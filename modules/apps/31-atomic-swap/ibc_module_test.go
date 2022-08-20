@@ -125,7 +125,9 @@ func (suite *SwapTestSuite) TestOnChanOpenTry() {
 		},
 		{
 			"capability already claimed", func() {
-				err := suite.chainA.GetSimApp().ScopedIBCSwapKeeper.ClaimCapability(suite.chainA.GetContext(), chanCap, host.ChannelCapabilityPath(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID))
+				err := suite.chainA.GetSimApp().ScopedIBCSwapKeeper.ClaimCapability(
+					suite.chainA.GetContext(), chanCap,
+					host.ChannelCapabilityPath(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID))
 				suite.Require().NoError(err)
 			}, false,
 		},
