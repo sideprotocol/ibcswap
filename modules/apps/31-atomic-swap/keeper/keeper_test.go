@@ -30,7 +30,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.chainC = suite.coordinator.GetChain(ibctesting.GetChainID(3))
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.chainA.GetContext(), suite.chainA.GetSimApp().InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, suite.chainA.GetSimApp())
+	types.RegisterQueryServer(queryHelper, suite.chainA.GetSimApp().IBCSwapKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 

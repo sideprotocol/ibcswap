@@ -1,7 +1,6 @@
 package simapp
 
 import (
-	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -243,14 +242,6 @@ type SimApp struct {
 
 	// the configurator
 	configurator module.Configurator
-}
-
-func (app *SimApp) Params(ctx context.Context, request *ibcswaptypes.QueryParamsRequest) (*ibcswaptypes.QueryParamsResponse, error) {
-	return app.IBCSwapKeeper.Params(ctx, request)
-}
-
-func (app *SimApp) EscrowAddress(ctx context.Context, request *ibcswaptypes.QueryEscrowAddressRequest) (*ibcswaptypes.QueryEscrowAddressResponse, error) {
-	return app.IBCSwapKeeper.EscrowAddress(ctx, request)
 }
 
 func init() {

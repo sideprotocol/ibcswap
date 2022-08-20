@@ -29,10 +29,10 @@ func NewIBCModule(k keeper.Keeper) IBCModule {
 	}
 }
 
-// ValidateTransferChannelParams does validation of a newly created transfer channel. A transfer
+// ValidateSwapChannelParams does validation of a newly created transfer channel. A transfer
 // channel must be UNORDERED, use the correct port (by default 'transfer'), and use the current
 // supported version. Only 2^32 channels are allowed to be created.
-func ValidateTransferChannelParams(
+func ValidateSwapChannelParams(
 	ctx sdk.Context,
 	keeper keeper.Keeper,
 	order channeltypes.Order,
@@ -72,7 +72,7 @@ func (im IBCModule) OnChanOpenInit(
 	counterparty channeltypes.Counterparty,
 	version string,
 ) (string, error) {
-	if err := ValidateTransferChannelParams(ctx, im.keeper, order, portID, channelID); err != nil {
+	if err := ValidateSwapChannelParams(ctx, im.keeper, order, portID, channelID); err != nil {
 		return "", err
 	}
 
@@ -103,7 +103,7 @@ func (im IBCModule) OnChanOpenTry(
 	counterparty channeltypes.Counterparty,
 	counterpartyVersion string,
 ) (string, error) {
-	if err := ValidateTransferChannelParams(ctx, im.keeper, order, portID, channelID); err != nil {
+	if err := ValidateSwapChannelParams(ctx, im.keeper, order, portID, channelID); err != nil {
 		return "", err
 	}
 
