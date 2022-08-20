@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package ibc.applications.atomic_swap.v1;
+
+option go_package = "github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic_swap/types";
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "ibc/core/client/v1/client.proto";
+
+// Msg defines the ibc/swap Msg service.
+service Msg {
+  // Transfer defines a rpc handler method for MsgTransfer.
+  rpc Swap(MsgSwap) returns (MsgSwapResponse);
+}
+
+// MsgTransfer defines a msg to transfer fungible tokens (i.e Coins) between
+// ICS20 enabled chains. See ICS Spec here:
+// https://github.com/cosmos/ibc/tree/master/spec/app/ics-020-fungible-token-transfer#data-structures
+message MsgSwap {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // the port on which the packet will be sent
+  string source_port = 1 [(gogoproto.moretags) = "yaml:\"source_port\""];
+  // the channel by which the packet will be sent
+  string source_channel = 2 [(gogoproto.moretags) = "yaml:\"source_channel\""];
+  // the tokens to be transferred
+  cosmos.base.v1beta1.Coin  sending_token = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin  receiving_token = 4 [(gogoproto.nullable) = false];
+  // the sender address
+  string sender_address = 5 [(gogoproto.moretags) = "yaml:\"sender_address\""];
+  // the sender's address on the destination chain
+  string sender_receiving_address = 6 [(gogoproto.moretags) = "yaml:\"sender_receiving_address\""];
+  // if expected_counterparty_address is specified,
+  // only the expected_counterparty_address is allowed to accept this deal
+  // this is address on destination chain
+  string expected_counterparty_address = 7;
+  // Timeout height relative to the current block height.
+  // The timeout is disabled when set to 0.
+  ibc.core.client.v1.Height timeout_height = 8
+      [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
+  // Timeout timestamp in absolute nanoseconds since unix epoch.
+  // The timeout is disabled when set to 0.
+  uint64 timeout_timestamp = 9 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
+}
+
+// MsgSwapResponse defines the Msg/Swap response type.
+message MsgSwapResponse {}

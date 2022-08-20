@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package ibc.applications.atomic_swap.v1;
+
+option go_package = "github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic_swap/types";
+
+// SwapPacketData defines a struct for the packet payload
+message SwapPacketData {
+  // the token denomination to be swapped
+  string sending_token_denom = 1;
+  // the token amount to be swapped
+  string sending_token_amount = 2;
+  // the token denomination to be swapped for
+  string receiving_token_denom = 3;
+  // the token amount to be swapped for
+  string receiving_token_amount = 4;
+  // the sender address
+  string sender = 5;
+  // the sender address on the destination chain
+  string sender_receiving_address = 6;
+  // the counterparty address on the destination chain
+  string expected_counterparty_address = 7;
+}

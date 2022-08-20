@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package ibc.applications.atomic_swap.v1;
+
+option go_package = "github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic_swap/types";
+
+import "ibc/applications/atomic_swap/v1/swap.proto";
+import "gogoproto/gogo.proto";
+
+// GenesisState defines the ibc-transfer genesis state
+message GenesisState {
+  string              port_id      = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
+  ibc.applications.atomic_swap.v1.Params params = 2 [(gogoproto.nullable) = false];
+}
