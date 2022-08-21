@@ -21,3 +21,38 @@ message SwapPacketData {
   // the counterparty address on the destination chain
   string expected_counterparty_address = 7;
 }
+
+message MakeSwapPacketData {
+  string id = 1;
+  string sell_token_denom = 2;
+  uint64 sell_token_amount = 3;
+  string buy_token_denom = 4;
+  uint64 buy_token_amount = 5;
+  string maker_address = 6;
+  string maker_buy_token_address = 7;
+  string desired_taker = 8;
+  string fee_recipient = 10;
+  // 1 / 10000 basis point
+  uint32 fee_rate = 11;
+  uint64 create_timestamp = 12;
+}
+
+message TakeSwapPacketData {
+  string id = 1;
+  string order_id = 2;
+  string taker_address = 3;
+  string sell_token_denom = 4;
+  uint64 sell_token_amount = 5;
+  string taker_receiving_address = 6;
+  string fee_recipient = 7;
+  // 1 / 10000 basis point
+  uint32 fee_rate = 8;
+  uint64 create_timestamp = 9;
+}
+
+message CancelSwapPacketData {
+  string id = 1;
+  string order_id = 2;
+  string maker_address = 3;
+  uint64 create_timestamp = 4;
+}

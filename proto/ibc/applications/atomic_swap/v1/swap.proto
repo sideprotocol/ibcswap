@@ -5,7 +5,7 @@ package ibc.applications.atomic_swap.v1;
 option go_package = "github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic_swap/types";
 
 import "gogoproto/gogo.proto";
-
+import "ibc/applications/atomic_swap/v1/packet.proto";
 
 // Params defines the set of IBC transfer parameters.
 // NOTE: To prevent a single token from being transferred, set the
@@ -15,4 +15,39 @@ message Params {
   // send_enabled enables or disables all cross-chain token transfers from this
   // chain.
   bool swap_enabled = 1 [(gogoproto.moretags) = "yaml:\"swap_enabled\""];
+}
+
+enum Status {
+  INITIAL = 0;
+  SYNC = 1;
+  CANCEL = 2;
+  COMPLETE = 3;
+}
+
+enum FillStatus {
+  PARTIAL_FILL = 0;
+  COMPLETE_FILL = 1;
+}
+
+message LimitOrder {
+  string id = 1;
+  ibc.applications.atomic_swap.v1.MakeSwapPacketData order = 2;
+  Status status = 3;
+  FillStatus fill_status = 4;
+  string channel_id = 5;
+  repeated ibc.applications.atomic_swap.v1.TakeSwapPacketData takers = 6;
+  uint64 create_timestamp = 7;
+  uint64 cancel_timestamp = 8;
+  uint64 complete_timestamp = 9;
+}
+
+message OTCOrder {
+  string id = 1;
+  ibc.applications.atomic_swap.v1.MakeSwapPacketData order = 2;
+  Status status = 3;
+  string channel_id = 4;
+  ibc.applications.atomic_swap.v1.TakeSwapPacketData takers = 5;
+  uint64 create_timestamp = 6;
+  uint64 cancel_timestamp = 7;
+  uint64 complete_timestamp = 8;
 }
