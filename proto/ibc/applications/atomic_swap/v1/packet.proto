@@ -1,58 +1,28 @@
 syntax = "proto3";
 
-package ibc.applications.atomic_swap.v1;
+package ibc.applications.interchain_accounts.v1;
 
 option go_package = "github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic_swap/types";
 
-// SwapPacketData defines a struct for the packet payload
-message SwapPacketData {
-  // the token denomination to be swapped
-  string sending_token_denom = 1;
-  // the token amount to be swapped
-  string sending_token_amount = 2;
-  // the token denomination to be swapped for
-  string receiving_token_denom = 3;
-  // the token amount to be swapped for
-  string receiving_token_amount = 4;
-  // the sender address
-  string sender = 5;
-  // the sender address on the destination chain
-  string sender_receiving_address = 6;
-  // the counterparty address on the destination chain
-  string expected_counterparty_address = 7;
+import "google/protobuf/any.proto";
+import "gogoproto/gogo.proto";
+
+// Type defines a classification of swap messages
+enum SwapMessageType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // Default zero value enumeration
+  TYPE_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "UNSPECIFIED"];
+
+  TYPE_MSG_MAKE_SWAP = 1 [(gogoproto.enumvalue_customname) = "MAKE_SWAP"];
+  TYPE_MSG_TAKE_SWAP = 2 [(gogoproto.enumvalue_customname) = "TAKE_SWAP"];
+  TYPE_MSG_CANCEL_SWAP = 3 [(gogoproto.enumvalue_customname) = "CANCEL_SWAP"];
 }
 
-message MakeSwapPacketData {
-  string id = 1;
-  string sell_token_denom = 2;
-  uint64 sell_token_amount = 3;
-  string buy_token_denom = 4;
-  uint64 buy_token_amount = 5;
-  string maker_address = 6;
-  string maker_buy_token_address = 7;
-  string desired_taker = 8;
-  string fee_recipient = 10;
-  // 1 / 10000 basis point
-  uint32 fee_rate = 11;
-  uint64 create_timestamp = 12;
+// AtomicSwapPacketData is comprised of a raw transaction, type of transaction and optional memo field.
+message AtomicSwapPacketData {
+  SwapMessageType   type = 1;
+  bytes  data = 2;
+  string memo = 3;
 }
 
-message TakeSwapPacketData {
-  string id = 1;
-  string order_id = 2;
-  string taker_address = 3;
-  string sell_token_denom = 4;
-  uint64 sell_token_amount = 5;
-  string taker_receiving_address = 6;
-  string fee_recipient = 7;
-  // 1 / 10000 basis point
-  uint32 fee_rate = 8;
-  uint64 create_timestamp = 9;
-}
-
-message CancelSwapPacketData {
-  string id = 1;
-  string order_id = 2;
-  string maker_address = 3;
-  uint64 create_timestamp = 4;
-}
