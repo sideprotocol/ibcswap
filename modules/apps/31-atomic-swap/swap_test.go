@@ -1,6 +1,7 @@
 package swap_test
 
 import (
+	"github.com/tendermint/tendermint/types/time"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -52,12 +53,12 @@ func (suite *SwapTestSuite) TestHandleMsgSwap() {
 	coinToSendToB := sdk.NewCoin(sdk.DefaultBondDenom, amount)
 
 	// send from chainA to chainB
-	msg := types.NewMsgSwap(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID,
+	msg := types.NewMsgMakeSwap(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID,
 		coinToSendToB, coinToSendToB,
 		suite.chainA.SenderAccount.GetAddress().String(),
 		suite.chainA.SenderAccount.GetAddress().String(), // it's same, since the prefix is same on both chains
 		suite.chainB.SenderAccount.GetAddress().String(),
-		timeoutHeight, 0)
+		timeoutHeight, 0, time.Now().UTC().Unix())
 	res, err := suite.chainA.SendMsgs(msg)
 	suite.Require().NoError(err) // message committed
 

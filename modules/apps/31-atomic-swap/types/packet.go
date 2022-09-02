@@ -1,11 +1,8 @@
 package types
 
 import (
-	"strings"
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"time"
 )
 
 var (
@@ -21,53 +18,28 @@ var (
 	DefaultRelativePacketTimeoutTimestamp = uint64((time.Duration(10) * time.Minute).Nanoseconds())
 )
 
-// NewAtomicSwapPacketData contructs a new SwapPacketData instance
+// NewAtomicSwapPacketData constructs a new AtomicSwapPacketData instance
 func NewAtomicSwapPacketData(
-	sendingDenom string, sendingAmount string,
-	receivingDenom string, receivingAmount string,
-	expectedCounterpartyAddress string,
-	sender, senderReceivingAddress string,
-) SwapPacketData {
-	return SwapPacketData{
-		SendingTokenDenom:           sendingDenom,
-		SendingTokenAmount:          sendingAmount,
-		ReceivingTokenDenom:         receivingDenom,
-		ReceivingTokenAmount:        receivingAmount,
-		Sender:                      sender,
-		SenderReceivingAddress:      senderReceivingAddress,
-		ExpectedCounterpartyAddress: expectedCounterpartyAddress,
+	mType SwapMessageType,
+	data []byte,
+	memo string,
+) AtomicSwapPacketData {
+	return AtomicSwapPacketData{
+		Type: mType,
+		Data: data,
+		Memo: memo,
 	}
 }
 
-// ValidateBasic is used for validating the token transfer.
-// NOTE: The addresses formats are not validated as the sender and recipient can have different
-// formats defined by their corresponding chains that are not known to IBC.
-func (pd SwapPacketData) ValidateBasic() error {
-	amount, ok := sdk.NewIntFromString(pd.SendingTokenAmount)
-	if !ok {
-		return sdkerrors.Wrapf(ErrInvalidAmount, "unable to parse sending token amount (%s) into math.Int", pd.SendingTokenAmount)
+// ValidateBasic is used for validating the token swap.
+func (pd AtomicSwapPacketData) ValidateBasic() error {
+	if pd.Data == nil || len(pd.Data) == 0 {
+		return ErrInvalidLengthPacket
 	}
-	if !amount.IsPositive() {
-		return sdkerrors.Wrapf(ErrInvalidAmount, "sending token amount must be strictly positive: got %d", amount)
-	}
-	amount2, ok2 := sdk.NewIntFromString(pd.ReceivingTokenAmount)
-	if !ok2 {
-		return sdkerrors.Wrapf(ErrInvalidAmount, "unable to parse receiving token amount (%s) into math.Int", pd.ReceivingTokenAmount)
-	}
-	if !amount2.IsPositive() {
-		return sdkerrors.Wrapf(ErrInvalidAmount, "receiving token amount must be strictly positive: got %d", amount)
-	}
-	if strings.TrimSpace(pd.Sender) == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "sender address cannot be blank")
-	}
-	if strings.TrimSpace(pd.SenderReceivingAddress) == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "receiver address cannot be blank")
-	}
-	// return ValidatePrefixedDenom(pd.SendingTokenDenom)
 	return nil
 }
 
 // GetBytes is a helper for serialising
-func (ftpd SwapPacketData) GetBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&ftpd))
+func (pd AtomicSwapPacketData) GetBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&pd))
 }

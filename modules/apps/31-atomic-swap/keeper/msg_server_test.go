@@ -2,12 +2,13 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"time"
 
 	"github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap/types"
 )
 
 func (suite *KeeperTestSuite) TestMsgSwap() {
-	var msg *types.MsgSwap
+	var msg *types.MsgMakeSwapRequest
 
 	testCases := []struct {
 		name     string
@@ -22,7 +23,7 @@ func (suite *KeeperTestSuite) TestMsgSwap() {
 		{
 			"invalid sender",
 			func() {
-				msg.SenderAddress = "address"
+				msg.MakerAddress = "address"
 			},
 			false,
 		},
@@ -49,18 +50,19 @@ func (suite *KeeperTestSuite) TestMsgSwap() {
 		suite.coordinator.Setup(path)
 
 		coin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
-		msg = types.NewMsgSwap(
+		msg = types.NewMsgMakeSwap(
 			path.EndpointA.ChannelConfig.PortID,
 			path.EndpointA.ChannelID,
 			coin, coin,
 			suite.chainA.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(),
 			suite.chainB.SenderAccount.GetAddress().String(),
 			suite.chainB.GetTimeoutHeight(), 0, // only use timeout height
+			time.Now().UTC().Unix(),
 		)
 
 		tc.malleate()
 
-		res, err := suite.chainA.GetSimApp().IBCSwapKeeper.Swap(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+		res, err := suite.chainA.GetSimApp().IBCSwapKeeper.MakeSwap(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 
 		if tc.expPass {
 			suite.Require().NoError(err)

@@ -118,10 +118,10 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 				}
 			}
 
-			msg := types.NewMsgSwap(
+			msg := types.NewMsgMakeSwap(
 				types.PortID, srcChannel, fromCoin, toCoin,
 				sender, receivingAddress, expectedCounterparty,
-				timeoutHeight, timeoutTimestamp,
+				timeoutHeight, timeoutTimestamp, time.Now().UTC().Unix(),
 			)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,22 +41,22 @@ var (
 	timeoutHeight = clienttypes.NewHeight(0, 10)
 )
 
-// TestMsgTransferRoute tests Route for MsgTransfer
+// TestMsgSwapRoute tests Route for MsgSwap
 func TestMsgSwapRoute(t *testing.T) {
-	msg := NewMsgSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0)
+	msg := NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix())
 
 	require.Equal(t, RouterKey, msg.Route())
 }
 
-// TestMsgTransferType tests Type for MsgTransfer
-func TestMsgTransferType(t *testing.T) {
-	msg := NewMsgSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0)
+// TestMsgSwapType tests Type for MsgSwap
+func TestMsgSwapType(t *testing.T) {
+	msg := NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix())
 
 	require.Equal(t, "swap", msg.Type())
 }
 
-func TestMsgTransferGetSignBytes(t *testing.T) {
-	msg := NewMsgSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0)
+func TestMsgSwapGetSignBytes(t *testing.T) {
+	msg := NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix())
 	expected := fmt.Sprintf(`{"type":"cosmos-sdk/MsgTransfer","value":{"receiver":"%s","sender":"%s","source_channel":"testchannel","source_port":"testportid","timeout_height":{"revision_height":"10"},"token":{"amount":"100","denom":"atom"}}}`, addr2, addr1)
 	require.NotPanics(t, func() {
 		res := msg.GetSignBytes()
@@ -67,23 +68,23 @@ func TestMsgTransferGetSignBytes(t *testing.T) {
 func TestMsgSwapValidation(t *testing.T) {
 	testCases := []struct {
 		name    string
-		msg     *MsgSwap
+		msg     *MsgMakeSwapRequest
 		expPass bool
 	}{
-		{"valid msg with base denom", NewMsgSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0), true},
-		{"valid msg with trace hash", NewMsgSwap(validPort, validChannel, ibcCoin, coin2, addr1, addr2, "", timeoutHeight, 0), true},
-		{"invalid ibc denom", NewMsgSwap(validPort, validChannel, invalidIBCCoin, coin2, addr1, addr2, "", timeoutHeight, 0), false},
-		{"too short port id", NewMsgSwap(invalidShortPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0), false},
-		{"too long port id", NewMsgSwap(invalidLongPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0), false},
-		{"port id contains non-alpha", NewMsgSwap(invalidPort, validChannel, coin, coin2, addr1, "", addr2, timeoutHeight, 0), false},
-		{"too short channel id", NewMsgSwap(validPort, invalidShortChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0), false},
-		{"too long channel id", NewMsgSwap(validPort, invalidLongChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0), false},
-		{"channel id contains non-alpha", NewMsgSwap(validPort, invalidChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0), false},
-		{"invalid denom", NewMsgSwap(validPort, validChannel, invalidDenomCoin, coin2, addr1, addr2, "", timeoutHeight, 0), false},
-		{"zero coin", NewMsgSwap(validPort, validChannel, zeroCoin, coin2, addr1, addr2, "", timeoutHeight, 0), false},
-		{"missing sender address", NewMsgSwap(validPort, validChannel, coin, coin2, emptyAddr, addr2, "", timeoutHeight, 0), false},
-		{"missing recipient address", NewMsgSwap(validPort, validChannel, coin, coin2, addr1, "", "", timeoutHeight, 0), false},
-		{"empty coin", NewMsgSwap(validPort, validChannel, sdk.Coin{}, coin2, addr1, addr2, "", timeoutHeight, 0), false},
+		{"valid msg with base denom", NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), true},
+		{"valid msg with trace hash", NewMsgMakeSwap(validPort, validChannel, ibcCoin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), true},
+		{"invalid ibc denom", NewMsgMakeSwap(validPort, validChannel, invalidIBCCoin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
+		{"too short port id", NewMsgMakeSwap(invalidShortPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
+		{"too long port id", NewMsgMakeSwap(invalidLongPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
+		{"port id contains non-alpha", NewMsgMakeSwap(invalidPort, validChannel, coin, coin2, addr1, "", addr2, timeoutHeight, 0, time.Now().UTC().Unix()), false},
+		{"too short channel id", NewMsgMakeSwap(validPort, invalidShortChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
+		{"too long channel id", NewMsgMakeSwap(validPort, invalidLongChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
+		{"channel id contains non-alpha", NewMsgMakeSwap(validPort, invalidChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
+		{"invalid denom", NewMsgMakeSwap(validPort, validChannel, invalidDenomCoin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
+		{"zero coin", NewMsgMakeSwap(validPort, validChannel, zeroCoin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
+		{"missing sender address", NewMsgMakeSwap(validPort, validChannel, coin, coin2, emptyAddr, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
+		{"missing recipient address", NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, "", "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
+		{"empty coin", NewMsgMakeSwap(validPort, validChannel, sdk.Coin{}, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
 	}
 
 	for i, tc := range testCases {
@@ -96,11 +97,11 @@ func TestMsgSwapValidation(t *testing.T) {
 	}
 }
 
-// TestMsgTransferGetSigners tests GetSigners for MsgTransfer
-func TestMsgTransferGetSigners(t *testing.T) {
+// TestMsgSwapGetSigners tests GetSigners for MsgTransfer
+func TestMsgSwapGetSigners(t *testing.T) {
 	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
-	msg := NewMsgSwap(validPort, validChannel, coin, coin2, addr.String(), addr2, "", timeoutHeight, 0)
+	msg := NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr.String(), addr2, "", timeoutHeight, 0, time.Now().UTC().Unix())
 	res := msg.GetSigners()
 
 	require.Equal(t, []sdk.AccAddress{addr}, res)

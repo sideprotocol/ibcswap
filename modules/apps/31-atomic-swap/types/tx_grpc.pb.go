@@ -22,8 +22,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MsgClient interface {
-	// Transfer defines a rpc handler method for MsgTransfer.
-	Swap(ctx context.Context, in *MsgSwap, opts ...grpc.CallOption) (*MsgSwapResponse, error)
+	MakeSwap(ctx context.Context, in *MsgMakeSwapRequest, opts ...grpc.CallOption) (*MsgMakeSwapResponse, error)
+	TakeSwap(ctx context.Context, in *MsgTakeSwapRequest, opts ...grpc.CallOption) (*MsgTakeSwapResponse, error)
+	CancelSwap(ctx context.Context, in *MsgCancelSwapRequest, opts ...grpc.CallOption) (*MsgCancelSwapResponse, error)
 }
 
 type msgClient struct {
@@ -34,9 +35,27 @@ func NewMsgClient(cc grpc.ClientConnInterface) MsgClient {
 	return &msgClient{cc}
 }
 
-func (c *msgClient) Swap(ctx context.Context, in *MsgSwap, opts ...grpc.CallOption) (*MsgSwapResponse, error) {
-	out := new(MsgSwapResponse)
-	err := c.cc.Invoke(ctx, "/ibc.applications.atomic_swap.v1.Msg/Swap", in, out, opts...)
+func (c *msgClient) MakeSwap(ctx context.Context, in *MsgMakeSwapRequest, opts ...grpc.CallOption) (*MsgMakeSwapResponse, error) {
+	out := new(MsgMakeSwapResponse)
+	err := c.cc.Invoke(ctx, "/ibc.applications.atomic_swap.v1.Msg/MakeSwap", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) TakeSwap(ctx context.Context, in *MsgTakeSwapRequest, opts ...grpc.CallOption) (*MsgTakeSwapResponse, error) {
+	out := new(MsgTakeSwapResponse)
+	err := c.cc.Invoke(ctx, "/ibc.applications.atomic_swap.v1.Msg/TakeSwap", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) CancelSwap(ctx context.Context, in *MsgCancelSwapRequest, opts ...grpc.CallOption) (*MsgCancelSwapResponse, error) {
+	out := new(MsgCancelSwapResponse)
+	err := c.cc.Invoke(ctx, "/ibc.applications.atomic_swap.v1.Msg/CancelSwap", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -47,16 +66,23 @@ func (c *msgClient) Swap(ctx context.Context, in *MsgSwap, opts ...grpc.CallOpti
 // All implementations should embed UnimplementedMsgServer
 // for forward compatibility
 type MsgServer interface {
-	// Transfer defines a rpc handler method for MsgTransfer.
-	Swap(context.Context, *MsgSwap) (*MsgSwapResponse, error)
+	MakeSwap(context.Context, *MsgMakeSwapRequest) (*MsgMakeSwapResponse, error)
+	TakeSwap(context.Context, *MsgTakeSwapRequest) (*MsgTakeSwapResponse, error)
+	CancelSwap(context.Context, *MsgCancelSwapRequest) (*MsgCancelSwapResponse, error)
 }
 
 // UnimplementedMsgServer should be embedded to have forward compatible implementations.
 type UnimplementedMsgServer struct {
 }
 
-func (UnimplementedMsgServer) Swap(context.Context, *MsgSwap) (*MsgSwapResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Swap not implemented")
+func (UnimplementedMsgServer) MakeSwap(context.Context, *MsgMakeSwapRequest) (*MsgMakeSwapResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MakeSwap not implemented")
+}
+func (UnimplementedMsgServer) TakeSwap(context.Context, *MsgTakeSwapRequest) (*MsgTakeSwapResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TakeSwap not implemented")
+}
+func (UnimplementedMsgServer) CancelSwap(context.Context, *MsgCancelSwapRequest) (*MsgCancelSwapResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CancelSwap not implemented")
 }
 
 // UnsafeMsgServer may be embedded to opt out of forward compatibility for this service.
@@ -70,20 +96,56 @@ func RegisterMsgServer(s grpc.ServiceRegistrar, srv MsgServer) {
 	s.RegisterService(&Msg_ServiceDesc, srv)
 }
 
-func _Msg_Swap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgSwap)
+func _Msg_MakeSwap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgMakeSwapRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).Swap(ctx, in)
+		return srv.(MsgServer).MakeSwap(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ibc.applications.atomic_swap.v1.Msg/Swap",
+		FullMethod: "/ibc.applications.atomic_swap.v1.Msg/MakeSwap",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Swap(ctx, req.(*MsgSwap))
+		return srv.(MsgServer).MakeSwap(ctx, req.(*MsgMakeSwapRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_TakeSwap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgTakeSwapRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).TakeSwap(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ibc.applications.atomic_swap.v1.Msg/TakeSwap",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).TakeSwap(ctx, req.(*MsgTakeSwapRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_CancelSwap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCancelSwapRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CancelSwap(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ibc.applications.atomic_swap.v1.Msg/CancelSwap",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CancelSwap(ctx, req.(*MsgCancelSwapRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -96,8 +158,16 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Swap",
-			Handler:    _Msg_Swap_Handler,
+			MethodName: "MakeSwap",
+			Handler:    _Msg_MakeSwap_Handler,
+		},
+		{
+			MethodName: "TakeSwap",
+			Handler:    _Msg_TakeSwap_Handler,
+		},
+		{
+			MethodName: "CancelSwap",
+			Handler:    _Msg_CancelSwap_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

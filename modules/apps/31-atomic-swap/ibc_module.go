@@ -171,7 +171,7 @@ func (im IBCModule) OnRecvPacket(
 ) ibcexported.Acknowledgement {
 	ack := channeltypes.NewResultAcknowledgement([]byte{byte(1)})
 
-	var data types.SwapPacketData
+	var data types.AtomicSwapPacketData
 	var ackErr error
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-20 transfer packet data")
@@ -190,13 +190,6 @@ func (im IBCModule) OnRecvPacket(
 
 	eventAttributes := []sdk.Attribute{
 		sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		sdk.NewAttribute(sdk.AttributeKeySender, data.Sender),
-		sdk.NewAttribute(types.AttributeKeyReceiver, data.SenderReceivingAddress),
-		sdk.NewAttribute(types.AttributeKeySendingDenom, data.SendingTokenDenom),
-		sdk.NewAttribute(types.AttributeKeySendingAmount, data.SendingTokenAmount),
-		sdk.NewAttribute(types.AttributeKeyReceivingDenom, data.ReceivingTokenDenom),
-		sdk.NewAttribute(types.AttributeKeyReceivingAmount, data.ReceivingTokenAmount),
-		sdk.NewAttribute(types.AttributeKeyCounterParty, data.ExpectedCounterpartyAddress),
 		sdk.NewAttribute(types.AttributeKeyAckSuccess, fmt.Sprintf("%t", ack.Success())),
 	}
 
@@ -226,7 +219,7 @@ func (im IBCModule) OnAcknowledgementPacket(
 	if err := types.ModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
 	}
-	var data types.SwapPacketData
+	var data types.AtomicSwapPacketData
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
@@ -239,13 +232,6 @@ func (im IBCModule) OnAcknowledgementPacket(
 		sdk.NewEvent(
 			types.EventTypePacket,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(sdk.AttributeKeySender, data.Sender),
-			sdk.NewAttribute(types.AttributeKeyReceiver, data.SenderReceivingAddress),
-			sdk.NewAttribute(types.AttributeKeySendingDenom, data.SendingTokenDenom),
-			sdk.NewAttribute(types.AttributeKeySendingAmount, data.SendingTokenAmount),
-			sdk.NewAttribute(types.AttributeKeyReceivingDenom, data.ReceivingTokenDenom),
-			sdk.NewAttribute(types.AttributeKeyReceivingAmount, data.ReceivingTokenAmount),
-			sdk.NewAttribute(types.AttributeKeyCounterParty, data.ExpectedCounterpartyAddress),
 			sdk.NewAttribute(types.AttributeKeyAck, ack.String()),
 		),
 	)
@@ -276,7 +262,7 @@ func (im IBCModule) OnTimeoutPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) error {
-	var data types.SwapPacketData
+	var data types.AtomicSwapPacketData
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
@@ -289,13 +275,6 @@ func (im IBCModule) OnTimeoutPacket(
 		sdk.NewEvent(
 			types.EventTypeTimeout,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(types.AttributeKeyRefundReceiver, data.Sender),
-			sdk.NewAttribute(types.AttributeKeyReceiver, data.SenderReceivingAddress),
-			sdk.NewAttribute(types.AttributeKeySendingDenom, data.SendingTokenDenom),
-			sdk.NewAttribute(types.AttributeKeySendingAmount, data.SendingTokenAmount),
-			sdk.NewAttribute(types.AttributeKeyReceivingDenom, data.ReceivingTokenDenom),
-			sdk.NewAttribute(types.AttributeKeyReceivingAmount, data.ReceivingTokenAmount),
-			sdk.NewAttribute(types.AttributeKeyCounterParty, data.ExpectedCounterpartyAddress),
 		),
 	)
 

@@ -8,34 +8,33 @@ import (
 )
 
 const (
-	// ModuleName defines the IBC transfer name
+	// ModuleName defines the IBC swap name
 	ModuleName = "atomicswap"
 
-	// Version defines the current version the IBC tranfer
+	// Version defines the current version the IBC swap
 	// module supports
-	Version = "ics20-1"
+	Version = "ics31-1"
 
-	// PortID is the default port id that transfer module binds to
+	// PortID is the default port id that swap module binds to
 	PortID = ModuleName
 
-	// StoreKey is the store key string for IBC transfer
+	// StoreKey is the store key string for IBC swap
 	StoreKey = ModuleName
 
-	// RouterKey is the message route for IBC transfer
+	// RouterKey is the message route for IBC swap
 	RouterKey = ModuleName
 
-	// QuerierRoute is the querier route for IBC transfer
+	// QuerierRoute is the querier route for IBC swap
 	QuerierRoute = ModuleName
-
-	// DenomPrefix is the prefix used for internal SDK coin representation.
-	DenomPrefix = "ibc"
 )
 
 var (
 	// PortKey defines the key to store the port ID in store
 	PortKey = []byte{0x01}
-	// DenomTraceKey defines the key to store the denomination trace info in store
-	DenomTraceKey = []byte{0x02}
+	// LimitOrderBookKey defines the key to store the denomination trace info in store
+	LimitOrderBookKey = []byte{0x02}
+	// OTCOrderBookKey defines the key to store the denomination trace info in store
+	OTCOrderBookKey = []byte{0x03}
 )
 
 // GetEscrowAddress returns the escrow address for the specified channel.

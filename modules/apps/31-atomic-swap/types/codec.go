@@ -9,13 +9,17 @@ import (
 // RegisterLegacyAminoCodec registers the necessary x/ibc transfer interfaces and concrete types
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgSwap{}, "cosmos-sdk/MsgSwap", nil)
+	cdc.RegisterConcrete(&MsgMakeSwapRequest{}, "cosmos-sdk/MsgMakeSwap", nil)
+	cdc.RegisterConcrete(&MsgTakeSwapRequest{}, "cosmos-sdk/MsgTakeSwap", nil)
+	cdc.RegisterConcrete(&MsgCancelSwapRequest{}, "cosmos-sdk/MsgCancelSwap", nil)
 }
 
 // RegisterInterfaces register the ibc transfer module interfaces to protobuf
 // Any.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSwap{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgMakeSwapRequest{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgTakeSwapRequest{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgCancelSwapRequest{})
 
 	// msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

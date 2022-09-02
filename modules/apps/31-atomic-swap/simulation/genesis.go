@@ -20,6 +20,10 @@ func RadomEnabled(r *rand.Rand) bool {
 	return r.Int63n(101) <= 75
 }
 
+func RadomInt(r *rand.Rand) uint32 {
+	return uint32(r.Int63n(101))
+}
+
 // RandomizedGenState generates a random GenesisState for transfer.
 func RandomizedGenState(simState *module.SimulationState) {
 	var portID string
@@ -34,9 +38,15 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { swapEnabled = RadomEnabled(r) },
 	)
 
+	var swapMaxFeeRate uint32
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, string(types.KeySwapMaxFeeRate), &swapMaxFeeRate, simState.Rand,
+		func(r *rand.Rand) { swapMaxFeeRate = RadomInt(r) },
+	)
+
 	transferGenesis := types.GenesisState{
 		PortId: portID,
-		Params: types.NewParams(swapEnabled),
+		Params: types.NewParams(swapEnabled, swapMaxFeeRate),
 	}
 
 	bz, err := json.MarshalIndent(&transferGenesis, "", " ")

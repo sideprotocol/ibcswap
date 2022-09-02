@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -98,12 +99,24 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 
 			tc.malleate()
 
-			err = suite.chainA.GetSimApp().IBCSwapKeeper.SendSwap(
-				suite.chainA.GetContext(), path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID,
+			msg := types.NewMsgMakeSwap(
+				path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID,
 				amount, amount,
-				suite.chainA.SenderAccount.GetAddress(), suite.chainA.SenderAccount.GetAddress().String(),
+				suite.chainA.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(),
 				suite.chainB.SenderAccount.GetAddress().String(),
 				clienttypes.NewHeight(0, 110), 0,
+				time.Now().UTC().Unix(),
+			)
+
+			msgbyte, err1 := types.ModuleCdc.Marshal(msg)
+			suite.Require().NoError(err1)
+
+			packet := types.NewAtomicSwapPacketData(types.MAKE_SWAP, msgbyte, "")
+
+			err = suite.chainA.GetSimApp().IBCSwapKeeper.SendSwapPacket(
+				suite.chainA.GetContext(), path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID,
+				clienttypes.NewHeight(0, 110), 0,
+				packet,
 			)
 
 			if tc.expPass {

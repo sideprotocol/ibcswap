@@ -13,9 +13,15 @@ func (k Keeper) GetSwapEnabled(ctx sdk.Context) bool {
 	return res
 }
 
+func (k Keeper) GetSwapMaxFeeRate(ctx sdk.Context) uint32 {
+	var res uint32
+	k.paramSpace.Get(ctx, types.KeySwapMaxFeeRate, &res)
+	return res
+}
+
 // GetParams returns the total set of ibc-transfer parameters.
 func (k Keeper) GetParams(ctx sdk.Context) types.Params {
-	return types.NewParams(k.GetSwapEnabled(ctx))
+	return types.NewParams(k.GetSwapEnabled(ctx), k.GetSwapMaxFeeRate(ctx))
 }
 
 // SetParams sets the total set of ibc-transfer parameters.
