@@ -27,8 +27,8 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Fetch latest Dockerfile
-        run: curl https://raw.githubusercontent.com/cosmos/ibc-go/main/Dockerfile -o Dockerfile
+#      - name: Fetch latest Dockerfile
+#        run: curl https://raw.githubusercontent.com/cosmos/ibc-go/main/Dockerfile -o Dockerfile
       - name: Build image
         run: |
           docker build . -t "${REGISTRY}/${ORG}/${IMAGE_NAME}:${VERSION}"
