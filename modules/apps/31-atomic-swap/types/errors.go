@@ -21,5 +21,5 @@ var (
 	ErrOrderCompleted              = sdkerrors.Register(ModuleName, 14, "Order has completed already")
 	ErrOrderDenominationMismatched = sdkerrors.Register(ModuleName, 15, "denomination are not matched")
 	ErrOrderInsufficientAmount     = sdkerrors.Register(ModuleName, 16, "amount of taker token is insufficient")
-	ErrOrderPermissionIsNotAllowed = sdkerrors.Register(ModuleName, 16, "sender is not the owner of the order")
+	ErrOrderPermissionIsNotAllowed = sdkerrors.Register(ModuleName, 17, "sender is not the owner of the order")
 )

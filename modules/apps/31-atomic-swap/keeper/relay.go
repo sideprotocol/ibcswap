@@ -87,7 +87,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
-		if err := k.OnReceivedMake(ctx.Context(), packet, &msg); err != nil {
+		if err := k.OnReceivedMake(ctx, packet, &msg); err != nil {
 			return err
 		}
 
@@ -99,7 +99,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
-		if err2 := k.OnReceivedTake(ctx.Context(), packet, &msg); err2 != nil {
+		if err2 := k.OnReceivedTake(ctx, packet, &msg); err2 != nil {
 			return err2
 		} else {
 			return nil
@@ -111,7 +111,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
-		if err2 := k.OnReceivedCancel(ctx.Context(), packet, &msg); err2 != nil {
+		if err2 := k.OnReceivedCancel(ctx, packet, &msg); err2 != nil {
 			return err2
 		} else {
 			return nil
@@ -126,7 +126,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	return nil
 }
 
-func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, data types.AtomicSwapPacketData, ack channeltypes.Acknowledgement) error {
+func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, data *types.AtomicSwapPacketData, ack channeltypes.Acknowledgement) error {
 	switch ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Error:
 		return k.refundPacketToken(ctx, packet, data)
@@ -146,6 +146,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			} else {
 				return types.ErrOrderDoesNotExists
 			}
+			break
 
 		case types.CANCEL_SWAP:
 			var msg types.MsgCancelSwapRequest
@@ -158,19 +159,17 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			} else {
 				return nil
 			}
-
-		default:
-			return types.ErrUnknownDataPacket
+			break
 		}
-		return nil
 	}
+	return nil
 }
 
-func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, data types.AtomicSwapPacketData) error {
+func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, data *types.AtomicSwapPacketData) error {
 	return k.refundPacketToken(ctx, packet, data)
 }
 
-func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, data types.AtomicSwapPacketData) error {
+func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, data *types.AtomicSwapPacketData) error {
 
 	ctx.Logger().Debug("refundPacketToken: %s", data)
 

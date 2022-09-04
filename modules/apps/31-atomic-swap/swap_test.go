@@ -69,6 +69,11 @@ func (suite *SwapTestSuite) TestHandleMsgSwap() {
 	err = path.RelayPacket(packet)
 	suite.Require().NoError(err) // relay committed
 
+	order := types.NewOTCOrder(msg, path.EndpointA.ChannelID)
+	suite.chainB.NextBlock()
+	has := suite.chainB.GetSimApp().IBCSwapKeeper.HasOTCOrder(suite.chainB.GetContext(), order.Id)
+	suite.Require().True(has)
+
 }
 
 func TestSwapTestSuite(t *testing.T) {

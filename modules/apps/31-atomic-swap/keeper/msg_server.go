@@ -332,8 +332,8 @@ func (k Keeper) executeCancel(ctx sdk.Context, msg *types.MsgCancelSwapRequest, 
 
 // the following methods are executed On Destination chain.
 
-func (k Keeper) OnReceivedMake(goCtx context.Context, packet channeltypes.Packet, msg *types.MsgMakeSwapRequest) error {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg *types.MsgMakeSwapRequest) error {
+
 	if err := msg.ValidateBasic(); err != nil {
 		return err
 	}
@@ -350,8 +350,8 @@ func (k Keeper) OnReceivedMake(goCtx context.Context, packet channeltypes.Packet
 	return nil
 }
 
-func (k Keeper) OnReceivedTake(goCtx context.Context, packet channeltypes.Packet, msg *types.MsgTakeSwapRequest) error {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg *types.MsgTakeSwapRequest) error {
+
 	if err := msg.ValidateBasic(); err != nil {
 		return err
 	}
@@ -369,8 +369,7 @@ func (k Keeper) OnReceivedTake(goCtx context.Context, packet channeltypes.Packet
 	return nil
 }
 
-func (k Keeper) OnReceivedCancel(goCtx context.Context, packet channeltypes.Packet, msg *types.MsgCancelSwapRequest) error {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, msg *types.MsgCancelSwapRequest) error {
 	if err := msg.ValidateBasic(); err != nil {
 		return err
 	}
