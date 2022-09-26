@@ -7,7 +7,7 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	"github.com/cosmos/ibc-go/v4/modules/core/exported"
 	ibctmtypes "github.com/cosmos/ibc-go/v4/modules/light-clients/07-tendermint/types"
-	"github.com/sideprotocol/ibcswap/v4/testing/mock"
+	"github.com/ibcswap/ibcswap/v4/testing/mock"
 )
 
 type ClientConfig interface {

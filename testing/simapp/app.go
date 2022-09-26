@@ -102,12 +102,12 @@ import (
 	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
 	// using custom test app
-	ibcmock "github.com/sideprotocol/ibcswap/v4/testing/mock"
-	simappparams "github.com/sideprotocol/ibcswap/v4/testing/simapp/params"
+	ibcmock "github.com/ibcswap/ibcswap/v4/testing/mock"
+	simappparams "github.com/ibcswap/ibcswap/v4/testing/simapp/params"
 	// ibcswap
-	ibcswap "github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap"
-	ibcswapkeeper "github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap/keeper"
-	ibcswaptypes "github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap/types"
+	ibcswap "github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap"
+	ibcswapkeeper "github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/keeper"
+	ibcswaptypes "github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/types"
 
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"

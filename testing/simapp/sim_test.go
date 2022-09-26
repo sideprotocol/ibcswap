@@ -31,7 +31,7 @@ import (
 
 	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
-	"github.com/sideprotocol/ibcswap/v4/testing/simapp/helpers"
+	"github.com/ibcswap/ibcswap/v4/testing/simapp/helpers"
 )
 
 // Get flags every time the simulator is run

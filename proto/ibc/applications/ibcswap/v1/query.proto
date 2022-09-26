@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package ibc.applications.ibcswap.v1;
+
+option go_package = "github.com/sidesnetwork/ibcswap/v4/modules/apps/101-interchain-swap/types";
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "ibc/applications/ibcswap/v1/swap.proto";
+import "google/api/annotations.proto";
+
+// Query provides defines the gRPC querier service.
+service Query {
+
+  // Params queries all parameters of the ibc-transfer module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/ibc/apps/swap/v1/params";
+  }
+
+  // EscrowAddress returns the escrow address for a particular port and channel id.
+  rpc EscrowAddress(QueryEscrowAddressRequest) returns (QueryEscrowAddressResponse) {
+    option (google.api.http).get = "/ibc/apps/swap/v1/channels/{channel_id}/ports/{port_id}/escrow_address";
+  }
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  ibc.applications.ibcswap.v1.Params params = 1;
+}
+
+// QueryEscrowAddressRequest is the request type for the EscrowAddress RPC method.
+message QueryEscrowAddressRequest {
+  // unique port identifier
+  string port_id = 1;
+  // unique channel identifier
+  string channel_id = 2;
+}
+
+// QueryEscrowAddressResponse is the response type of the EscrowAddress RPC method.
+message QueryEscrowAddressResponse {
+  // the escrow account address
+  string escrow_address = 1;
+}

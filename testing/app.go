@@ -24,7 +24,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/ibc-go/v4/modules/core/keeper"
-	"github.com/sideprotocol/ibcswap/v4/testing/simapp"
+	"github.com/ibcswap/ibcswap/v4/testing/simapp"
 )
 
 var DefaultTestingAppInit func() (TestingApp, map[string]json.RawMessage) = SetupTestingApp

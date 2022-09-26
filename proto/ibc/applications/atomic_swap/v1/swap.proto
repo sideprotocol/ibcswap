@@ -16,6 +16,22 @@ message Params {
   uint32 max_fee_rate = 2 [(gogoproto.moretags) = "yaml:\"max_fee_rate\""];
 }
 
+// AMM + Liquidity pool
+// invariant: K = X ** Wx * Y ** Wy
+
+enum PoolSide {
+  NATIVE = 0;
+  REMOTE = 1;
+}
+
+enum PoolStatus {
+  READY = 0;
+  CREATING = 1;
+}
+
+
+
+// OTC
 enum Status {
   INITIAL = 0;
   SYNC = 1;

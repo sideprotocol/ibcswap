@@ -5,7 +5,7 @@
 package ibctesting
 
 import (
-	ibcswaptypes "github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap/types"
+	ibcswaptypes "github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/types"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,8 +14,8 @@ import (
 	connectiontypes "github.com/cosmos/ibc-go/v4/modules/core/03-connection/types"
 	commitmenttypes "github.com/cosmos/ibc-go/v4/modules/core/23-commitment/types"
 	ibctmtypes "github.com/cosmos/ibc-go/v4/modules/light-clients/07-tendermint/types"
-	"github.com/sideprotocol/ibcswap/v4/testing/mock"
-	"github.com/sideprotocol/ibcswap/v4/testing/simapp"
+	"github.com/ibcswap/ibcswap/v4/testing/mock"
+	"github.com/ibcswap/ibcswap/v4/testing/simapp"
 )
 
 const (
