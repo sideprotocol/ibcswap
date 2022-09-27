@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package ibc.applications.atomic_swap.v1;
 
-option go_package = "github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic_swap/types";
+option go_package = "github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic_swap/types";
 
 import "ibc/applications/atomic_swap/v1/swap.proto";
 import "gogoproto/gogo.proto";

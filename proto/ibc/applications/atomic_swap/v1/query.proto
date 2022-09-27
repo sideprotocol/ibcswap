@@ -2,12 +2,12 @@ syntax = "proto3";
 
 package ibc.applications.atomic_swap.v1;
 
+option go_package = "github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic_swap/types";
+
 import "gogoproto/gogo.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "ibc/applications/atomic_swap/v1/swap.proto";
 import "google/api/annotations.proto";
-
-option go_package = "github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic_swap/types";
 
 // Query provides defines the gRPC querier service.
 service Query {

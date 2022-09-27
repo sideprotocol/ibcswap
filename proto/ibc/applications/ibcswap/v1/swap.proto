@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package ibc.applications.ibcswap.v1;
 
-option go_package = "github.com/sidesnetwork/ibcswap/v4/modules/apps/101-interchain-swap/types";
+option go_package = "github.com/ibcswap/ibcswap/v4/modules/apps/101-interchain-swap/types";
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
@@ -22,8 +22,9 @@ message Params {
 
 // PoolSide defines an asset is native token or remote token on counter-party chain.
 enum PoolSide {
-  POOL_SIDE_NATIVE_ASSET = 0;
-  POOL_SIDE_REMOTE_ASSET = 1;
+  POOL_SIDE_PENDING = 0;
+  POOL_SIDE_NATIVE_ASSET = 1;
+  POOL_SIDE_REMOTE_ASSET = 2;
 }
 
 // PoolStatus defines if the pool is ready for trading
@@ -32,8 +33,19 @@ enum PoolStatus {
   POOL_STATUS_INITIAL = 1;
 }
 
+enum PoolType {
+  POOL_TYPE_WEIGHTED_CROSS_CHAIN = 0;
+  POOL_TYPE_WEIGHTED_INTERN_CHAIN = 1;
+}
+
 message PoolAsset {
   PoolSide side = 1;
   cosmos.base.v1beta1.Coin balance = 2;
   uint32 weight = 3;
+  uint32 decimals = 4;
+}
+
+message BalancerLiquidityPool {
+  string id = 1;
+  repeated PoolAsset assets = 2;
 }
