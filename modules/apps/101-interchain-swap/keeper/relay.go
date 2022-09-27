@@ -9,7 +9,7 @@ import (
 	"github.com/ibcswap/ibcswap/v4/modules/apps/101-interchain-swap/types"
 )
 
-func (k Keeper) SendSwapPacket(
+func (k Keeper) SendIBCSwapPacket(
 	ctx sdk.Context,
 	sourcePort,
 	sourceChannel string,

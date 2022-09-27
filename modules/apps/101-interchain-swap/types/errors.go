@@ -22,4 +22,8 @@ var (
 	ErrOrderDenominationMismatched = sdkerrors.Register(ModuleName, 15, "denomination are not matched")
 	ErrOrderInsufficientAmount     = sdkerrors.Register(ModuleName, 16, "amount of taker token is insufficient")
 	ErrOrderPermissionIsNotAllowed = sdkerrors.Register(ModuleName, 17, "sender is not the owner of the order")
+	ErrInvalidPairLength           = sdkerrors.Register(ModuleName, 18, "invalid pair length")
+	ErrInvalidWeightOfPool         = sdkerrors.Register(ModuleName, 19, "invalid weights of pool")
+	ErrInvalidPoolId               = sdkerrors.Register(ModuleName, 20, "invalid pool id")
+	ErrInvalidToken                = sdkerrors.Register(ModuleName, 20, "invalid token")
 )

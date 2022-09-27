@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MsgClient interface {
 	CreatePool(ctx context.Context, in *MsgCreatePoolRequest, opts ...grpc.CallOption) (*MsgCreatePoolResponse, error)
-	Deposit(ctx context.Context, in *MsgCreatePoolResponse, opts ...grpc.CallOption) (*MsgDepositResponse, error)
+	SingleDeposit(ctx context.Context, in *MsgSingleDepositRequest, opts ...grpc.CallOption) (*MsgSingleDepositResponse, error)
 	Withdraw(ctx context.Context, in *MsgWithdrawRequest, opts ...grpc.CallOption) (*MsgWithdrawResponse, error)
 	LeftSwap(ctx context.Context, in *MsgLeftSwapRequest, opts ...grpc.CallOption) (*MsgSwapResponse, error)
 	RightSwap(ctx context.Context, in *MsgRightSwapRequest, opts ...grpc.CallOption) (*MsgSwapResponse, error)
@@ -46,9 +46,9 @@ func (c *msgClient) CreatePool(ctx context.Context, in *MsgCreatePoolRequest, op
 	return out, nil
 }
 
-func (c *msgClient) Deposit(ctx context.Context, in *MsgCreatePoolResponse, opts ...grpc.CallOption) (*MsgDepositResponse, error) {
-	out := new(MsgDepositResponse)
-	err := c.cc.Invoke(ctx, "/ibc.applications.ibcswap.v1.Msg/Deposit", in, out, opts...)
+func (c *msgClient) SingleDeposit(ctx context.Context, in *MsgSingleDepositRequest, opts ...grpc.CallOption) (*MsgSingleDepositResponse, error) {
+	out := new(MsgSingleDepositResponse)
+	err := c.cc.Invoke(ctx, "/ibc.applications.ibcswap.v1.Msg/SingleDeposit", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (c *msgClient) RightSwap(ctx context.Context, in *MsgRightSwapRequest, opts
 // for forward compatibility
 type MsgServer interface {
 	CreatePool(context.Context, *MsgCreatePoolRequest) (*MsgCreatePoolResponse, error)
-	Deposit(context.Context, *MsgCreatePoolResponse) (*MsgDepositResponse, error)
+	SingleDeposit(context.Context, *MsgSingleDepositRequest) (*MsgSingleDepositResponse, error)
 	Withdraw(context.Context, *MsgWithdrawRequest) (*MsgWithdrawResponse, error)
 	LeftSwap(context.Context, *MsgLeftSwapRequest) (*MsgSwapResponse, error)
 	RightSwap(context.Context, *MsgRightSwapRequest) (*MsgSwapResponse, error)
@@ -100,8 +100,8 @@ type UnimplementedMsgServer struct {
 func (UnimplementedMsgServer) CreatePool(context.Context, *MsgCreatePoolRequest) (*MsgCreatePoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreatePool not implemented")
 }
-func (UnimplementedMsgServer) Deposit(context.Context, *MsgCreatePoolResponse) (*MsgDepositResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Deposit not implemented")
+func (UnimplementedMsgServer) SingleDeposit(context.Context, *MsgSingleDepositRequest) (*MsgSingleDepositResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SingleDeposit not implemented")
 }
 func (UnimplementedMsgServer) Withdraw(context.Context, *MsgWithdrawRequest) (*MsgWithdrawResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Withdraw not implemented")
@@ -142,20 +142,20 @@ func _Msg_CreatePool_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_Deposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCreatePoolResponse)
+func _Msg_SingleDeposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSingleDepositRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).Deposit(ctx, in)
+		return srv.(MsgServer).SingleDeposit(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ibc.applications.ibcswap.v1.Msg/Deposit",
+		FullMethod: "/ibc.applications.ibcswap.v1.Msg/SingleDeposit",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Deposit(ctx, req.(*MsgCreatePoolResponse))
+		return srv.(MsgServer).SingleDeposit(ctx, req.(*MsgSingleDepositRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -226,8 +226,8 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_CreatePool_Handler,
 		},
 		{
-			MethodName: "Deposit",
-			Handler:    _Msg_Deposit_Handler,
+			MethodName: "SingleDeposit",
+			Handler:    _Msg_SingleDeposit_Handler,
 		},
 		{
 			MethodName: "Withdraw",

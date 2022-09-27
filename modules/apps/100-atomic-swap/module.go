@@ -18,10 +18,10 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap/client/cli"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap/keeper"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap/simulation"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap/types"
+	"github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/client/cli"
+	"github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/keeper"
+	"github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/simulation"
+	"github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/types"
 )
 
 var (

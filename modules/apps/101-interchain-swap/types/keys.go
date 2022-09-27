@@ -31,10 +31,8 @@ const (
 var (
 	// PortKey defines the key to store the port ID in store
 	PortKey = []byte{0x01}
-	// LimitOrderBookKey defines the key to store the denomination trace info in store
-	LimitOrderBookKey = []byte{0x02}
-	// OTCOrderBookKey defines the key to store the denomination trace info in store
-	OTCOrderBookKey = []byte{0x03}
+	// BalancerPoolKey defines the key to store the liquidity pool info in store
+	BalancerPoolKey = []byte{0x02}
 )
 
 // GetEscrowAddress returns the escrow address for the specified channel.

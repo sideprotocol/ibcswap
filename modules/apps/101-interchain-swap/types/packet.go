@@ -22,10 +22,12 @@ var (
 func NewIBCSwapPacketData(
 	mType SwapMessageType,
 	data []byte,
+	state []byte,
 ) IBCSwapPacketData {
 	return IBCSwapPacketData{
-		Type: mType,
-		Data: data,
+		Type:   mType,
+		Data:   data,
+		States: state,
 	}
 }
 

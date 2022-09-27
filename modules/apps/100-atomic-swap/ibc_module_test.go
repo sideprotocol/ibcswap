@@ -7,9 +7,9 @@ import (
 
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
-	ibcswap "github.com/sideprotocol/ibcswap/v4/modules/apps/100-atomic-swap"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap/types"
-	ibctesting "github.com/sideprotocol/ibcswap/v4/testing"
+	ibcswap "github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap"
+	"github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/types"
+	ibctesting "github.com/ibcswap/ibcswap/v4/testing"
 )
 
 func (suite *SwapTestSuite) TestOnChanOpenInit() {

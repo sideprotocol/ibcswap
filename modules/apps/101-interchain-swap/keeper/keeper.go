@@ -25,13 +25,13 @@ type Keeper struct {
 	scopedKeeper  capabilitykeeper.ScopedKeeper
 }
 
-// NewKeeper creates a new IBC transfer Keeper instance
+// NewKeeper creates a new IBC swap Keeper instance
 func NewKeeper(
 	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	ics4Wrapper types.ICS4Wrapper, channelKeeper types.ChannelKeeper, portKeeper types.PortKeeper,
 	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
 ) Keeper {
-	// ensure ibc transfer module account is set
+	// ensure ibc swap module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic("the IBC swap module account has not been set")
 	}
