@@ -42,3 +42,12 @@ func (m *BalancerLiquidityPool) UpdateAssetPoolSide(denom string, side PoolSide)
 		}
 	}
 }
+
+func (m *BalancerLiquidityPool) findAssetByDenom(denom string) (*PoolAsset, error) {
+	for _, asset := range m.Assets {
+		if asset.Balance.Denom == denom {
+			return asset, nil
+		}
+	}
+	return nil, ErrTokenNotInPool
+}

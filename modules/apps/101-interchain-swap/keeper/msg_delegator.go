@@ -14,9 +14,10 @@ var (
 	StepReceive         = 2
 	StepAcknowledgement = 3
 )
+
 var _ types.MsgServer = Keeper{}
 
-func (k Keeper) CreatePool(goctx context.Context, msg *types.MsgCreatePoolRequest) (*types.MsgCreatePoolResponse, error) {
+func (k Keeper) DelegateCreatePool(goctx context.Context, msg *types.MsgCreatePoolRequest) (*types.MsgCreatePoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goctx)
 
 	if err := msg.ValidateBasic(); err != nil {
@@ -33,7 +34,19 @@ func (k Keeper) CreatePool(goctx context.Context, msg *types.MsgCreatePoolReques
 		return nil, err
 	}
 
-	k.bankKeeper.HasSupply(ctx, "")
+	// count native tokens
+	count := 0
+	for _, denom := range msg.Denoms {
+		if k.bankKeeper.HasSupply(ctx, denom) {
+			count += 1
+			pool.UpdateAssetPoolSide(denom, types.PoolSide_POOL_SIDE_NATIVE_ASSET)
+		} else {
+			pool.UpdateAssetPoolSide(denom, types.PoolSide_POOL_SIDE_REMOTE_ASSET)
+		}
+	}
+	if count == 0 {
+		return nil, types.ErrNoNativeTokenInPool
+	}
 
 	msgByte, err0 := types.ModuleCdc.Marshal(msg)
 	if err0 != nil {
@@ -41,7 +54,7 @@ func (k Keeper) CreatePool(goctx context.Context, msg *types.MsgCreatePoolReques
 	}
 
 	packet := types.NewIBCSwapPacketData(types.CREATE_POOL, msgByte, nil)
-	if err := k.SendIBCSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
+	if err := k.SendIBCSwapDelegationDataPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
 		return nil, err
 	}
 
@@ -50,7 +63,7 @@ func (k Keeper) CreatePool(goctx context.Context, msg *types.MsgCreatePoolReques
 	return &types.MsgCreatePoolResponse{}, nil
 }
 
-func (k Keeper) SingleDeposit(goctx context.Context, msg *types.MsgSingleDepositRequest) (*types.MsgSingleDepositResponse, error) {
+func (k Keeper) DelegateSingleDeposit(goctx context.Context, msg *types.MsgSingleDepositRequest) (*types.MsgSingleDepositResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goctx)
 
 	if err := msg.ValidateBasic(); err != nil {
@@ -76,7 +89,7 @@ func (k Keeper) SingleDeposit(goctx context.Context, msg *types.MsgSingleDeposit
 	}
 
 	packet := types.NewIBCSwapPacketData(types.SINGLE_DEPOSIT, msgByte, nil)
-	if err := k.SendIBCSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
+	if err := k.SendIBCSwapDelegationDataPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
 		return nil, err
 	}
 
@@ -85,7 +98,7 @@ func (k Keeper) SingleDeposit(goctx context.Context, msg *types.MsgSingleDeposit
 	return &types.MsgSingleDepositResponse{}, nil
 }
 
-func (k Keeper) Withdraw(ctx2 context.Context, msg *types.MsgWithdrawRequest) (*types.MsgWithdrawResponse, error) {
+func (k Keeper) DelegateWithdraw(ctx2 context.Context, msg *types.MsgWithdrawRequest) (*types.MsgWithdrawResponse, error) {
 	ctx := sdk.UnwrapSDKContext(ctx2)
 
 	if err := msg.ValidateBasic(); err != nil {
@@ -106,7 +119,7 @@ func (k Keeper) Withdraw(ctx2 context.Context, msg *types.MsgWithdrawRequest) (*
 	}
 
 	packet := types.NewIBCSwapPacketData(types.WITHDRAW, msgByte, nil)
-	if err := k.SendIBCSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
+	if err := k.SendIBCSwapDelegationDataPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
 		return nil, err
 	}
 
@@ -115,7 +128,7 @@ func (k Keeper) Withdraw(ctx2 context.Context, msg *types.MsgWithdrawRequest) (*
 	return &types.MsgWithdrawResponse{}, nil
 }
 
-func (k Keeper) LeftSwap(goctx context.Context, msg *types.MsgLeftSwapRequest) (*types.MsgSwapResponse, error) {
+func (k Keeper) DelegateLeftSwap(goctx context.Context, msg *types.MsgLeftSwapRequest) (*types.MsgSwapResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goctx)
 
 	if err := msg.ValidateBasic(); err != nil {
@@ -136,7 +149,7 @@ func (k Keeper) LeftSwap(goctx context.Context, msg *types.MsgLeftSwapRequest) (
 	}
 
 	packet := types.NewIBCSwapPacketData(types.LEFT_SWAP, msgByte, nil)
-	if err := k.SendIBCSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
+	if err := k.SendIBCSwapDelegationDataPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
 		return nil, err
 	}
 
@@ -145,7 +158,7 @@ func (k Keeper) LeftSwap(goctx context.Context, msg *types.MsgLeftSwapRequest) (
 	return &types.MsgSwapResponse{}, nil
 }
 
-func (k Keeper) RightSwap(goctx context.Context, msg *types.MsgRightSwapRequest) (*types.MsgSwapResponse, error) {
+func (k Keeper) DelegateRightSwap(goctx context.Context, msg *types.MsgRightSwapRequest) (*types.MsgSwapResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goctx)
 
 	if err := msg.ValidateBasic(); err != nil {
@@ -165,7 +178,7 @@ func (k Keeper) RightSwap(goctx context.Context, msg *types.MsgRightSwapRequest)
 	}
 
 	packet := types.NewIBCSwapPacketData(types.RIGHT_SWAP, msgByte, nil)
-	if err := k.SendIBCSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
+	if err := k.SendIBCSwapDelegationDataPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
 		return nil, err
 	}
 

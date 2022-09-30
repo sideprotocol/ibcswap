@@ -16,7 +16,7 @@ import (
 	"github.com/ibcswap/ibcswap/v4/modules/apps/101-interchain-swap/types"
 )
 
-// IBCModule implements the ICS26 interface for transfer given the transfer keeper.
+// IBCModule implements the ICS26 interface for ibcswap given the ibcswap keeper.
 type IBCModule struct {
 	keeper keeper.Keeper
 }
@@ -28,8 +28,8 @@ func NewIBCModule(k keeper.Keeper) IBCModule {
 	}
 }
 
-// ValidateSwapChannelParams does validation of a newly created transfer channel. A transfer
-// channel must be UNORDERED, use the correct port (by default 'transfer'), and use the current
+// ValidateSwapChannelParams does validation of a newly created ibcswap channel. A ibcswap
+// channel must be ORDERED, use the correct port (by default 'ibcswap'), and use the current
 // supported version. Only 2^32 channels are allowed to be created.
 func ValidateSwapChannelParams(
 	ctx sdk.Context,
@@ -45,10 +45,10 @@ func ValidateSwapChannelParams(
 		return err
 	}
 	if channelSequence > uint64(math.MaxUint32) {
-		return sdkerrors.Wrapf(types.ErrMaxTransferChannels, "channel sequence %d is greater than max allowed transfer channels %d", channelSequence, uint64(math.MaxUint32))
+		return sdkerrors.Wrapf(types.ErrMaxTransferChannels, "channel sequence %d is greater than max allowed ibcswap channels %d", channelSequence, uint64(math.MaxUint32))
 	}
-	if order != channeltypes.UNORDERED {
-		return sdkerrors.Wrapf(channeltypes.ErrInvalidChannelOrdering, "expected %s channel, got %s ", channeltypes.UNORDERED, order)
+	if order != channeltypes.ORDERED {
+		return sdkerrors.Wrapf(channeltypes.ErrInvalidChannelOrdering, "expected %s channel, got %s ", channeltypes.ORDERED, order)
 	}
 
 	// Require portID is the portID transfer module is bound to
@@ -173,18 +173,92 @@ func (im IBCModule) OnRecvPacket(
 	var data types.IBCSwapPacketData
 	var ackErr error
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-20 transfer packet data")
+		ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap packet data")
 		ack = channeltypes.NewErrorAcknowledgement(ackErr)
 	}
 
 	// only attempt the application logic if the packet data
 	// was successfully decoded
 	if ack.Success() {
-		//err := im.keeper.OnRecvPacket(ctx, packet, data)
-		//if err != nil {
-		//	ack = channeltypes.NewErrorAcknowledgement(err)
-		//	ackErr = err
-		//}
+
+		switch data.Type {
+		case types.CREATE_POOL:
+			var msg types.MsgCreatePoolRequest
+			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
+				ack = channeltypes.NewErrorAcknowledgement(ackErr)
+			}
+			if res, err := im.keeper.OnCreatePoolReceived(ctx, &msg); err != nil {
+				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
+				ack = channeltypes.NewErrorAcknowledgement(ackErr)
+			} else if result, errEncode := types.ModuleCdc.Marshal(res); errEncode != nil {
+				ack = channeltypes.NewErrorAcknowledgement(errEncode)
+			} else {
+				ack = channeltypes.NewResultAcknowledgement(result)
+			}
+			break
+		case types.SINGLE_DEPOSIT:
+			var msg types.MsgSingleDepositRequest
+			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
+				ack = channeltypes.NewErrorAcknowledgement(ackErr)
+			}
+			if res, err := im.keeper.OnSingleDepositReceived(ctx, &msg); err != nil {
+				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
+				ack = channeltypes.NewErrorAcknowledgement(ackErr)
+			} else if result, errEncode := types.ModuleCdc.Marshal(res); errEncode != nil {
+				ack = channeltypes.NewErrorAcknowledgement(errEncode)
+			} else {
+				ack = channeltypes.NewResultAcknowledgement(result)
+			}
+			break
+		case types.WITHDRAW:
+			var msg types.MsgWithdrawRequest
+			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
+				ack = channeltypes.NewErrorAcknowledgement(ackErr)
+			}
+			if res, err := im.keeper.OnWithdrawReceived(ctx, &msg); err != nil {
+				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
+				ack = channeltypes.NewErrorAcknowledgement(ackErr)
+			} else if result, errEncode := types.ModuleCdc.Marshal(res); errEncode != nil {
+				ack = channeltypes.NewErrorAcknowledgement(errEncode)
+			} else {
+				ack = channeltypes.NewResultAcknowledgement(result)
+			}
+			break
+		case types.LEFT_SWAP:
+			var msg types.MsgLeftSwapRequest
+			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
+				ack = channeltypes.NewErrorAcknowledgement(ackErr)
+			}
+			if res, err := im.keeper.OnLeftSwapReceived(ctx, &msg); err != nil {
+				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
+				ack = channeltypes.NewErrorAcknowledgement(ackErr)
+			} else if result, errEncode := types.ModuleCdc.Marshal(res); errEncode != nil {
+				ack = channeltypes.NewErrorAcknowledgement(errEncode)
+			} else {
+				ack = channeltypes.NewResultAcknowledgement(result)
+			}
+			break
+		case types.RIGHT_SWAP:
+			var msg types.MsgRightSwapRequest
+			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
+				ack = channeltypes.NewErrorAcknowledgement(ackErr)
+			}
+			if res, err := im.keeper.OnRightSwapReceived(ctx, &msg); err != nil {
+				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
+				ack = channeltypes.NewErrorAcknowledgement(ackErr)
+			} else if result, errEncode := types.ModuleCdc.Marshal(res); errEncode != nil {
+				ack = channeltypes.NewErrorAcknowledgement(errEncode)
+			} else {
+				ack = channeltypes.NewResultAcknowledgement(result)
+			}
+			break
+		}
+
 	}
 
 	//eventAttributes := []sdk.Attribute{
@@ -195,7 +269,7 @@ func (im IBCModule) OnRecvPacket(
 	//if ackErr != nil {
 	//	eventAttributes = append(eventAttributes, sdk.NewAttribute(types.AttributeKeyAckError, ackErr.Error()))
 	//}
-	//
+
 	//ctx.EventManager().EmitEvent(
 	//	sdk.NewEvent(
 	//		types.EventTypePacket,
@@ -223,28 +297,73 @@ func (im IBCModule) OnAcknowledgementPacket(
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-101 ibcswap packet data: %s", err.Error())
 	}
 
-	//if err := im.keeper.OnAcknowledgementPacket(ctx, packet, &data, ack); err != nil {
-	//	return err
-	//}
-	//
-	//switch resp := ack.Response.(type) {
-	//case *channeltypes.Acknowledgement_Result:
-	//	ctx.EventManager().EmitEvent(
-	//		sdk.NewEvent(
-	//			types.EventTypePacket,
-	//			sdk.NewAttribute(types.AttributeKeyAckSuccess, string(resp.Result)),
-	//		),
-	//	)
-	//case *channeltypes.Acknowledgement_Error:
-	//	ctx.EventManager().EmitEvent(
-	//		sdk.NewEvent(
-	//			types.EventTypePacket,
-	//			sdk.NewAttribute(types.AttributeKeyAckError, resp.Error),
-	//		),
-	//	)
-	//}
-
-	ctx.EventManager().EmitTypedEvents(&data)
+	switch data.Type {
+	case types.CREATE_POOL:
+		var request types.MsgCreatePoolRequest
+		if err := types.ModuleCdc.Unmarshal(data.Data, &request); err != nil {
+			return err
+		}
+		var response types.MsgCreatePoolResponse
+		if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &response); err != nil {
+			return err
+		}
+		if err := im.keeper.OnCreatePoolAcknowledged(ctx, &request, &response); err != nil {
+			return err
+		}
+		break
+	case types.SINGLE_DEPOSIT:
+		var request types.MsgSingleDepositRequest
+		if err := types.ModuleCdc.Unmarshal(data.Data, &request); err != nil {
+			return err
+		}
+		var response types.MsgSingleDepositResponse
+		if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &response); err != nil {
+			return err
+		}
+		if err := im.keeper.OnSingleDepositAcknowledged(ctx, &request, &response); err != nil {
+			return err
+		}
+		break
+	case types.WITHDRAW:
+		var request types.MsgWithdrawRequest
+		if err := types.ModuleCdc.Unmarshal(data.Data, &request); err != nil {
+			return err
+		}
+		var response types.MsgWithdrawResponse
+		if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &response); err != nil {
+			return err
+		}
+		if err := im.keeper.OnWithdrawAcknowledged(ctx, &request, &response); err != nil {
+			return err
+		}
+		break
+	case types.LEFT_SWAP:
+		var request types.MsgLeftSwapRequest
+		if err := types.ModuleCdc.Unmarshal(data.Data, &request); err != nil {
+			return err
+		}
+		var response types.MsgSwapResponse
+		if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &response); err != nil {
+			return err
+		}
+		if err := im.keeper.OnLeftSwapAcknowledged(ctx, &request, &response); err != nil {
+			return err
+		}
+		break
+	case types.RIGHT_SWAP:
+		var request types.MsgRightSwapRequest
+		if err := types.ModuleCdc.Unmarshal(data.Data, &request); err != nil {
+			return err
+		}
+		var response types.MsgSwapResponse
+		if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &response); err != nil {
+			return err
+		}
+		if err := im.keeper.OnRightSwapAcknowledged(ctx, &request, &response); err != nil {
+			return err
+		}
+		break
+	}
 
 	return nil
 }

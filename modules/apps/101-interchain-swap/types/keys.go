@@ -35,6 +35,8 @@ var (
 	BalancerPoolKey = []byte{0x02}
 )
 
+// TODO, We might need remove GetEscrowAddress
+
 // GetEscrowAddress returns the escrow address for the specified channel.
 // The escrow address follows the format as outlined in ADR 028:
 // https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-028-public-key-addresses.md

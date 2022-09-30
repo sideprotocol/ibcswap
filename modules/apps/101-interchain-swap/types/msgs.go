@@ -95,8 +95,8 @@ func (m *MsgCreatePoolRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{signer}
 }
 
-// NewMsgDepositRequest creates a new MsgDepositRequest instance
-func NewMsgDepositRequest(
+// NewMsgSingleDepositRequest creates a new MsgSingleDepositRequest instance
+func NewMsgSingleDepositRequest(
 	sourcePort, sourceChannel string,
 	tokens []*sdk.Coin,
 	sender string,
