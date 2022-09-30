@@ -10,11 +10,11 @@ import "ibc/core/client/v1/client.proto";
 
 // Msg defines the ibc/swap Msg service.
 service Msg {
-  rpc CreatePool(MsgCreatePoolRequest) returns (MsgCreatePoolResponse);
-  rpc SingleDeposit(MsgSingleDepositRequest) returns (MsgSingleDepositResponse);
-  rpc Withdraw(MsgWithdrawRequest) returns (MsgWithdrawResponse);
-  rpc LeftSwap(MsgLeftSwapRequest) returns (MsgSwapResponse);
-  rpc RightSwap(MsgRightSwapRequest) returns (MsgSwapResponse);
+  rpc DelegateCreatePool(MsgCreatePoolRequest) returns (MsgCreatePoolResponse);
+  rpc DelegateSingleDeposit(MsgSingleDepositRequest) returns (MsgSingleDepositResponse);
+  rpc DelegateWithdraw(MsgWithdrawRequest) returns (MsgWithdrawResponse);
+  rpc DelegateLeftSwap(MsgLeftSwapRequest) returns (MsgSwapResponse);
+  rpc DelegateRightSwap(MsgRightSwapRequest) returns (MsgSwapResponse);
 }
 
 message MsgCreatePoolRequest {
@@ -42,7 +42,9 @@ message MsgCreatePoolRequest {
   uint64 timeout_timestamp = 8 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
 }
 
-message MsgCreatePoolResponse {}
+message MsgCreatePoolResponse {
+  string pool_id = 1;
+}
 
 message MsgSingleDepositRequest {
   option (gogoproto.equal)           = false;
@@ -90,7 +92,6 @@ message MsgWithdrawRequest {
   // Timeout timestamp in absolute nanoseconds since unix epoch.
   // The timeout is disabled when set to 0.
   uint64 timeout_timestamp = 9 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
-  int64 create_timestamp = 10;
 }
 
 message MsgWithdrawResponse {
@@ -122,7 +123,6 @@ message MsgLeftSwapRequest {
   // Timeout timestamp in absolute nanoseconds since unix epoch.
   // The timeout is disabled when set to 0.
   uint64 timeout_timestamp = 9 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
-  int64 create_timestamp = 10;
 }
 
 message MsgRightSwapRequest {
@@ -150,8 +150,8 @@ message MsgRightSwapRequest {
   // Timeout timestamp in absolute nanoseconds since unix epoch.
   // The timeout is disabled when set to 0.
   uint64 timeout_timestamp = 9 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
-  int64 create_timestamp = 10;
 }
 
 message MsgSwapResponse {
+  cosmos.base.v1beta1.Coin tokenOut = 1;
 }

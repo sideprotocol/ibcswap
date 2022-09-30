@@ -41,6 +41,7 @@ enum PoolType {
 message PoolAsset {
   PoolSide side = 1;
   cosmos.base.v1beta1.Coin balance = 2;
+  // percentage
   uint32 weight = 3;
   uint32 decimals = 4;
 }
@@ -48,4 +49,5 @@ message PoolAsset {
 message BalancerLiquidityPool {
   string id = 1;
   repeated PoolAsset assets = 2;
+  cosmos.base.v1beta1.Coin pool_token = 3;
 }
