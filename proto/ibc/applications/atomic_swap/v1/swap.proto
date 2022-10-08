@@ -16,33 +16,12 @@ message Params {
   uint32 max_fee_rate = 2 [(gogoproto.moretags) = "yaml:\"max_fee_rate\""];
 }
 
-// AMM + Liquidity pool
-// invariant: K = X ** Wx * Y ** Wy
-
-enum PoolSide {
-  NATIVE = 0;
-  REMOTE = 1;
-}
-
-enum PoolStatus {
-  READY = 0;
-  CREATING = 1;
-}
-
-
-
 // OTC
 enum Status {
   INITIAL = 0;
   SYNC = 1;
   CANCEL = 2;
   COMPLETE = 3;
-}
-
-enum FillStatus {
-  NONE_FILL = 0;
-  PARTIAL_FILL = 1;
-  COMPLETE_FILL = 2;
 }
 
 message SwapMaker {
@@ -75,18 +54,7 @@ message SwapTaker {
   int64 create_timestamp = 5;
 }
 
-message LimitOrder {
-  string id = 1;
-  SwapMaker maker = 2;
-  Status status = 3;
-  FillStatus fill_status = 4;
-  string channel_id = 5;
-  repeated SwapTaker takers = 6;
-  int64 cancel_timestamp = 7;
-  int64 complete_timestamp = 8;
-}
-
-message OTCOrder {
+message AtomicSwapOrder {
   string id = 1;
   SwapMaker maker = 2;
   Status status = 3;
