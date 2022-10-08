@@ -39,13 +39,8 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MsgMakeSwapRequest) (
 		return nil, err
 	}
 
-	if len(msg.DesiredTaker) > 0 {
-		order := types.NewOTCOrder(msg, msg.SourceChannel)
-		k.SetOTCOrder(ctx, order)
-	} else {
-		order := types.NewLimitOrder(msg, msg.SourceChannel)
-		k.SetLimitOrder(ctx, order)
-	}
+	order := types.NewAtomicOrder(msg, msg.SourceChannel)
+	k.SetAtomicOrder(ctx, order)
 
 	packet := types.AtomicSwapPacketData{
 		Type: types.MAKE_SWAP,
@@ -74,10 +69,8 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.MsgTakeSwapRequest) (
 	}
 
 	// check order status
-	if order, ok := k.GetLimitOrder(ctx, msg.OrderId); ok {
-		k.executeLimitOrderMatch(ctx, order, msg, StepSend)
-	} else if orderOtc, ok2 := k.GetOTCOrder(ctx, msg.OrderId); ok2 {
-		k.executeOTCOrderMatch(ctx, orderOtc, msg, StepSend)
+	if order, ok := k.GetAtomicOrder(ctx, msg.OrderId); ok {
+		k.fillAtomicOrder(ctx, order, msg, StepSend)
 	} else {
 		return nil, types.ErrOrderDoesNotExists
 	}
@@ -124,94 +117,7 @@ func (k Keeper) CancelSwap(goCtx context.Context, msg *types.MsgCancelSwapReques
 }
 
 // See createOutgoingPacket in spec:https://github.com/cosmos/ibc/tree/master/spec/app/ics-020-fungible-token-transfer#packet-relay
-
-func (k Keeper) executeLimitOrderMatch(ctx sdk.Context, order types.LimitOrder, msg *types.MsgTakeSwapRequest, step int) error {
-
-	switch order.Status {
-	case types.Status_CANCEL:
-		return types.ErrOrderCanceled
-	case types.Status_COMPLETE:
-		return types.ErrOrderCompleted
-	default:
-		// continue
-	}
-	if order.Maker.BuyToken.Denom != msg.SellToken.Denom {
-		return types.ErrOrderDenominationMismatched
-	}
-	// calculate how much is filled
-	sum := sdk.NewCoin(order.Maker.BuyToken.Denom, sdk.NewInt(0))
-	order.Takers = append(order.Takers, types.NewTakerFromMsg(msg))
-	for _, taker := range order.Takers {
-		sum.Add(taker.SellToken)
-	}
-
-	if sum.IsGTE(order.Maker.BuyToken) {
-		order.FillStatus = types.FillStatus_COMPLETE_FILL
-		order.Status = types.Status_COMPLETE
-		order.CompleteTimestamp = msg.CreateTimestamp
-	} else {
-		order.FillStatus = types.FillStatus_PARTIAL_FILL
-	}
-
-	switch step {
-	case StepSend:
-		// executed on the destination chain of make swap,
-		// lock the taker's sell coin into the module
-		sender, err1 := sdk.AccAddressFromBech32(msg.TakerAddress)
-		if err1 != nil {
-			return err1
-		}
-
-		// lock sell token into module
-		if err := k.bankKeeper.SendCoinsFromAccountToModule(
-			ctx, sender, types.ModuleName, sdk.NewCoins(msg.SellToken),
-		); err != nil {
-			return err
-		}
-		break
-	case StepReceive:
-		// StepReceive
-		// executed on the source chain of make swap,
-		// send maker's sell token to taker
-		receiver, err1 := sdk.AccAddressFromBech32(msg.TakerReceivingAddress)
-		if err1 != nil {
-			return err1
-		}
-
-		// 可能存在精度问题
-		amount := int64(float64(msg.SellToken.Amount.Int64()) / float64(order.Maker.BuyToken.Amount.Int64()) * float64(order.Maker.SellToken.Amount.Int64()))
-
-		// send maker's sell token from module to taker
-		if err := k.bankKeeper.SendCoinsFromModuleToAccount(
-			ctx, types.ModuleName, receiver, sdk.NewCoins(sdk.NewCoin(order.Maker.SellToken.Denom, sdk.NewInt(amount))),
-		); err != nil {
-			return err
-		}
-		break
-	case StepAcknowledgement:
-		// executed on the destination chain of the swap,
-		// send taker's sell token to maker
-		receiver, err1 := sdk.AccAddressFromBech32(order.Maker.MakerReceivingAddress)
-		if err1 != nil {
-			return err1
-		}
-
-		// send taker's sell token from module to maker
-		if err := k.bankKeeper.SendCoinsFromModuleToAccount(
-			ctx, types.ModuleName, receiver, sdk.NewCoins(msg.SellToken),
-		); err != nil {
-			return err
-		}
-		break
-	}
-
-	// save updated status
-	k.SetLimitOrder(ctx, order)
-
-	return nil
-}
-
-func (k Keeper) executeOTCOrderMatch(ctx sdk.Context, order types.OTCOrder, msg *types.MsgTakeSwapRequest, step int) error {
+func (k Keeper) fillAtomicOrder(ctx sdk.Context, order types.AtomicSwapOrder, msg *types.MsgTakeSwapRequest, step int) error {
 
 	switch order.Status {
 	case types.Status_CANCEL:
@@ -283,35 +189,18 @@ func (k Keeper) executeOTCOrderMatch(ctx sdk.Context, order types.OTCOrder, msg 
 	}
 
 	// save updated status
-	k.SetOTCOrder(ctx, order)
+	k.SetAtomicOrder(ctx, order)
 
 	return nil
 }
 
 func (k Keeper) executeCancel(ctx sdk.Context, msg *types.MsgCancelSwapRequest, step int) error {
 	// check order status
-	if order, ok := k.GetLimitOrder(ctx, msg.OrderId); ok {
+	if order, ok2 := k.GetAtomicOrder(ctx, msg.OrderId); ok2 {
 		if order.Maker.MakerAddress != msg.MakerAddress {
 			return types.ErrOrderPermissionIsNotAllowed
 		}
 		switch order.Status {
-		case types.Status_CANCEL:
-			return types.ErrOrderCanceled
-		case types.Status_COMPLETE:
-			return types.ErrOrderCompleted
-		default:
-			// continue
-			if step != StepSend {
-				order.CancelTimestamp = msg.CreateTimestamp
-				order.Status = types.Status_CANCEL
-			}
-		}
-
-	} else if orderOtc, ok2 := k.GetOTCOrder(ctx, msg.OrderId); ok2 {
-		if orderOtc.Maker.MakerAddress != msg.MakerAddress {
-			return types.ErrOrderPermissionIsNotAllowed
-		}
-		switch orderOtc.Status {
 		case types.Status_CANCEL:
 			return types.ErrOrderCanceled
 		case types.Status_COMPLETE:
@@ -338,13 +227,8 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg 
 		return err
 	}
 
-	if len(msg.DesiredTaker) > 0 {
-		order := types.NewOTCOrder(msg, packet.DestinationChannel)
-		k.SetOTCOrder(ctx, order)
-	} else {
-		order := types.NewLimitOrder(msg, packet.DestinationChannel)
-		k.SetLimitOrder(ctx, order)
-	}
+	order := types.NewAtomicOrder(msg, packet.DestinationChannel)
+	k.SetAtomicOrder(ctx, order)
 
 	ctx.EventManager().EmitTypedEvents(msg)
 	return nil
@@ -357,10 +241,8 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	}
 
 	// check order status
-	if order, ok := k.GetLimitOrder(ctx, msg.OrderId); ok {
-		k.executeLimitOrderMatch(ctx, order, msg, StepReceive)
-	} else if orderOtc, ok2 := k.GetOTCOrder(ctx, msg.OrderId); ok2 {
-		k.executeOTCOrderMatch(ctx, orderOtc, msg, StepReceive)
+	if order, ok := k.GetAtomicOrder(ctx, msg.OrderId); ok {
+		k.fillAtomicOrder(ctx, order, msg, StepReceive)
 	} else {
 		return types.ErrOrderDoesNotExists
 	}

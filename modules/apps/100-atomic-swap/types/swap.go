@@ -7,28 +7,11 @@ import (
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 )
 
-func NewLimitOrder(msg *MsgMakeSwapRequest, channelId string) LimitOrder {
+func NewAtomicOrder(msg *MsgMakeSwapRequest, channelId string) AtomicSwapOrder {
 	maker := NewMakerFromMsg(msg)
 	buf, _ := proto.Marshal(maker)
 	id := Hash(buf).String()
-	var takers []*SwapTaker
-	return LimitOrder{
-		Id:                id,
-		Maker:             maker,
-		Status:            Status_INITIAL,
-		FillStatus:        FillStatus_NONE_FILL,
-		ChannelId:         channelId,
-		Takers:            takers,
-		CancelTimestamp:   0,
-		CompleteTimestamp: 0,
-	}
-}
-
-func NewOTCOrder(msg *MsgMakeSwapRequest, channelId string) OTCOrder {
-	maker := NewMakerFromMsg(msg)
-	buf, _ := proto.Marshal(maker)
-	id := Hash(buf).String()
-	return OTCOrder{
+	return AtomicSwapOrder{
 		Id:                id,
 		Maker:             maker,
 		Status:            Status_INITIAL,

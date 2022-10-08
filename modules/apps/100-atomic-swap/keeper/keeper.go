@@ -98,86 +98,26 @@ func (k Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability
 	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
 }
 
-// GetLimitOrder returns the LimitOrder for the swap module.
-func (k Keeper) GetLimitOrder(ctx sdk.Context, orderId string) (types.LimitOrder, bool) {
+/// Atomic orders
+
+// GetAtomicOrder returns the OTCOrder for the swap module.
+func (k Keeper) GetAtomicOrder(ctx sdk.Context, orderId string) (types.AtomicSwapOrder, bool) {
 	key, err := hex.DecodeString(orderId)
 	if err != nil {
-		return types.LimitOrder{}, false
-	}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.LimitOrderBookKey)
-	bz := store.Get(key)
-	if bz == nil {
-		return types.LimitOrder{}, false
-	}
-
-	order := k.MustUnmarshalLimitOrder(bz)
-	return order, true
-}
-
-// HasLimitOrder checks if a the key with the given id exists on the store.
-func (k Keeper) HasLimitOrder(ctx sdk.Context, orderId string) bool {
-	key, err := hex.DecodeString(orderId)
-	if err != nil {
-		return false
-	}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.LimitOrderBookKey)
-	return store.Has(key)
-}
-
-// SetLimitOrder sets a new LimitOrder to the store.
-func (k Keeper) SetLimitOrder(ctx sdk.Context, order types.LimitOrder) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.LimitOrderBookKey)
-	bz := k.MustMarshalLimitOrder(order)
-	store.Set([]byte(order.Id), bz)
-}
-
-// IterateLimitOrders iterates over the limit orders in the store
-// and performs a callback function.
-func (k Keeper) IterateLimitOrders(ctx sdk.Context, cb func(order types.LimitOrder) bool) {
-	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.LimitOrderBookKey)
-
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-
-		order := k.MustUnmarshalLimitOrder(iterator.Value())
-		if cb(order) {
-			break
-		}
-	}
-}
-
-// GetAllLimitOrders returns the information for all the limit orders.
-func (k Keeper) GetAllLimitOrders(ctx sdk.Context) []types.LimitOrder {
-	var orders []types.LimitOrder
-	k.IterateLimitOrders(ctx, func(order types.LimitOrder) bool {
-		orders = append(orders, order)
-		return false
-	})
-
-	return orders
-}
-
-/// OTC orders
-
-// GetOTCOrder returns the OTCOrder for the swap module.
-func (k Keeper) GetOTCOrder(ctx sdk.Context, orderId string) (types.OTCOrder, bool) {
-	key, err := hex.DecodeString(orderId)
-	if err != nil {
-		return types.OTCOrder{}, false
+		return types.AtomicSwapOrder{}, false
 	}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKey)
 	bz := store.Get(key)
 	if bz == nil {
-		return types.OTCOrder{}, false
+		return types.AtomicSwapOrder{}, false
 	}
 
 	order := k.MustUnmarshalOTCOrder(bz)
 	return order, true
 }
 
-// HasOTCOrder checks if a the key with the given id exists on the store.
-func (k Keeper) HasOTCOrder(ctx sdk.Context, orderId string) bool {
+// HasAtomicOrder checks if a the key with the given id exists on the store.
+func (k Keeper) HasAtomicOrder(ctx sdk.Context, orderId string) bool {
 	key, err := hex.DecodeString(orderId)
 	if err != nil {
 		return false
@@ -186,16 +126,16 @@ func (k Keeper) HasOTCOrder(ctx sdk.Context, orderId string) bool {
 	return store.Has(key)
 }
 
-// SetOTCOrder sets a new OTCOrder to the store.
-func (k Keeper) SetOTCOrder(ctx sdk.Context, order types.OTCOrder) {
+// SetAtomicOrder sets a new OTCOrder to the store.
+func (k Keeper) SetAtomicOrder(ctx sdk.Context, order types.AtomicSwapOrder) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKey)
 	bz := k.MustMarshalOTCOrder(order)
 	store.Set([]byte(order.Id), bz)
 }
 
-// IterateOTCOrders iterates over the limit orders in the store
+// IterateAtomicOrders iterates over the limit orders in the store
 // and performs a callback function.
-func (k Keeper) IterateOTCOrders(ctx sdk.Context, cb func(order types.OTCOrder) bool) {
+func (k Keeper) IterateAtomicOrders(ctx sdk.Context, cb func(order types.AtomicSwapOrder) bool) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.OTCOrderBookKey)
 
@@ -209,10 +149,10 @@ func (k Keeper) IterateOTCOrders(ctx sdk.Context, cb func(order types.OTCOrder) 
 	}
 }
 
-// GetAllOTCOrders returns the information for all the limit orders.
-func (k Keeper) GetAllOTCOrders(ctx sdk.Context) []types.OTCOrder {
-	var orders []types.OTCOrder
-	k.IterateOTCOrders(ctx, func(order types.OTCOrder) bool {
+// GetAllAtomicOrders returns the information for all the limit orders.
+func (k Keeper) GetAllAtomicOrders(ctx sdk.Context) []types.AtomicSwapOrder {
+	var orders []types.AtomicSwapOrder
+	k.IterateAtomicOrders(ctx, func(order types.AtomicSwapOrder) bool {
 		orders = append(orders, order)
 		return false
 	})
