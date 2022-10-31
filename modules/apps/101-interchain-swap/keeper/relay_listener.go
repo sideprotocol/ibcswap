@@ -220,7 +220,7 @@ func (k Keeper) OnRightSwapReceived(ctx sdk.Context, msg *types.MsgRightSwapRequ
 		return nil, err
 	}
 
-	outToken, err := amm.RightSwap(msg.TokenIn.Denom, msg.TokenOut)
+	outToken, err := amm.RightSwap(msg.TokenIn, msg.TokenOut)
 	if err != nil {
 		return nil, err
 	}

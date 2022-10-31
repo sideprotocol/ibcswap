@@ -32,9 +32,11 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MsgMakeSwapRequest) (
 		return nil, err1
 	}
 
+	escrowAddr := types.GetEscrowAddress(msg.SourcePort, msg.SourceChannel)
+
 	// lock sell token into module
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(
-		ctx, sender, types.ModuleName, sdk.NewCoins(msg.SellToken),
+	if err := k.bankKeeper.SendCoins(
+		ctx, sender, escrowAddr, sdk.NewCoins(msg.SellToken),
 	); err != nil {
 		return nil, err
 	}
@@ -68,9 +70,11 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.MsgTakeSwapRequest) (
 		return nil, err0
 	}
 
+	escrowAddr := types.GetEscrowAddress(msg.SourcePort, msg.SourceChannel)
 	// check order status
 	if order, ok := k.GetAtomicOrder(ctx, msg.OrderId); ok {
-		k.fillAtomicOrder(ctx, order, msg, StepSend)
+		//packet is not used at this step.
+		k.fillAtomicOrder(ctx, escrowAddr, order, msg, StepSend)
 	} else {
 		return nil, types.ErrOrderDoesNotExists
 	}
@@ -117,7 +121,7 @@ func (k Keeper) CancelSwap(goCtx context.Context, msg *types.MsgCancelSwapReques
 }
 
 // See createOutgoingPacket in spec:https://github.com/cosmos/ibc/tree/master/spec/app/ics-020-fungible-token-transfer#packet-relay
-func (k Keeper) fillAtomicOrder(ctx sdk.Context, order types.AtomicSwapOrder, msg *types.MsgTakeSwapRequest, step int) error {
+func (k Keeper) fillAtomicOrder(ctx sdk.Context, escrowAddr sdk.AccAddress, order types.AtomicSwapOrder, msg *types.MsgTakeSwapRequest, step int) error {
 
 	switch order.Status {
 	case types.Status_CANCEL:
@@ -149,8 +153,8 @@ func (k Keeper) fillAtomicOrder(ctx sdk.Context, order types.AtomicSwapOrder, ms
 		}
 
 		// lock sell token into module
-		if err := k.bankKeeper.SendCoinsFromAccountToModule(
-			ctx, sender, types.ModuleName, sdk.NewCoins(msg.SellToken),
+		if err := k.bankKeeper.SendCoins(
+			ctx, sender, escrowAddr, sdk.NewCoins(msg.SellToken),
 		); err != nil {
 			return err
 		}
@@ -165,8 +169,8 @@ func (k Keeper) fillAtomicOrder(ctx sdk.Context, order types.AtomicSwapOrder, ms
 		}
 
 		// send maker's sell token from module to taker
-		if err := k.bankKeeper.SendCoinsFromModuleToAccount(
-			ctx, types.ModuleName, receiver, sdk.NewCoins(order.Maker.SellToken),
+		if err := k.bankKeeper.SendCoins(
+			ctx, escrowAddr, receiver, sdk.NewCoins(order.Maker.SellToken),
 		); err != nil {
 			return err
 		}
@@ -180,8 +184,8 @@ func (k Keeper) fillAtomicOrder(ctx sdk.Context, order types.AtomicSwapOrder, ms
 		}
 
 		// send taker's sell token from module to maker
-		if err := k.bankKeeper.SendCoinsFromModuleToAccount(
-			ctx, types.ModuleName, receiver, sdk.NewCoins(msg.SellToken),
+		if err := k.bankKeeper.SendCoins(
+			ctx, escrowAddr, receiver, sdk.NewCoins(msg.SellToken),
 		); err != nil {
 			return err
 		}
@@ -210,6 +214,13 @@ func (k Keeper) executeCancel(ctx sdk.Context, msg *types.MsgCancelSwapRequest, 
 			if step != StepSend {
 				order.CancelTimestamp = msg.CreateTimestamp
 				order.Status = types.Status_CANCEL
+			}
+
+			// refund
+			if step == StepAcknowledgement {
+				receiver := sdk.MustAccAddressFromBech32(msg.MakerAddress)
+				escrowAddr := types.GetEscrowAddress(msg.SourcePort, msg.SourceChannel)
+				k.bankKeeper.SendCoins(ctx, escrowAddr, receiver, sdk.NewCoins(order.Maker.SellToken))
 			}
 		}
 	} else {
@@ -240,9 +251,11 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 		return err
 	}
 
+	escrowAddr := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
+
 	// check order status
 	if order, ok := k.GetAtomicOrder(ctx, msg.OrderId); ok {
-		k.fillAtomicOrder(ctx, order, msg, StepReceive)
+		k.fillAtomicOrder(ctx, escrowAddr, order, msg, StepReceive)
 	} else {
 		return types.ErrOrderDoesNotExists
 	}

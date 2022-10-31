@@ -139,10 +139,9 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				return err
 			}
 			// check order status
-			if order, ok := k.GetLimitOrder(ctx, msg.OrderId); ok {
-				k.executeLimitOrderMatch(ctx, order, &msg, StepAcknowledgement)
-			} else if orderOtc, ok2 := k.GetOTCOrder(ctx, msg.OrderId); ok2 {
-				k.executeOTCOrderMatch(ctx, orderOtc, &msg, StepAcknowledgement)
+			if order, ok := k.GetAtomicOrder(ctx, msg.OrderId); ok {
+				escrowAddr := types.GetEscrowAddress(msg.SourcePort, msg.SourceChannel)
+				k.fillAtomicOrder(ctx, escrowAddr, order, &msg, StepAcknowledgement)
 			} else {
 				return types.ErrOrderDoesNotExists
 			}
