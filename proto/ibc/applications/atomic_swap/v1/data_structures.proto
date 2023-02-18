@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package ibc.applications.atomic_swap.v1;
+
+import "gogoproto/gogo.proto";
+import "ibc/core/client/v1/client.proto";
+
+// Define the SwapMessageType enumeration.
+enum SwapMessageType {
+  TYPE_UNSPECIFIED = 0;
+  TYPE_MSG_MAKE_SWAP = 1;
+  TYPE_MSG_TAKE_SWAP = 2;
+  TYPE_MSG_CANCEL_SWAP = 3;
+}
+
+// Define the AtomicSwapPacketData message.
+message AtomicSwapPacketData {
+  SwapMessageType type = 1;
+  bytes data = 2;
+  string memo = 3;
+}
+
+// Define the AtomicSwapPacketAcknowledgement union message.
+message AtomicSwapPacketAcknowledgement {
+  oneof response {
+    AtomicSwapPacketSuccess success = 1;
+    AtomicSwapPacketError error = 2;
+  }
+}
+
+// Define the AtomicSwapPacketSuccess message.
+message AtomicSwapPacketSuccess {
+  string result = 1 [(gogoproto.customname) = "resultBase64"];
+}
+
+// Define the AtomicSwapPacketError message.
+message AtomicSwapPacketError {
+  string error = 1;
+}
+
+// Define the Coin message.
+message Coin {
+  int64 amount = 1;
+  string denom = 2;
+}
+
+// Define the MakeSwapMsg message.
+message MakeSwapMsg {
+  string sourcePort = 1;
+  string sourceChannel = 2;
+  Coin sellToken = 3;
+  Coin buyToken = 4;
+  string makerAddress = 5;
+  string makerReceivingAddress = 6;
+  string desiredTaker = 7;
+  uint64 creationTimestamp = 8;
+  uint64 expirationTimestamp = 9;
+  ibc.core.client.v1.Height timeoutHeight = 10;
+  uint64 timeoutTimestamp = 11;
+}
+
+// Define the TakeSwapMsg message.
+message TakeSwapMsg {
+  string orderId = 1;
+  Coin sellToken = 2;
+  string takerAddress = 3;
+  string takerReceivingAddress = 4;
+  uint64 creationTimestamp = 5;
+  ibc.core.client.v1.Height timeoutHeight = 6;
+  uint64 timeoutTimestamp = 7;
+}
+
+// Define the CancelSwapMsg message.
+message CancelSwapMsg {
+  string orderId = 1;
+  string makerAddress = 2;
+  ibc.core.client.v1.Height timeoutHeight = 3;
+  uint64 timeoutTimestamp = 4;
+}
+
+// Define the Status enumeration.
+enum Status {
+  INITIAL = 0;
+  SYNC = 1;
+  CANCEL = 2;
+  COMPLETE = 3;
+}
+
+// Define the Order message.
+message Order {
+  string id = 1;
+  MakeSwapMsg maker = 2;
+  Status status = 3;
+  string path = 4;
+  TakeSwapMsg taker = 5;
+  uint64 cancelTimestamp = 6;
+  uint64 completeTimestamp = 7;
+}
