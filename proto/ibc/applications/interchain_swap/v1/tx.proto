@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package ibc.applications.interchain_swap.v1;
+
+option go_package = "github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain_swap/types";
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "ibc/core/client/v1/client.proto";
+import "ibc/applications/interchain_swap/v1/swap.proto";
+
+// Msg defines the ibc/swap Msg service.
+service Msg {
+  rpc DelegateCreatePool(MsgCreatePoolRequest) returns (MsgCreatePoolResponse);
+  rpc DelegateSingleDeposit(MsgDepositSingleRequest) returns (MsgSingleDepositResponse);
+  rpc DelegateWithdraw(MsgWithDrawRequest) returns (MsgWithdrawResponse);
+  rpc DelegateLeftSwap(MsgLeftSwapRequest) returns (MsgSwapResonse);
+  rpc DelegateRightSwap(MsgRightSwapRequest) returns (MsgSwapResonse);
+}
+
+message MsgCreatePoolRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // the port on which the packet will be sent
+  string source_port = 1 [(gogoproto.moretags) = "yaml:\"source_port\""];
+  // the channel by which the packet will be sent
+  string source_channel = 2 [(gogoproto.moretags) = "yaml:\"source_channel\""];
+  string sender = 3 [(gogoproto.moretags) = "yaml:\"sender\""];
+  repeated string denoms = 4;
+  repeated uint32 decimals = 5;
+  string weight = 6;
+}
+
+message MsgCreatePoolResponse {}
+
+message MsgDepositSingleRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+  string pool_id = 1;
+  string sender = 3 [(gogoproto.moretags) = "yaml:\"sender\""];
+  repeated ibc.applications.interchain_swap.v1.Coin tokens = 4;
+}
+
+message MsgSingleDepositResponse  {
+    ibc.applications.interchain_swap.v1.Coin pool_token = 1;
+}
+
+message MsgWithDrawRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+  string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
+  ibc.applications.interchain_swap.v1.Coin pool_coin = 2;
+  string denom_out = 3;
+}
+
+message MsgWithdrawResponse  {
+    repeated ibc.applications.interchain_swap.v1.Coin tokens = 1;
+}
+
+
+message MsgLeftSwapRequest {
+    option (gogoproto.equal)           = false;
+    option (gogoproto.goproto_getters) = false;
+    string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
+    ibc.applications.interchain_swap.v1.Coin token_in = 2;
+    ibc.applications.interchain_swap.v1.Coin token_out = 3;
+    uint32 slippage = 4;
+    string recipient = 5;
+}
+
+message MsgRightSwapRequest {
+    option (gogoproto.equal)           = false;
+    option (gogoproto.goproto_getters) = false;
+    string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
+    ibc.applications.interchain_swap.v1.Coin token_in = 2;
+    ibc.applications.interchain_swap.v1.Coin token_out = 3;
+    uint32 slippage = 4;
+    string recipient = 5;
+}
+
+message MsgSwapResonse  {
+    repeated ibc.applications.interchain_swap.v1.Coin tokens = 1;
+}
