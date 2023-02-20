@@ -2,12 +2,9 @@ syntax = "proto3";
 
 package ibcswap.v4.interchainswap;
 
-option go_package = "github.com/sideprotocol/ibcswap/v4/x/interchainswap/types";
+import "cosmos/base/v1beta1/coin.proto";
 
-message Coin {
-    uint32 amount = 1;
-    string denom = 2;
-}
+option go_package = "github.com/sideprotocol/ibcswap/v4/x/interchainswap/types";
 
 enum PoolSide {
     NATIVE = 0;
@@ -20,7 +17,7 @@ enum PoolStatus {
 }
 message PoolAsset {
     PoolSide side = 1;
-    Coin balance = 2;
+    cosmos.base.v1beta1.Coin balance = 2;
     uint32 weight = 3;
     uint32 decimal = 4;
 }
@@ -28,7 +25,7 @@ message PoolAsset {
 message InterchainLiquidityPool {
     string poolId = 1; 
     repeated PoolAsset assets = 2;
-    Coin supply = 3;
+    cosmos.base.v1beta1.Coin supply = 3;
     PoolStatus status = 4;
     string encounterPartyPort = 5; 
     string encounterPartyChannel = 6; 

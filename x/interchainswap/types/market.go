@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 func NewInterchainLiquidityPool(
@@ -23,8 +26,8 @@ func NewInterchainLiquidityPool(
 
 	return &InterchainLiquidityPool{
 		PoolId: poolId,
-		Supply: &Coin{
-			Amount: 0,
+		Supply: &types.Coin{
+			Amount: math.NewInt(0),
 			Denom:  poolId,
 		},
 		Status:                PoolStatus_POOL_STATUS_INITIAL,

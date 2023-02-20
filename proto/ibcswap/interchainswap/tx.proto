@@ -2,7 +2,8 @@ syntax = "proto3";
 
 package ibcswap.v4.interchainswap;
 
-import "ibcswap/interchainswap/market.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
 
 option go_package = "github.com/sideprotocol/ibcswap/v4/x/interchainswap/types";
 
@@ -27,21 +28,21 @@ message MsgCreatePoolResponse {}
 message MsgDepositRequest {
            string                         poolId = 1;
            string                         sender = 2;
-  repeated ibcswap.v4.interchainswap.Coin tokens = 3;
+  repeated cosmos.base.v1beta1.Coin tokens = 3;
 }
 
 message MsgDepositResponse {
-  ibcswap.v4.interchainswap.Coin poolToken = 1;
+  cosmos.base.v1beta1.Coin poolToken = 1;
 }
 
 message MsgWithdrawRequest {
   string                         sender   = 1;
-  ibcswap.v4.interchainswap.Coin poolCoin = 2;
+  cosmos.base.v1beta1.Coin poolCoin = 2;
   string                         denomOut = 3;
 }
 
 message MsgWithdrawResponse {
-  repeated ibcswap.v4.interchainswap.Coin tokens = 1;
+  repeated cosmos.base.v1beta1.Coin tokens = 1;
 }
 
 enum SwapMsgType {
@@ -57,6 +58,6 @@ message MsgSwapRequest {
 
 message MsgSwapResponse {
   SwapMsgType swap_type = 1;
-  repeated ibcswap.v4.interchainswap.Coin tokens = 2;
+  repeated cosmos.base.v1beta1.Coin tokens = 2;
 }
 

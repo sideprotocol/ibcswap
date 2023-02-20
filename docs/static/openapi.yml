@@ -45885,11 +45885,19 @@ paths:
                           balance:
                             type: object
                             properties:
-                              amount:
-                                type: integer
-                                format: int64
                               denom:
                                 type: string
+                              amount:
+                                type: string
+                            description: >-
+                              Coin defines a token with a denomination and an
+                              amount.
+
+
+                              NOTE: The amount field is an Int which implements
+                              the custom method
+
+                              signatures required by gogoproto.
                           weight:
                             type: integer
                             format: int64
@@ -45899,11 +45907,18 @@ paths:
                     supply:
                       type: object
                       properties:
-                        amount:
-                          type: integer
-                          format: int64
                         denom:
                           type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
                     status:
                       type: string
                       enum:
@@ -46048,11 +46063,19 @@ paths:
                         balance:
                           type: object
                           properties:
-                            amount:
-                              type: integer
-                              format: int64
                             denom:
                               type: string
+                            amount:
+                              type: string
+                          description: >-
+                            Coin defines a token with a denomination and an
+                            amount.
+
+
+                            NOTE: The amount field is an Int which implements
+                            the custom method
+
+                            signatures required by gogoproto.
                         weight:
                           type: integer
                           format: int64
@@ -46062,11 +46085,18 @@ paths:
                   supply:
                     type: object
                     properties:
-                      amount:
-                        type: integer
-                        format: int64
                       denom:
                         type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
                   status:
                     type: string
                     enum:
@@ -76231,14 +76261,6 @@ definitions:
     description: |-
       Version defines the versioning scheme used to negotiate the IBC verison in
       the connection handshake.
-  ibcswap.v4.interchainswap.Coin:
-    type: object
-    properties:
-      amount:
-        type: integer
-        format: int64
-      denom:
-        type: string
   ibcswap.v4.interchainswap.InterchainLiquidityPool:
     type: object
     properties:
@@ -76258,11 +76280,18 @@ definitions:
             balance:
               type: object
               properties:
-                amount:
-                  type: integer
-                  format: int64
                 denom:
                   type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
             weight:
               type: integer
               format: int64
@@ -76272,11 +76301,15 @@ definitions:
       supply:
         type: object
         properties:
-          amount:
-            type: integer
-            format: int64
           denom:
             type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
       status:
         type: string
         enum:
@@ -76295,11 +76328,15 @@ definitions:
       poolToken:
         type: object
         properties:
-          amount:
-            type: integer
-            format: int64
           denom:
             type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
   ibcswap.v4.interchainswap.MsgSwapResponse:
     type: object
     properties:
@@ -76314,11 +76351,15 @@ definitions:
         items:
           type: object
           properties:
-            amount:
-              type: integer
-              format: int64
             denom:
               type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
   ibcswap.v4.interchainswap.MsgWithdrawResponse:
     type: object
     properties:
@@ -76327,11 +76368,15 @@ definitions:
         items:
           type: object
           properties:
-            amount:
-              type: integer
-              format: int64
             denom:
               type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
   ibcswap.v4.interchainswap.Params:
     type: object
     description: Params defines the parameters for the module.
@@ -76347,11 +76392,15 @@ definitions:
       balance:
         type: object
         properties:
-          amount:
-            type: integer
-            format: int64
           denom:
             type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
       weight:
         type: integer
         format: int64
@@ -76394,11 +76443,18 @@ definitions:
                   balance:
                     type: object
                     properties:
-                      amount:
-                        type: integer
-                        format: int64
                       denom:
                         type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
                   weight:
                     type: integer
                     format: int64
@@ -76408,11 +76464,18 @@ definitions:
             supply:
               type: object
               properties:
-                amount:
-                  type: integer
-                  format: int64
                 denom:
                   type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
             status:
               type: string
               enum:
@@ -76471,11 +76534,18 @@ definitions:
                 balance:
                   type: object
                   properties:
-                    amount:
-                      type: integer
-                      format: int64
                     denom:
                       type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom
+                    method
+
+                    signatures required by gogoproto.
                 weight:
                   type: integer
                   format: int64
@@ -76485,11 +76555,18 @@ definitions:
           supply:
             type: object
             properties:
-              amount:
-                type: integer
-                format: int64
               denom:
                 type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
           status:
             type: string
             enum:
