@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package ibcswap.v4.interchainswap;
+
+import "ibcswap/interchainswap/market.proto";
+
+option go_package = "github.com/sideprotocol/ibcswap/v4/x/interchainswap/types";
+
+// Msg defines the Msg service.
+service Msg {
+  rpc CreatePool (MsgCreatePoolRequest) returns (MsgCreatePoolResponse);
+  rpc Deposit    (MsgDepositRequest   ) returns (MsgDepositResponse   );
+  rpc Withdraw   (MsgWithdrawRequest  ) returns (MsgWithdrawResponse  );
+  rpc Swap       (MsgSwapRequest             ) returns (MsgSwapResponse      );
+}
+message MsgCreatePoolRequest {
+           string sourcePort    = 1;
+           string sourceChannel = 2;
+           string sender        = 3;
+  repeated string denoms        = 4;
+  repeated uint32 decimals      = 5;
+           string weight        = 6;
+}
+
+message MsgCreatePoolResponse {}
+
+message MsgDepositRequest {
+           string                         poolId = 1;
+           string                         sender = 2;
+  repeated ibcswap.v4.interchainswap.Coin tokens = 3;
+}
+
+message MsgDepositResponse {
+  ibcswap.v4.interchainswap.Coin poolToken = 1;
+}
+
+message MsgWithdrawRequest {
+  string                         sender   = 1;
+  ibcswap.v4.interchainswap.Coin poolCoin = 2;
+  string                         denomOut = 3;
+}
+
+message MsgWithdrawResponse {
+  repeated ibcswap.v4.interchainswap.Coin tokens = 1;
+}
+
+enum SwapMsgType {
+  LEFT = 0;
+  RIGHT = 1;
+}
+message MsgSwapRequest {
+  SwapMsgType swap_type = 1;
+  string sender    = 2;
+  uint64 slippage  = 3;
+  string recipient = 4;
+}
+
+message MsgSwapResponse {
+  SwapMsgType swap_type = 1;
+  repeated ibcswap.v4.interchainswap.Coin tokens = 2;
+}
+

@@ -1,0 +1,17 @@
+syntax = "proto3";
+package ibcswap.v4.interchainswap;
+
+option go_package = "github.com/sideprotocol/ibcswap/v4/x/interchainswap/types";
+
+
+enum MessageType {
+    CREATE = 0;
+    DEPOSIT = 1;
+    WITHDRAW = 2;
+    LEFTSWAP = 3;
+    RIGHTSWAP = 4;
+}
+message IBCSwapDataPacket {
+    MessageType type = 1;
+    bytes data = 2;
+}

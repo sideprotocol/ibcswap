@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package ibcswap.v4.interchainswap;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "ibcswap/interchainswap/params.proto";
+import "ibcswap/interchainswap/market.proto";
+
+option go_package = "github.com/sideprotocol/ibcswap/v4/x/interchainswap/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  
+  // Parameters queries the parameters of the module.
+  rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/ibcswap/v4/interchainswap/params";
+  
+  }
+  
+  // Queries a list of InterchainLiquidityPool items.
+  rpc InterchainLiquidityPool    (QueryGetInterchainLiquidityPoolRequest) returns (QueryGetInterchainLiquidityPoolResponse) {
+    option (google.api.http).get = "/ibcswap/v4/interchainswap/interchain_liquidity_pool/{poolId}";
+  
+  }
+  rpc InterchainLiquidityPoolAll (QueryAllInterchainLiquidityPoolRequest) returns (QueryAllInterchainLiquidityPoolResponse) {
+    option (google.api.http).get = "/ibcswap/v4/interchainswap/interchain_liquidity_pool";
+  
+  }
+}
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryGetInterchainLiquidityPoolRequest {
+  string poolId = 1;
+}
+
+message QueryGetInterchainLiquidityPoolResponse {
+  InterchainLiquidityPool interchainLiquidityPool = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllInterchainLiquidityPoolRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllInterchainLiquidityPoolResponse {
+  repeated InterchainLiquidityPool                interchainLiquidityPool = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination              = 2;
+}
+
