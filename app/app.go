@@ -106,6 +106,7 @@ import (
 	interchainswapmodule "github.com/sideprotocol/ibcswap/v4/x/interchainswap"
 	interchainswapmodulekeeper "github.com/sideprotocol/ibcswap/v4/x/interchainswap/keeper"
 	interchainswapmoduletypes "github.com/sideprotocol/ibcswap/v4/x/interchainswap/types"
+
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 
 	appparams "github.com/sideprotocol/ibcswap/v4/app/params"
@@ -217,6 +218,7 @@ type App struct {
 	AccountKeeper    authkeeper.AccountKeeper
 	AuthzKeeper      authzkeeper.Keeper
 	BankKeeper       bankkeeper.Keeper
+	BankViewKeeper   bankkeeper.ViewKeeper
 	CapabilityKeeper *capabilitykeeper.Keeper
 	StakingKeeper    stakingkeeper.Keeper
 	SlashingKeeper   slashingkeeper.Keeper
@@ -498,6 +500,7 @@ func New(
 
 	scopedInterchainswapKeeper := app.CapabilityKeeper.ScopeToModule(interchainswapmoduletypes.ModuleName)
 	app.ScopedInterchainswapKeeper = scopedInterchainswapKeeper
+	
 	app.InterchainswapKeeper = *interchainswapmodulekeeper.NewKeeper(
 		appCodec,
 		keys[interchainswapmoduletypes.StoreKey],
@@ -506,6 +509,8 @@ func New(
 		app.IBCKeeper.ChannelKeeper,
 		&app.IBCKeeper.PortKeeper,
 		scopedInterchainswapKeeper,
+		app.BankKeeper,
+		app.BankViewKeeper,
 	)
 	interchainswapModule := interchainswapmodule.NewAppModule(appCodec, app.InterchainswapKeeper, app.AccountKeeper, app.BankKeeper)
 

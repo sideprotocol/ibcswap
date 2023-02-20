@@ -165,12 +165,89 @@ func (im IBCModule) OnAcknowledgementPacket(
 
 	// this line is used by starport scaffolding # oracle/packet/module/ack
 
-	var modulePacketData types.IBCSwapDataPacket
-	if err := modulePacketData.Unmarshal(modulePacket.GetData()); err != nil {
+	var data types.IBCSwapDataPacket
+	if err := data.Unmarshal(modulePacket.GetData()); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal packet data: %s", err.Error())
 	}
 
 	var eventType string
+
+	switch resp := ack.Response.(type) {
+	case *channeltypes.Acknowledgement_Error:
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypePacket,
+				sdk.NewAttribute(types.AttributeKeyAckError, resp.Error),
+			),
+		)
+	default:
+		switch data.Type {
+		case types.MessageType_CREATE:
+			// var msg types.MsgTakeSwapRequest
+			// if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+			// 	return err
+			// }
+			// // check order status
+			// if order, ok := k.GetLimitOrder(ctx, msg.OrderId); ok {
+			// 	k.executeLimitOrderMatch(ctx, order, &msg, StepAcknowledgement)
+			// } else if orderOtc, ok2 := k.GetOTCOrder(ctx, msg.OrderId); ok2 {
+			// 	k.executeOTCOrderMatch(ctx, orderOtc, &msg, StepAcknowledgement)
+			// } else {
+			// 	return types.ErrOrderDoesNotExists
+			// }
+			// break
+
+		case types.MessageType_DEPOSIT:
+			// var msg types.MsgCancelSwapRequest
+			// if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+			// 	return err
+			// }
+			// if err2 := k.executeCancel(ctx, &msg, StepAcknowledgement); err2 != nil {
+			// 	return err2
+			// } else {
+			// 	return nil
+			// }
+			// break
+		case types.MessageType_WITHDRAW:
+			// var msg types.MsgCancelSwapRequest
+
+			// if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+			// 	return err
+			// }
+			// if err2 := k.executeCancel(ctx, &msg, StepAcknowledgement); err2 != nil {
+			// 	return err2
+			// } else {
+			// 	return nil
+			// }
+			// break
+
+		case types.MessageType_RIGHTSWAP:
+			// var msg types.MsgCancelSwapRequest
+
+			// if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+			// 	return err
+			// }
+			// if err2 := k.executeCancel(ctx, &msg, StepAcknowledgement); err2 != nil {
+			// 	return err2
+			// } else {
+			// 	return nil
+			// }
+			// break
+		case types.MessageType_LEFTSWAP:
+			// var msg types.MsgCancelSwapRequest
+
+			// if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+			// 	return err
+			// }
+			// if err2 := k.executeCancel(ctx, &msg, StepAcknowledgement); err2 != nil {
+			// 	return err2
+			// } else {
+			// 	return nil
+			// }
+			// break
+		}
+
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

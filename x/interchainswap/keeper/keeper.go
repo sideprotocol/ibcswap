@@ -24,9 +24,11 @@ type (
 		memKey     storetypes.StoreKey
 		paramstore paramtypes.Subspace
 
-		channelKeeper types.ChannelKeeper
-		portKeeper    types.PortKeeper
-		scopedKeeper  exported.ScopedKeeper
+		channelKeeper  types.ChannelKeeper
+		portKeeper     types.PortKeeper
+		scopedKeeper   exported.ScopedKeeper
+		bankKeeper     types.BankKeeper
+		bankViewKeeper types.BankViewKeeper
 	}
 )
 
@@ -38,6 +40,8 @@ func NewKeeper(
 	channelKeeper types.ChannelKeeper,
 	portKeeper types.PortKeeper,
 	scopedKeeper exported.ScopedKeeper,
+	bankKeeper types.BankKeeper,
+	bankViewKeeper types.BankViewKeeper,
 
 ) *Keeper {
 	// set KeyTable if it has not already been set
@@ -51,9 +55,11 @@ func NewKeeper(
 		memKey:     memKey,
 		paramstore: ps,
 
-		channelKeeper: channelKeeper,
-		portKeeper:    portKeeper,
-		scopedKeeper:  scopedKeeper,
+		channelKeeper:  channelKeeper,
+		portKeeper:     portKeeper,
+		scopedKeeper:   scopedKeeper,
+		bankKeeper:     bankKeeper,
+		bankViewKeeper: bankViewKeeper,
 	}
 }
 
