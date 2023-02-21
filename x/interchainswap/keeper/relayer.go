@@ -9,12 +9,6 @@ import (
 	"github.com/sideprotocol/ibcswap/v4/x/interchainswap/types"
 )
 
-var (
-	StepSend            = 1
-	StepReceive         = 2
-	StepAcknowledgement = 3
-)
-
 func (k Keeper) SendIBCSwapPacket(
 	ctx sdk.Context,
 	sourcePort,

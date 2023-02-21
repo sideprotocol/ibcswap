@@ -26,4 +26,5 @@ var (
 	ErrInvalidWeightPair   = errorsmod.Register(ModuleName, 1510, "invalid weight pair!")
 	ErrEmptyDenom          = errorsmod.Register(ModuleName, 1511, "dropped denom!")
 	ErrInvalidSlippage     = errorsmod.Register(ModuleName, 1512, "invalid slippage!")
+	ErrNotReadyForSwap     = errorsmod.Register(ModuleName, 1513, "pool is not ready for swap!")
 )

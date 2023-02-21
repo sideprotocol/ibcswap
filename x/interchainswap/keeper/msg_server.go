@@ -126,6 +126,7 @@ func (k Keeper) OnDepositReceived(ctx sdk.Context, msg *types.MsgDepositRequest)
 	_ = pool
 
 	//TODO: Need to implement params module and market maker.
+	
 
 	ctx.EventManager().EmitTypedEvents(msg)
 	return &types.MsgDepositResponse{
