@@ -24,6 +24,7 @@ type (
 		memKey     storetypes.StoreKey
 		paramstore paramtypes.Subspace
 
+		ics4Wrapper    types.ICS4Wrapper
 		channelKeeper  types.ChannelKeeper
 		portKeeper     types.PortKeeper
 		scopedKeeper   exported.ScopedKeeper

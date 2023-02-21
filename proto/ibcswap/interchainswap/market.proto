@@ -23,7 +23,7 @@ message PoolAsset {
 }
 
 message InterchainLiquidityPool {
-    string poolId = 1; 
+    string poolId = 1;
     repeated PoolAsset assets = 2;
     cosmos.base.v1beta1.Coin supply = 3;
     PoolStatus status = 4;

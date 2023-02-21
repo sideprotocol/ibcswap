@@ -1,8 +1,11 @@
 package types
 
 import (
+	"strings"
+
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const TypeMsgWithdraw = "withdraw"
@@ -40,7 +43,14 @@ func (msg *MsgWithdrawRequest) GetSignBytes() []byte {
 func (msg *MsgWithdrawRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)
+	}
+
+	if strings.TrimSpace(msg.DenomOut) == "" {
+		return errorsmod.Wrapf(ErrEmptyDenom, "none exist denom (%s)", err)
+	}
+	if msg.PoolCoin.Amount.LTE(math.NewInt(0)) {
+		return errorsmod.Wrapf(ErrInvalidAmount, "invalid amount (%s)", err)
 	}
 	return nil
 }

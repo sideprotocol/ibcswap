@@ -1,8 +1,11 @@
 package types
 
 import (
+	"strings"
+
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const TypeMsgSwap = "swap"
@@ -41,7 +44,23 @@ func (msg *MsgSwapRequest) GetSignBytes() []byte {
 func (msg *MsgSwapRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)
 	}
+
+	_, err = sdk.AccAddressFromBech32(msg.Recipient)
+	if err != nil {
+		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)
+	}
+
+	if strings.TrimSpace(msg.TokenIn.Denom) == "" || strings.TrimSpace(msg.TokenOut.Denom) == "" {
+		return ErrEmptyDenom
+	}
+	if msg.TokenIn.Amount.LTE(math.NewInt(0)) || msg.TokenOut.Amount.LTE(math.NewInt(0)) {
+		return ErrInvalidAmount
+	}
+	if msg.Slippage == 0 {
+		return ErrInvalidSlippage
+	}
+
 	return nil
 }

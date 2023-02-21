@@ -1,8 +1,10 @@
 package types
 
 import (
+	"strings"
+
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const TypeMsgCreatePool = "create_pool"
@@ -42,7 +44,19 @@ func (msg *MsgCreatePoolRequest) GetSignBytes() []byte {
 func (msg *MsgCreatePoolRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return errorsmod.Wrapf(ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
+
+	//validation message
+	if len(msg.Denoms) != 2 {
+		return ErrInvalidDenomPair
+	}
+
+	if len(msg.Decimals) != 2 {
+		return ErrInvalidDecimalPair
+	}
+	if len(strings.Split(msg.Weight, ":")) != 2 {
+		return ErrInvalidWeightPair
 	}
 	return nil
 }

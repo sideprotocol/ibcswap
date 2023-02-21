@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,9 +14,9 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// TODO: Handling the message
-	_, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
+	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
 	if !found {
-		return nil, nil
+		return nil, fmt.Errorf("tokenId: %s  %s", &pool.PoolId, types.ErrNotFoundPool)
 	}
 
 	// Deposit token to Escrow account
@@ -23,7 +24,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) 
 	for _, denom := range msg.Tokens {
 		balance := k.bankViewKeeper.GetBalance(ctx, sdk.AccAddress(msg.Sender), denom.Denom)
 		if balance.Amount.Equal(math.NewInt(0)) {
-			return nil, nil
+			return nil, types.ErrInvalidAmount
 		}
 		coin := sdk.Coin{
 			Denom:  denom.Denom,
@@ -32,7 +33,10 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) 
 		coins.Add(coin)
 	}
 
-	k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(msg.Sender), types.ModuleName, coins)
+	escrowAccount := types.GetEscrowAddress(pool.EncounterPartyPort, pool.EncounterPartyChannel)
+	k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, escrowAccount, types.ModuleName, coins)
+
+	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut()
 
 	//Send packet
 	rawMsgData, err := json.Marshal(msg)
@@ -40,14 +44,14 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) 
 		return nil, err
 	}
 
-	_ = types.IBCSwapDataPacket{
+	packet := types.IBCSwapDataPacket{
 		Type: types.MessageType_DEPOSIT,
 		Data: rawMsgData,
 	}
-	//channelCap, ok := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(msg., msg.SourceChannel))
-	// if !ok {
-	// 	return nil, nil
-	// }
-	// k.channelKeeper.SendPacket(ctx)
+	err = k.SendIBCSwapPacket(ctx, pool.EncounterPartyPort, pool.EncounterPartyChannel, timeoutHeight, timeoutStamp, packet)
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.MsgDepositResponse{}, nil
 }

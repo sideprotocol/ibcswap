@@ -52,8 +52,10 @@ enum SwapMsgType {
 message MsgSwapRequest {
   SwapMsgType swap_type = 1;
   string sender    = 2;
-  uint64 slippage  = 3;
-  string recipient = 4;
+  cosmos.base.v1beta1.Coin tokenIn = 3;
+  cosmos.base.v1beta1.Coin tokenOut = 4;
+  uint64 slippage  = 5;
+  string recipient = 6;
 }
 
 message MsgSwapResponse {

@@ -1,8 +1,8 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const TypeMsgDeposit = "deposit"
@@ -40,7 +40,10 @@ func (msg *MsgDepositRequest) GetSignBytes() []byte {
 func (msg *MsgDepositRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return errorsmod.Wrapf(ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
+	if len(msg.Tokens) == 0 {
+		return ErrInvalidLength
 	}
 	return nil
 }
