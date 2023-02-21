@@ -30,6 +30,14 @@ func TestGenesisState_Validate(t *testing.T) {
 						PoolId: "1",
 					},
 				},
+				InterchainMarketMakerList: []types.InterchainMarketMaker{
+					{
+						PoolId: "0",
+					},
+					{
+						PoolId: "1",
+					},
+				},
 				// this line is used by starport scaffolding # types/genesis/validField
 			},
 			valid: true,
@@ -38,6 +46,20 @@ func TestGenesisState_Validate(t *testing.T) {
 			desc: "duplicated interchainLiquidityPool",
 			genState: &types.GenesisState{
 				InterchainLiquidityPoolList: []types.InterchainLiquidityPool{
+					{
+						PoolId: "0",
+					},
+					{
+						PoolId: "0",
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			desc: "duplicated interchainMarketMaker",
+			genState: &types.GenesisState{
+				InterchainMarketMakerList: []types.InterchainMarketMaker{
 					{
 						PoolId: "0",
 					},

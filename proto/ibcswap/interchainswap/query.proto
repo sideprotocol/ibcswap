@@ -7,7 +7,6 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "ibcswap/interchainswap/params.proto";
 import "ibcswap/interchainswap/market.proto";
-
 option go_package = "github.com/sideprotocol/ibcswap/v4/x/interchainswap/types";
 
 // Query defines the gRPC querier service.
@@ -28,6 +27,16 @@ service Query {
     option (google.api.http).get = "/ibcswap/v4/interchainswap/interchain_liquidity_pool";
   
   }
+  
+  // Queries a list of InterchainMarketMaker items.
+  rpc InterchainMarketMaker    (QueryGetInterchainMarketMakerRequest) returns (QueryGetInterchainMarketMakerResponse) {
+    option (google.api.http).get = "/ibcswap/v4/interchainswap/interchain_market_maker/{poolId}";
+  
+  }
+  rpc InterchainMarketMakerAll (QueryAllInterchainMarketMakerRequest) returns (QueryAllInterchainMarketMakerResponse) {
+    option (google.api.http).get = "/ibcswap/v4/interchainswap/interchain_market_maker";
+  
+  }
 }
 // QueryParamsRequest is request type for the Query/Params RPC method.
 message QueryParamsRequest {}
@@ -44,7 +53,7 @@ message QueryGetInterchainLiquidityPoolRequest {
 }
 
 message QueryGetInterchainLiquidityPoolResponse {
-  InterchainLiquidityPool interchainLiquidityPool = 1 [(gogoproto.nullable) = false];
+  ibcswap.v4.interchainswap.InterchainLiquidityPool interchainLiquidityPool = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryAllInterchainLiquidityPoolRequest {
@@ -54,5 +63,22 @@ message QueryAllInterchainLiquidityPoolRequest {
 message QueryAllInterchainLiquidityPoolResponse {
   repeated InterchainLiquidityPool                interchainLiquidityPool = 1 [(gogoproto.nullable) = false];
            cosmos.base.query.v1beta1.PageResponse pagination              = 2;
+}
+
+message QueryGetInterchainMarketMakerRequest {
+  string poolId = 1;
+}
+
+message QueryGetInterchainMarketMakerResponse {
+  InterchainMarketMaker interchainMarketMaker = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllInterchainMarketMakerRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllInterchainMarketMakerResponse {
+  repeated InterchainMarketMaker                  interchainMarketMaker = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination            = 2;
 }
 

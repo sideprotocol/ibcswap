@@ -30,3 +30,9 @@ message InterchainLiquidityPool {
     string encounterPartyPort = 5; 
     string encounterPartyChannel = 6; 
 }
+
+message InterchainMarketMaker {
+    string poolId = 1; 
+    InterchainLiquidityPool pool = 2;
+    uint64 feeRate = 3; 
+  }

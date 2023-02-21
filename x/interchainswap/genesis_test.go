@@ -22,6 +22,14 @@ func TestGenesis(t *testing.T) {
 				PoolId: "1",
 			},
 		},
+		InterchainMarketMakerList: []types.InterchainMarketMaker{
+			{
+				PoolId: "0",
+			},
+			{
+				PoolId: "1",
+			},
+		},
 		// this line is used by starport scaffolding # genesis/test/state
 	}
 
@@ -36,5 +44,6 @@ func TestGenesis(t *testing.T) {
 	require.Equal(t, genesisState.PortId, got.PortId)
 
 	require.ElementsMatch(t, genesisState.InterchainLiquidityPoolList, got.InterchainLiquidityPoolList)
+	require.ElementsMatch(t, genesisState.InterchainMarketMakerList, got.InterchainMarketMakerList)
 	// this line is used by starport scaffolding # genesis/test/assert
 }

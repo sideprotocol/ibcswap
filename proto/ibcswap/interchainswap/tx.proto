@@ -62,4 +62,3 @@ message MsgSwapResponse {
   SwapMsgType swap_type = 1;
   repeated cosmos.base.v1beta1.Coin tokens = 2;
 }
-

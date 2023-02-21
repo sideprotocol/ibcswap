@@ -12,6 +12,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, elem := range genState.InterchainLiquidityPoolList {
 		k.SetInterchainLiquidityPool(ctx, elem)
 	}
+	// Set all the interchainMarketMaker
+	for _, elem := range genState.InterchainMarketMakerList {
+		k.SetInterchainMarketMaker(ctx, elem)
+	}
 	// this line is used by starport scaffolding # genesis/module/init
 	k.SetPort(ctx, genState.PortId)
 	// Only try to bind to port if it is not already bound, since we may already own
@@ -34,6 +38,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	genesis.PortId = k.GetPort(ctx)
 	genesis.InterchainLiquidityPoolList = k.GetAllInterchainLiquidityPool(ctx)
+	genesis.InterchainMarketMakerList = k.GetAllInterchainMarketMaker(ctx)
 	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis

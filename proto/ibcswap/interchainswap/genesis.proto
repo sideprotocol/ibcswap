@@ -6,13 +6,13 @@ import "gogoproto/gogo.proto";
 import "ibcswap/interchainswap/params.proto";
 import "ibcswap/interchainswap/market.proto";
 
-
 option go_package = "github.com/sideprotocol/ibcswap/v4/x/interchainswap/types";
 
 // GenesisState defines the interchainswap module's genesis state.
 message GenesisState {
-           Params                  params                      = 1 [(gogoproto.nullable) = false];
-           string                  port_id                     = 2;
+           Params                                            params                      = 1 [(gogoproto.nullable) = false];
+           string                                            port_id                     = 2;
   repeated ibcswap.v4.interchainswap.InterchainLiquidityPool interchainLiquidityPoolList = 3 [(gogoproto.nullable) = false];
+  repeated ibcswap.v4.interchainswap.InterchainMarketMaker                             interchainMarketMakerList   = 4 [(gogoproto.nullable) = false];
 }
 

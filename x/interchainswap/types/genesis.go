@@ -13,6 +13,7 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		PortId:                      PortID,
 		InterchainLiquidityPoolList: []InterchainLiquidityPool{},
+		InterchainMarketMakerList:   []InterchainMarketMaker{},
 		// this line is used by starport scaffolding # genesis/types/default
 		Params: DefaultParams(),
 	}
@@ -33,6 +34,16 @@ func (gs GenesisState) Validate() error {
 			return fmt.Errorf("duplicated index for interchainLiquidityPool")
 		}
 		interchainLiquidityPoolIndexMap[index] = struct{}{}
+	}
+	// Check for duplicated index in interchainMarketMaker
+	interchainMarketMakerIndexMap := make(map[string]struct{})
+
+	for _, elem := range gs.InterchainMarketMakerList {
+		index := string(InterchainMarketMakerKey(elem.PoolId))
+		if _, ok := interchainMarketMakerIndexMap[index]; ok {
+			return fmt.Errorf("duplicated index for interchainMarketMaker")
+		}
+		interchainMarketMakerIndexMap[index] = struct{}{}
 	}
 	// this line is used by starport scaffolding # genesis/types/validate
 

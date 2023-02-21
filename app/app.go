@@ -500,7 +500,7 @@ func New(
 
 	scopedInterchainswapKeeper := app.CapabilityKeeper.ScopeToModule(interchainswapmoduletypes.ModuleName)
 	app.ScopedInterchainswapKeeper = scopedInterchainswapKeeper
-	
+
 	app.InterchainswapKeeper = *interchainswapmodulekeeper.NewKeeper(
 		appCodec,
 		keys[interchainswapmoduletypes.StoreKey],

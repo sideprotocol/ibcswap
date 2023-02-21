@@ -137,7 +137,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				return err
 			}
-			k.onCreatePoolAcknowledged(ctx,&msg)
+			k.onCreatePoolAcknowledged(ctx, &msg)
 		case types.MessageType_DEPOSIT:
 			var msg types.MsgDepositRequest
 
