@@ -101,13 +101,20 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
+
 	// using custom test app
 	ibcmock "github.com/sideprotocol/ibcswap/v4/testing/mock"
 	simappparams "github.com/sideprotocol/ibcswap/v4/testing/simapp/params"
+
 	// ibcswap
 	ibcswap "github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap"
 	ibcswapkeeper "github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap/keeper"
 	ibcswaptypes "github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap/types"
+
+	// ibcinterchainswap
+	ibcinterchainswap "github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap"
+	ibcinterchainswapkeeper "github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/keeper"
+	ibcinterchainswaptypes "github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
 
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
@@ -157,21 +164,23 @@ var (
 		vesting.AppModuleBasic{},
 		ibcfee.AppModuleBasic{},
 		ibcswap.AppModuleBasic{},
+		ibcinterchainswap.AppModuleBasic{},
 	)
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:     nil,
-		distrtypes.ModuleName:          nil,
-		minttypes.ModuleName:           {authtypes.Minter},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:            {authtypes.Burner},
-		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		ibcfeetypes.ModuleName:         nil,
-		icatypes.ModuleName:            nil,
-		ibcmock.ModuleName:             nil,
-		ibcswaptypes.ModuleName:        nil,
+		authtypes.FeeCollectorName:        nil,
+		distrtypes.ModuleName:             nil,
+		minttypes.ModuleName:              {authtypes.Minter},
+		stakingtypes.BondedPoolName:       {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:    {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:               {authtypes.Burner},
+		ibctransfertypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
+		ibcfeetypes.ModuleName:            nil,
+		icatypes.ModuleName:               nil,
+		ibcmock.ModuleName:                nil,
+		ibcswaptypes.ModuleName:           nil,
+		ibcinterchainswaptypes.ModuleName: nil,
 	}
 )
 
@@ -197,37 +206,40 @@ type SimApp struct {
 	memKeys map[string]*sdk.MemoryStoreKey
 
 	// keepers
-	AccountKeeper       authkeeper.AccountKeeper
-	BankKeeper          bankkeeper.Keeper
-	CapabilityKeeper    *capabilitykeeper.Keeper
-	StakingKeeper       stakingkeeper.Keeper
-	SlashingKeeper      slashingkeeper.Keeper
-	MintKeeper          mintkeeper.Keeper
-	DistrKeeper         distrkeeper.Keeper
-	GovKeeper           govkeeper.Keeper
-	CrisisKeeper        crisiskeeper.Keeper
-	UpgradeKeeper       upgradekeeper.Keeper
-	ParamsKeeper        paramskeeper.Keeper
-	AuthzKeeper         authzkeeper.Keeper
-	IBCKeeper           *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
-	IBCFeeKeeper        ibcfeekeeper.Keeper
-	ICAControllerKeeper icacontrollerkeeper.Keeper
-	ICAHostKeeper       icahostkeeper.Keeper
-	EvidenceKeeper      evidencekeeper.Keeper
-	TransferKeeper      ibctransferkeeper.Keeper
-	FeeGrantKeeper      feegrantkeeper.Keeper
-	IBCSwapKeeper       ibcswapkeeper.Keeper
+	AccountKeeper           authkeeper.AccountKeeper
+	BankKeeper              bankkeeper.Keeper
+	BankViewKeeper          bankkeeper.BaseViewKeeper
+	CapabilityKeeper        *capabilitykeeper.Keeper
+	StakingKeeper           stakingkeeper.Keeper
+	SlashingKeeper          slashingkeeper.Keeper
+	MintKeeper              mintkeeper.Keeper
+	DistrKeeper             distrkeeper.Keeper
+	GovKeeper               govkeeper.Keeper
+	CrisisKeeper            crisiskeeper.Keeper
+	UpgradeKeeper           upgradekeeper.Keeper
+	ParamsKeeper            paramskeeper.Keeper
+	AuthzKeeper             authzkeeper.Keeper
+	IBCKeeper               *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
+	IBCFeeKeeper            ibcfeekeeper.Keeper
+	ICAControllerKeeper     icacontrollerkeeper.Keeper
+	ICAHostKeeper           icahostkeeper.Keeper
+	EvidenceKeeper          evidencekeeper.Keeper
+	TransferKeeper          ibctransferkeeper.Keeper
+	FeeGrantKeeper          feegrantkeeper.Keeper
+	IBCSwapKeeper           ibcswapkeeper.Keeper
+	IBCInterchainSwapKeeper ibcinterchainswapkeeper.Keeper
 
 	// make scoped keepers public for test purposes
-	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
-	ScopedTransferKeeper      capabilitykeeper.ScopedKeeper
-	ScopedIBCFeeKeeper        capabilitykeeper.ScopedKeeper
-	ScopedFeeMockKeeper       capabilitykeeper.ScopedKeeper
-	ScopedICAControllerKeeper capabilitykeeper.ScopedKeeper
-	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
-	ScopedIBCMockKeeper       capabilitykeeper.ScopedKeeper
-	ScopedICAMockKeeper       capabilitykeeper.ScopedKeeper
-	ScopedIBCSwapKeeper       capabilitykeeper.ScopedKeeper
+	ScopedIBCKeeper               capabilitykeeper.ScopedKeeper
+	ScopedTransferKeeper          capabilitykeeper.ScopedKeeper
+	ScopedIBCFeeKeeper            capabilitykeeper.ScopedKeeper
+	ScopedFeeMockKeeper           capabilitykeeper.ScopedKeeper
+	ScopedICAControllerKeeper     capabilitykeeper.ScopedKeeper
+	ScopedICAHostKeeper           capabilitykeeper.ScopedKeeper
+	ScopedIBCMockKeeper           capabilitykeeper.ScopedKeeper
+	ScopedICAMockKeeper           capabilitykeeper.ScopedKeeper
+	ScopedIBCSwapKeeper           capabilitykeeper.ScopedKeeper
+	ScopedIBCInterchainSwapKeeper capabilitykeeper.ScopedKeeper
 
 	// make IBC modules public for test purposes
 	// these modules are never directly routed to by the IBC Router
@@ -301,6 +313,7 @@ func NewSimApp(
 	scopedICAControllerKeeper := app.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	scopedIBCSwapKeeper := app.CapabilityKeeper.ScopeToModule(ibcswaptypes.ModuleName)
+	scopedIBCInterchainswapKeeper := app.CapabilityKeeper.ScopeToModule(ibcinterchainswaptypes.ModuleName)
 
 	// NOTE: the IBC mock keeper and application module is used only for testing core IBC. Do
 	// not replicate if you do not need to test core IBC or light clients.
@@ -320,6 +333,8 @@ func NewSimApp(
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.ModuleAccountAddrs(),
 	)
+	app.BankViewKeeper = bankkeeper.NewBaseViewKeeper(appCodec, keys[banktypes.StoreKey], app.AccountKeeper)
+
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
 	)
@@ -409,6 +424,17 @@ func NewSimApp(
 		app.IBCFeeKeeper,
 		app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
 		app.AccountKeeper, app.BankKeeper, scopedIBCSwapKeeper)
+
+	app.IBCInterchainSwapKeeper = *ibcinterchainswapkeeper.NewKeeper(
+		appCodec, keys[ibcinterchainswaptypes.StoreKey],
+		memKeys[ibcinterchainswaptypes.StoreKey],
+		app.GetSubspace(ibcinterchainswaptypes.ModuleName),
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		scopedIBCInterchainswapKeeper,
+		app.BankKeeper,
+		app.BankViewKeeper,
+	)
 
 	// Mock Module Stack
 
@@ -642,6 +668,7 @@ func NewSimApp(
 	app.ScopedICAControllerKeeper = scopedICAControllerKeeper
 	app.ScopedICAHostKeeper = scopedICAHostKeeper
 	app.ScopedIBCSwapKeeper = scopedIBCSwapKeeper
+	app.ScopedIBCInterchainSwapKeeper = scopedIBCSwapKeeper
 
 	// NOTE: the IBC mock keeper and application module is used only for testing core IBC. Do
 	// note replicate if you do not need to test core IBC or light clients.

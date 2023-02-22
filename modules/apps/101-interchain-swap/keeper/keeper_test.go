@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
 
 	"github.com/stretchr/testify/suite"
 
@@ -32,7 +33,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
-func NewSwapPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
+func NewInterchainSwapPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA, chainB)
 	path.EndpointA.ChannelConfig.PortID = ibctesting.SwapPort
 	path.EndpointB.ChannelConfig.PortID = ibctesting.SwapPort

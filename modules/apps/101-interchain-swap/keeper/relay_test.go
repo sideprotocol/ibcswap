@@ -94,7 +94,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
-			path = NewSwapPath(suite.chainA, suite.chainB)
+			path = NewInterchainSwapPath(suite.chainA, suite.chainB)
 			suite.coordinator.SetupConnections(path)
 
 			tc.malleate()

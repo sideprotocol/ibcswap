@@ -47,7 +47,7 @@ func (suite *KeeperTestSuite) TestMsgSwap() {
 	for _, tc := range testCases {
 		suite.SetupTest()
 
-		path := NewSwapPath(suite.chainA, suite.chainB)
+		path := NewInterchainSwapPath(suite.chainA, suite.chainB)
 		suite.coordinator.Setup(path)
 
 		coin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))

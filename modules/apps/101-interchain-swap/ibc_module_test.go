@@ -1,4 +1,4 @@
-package swap_test
+package interchainswap_test
 
 import (
 	"math"
@@ -7,12 +7,12 @@ import (
 
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
-	ibcswap "github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap/types"
+	ibcswap "github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap"
+	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
 	ibctesting "github.com/sideprotocol/ibcswap/v4/testing"
 )
 
-func (suite *SwapTestSuite) TestOnChanOpenInit() {
+func (suite *InterchainSwapTestSuite) TestOnChanOpenInit() {
 	var (
 		channel      *channeltypes.Channel
 		path         *ibctesting.Path
@@ -66,7 +66,7 @@ func (suite *SwapTestSuite) TestOnChanOpenInit() {
 
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset
-			path = NewSwapTestPath(suite.chainA, suite.chainB)
+			path = NewInterchainSwapTestPath(suite.chainA, suite.chainB)
 			suite.coordinator.SetupConnections(path)
 			path.EndpointA.ChannelID = ibctesting.FirstChannelID
 
@@ -85,7 +85,7 @@ func (suite *SwapTestSuite) TestOnChanOpenInit() {
 
 			tc.malleate() // explicitly change fields in channel and testChannel
 
-			swapModule := ibcswap.NewIBCModule(suite.chainA.GetSimApp().IBCSwapKeeper)
+			swapModule := ibcswap.NewIBCModule(suite.chainA.GetSimApp().IBCInterchainSwapKeeper)
 			version, err := swapModule.OnChanOpenInit(suite.chainA.GetContext(), channel.Ordering, channel.GetConnectionHops(),
 				path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, chanCap, counterparty, channel.GetVersion(),
 			)
@@ -101,7 +101,7 @@ func (suite *SwapTestSuite) TestOnChanOpenInit() {
 	}
 }
 
-func (suite *SwapTestSuite) TestOnChanOpenTry() {
+func (suite *InterchainSwapTestSuite) TestOnChanOpenTry() {
 	var (
 		channel             *channeltypes.Channel
 		chanCap             *capabilitytypes.Capability
@@ -154,7 +154,7 @@ func (suite *SwapTestSuite) TestOnChanOpenTry() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset
 
-			path = NewSwapTestPath(suite.chainA, suite.chainB)
+			path = NewInterchainSwapTestPath(suite.chainA, suite.chainB)
 			suite.coordinator.SetupConnections(path)
 			path.EndpointA.ChannelID = ibctesting.FirstChannelID
 
@@ -194,7 +194,7 @@ func (suite *SwapTestSuite) TestOnChanOpenTry() {
 	}
 }
 
-func (suite *SwapTestSuite) TestOnChanOpenAck() {
+func (suite *InterchainSwapTestSuite) TestOnChanOpenAck() {
 	var counterpartyVersion string
 
 	testCases := []struct {
@@ -218,7 +218,7 @@ func (suite *SwapTestSuite) TestOnChanOpenAck() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset
 
-			path := NewSwapTestPath(suite.chainA, suite.chainB)
+			path := NewInterchainSwapTestPath(suite.chainA, suite.chainB)
 			suite.coordinator.SetupConnections(path)
 			path.EndpointA.ChannelID = ibctesting.FirstChannelID
 			counterpartyVersion = types.Version

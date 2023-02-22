@@ -1,64 +1,28 @@
-package swap
+package interchainswap
 
 import (
+	"encoding/json"
 	"fmt"
-	"math"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
 	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	ibcexported "github.com/cosmos/ibc-go/v4/modules/core/exported"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap/keeper"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap/types"
+	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/keeper"
+	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
 )
 
-// IBCModule implements the ICS26 interface for transfer given the transfer keeper.
 type IBCModule struct {
 	keeper keeper.Keeper
 }
 
-// NewIBCModule creates a new IBCModule given the keeper
 func NewIBCModule(k keeper.Keeper) IBCModule {
 	return IBCModule{
 		keeper: k,
 	}
-}
-
-// ValidateSwapChannelParams does validation of a newly created transfer channel. A transfer
-// channel must be UNORDERED, use the correct port (by default 'transfer'), and use the current
-// supported version. Only 2^32 channels are allowed to be created.
-func ValidateSwapChannelParams(
-	ctx sdk.Context,
-	keeper keeper.Keeper,
-	order channeltypes.Order,
-	portID string,
-	channelID string,
-) error {
-	// NOTE: for escrow address security only 2^32 channels are allowed to be created
-	// Issue: https://github.com/cosmos/cosmos-sdk/issues/7737
-	channelSequence, err := channeltypes.ParseChannelSequence(channelID)
-	if err != nil {
-		return err
-	}
-	if channelSequence > uint64(math.MaxUint32) {
-		return sdkerrors.Wrapf(types.ErrMaxTransferChannels, "channel sequence %d is greater than max allowed transfer channels %d", channelSequence, uint64(math.MaxUint32))
-	}
-	if order != channeltypes.UNORDERED {
-		return sdkerrors.Wrapf(channeltypes.ErrInvalidChannelOrdering, "expected %s channel, got %s ", channeltypes.UNORDERED, order)
-	}
-
-	// Require portID is the portID transfer module is bound to
-	boundPort := keeper.GetPort(ctx)
-	if boundPort != portID {
-		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid port: %s, expected %s", portID, boundPort)
-	}
-
-	return nil
 }
 
 // OnChanOpenInit implements the IBCModule interface
@@ -72,16 +36,16 @@ func (im IBCModule) OnChanOpenInit(
 	counterparty channeltypes.Counterparty,
 	version string,
 ) (string, error) {
-	if err := ValidateSwapChannelParams(ctx, im.keeper, order, portID, channelID); err != nil {
-		return "", err
+
+	// Require portID is the portID module is bound to
+	boundPort := im.keeper.GetPort(ctx)
+	if boundPort != portID {
+		return "", errorsmod.Wrapf(porttypes.ErrInvalidPort, "invalid port: %s, expected %s", portID, boundPort)
 	}
 
-	if strings.TrimSpace(version) == "" {
-		version = types.Version
-	}
-
+	fmt.Println(types.Version)
 	if version != types.Version {
-		return "", sdkerrors.Wrapf(types.ErrInvalidVersion, "got %s, expected %s", version, types.Version)
+		return "", errorsmod.Wrapf(types.ErrInvalidVersion, "got %s, expected %s", version, types.Version)
 	}
 
 	// Claim channel capability passed back by IBC module
@@ -92,7 +56,7 @@ func (im IBCModule) OnChanOpenInit(
 	return version, nil
 }
 
-// OnChanOpenTry implements the IBCModule interface.
+// OnChanOpenTry implements the IBCModule interface
 func (im IBCModule) OnChanOpenTry(
 	ctx sdk.Context,
 	order channeltypes.Order,
@@ -103,17 +67,26 @@ func (im IBCModule) OnChanOpenTry(
 	counterparty channeltypes.Counterparty,
 	counterpartyVersion string,
 ) (string, error) {
-	if err := ValidateSwapChannelParams(ctx, im.keeper, order, portID, channelID); err != nil {
-		return "", err
+
+	// Require portID is the portID module is bound to
+	boundPort := im.keeper.GetPort(ctx)
+	if boundPort != portID {
+		return "", errorsmod.Wrapf(porttypes.ErrInvalidPort, "invalid port: %s, expected %s", portID, boundPort)
 	}
 
 	if counterpartyVersion != types.Version {
-		return "", sdkerrors.Wrapf(types.ErrInvalidVersion, "invalid counterparty version: got: %s, expected %s", counterpartyVersion, types.Version)
+		return "", errorsmod.Wrapf(types.ErrInvalidVersion, "invalid counterparty version: got: %s, expected %s", counterpartyVersion, types.Version)
 	}
 
-	// OpenTry must claim the channelCapability that IBC passes into the callback
-	if err := im.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
-		return "", err
+	// Module may have already claimed capability in OnChanOpenInit in the case of crossing hellos
+	// (ie chainA and chainB both call ChanOpenInit before one of them calls ChanOpenTry)
+	// If module can already authenticate the capability then module already owns it so we don't need to claim
+	// Otherwise, module does not have channel capability and we must claim it from IBC
+	if !im.keeper.AuthenticateCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) {
+		// Only claim channel capability passed back by IBC module if we do not already own it
+		if err := im.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
+			return "", err
+		}
 	}
 
 	return types.Version, nil
@@ -124,11 +97,11 @@ func (im IBCModule) OnChanOpenAck(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	_ string,
+	_,
 	counterpartyVersion string,
 ) error {
 	if counterpartyVersion != types.Version {
-		return sdkerrors.Wrapf(types.ErrInvalidVersion, "invalid counterparty version: %s, expected %s", counterpartyVersion, types.Version)
+		return errorsmod.Wrapf(types.ErrInvalidVersion, "invalid counterparty version: %s, expected %s", counterpartyVersion, types.Version)
 	}
 	return nil
 }
@@ -148,8 +121,8 @@ func (im IBCModule) OnChanCloseInit(
 	portID,
 	channelID string,
 ) error {
-	// Disallow user-initiated channel closing for transfer channels
-	return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "user cannot close channel")
+	// Disallow user-initiated channel closing for channels
+	return errorsmod.Wrap(types.ErrInvalidRequest, "user cannot close channel")
 }
 
 // OnChanCloseConfirm implements the IBCModule interface
@@ -161,31 +134,34 @@ func (im IBCModule) OnChanCloseConfirm(
 	return nil
 }
 
-// OnRecvPacket implements the IBCModule interface. A successful acknowledgement
-// is returned if the packet data is successfully decoded and the receive application
-// logic returns without error.
+// OnRecvPacket implements the IBCModule interface
 func (im IBCModule) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) ibcexported.Acknowledgement {
-	ack := channeltypes.NewResultAcknowledgement([]byte{byte(1)})
+	var ack channeltypes.Acknowledgement
 
-	var data types.AtomicSwapPacketData
+	ack = channeltypes.NewResultAcknowledgement([]byte{byte(1)})
+	var data types.IBCSwapDataPacket
 	var ackErr error
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-20 transfer packet data")
+		ackErr = errorsmod.Wrapf(types.ErrInvalidType, "cannot unmarshal ICS-20 transfer packet data")
 		ack = channeltypes.NewErrorAcknowledgement(ackErr)
 	}
 
 	// only attempt the application logic if the packet data
 	// was successfully decoded
 	if ack.Success() {
-		err := im.keeper.OnRecvPacket(ctx, packet, data)
+		res, err := im.keeper.OnRecvPacket(ctx, packet, data)
 		if err != nil {
 			ack = channeltypes.NewErrorAcknowledgement(err)
 			ackErr = err
+		} else {
+
 		}
+		result, _ := json.Marshal(res)
+		ack = channeltypes.NewResultAcknowledgement(result)
 	}
 
 	eventAttributes := []sdk.Attribute{
@@ -217,11 +193,11 @@ func (im IBCModule) OnAcknowledgementPacket(
 ) error {
 	var ack channeltypes.Acknowledgement
 	if err := types.ModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
+		return errorsmod.Wrapf(types.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
 	}
-	var data types.AtomicSwapPacketData
+	var data types.IBCSwapDataPacket
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
+		return errorsmod.Wrapf(types.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
 
 	if err := im.keeper.OnAcknowledgementPacket(ctx, packet, &data, ack); err != nil {
@@ -256,9 +232,9 @@ func (im IBCModule) OnTimeoutPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) error {
-	var data types.AtomicSwapPacketData
+	var data types.IBCSwapDataPacket
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
+		return errorsmod.Wrapf(types.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
 	// refund tokens
 	if err := im.keeper.OnTimeoutPacket(ctx, packet, &data); err != nil {
