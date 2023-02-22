@@ -49,8 +49,8 @@ func (msg *MsgWithdrawRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.DenomOut) == "" {
 		return errorsmod.Wrapf(ErrEmptyDenom, "none exist denom (%s)", err)
 	}
-	if msg.PoolCoin.Amount.LTE(math.NewInt(0)) {
-		return errorsmod.Wrapf(ErrInvalidAmount, "invalid amount (%s)", err)
+	if msg.PoolCoin == nil || msg.PoolCoin.Amount.LTE(math.NewInt(0)) {
+		return errorsmod.Wrapf(ErrInvalidAmount, "invalid pool coin amount (%s)", "")
 	}
 	return nil
 }

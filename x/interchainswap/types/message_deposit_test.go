@@ -3,7 +3,9 @@ package types
 import (
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/sideprotocol/ibcswap/v4/testutil/sample"
 	"github.com/stretchr/testify/require"
 )
@@ -19,12 +21,29 @@ func TestMsgDeposit_ValidateBasic(t *testing.T) {
 			msg: MsgDepositRequest{
 				Sender: "invalid_address",
 			},
-			err: sdkerrors.ErrInvalidAddress,
+			err: errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", ""),
 		}, {
 			name: "valid address",
 			msg: MsgDepositRequest{
 				Sender: sample.AccAddress(),
+				Tokens: []*types.Coin{
+					{
+						Denom:  "atom",
+						Amount: math.NewInt(0),
+					},
+					{
+						Denom:  "marscoin",
+						Amount: math.NewInt(0),
+					}},
 			},
+		},
+
+		{
+			name: "invalid denom length",
+			msg: MsgDepositRequest{
+				Sender: sample.AccAddress(),
+			},
+			err: errorsmod.Wrapf(ErrInvalidTokenLength, "invalid token length (%d)", 1),
 		},
 	}
 	for _, tt := range tests {

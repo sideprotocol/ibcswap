@@ -40,10 +40,10 @@ func (msg *MsgDepositRequest) GetSignBytes() []byte {
 func (msg *MsgDepositRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return errorsmod.Wrapf(ErrInvalidAddress, "invalid creator address (%s)", err)
+		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)
 	}
 	if len(msg.Tokens) == 0 {
-		return ErrInvalidLength
+		return errorsmod.Wrapf(ErrInvalidTokenLength, "invalid token length (%d)", len(msg.Tokens))
 	}
 	return nil
 }

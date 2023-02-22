@@ -49,14 +49,14 @@ func (msg *MsgSwapRequest) ValidateBasic() error {
 
 	_, err = sdk.AccAddressFromBech32(msg.Recipient)
 	if err != nil {
-		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)
+		return errorsmod.Wrapf(ErrInvalidAddress, "invalid recipient address (%s)", err)
 	}
 
-	if strings.TrimSpace(msg.TokenIn.Denom) == "" || strings.TrimSpace(msg.TokenOut.Denom) == "" {
-		return ErrEmptyDenom
+	if msg.TokenIn == nil || msg.TokenOut == nil || strings.TrimSpace(msg.TokenIn.Denom) == "" || strings.TrimSpace(msg.TokenOut.Denom) == "" {
+		return errorsmod.Wrapf(ErrEmptyDenom, "missed token denoms (%s)", err)
 	}
 	if msg.TokenIn.Amount.LTE(math.NewInt(0)) || msg.TokenOut.Amount.LTE(math.NewInt(0)) {
-		return ErrInvalidAmount
+		return errorsmod.Wrapf(ErrInvalidAmount, "invalid token amounts (%s)", err)
 	}
 	if msg.Slippage == 0 {
 		return ErrInvalidSlippage

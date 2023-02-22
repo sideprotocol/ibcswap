@@ -43,6 +43,7 @@ func (im IBCModule) OnChanOpenInit(
 		return "", errorsmod.Wrapf(porttypes.ErrInvalidPort, "invalid port: %s, expected %s", portID, boundPort)
 	}
 
+	fmt.Println(types.Version)
 	if version != types.Version {
 		return "", errorsmod.Wrapf(types.ErrInvalidVersion, "got %s, expected %s", version, types.Version)
 	}
@@ -156,8 +157,8 @@ func (im IBCModule) OnRecvPacket(
 		if err != nil {
 			ack = channeltypes.NewErrorAcknowledgement(err)
 			ackErr = err
-		}else{
-			
+		} else {
+
 		}
 		result, _ := json.Marshal(res)
 		ack = channeltypes.NewResultAcknowledgement(result)

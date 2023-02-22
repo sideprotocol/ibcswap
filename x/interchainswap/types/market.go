@@ -148,7 +148,7 @@ func (imm *InterchainMarketMaker) Withdraw(redeem types.Coin, denomOut string) (
 	}
 
 	if redeem.Amount.GT(asset.Balance.Amount) {
-		return nil, errorsmod.Wrapf(err, "bigger redeem amount than asset balance. %s")
+		return nil, errorsmod.Wrapf(err, "bigger redeem amount than asset balance(%d).", asset.Balance.Amount)
 	}
 
 	if redeem.Denom != imm.Pool.Supply.Denom {
@@ -200,12 +200,12 @@ func (imm *InterchainMarketMaker) LeftSwap(amountIn types.Coin, denomOut string)
 func (imm *InterchainMarketMaker) RightSwap(amountIn types.Coin, amountOut types.Coin) (*types.Coin, error) {
 	assetIn, err := imm.Pool.FindAssetByDenom(amountIn.Denom)
 	if err != nil {
-		return nil, errorsmod.Wrapf(err, "right swap failed because of %s")
+		return nil, errorsmod.Wrapf(err, "right swap failed! %s", imm.PoolId)
 	}
 
 	assetOut, err := imm.Pool.FindAssetByDenom(amountOut.Denom)
 	if err != nil {
-		return nil, errorsmod.Wrapf(err, "right swap failed because of %s")
+		return nil, nil //errorsmod.Wrapf(err, "right swap failed because of %s")
 	}
 
 	// redeem.weight is percentage
@@ -217,7 +217,7 @@ func (imm *InterchainMarketMaker) RightSwap(amountIn types.Coin, amountOut types
 	amount := math.NewInt(int64(balanceIn * (balanceOut/mathtool.Pow(balanceOut-float64(amountOut.Amount.Uint64()), weightOut/weightIn) - 1)))
 
 	if amountIn.Amount.LT(amount) {
-		return nil, errorsmod.Wrapf(ErrInvalidAmount, "right swap failed because of %s")
+		return nil, nil //errorsmod.Wrapf(ErrInvalidAmount, "right swap failed because of %s")
 	}
 	return &types.Coin{
 		Amount: amount,

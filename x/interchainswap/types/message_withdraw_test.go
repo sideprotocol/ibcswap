@@ -3,7 +3,9 @@ package types
 import (
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/sideprotocol/ibcswap/v4/testutil/sample"
 	"github.com/stretchr/testify/require"
 )
@@ -15,15 +17,40 @@ func TestMsgWithdraw_ValidateBasic(t *testing.T) {
 		err  error
 	}{
 		{
-			name: "invalid address",
+			name: "invalid sender address",
 			msg: MsgWithdrawRequest{
 				Sender: "invalid_address",
 			},
-			err: sdkerrors.ErrInvalidAddress,
-		}, {
-			name: "valid address",
+			err: errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", ""),
+		},
+		{
+			name: "invalid denomout",
 			msg: MsgWithdrawRequest{
 				Sender: sample.AccAddress(),
+			},
+			err: errorsmod.Wrapf(ErrEmptyDenom, "none exist denom (%s)", ""),
+		},
+		{
+			name: "invalid pool-coin amount",
+			msg: MsgWithdrawRequest{
+				Sender:   sample.AccAddress(),
+				DenomOut: "atom",
+				PoolCoin: &types.Coin{
+					Denom:  "atm",
+					Amount: math.NewInt(0),
+				},
+			},
+			err: errorsmod.Wrapf(ErrInvalidAmount, "invalid pool coin amount (%s)", ""),
+		},
+		{
+			name: "valid message",
+			msg: MsgWithdrawRequest{
+				Sender: sample.AccAddress(),
+				PoolCoin: &types.Coin{
+					Denom:  "atm",
+					Amount: math.NewInt(100),
+				},
+				DenomOut: "marscoin",
 			},
 		},
 	}
