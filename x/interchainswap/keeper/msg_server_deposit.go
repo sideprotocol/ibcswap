@@ -3,8 +3,8 @@ package keeper
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/sideprotocol/ibcswap/v4/x/interchainswap/types"
@@ -13,10 +13,15 @@ import (
 func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) (*types.MsgDepositResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO: Handling the message
+	// validate message
+	err := msg.ValidateBasic()
+	if err != nil {
+		return nil, err
+	}
+
 	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
 	if !found {
-		return nil, fmt.Errorf("tokenId: %s  %s", &pool.PoolId, types.ErrNotFoundPool)
+		return nil, errorsmod.Wrapf(types.ErrNotFoundPool, "failed to deposit because of %s")
 	}
 
 	// Deposit token to Escrow account
@@ -38,7 +43,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) 
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut()
 
-	//Send packet
+	// construct ibc packet
 	rawMsgData, err := json.Marshal(msg)
 	if err != nil {
 		return nil, err
@@ -53,5 +58,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) 
 		return nil, err
 	}
 
-	return &types.MsgDepositResponse{}, nil
+	return &types.MsgDepositResponse{
+		PoolToken: pool.Supply,
+	}, nil
 }

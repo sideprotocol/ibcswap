@@ -183,7 +183,34 @@ func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, dat
 
 func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, data *types.IBCSwapDataPacket) error {
 
-	ctx.Logger().Debug("refundPacketToken: %s", data)
-
+	var token sdk.Coin
+	var sender string
+	switch data.Type {
+	case types.MessageType_DEPOSIT:
+		var msg types.MsgDepositRequest
+		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+			return err
+		}
+		token = *msg.Tokens[0]
+		sender = msg.Sender
+	case types.MessageType_WITHDRAW:
+		var msg types.MsgWithdrawRequest
+		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+			return err
+		}
+		token = *msg.PoolCoin
+		sender = msg.Sender
+	case types.MessageType_RIGHTSWAP:
+		var msg types.MsgSwapRequest
+		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+			return err
+		}
+		token = *msg.TokenIn
+		sender = msg.Sender
+	default:
+		return types.ErrUnknownDataPacket
+	}
+	escrowAccount := types.GetEscrowAddress(packet.SourcePort, packet.SourceChannel)
+	k.bankKeeper.SendCoinsFromModuleToAccount(ctx, escrowAccount.String(), sdk.AccAddress(sender), sdk.NewCoins(token))
 	return nil
 }
