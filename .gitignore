@@ -16,4 +16,4 @@ dist
 
 # IDE
 .idea/
-.vscode/
+.vscode/.DS_Store
