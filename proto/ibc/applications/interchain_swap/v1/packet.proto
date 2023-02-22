@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package ibc.applications.interchain_accounts.v1;
+package ibc.applications.interchain_swap.v1;
 
 option go_package = "github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain_swap/types";
 
@@ -9,20 +9,16 @@ import "gogoproto/gogo.proto";
 
 // Type defines a classification of swap messages
 enum MessageType {
-  option (gogoproto.goproto_enum_prefix) = false;
-  // Default zero value enumeration
-  TYPE_MSG_CREAT = 0 [(gogoproto.enumvalue_customname) = "CREAT"];
-  TYPE_MSG_DEPOSIT = 1 [(gogoproto.enumvalue_customname) = "DEPOSIT"];
-  TYPE_MSG_WITHDRAW = 2 [(gogoproto.enumvalue_customname) = "WITHDRAW"];
-  TYPE_MSG_LEFT_SWAP = 3 [(gogoproto.enumvalue_customname) = "LEFT_SWAP"];
-  TYPE_MSG_RIGHT_SWAP = 4 [(gogoproto.enumvalue_customname) = "RIGHT_SWAP"];
+  CREATE = 0;
+  DEPOSIT = 1;
+  WITHDRAW = 2;
+  LEFTSWAP = 3;
+  RIGHTSWAP = 4;
+}
+message IBCSwapDataPacket {
+  MessageType type = 1;
+  bytes data = 2;
 }
 
-// AtomicSwapPacketData is comprised of a raw transaction, type of transaction and optional memo field.
-message IBCSwapPacketData {
-  MessageType   type = 1;
-  bytes  data = 2;
-  string memo = 3;
-}
 
 
