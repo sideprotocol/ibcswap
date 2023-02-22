@@ -76687,6 +76687,9 @@ definitions:
         format: uint64
   ibcswap.v4.interchainswap.MsgCreatePoolResponse:
     type: object
+    properties:
+      poolId:
+        type: string
   ibcswap.v4.interchainswap.MsgDepositResponse:
     type: object
     properties:

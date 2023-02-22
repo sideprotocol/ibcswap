@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/sideprotocol/ibcswap/v4/x/interchainswap/types"
 )
@@ -54,7 +56,7 @@ func (k Keeper) onWithdrawAcknowledged(ctx sdk.Context, req *types.MsgWithdrawRe
 	return nil
 }
 
-func (k Keeper) onSwapAcknowledged(ctx sdk.Context, req *types.MsgSwapRequest, res *types.MsgWithdrawResponse) error {
+func (k Keeper) onSwapAcknowledged(ctx sdk.Context, req *types.MsgSwapRequest, res *types.MsgSwapResponse) error {
 	pooId := types.GetPoolId([]string{req.TokenIn.Denom, req.TokenOut.Denom})
 	pool, found := k.GetInterchainLiquidityPool(ctx, pooId)
 	if !found {
@@ -126,11 +128,23 @@ func (k Keeper) OnDepositReceived(ctx sdk.Context, msg *types.MsgDepositRequest)
 	_ = pool
 
 	//TODO: Need to implement params module and market maker.
-	
+
+	amm := types.NewInterchainMarketMaker(
+		pool,
+		323,
+	)
+
+	poolToken, err := amm.DepositSingleAsset(*msg.Tokens[0])
+
+	if err != nil {
+		return nil, errorsmod.Wrapf(err, "failed to deposit because %s")
+	}
+
+	k.SetInterchainLiquidityPool(ctx, pool)
 
 	ctx.EventManager().EmitTypedEvents(msg)
 	return &types.MsgDepositResponse{
-		PoolToken: &sdk.Coin{},
+		PoolToken: poolToken,
 	}, nil
 }
 
@@ -147,9 +161,23 @@ func (k Keeper) OndWithdrawReceive(ctx sdk.Context, msg *types.MsgWithdrawReques
 
 	_ = pool
 	//TODO: need to implement amm part.
+	//feeRate := parms.getPoolFeeRate()
+
+	amm := types.NewInterchainMarketMaker(
+		pool,
+		323,
+	)
+
+	outToken, err := amm.Withdraw(*msg.PoolCoin, msg.DenomOut)
+
+	if err != nil {
+		return nil, errorsmod.Wrapf(err, "failed to withdraw because of %s!")
+	}
 
 	ctx.EventManager().EmitTypedEvents(msg)
-	return nil, nil
+	return &types.MsgWithdrawResponse{
+		Tokens: []*sdk.Coin{outToken},
+	}, nil
 }
 
 func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest) (*types.MsgSwapResponse, error) {
@@ -165,7 +193,44 @@ func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest) (*typ
 	}
 
 	//TODO: need to implement amm part.
-	_ = pool
+	//feeRate := parms.getPoolFeeRate()
+
+	amm := types.NewInterchainMarketMaker(
+		pool,
+		323,
+	)
+
+	var outToken *sdk.Coin
+	var err error
+	switch msg.SwapType {
+	case types.SwapMsgType_LEFT:
+		outToken, err = amm.LeftSwap(*msg.TokenIn, msg.TokenOut.Denom)
+		if err != nil {
+			return nil, errorsmod.Wrapf(err, "failed to swap because of %s")
+		}
+	case types.SwapMsgType_RIGHT:
+		outToken, err = amm.RightSwap(*msg.TokenIn, *msg.TokenOut)
+		if err != nil {
+			return nil, errorsmod.Wrapf(err, "failed to swap because of %s")
+		}
+	}
+
+	expected := float64(msg.TokenOut.Amount.Uint64()) * (1 - float64(msg.Slippage)/10000)
+
+	if outToken.Amount.LT(math.NewInt(int64(expected))) {
+		return nil, errorsmod.Wrap(err, "doesn't meet slippage for swap!")
+	}
+
+	escrowAddr := types.GetEscrowAddress(pool.EncounterPartyPort, pool.EncounterPartyChannel)
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, escrowAddr.String(), sdk.AccAddress(msg.Recipient), sdk.NewCoins(*outToken))
+
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "failed to move assets from escrow address to recipient!")
+	}
+
+	k.SetInterchainLiquidityPool(ctx, pool)
 	ctx.EventManager().EmitTypedEvents(msg)
-	return nil, nil
+	return &types.MsgSwapResponse{
+		Tokens: []*sdk.Coin{outToken},
+	}, nil
 }

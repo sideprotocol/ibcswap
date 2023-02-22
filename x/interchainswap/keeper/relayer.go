@@ -63,60 +63,61 @@ func (k Keeper) SendIBCSwapPacket(
 	return nil
 }
 
-func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.IBCSwapDataPacket) error {
+func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.IBCSwapDataPacket) (interface{}, error) {
 	switch data.Type {
 	case types.MessageType_CREATE:
 		var msg types.MsgCreatePoolRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
-			return err
+			return nil, err
 		}
 
-		_, err := k.OnCreatePoolReceived(ctx, &msg, packet.DestinationPort, packet.DestinationChannel)
+		pooId, err := k.OnCreatePoolReceived(ctx, &msg, packet.DestinationPort, packet.DestinationChannel)
 		if err != nil {
-			return err
+			return nil, err
 		}
-
-		return nil
+		return &types.MsgCreatePoolResponse{
+			PoolId: *pooId,
+		}, nil
 
 	case types.MessageType_DEPOSIT:
 		var msg types.MsgDepositRequest
 
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
-			return err
+			return nil, err
 		}
 		_, err := k.OnDepositReceived(ctx, &msg)
 		if err != nil {
-			return err
+			return nil, err
 		} else {
-			return nil
+			return nil, nil
 		}
 
 	case types.MessageType_WITHDRAW:
 		var msg types.MsgWithdrawRequest
 
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
-			return err
+			return nil, err
 		}
-		if _, err2 := k.OndWithdrawReceive(ctx, &msg); err2 != nil {
-			return err2
+		if res, err2 := k.OndWithdrawReceive(ctx, &msg); err2 != nil {
+			return nil, err2
 		} else {
-			return nil
+			return res, nil
 		}
 
 	case types.MessageType_LEFTSWAP, types.MessageType_RIGHTSWAP:
 		var msg types.MsgSwapRequest
 
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
-			return err
+			return nil, err
 		}
-		if _, err2 := k.OnSwapReceived(ctx, &msg); err2 != nil {
-			return err2
+		if res, err2 := k.OnSwapReceived(ctx, &msg); err2 != nil {
+			return nil, err2
 		} else {
-			return nil
+			return res, nil
 		}
 
 	default:
-		return types.ErrUnknownDataPacket
+		return nil, types.ErrUnknownDataPacket
 	}
 }
 
@@ -134,29 +135,43 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			k.onCreatePoolAcknowledged(ctx, &msg)
 		case types.MessageType_DEPOSIT:
 			var msg types.MsgDepositRequest
+			var res types.MsgDepositResponse
 
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				return err
 			}
-			//k.OnDepositReceived()
-			//k.onSingleDepositAcknowledged(ctx, &msg,)
-			break
+			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
+				return err
+			}
+			if err := k.onSingleDepositAcknowledged(ctx, &msg, &res); err != nil {
+				return err
+			}
 		case types.MessageType_WITHDRAW:
 			var msg types.MsgWithdrawRequest
+			var res types.MsgWithdrawResponse
 
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				return err
 			}
-			//k.executeWithdrawRequest(ctx, &msg, StepAcknowledgement)
-			break
+			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
+				return err
+			}
+			if err := k.onWithdrawAcknowledged(ctx, &msg, &res); err != nil {
+				return err
+			}
 		case types.MessageType_LEFTSWAP, types.MessageType_RIGHTSWAP:
 			var msg types.MsgSwapRequest
+			var res types.MsgSwapResponse
 
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				return err
 			}
-			//k.executeSwapRequest(ctx, &msg, StepAcknowledgement)
-			break
+			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
+				return err
+			}
+			if err := k.onSwapAcknowledged(ctx, &msg, &res); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

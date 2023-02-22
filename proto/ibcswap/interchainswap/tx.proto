@@ -23,7 +23,9 @@ message MsgCreatePoolRequest {
            string weight        = 6;
 }
 
-message MsgCreatePoolResponse {}
+message MsgCreatePoolResponse {
+  string poolId = 1;
+}
 
 message MsgDepositRequest {
            string                         poolId = 1;

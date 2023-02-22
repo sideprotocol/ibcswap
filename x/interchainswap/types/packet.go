@@ -26,3 +26,8 @@ func (pd IBCSwapDataPacket) ValidateBasic() error {
 func (pd IBCSwapDataPacket) GetBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&pd))
 }
+
+type AckData[T any, U any] struct {
+	Req T
+	Res U
+}

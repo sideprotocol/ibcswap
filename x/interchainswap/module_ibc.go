@@ -1,6 +1,7 @@
 package interchainswap
 
 import (
+	"encoding/json"
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
@@ -151,11 +152,15 @@ func (im IBCModule) OnRecvPacket(
 	// only attempt the application logic if the packet data
 	// was successfully decoded
 	if ack.Success() {
-		err := im.keeper.OnRecvPacket(ctx, packet, data)
+		res, err := im.keeper.OnRecvPacket(ctx, packet, data)
 		if err != nil {
 			ack = channeltypes.NewErrorAcknowledgement(err)
 			ackErr = err
+		}else{
+			
 		}
+		result, _ := json.Marshal(res)
+		ack = channeltypes.NewResultAcknowledgement(result)
 	}
 
 	eventAttributes := []sdk.Attribute{
