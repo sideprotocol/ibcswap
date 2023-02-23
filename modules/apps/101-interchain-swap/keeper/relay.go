@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
@@ -54,12 +54,12 @@ func (k Keeper) SendIBCSwapPacket(
 		destinationPort,
 		destinationChannel,
 		timeoutHeight,
-		timeoutTimestamp,
-	)
+		timeoutTimestamp)
 
 	if err := k.ics4Wrapper.SendPacket(ctx, channelCap, packet); err != nil {
 		return err
 	}
+
 	return nil
 }
 

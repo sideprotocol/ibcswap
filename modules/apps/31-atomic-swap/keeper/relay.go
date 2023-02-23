@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
@@ -50,6 +52,7 @@ func (k Keeper) SendSwapPacket(
 		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 
+	fmt.Println("Timestamp", timeoutTimestamp)
 	packet := channeltypes.NewPacket(
 		swapPacket.GetBytes(),
 		sequence,

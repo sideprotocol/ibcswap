@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
 )
 
@@ -136,7 +136,7 @@ func (k Keeper) OnDepositReceived(ctx sdk.Context, msg *types.MsgDepositRequest)
 	poolToken, err := amm.DepositSingleAsset(*msg.Tokens[0])
 
 	if err != nil {
-		return nil, errorsmod.Wrapf(err, "failed to deposit because %s")
+		return nil, errorsmod.Wrapf(types.ErrFailedOnDepositReceived, "because of %s", err)
 	}
 
 	k.SetInterchainLiquidityPool(ctx, pool)
@@ -170,7 +170,7 @@ func (k Keeper) OndWithdrawReceive(ctx sdk.Context, msg *types.MsgWithdrawReques
 	outToken, err := amm.Withdraw(*msg.PoolCoin, msg.DenomOut)
 
 	if err != nil {
-		return nil, errorsmod.Wrapf(err, "failed to withdraw because of %s!")
+		return nil, errorsmod.Wrapf(types.ErrFailedOnDepositReceived, "because of %s!", err)
 	}
 
 	ctx.EventManager().EmitTypedEvents(msg)
@@ -205,19 +205,19 @@ func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest) (*typ
 	case types.SwapMsgType_LEFT:
 		outToken, err = amm.LeftSwap(*msg.TokenIn, msg.TokenOut.Denom)
 		if err != nil {
-			return nil, errorsmod.Wrapf(err, "failed to swap because of %s")
+			return nil, errorsmod.Wrapf(types.ErrFailedOnSwapReceived, "because of %s", err)
 		}
 	case types.SwapMsgType_RIGHT:
 		outToken, err = amm.RightSwap(*msg.TokenIn, *msg.TokenOut)
 		if err != nil {
-			return nil, errorsmod.Wrapf(err, "failed to swap because of %s")
+			return nil, errorsmod.Wrapf(types.ErrFailedOnSwapReceived, "because of %s", err)
 		}
 	}
 
 	expected := float64(msg.TokenOut.Amount.Uint64()) * (1 - float64(msg.Slippage)/10000)
 
 	if outToken.Amount.LT(sdk.NewInt(int64(expected))) {
-		return nil, errorsmod.Wrap(err, "doesn't meet slippage for swap!")
+		return nil, errorsmod.Wrap(types.ErrFailedOnSwapReceived, "doesn't meet slippage for swap!, %s")
 	}
 
 	escrowAddr := types.GetEscrowAddress(pool.EncounterPartyPort, pool.EncounterPartyChannel)

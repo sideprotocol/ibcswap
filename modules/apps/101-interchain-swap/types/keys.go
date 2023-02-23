@@ -8,28 +8,29 @@ import (
 )
 
 const (
-	// ModuleName defines the module name
+	// ModuleName defines the IBC swap name
 	ModuleName = "interchainswap"
 
-	// StoreKey defines the primary module store key
+	// Version defines the current version the IBC swap
+	// module supports
+	Version = "ics101-1"
+
+	// PortID is the default port id that swap module binds to
+	PortID = ModuleName
+
+	// StoreKey is the store key string for IBC swap
 	StoreKey = ModuleName
 
-	// RouterKey defines the module's message routing key
+	// RouterKey is the message route for IBC swap
 	RouterKey = ModuleName
 
-	// MemStoreKey defines the in-memory store key
-	MemStoreKey = "mem_interchainswap"
-
-	// Version defines the current version the IBC module supports
-	Version = "interchainswap-1"
-
-	// PortID is the default port id that module binds to
-	PortID = "interchainswap"
+	// QuerierRoute is the querier route for IBC swap
+	QuerierRoute = ModuleName
 )
 
 var (
 	// PortKey defines the key to store the port ID in store
-	PortKey = KeyPrefix("interchainswap-port-")
+	PortKey = []byte{0x01}
 )
 
 func KeyPrefix(p string) []byte {

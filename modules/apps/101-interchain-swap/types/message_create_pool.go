@@ -10,7 +10,7 @@ const TypeMsgCreatePool = "create_pool"
 
 var _ sdk.Msg = &MsgCreatePoolRequest{}
 
-func NewMsgCreatePool(creator string, sourcePort string, sourceChannel string, sender string, weight string, denoms []string, decimals []uint32) *MsgCreatePoolRequest {
+func NewMsgCreatePool(sourcePort string, sourceChannel string, sender string, weight string, denoms []string, decimals []uint32) *MsgCreatePoolRequest {
 	return &MsgCreatePoolRequest{
 		SourcePort:    sourcePort,
 		SourceChannel: sourceChannel,

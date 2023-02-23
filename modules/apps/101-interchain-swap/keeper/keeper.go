@@ -7,6 +7,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
@@ -18,15 +19,13 @@ import (
 
 type (
 	Keeper struct {
-		cdc        codec.BinaryCodec
-		storeKey   storetypes.StoreKey
-		memKey     storetypes.StoreKey
-		paramstore paramtypes.Subspace
-
+		cdc            codec.BinaryCodec
+		storeKey       storetypes.StoreKey
+		paramstore     paramtypes.Subspace
 		ics4Wrapper    types.ICS4Wrapper
 		channelKeeper  types.ChannelKeeper
 		portKeeper     types.PortKeeper
-		scopedKeeper   types.ScopedKeeper
+		scopedKeeper   capabilitykeeper.ScopedKeeper
 		bankKeeper     types.BankKeeper
 		bankViewKeeper types.BankViewKeeper
 	}
@@ -34,12 +33,12 @@ type (
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	storeKey,
-	memKey storetypes.StoreKey,
+	storeKey storetypes.StoreKey,
 	ps paramtypes.Subspace,
+	ics4Wrapper types.ICS4Wrapper,
 	channelKeeper types.ChannelKeeper,
 	portKeeper types.PortKeeper,
-	scopedKeeper types.ScopedKeeper,
+	scopedKeeper capabilitykeeper.ScopedKeeper,
 	bankKeeper types.BankKeeper,
 	bankViewKeeper types.BankViewKeeper,
 
@@ -50,11 +49,10 @@ func NewKeeper(
 	}
 
 	return &Keeper{
-		cdc:        cdc,
-		storeKey:   storeKey,
-		memKey:     memKey,
-		paramstore: ps,
-
+		cdc:            cdc,
+		storeKey:       storeKey,
+		paramstore:     ps,
+		ics4Wrapper:    ics4Wrapper,
 		channelKeeper:  channelKeeper,
 		portKeeper:     portKeeper,
 		scopedKeeper:   scopedKeeper,

@@ -5,6 +5,17 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	DefaultSwapEnabled = true
+	// DefaultMaxFeeRate is 0.0010
+	DefaultMaxFeeRate = 10
+)
+
+var (
+	KeySwapEnabled    = []byte("SwapEnabled")
+	KeySwapMaxFeeRate = []byte("MaxFeeRate")
+)
+
 var _ paramtypes.ParamSet = (*Params)(nil)
 
 // ParamKeyTable the param key table for launch module
@@ -13,13 +24,16 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams() Params {
-	return Params{}
+func NewParams(enable bool, feeRate uint32) Params {
+	return Params{
+		SwapEnabled: enable,
+		MaxFeeRate:  feeRate,
+	}
 }
 
 // DefaultParams returns a default set of parameters
 func DefaultParams() Params {
-	return NewParams()
+	return NewParams(DefaultSwapEnabled, DefaultMaxFeeRate)
 }
 
 // ParamSetPairs get the params.ParamSet

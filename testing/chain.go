@@ -579,6 +579,8 @@ func (chain *TestChain) CreateChannelCapability(scopedKeeper capabilitykeeper.Sc
 // The capability must exist, otherwise testing will fail.
 func (chain *TestChain) GetChannelCapability(portID, channelID string) *capabilitytypes.Capability {
 	cap, ok := chain.App.GetScopedIBCKeeper().GetCapability(chain.GetContext(), host.ChannelCapabilityPath(portID, channelID))
+	fmt.Println("SimApp_HostChannel", host.ChannelCapabilityPath(portID, channelID))
+	
 	require.True(chain.T, ok)
 
 	return cap

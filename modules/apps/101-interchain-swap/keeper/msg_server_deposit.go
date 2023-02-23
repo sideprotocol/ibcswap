@@ -20,7 +20,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) 
 
 	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
 	if !found {
-		return nil, errorsmod.Wrapf(types.ErrNotFoundPool, "failed to deposit because of %s")
+		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "because of %s", err)
 	}
 
 	// Deposit token to Escrow account
@@ -40,7 +40,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) 
 	escrowAccount := types.GetEscrowAddress(pool.EncounterPartyPort, pool.EncounterPartyChannel)
 	k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, escrowAccount, types.ModuleName, coins)
 
-	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut()
+	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&ctx)
 
 	// construct ibc packet
 	rawMsgData, err := json.Marshal(msg)

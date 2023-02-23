@@ -149,6 +149,12 @@ func (coord *Coordinator) CreateSwapChannels(path *Path) {
 	coord.CreateChannels(path)
 }
 
+func (coord *Coordinator) CreateInterchainSwapChannels(path *Path) {
+	path.EndpointA.ChannelConfig.PortID = InterChainSwapPort
+	path.EndpointB.ChannelConfig.PortID = InterChainSwapPort
+	coord.CreateChannels(path)
+}
+
 // CreateChannels constructs and executes channel handshake messages in order to create
 // OPEN channels on chainA and chainB. The function expects the channels to be successfully
 // opened otherwise testing will fail.

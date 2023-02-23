@@ -3,9 +3,10 @@ package keeper
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
-	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
 )
@@ -16,19 +17,19 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolReq
 	// validate message
 	err := host.PortIdentifierValidator(msg.SourcePort)
 	if err != nil {
-		return nil, errorsmod.Wrapf(err, "failed to create pool because of %s")
+		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "because of %s", err)
 	}
 
 	err = host.ChannelIdentifierValidator(msg.SourceChannel)
 	if err != nil {
-		return nil, errorsmod.Wrapf(err, "failed to create pool because of %s")
+		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "because of %s", err)
 	}
 
 	err = msg.ValidateBasic()
 	if err != nil {
-		return nil, errorsmod.Wrapf(err, "failed to create pool because of %s")
+		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "because of %s", err)
 	}
-  
+
 	pool := types.NewInterchainLiquidityPool(
 		ctx,
 		k.bankKeeper,
@@ -62,7 +63,9 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolReq
 		Data: poolData,
 	}
 
-	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut()
+	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&ctx)
+	fmt.Println("Timeout-:", timeoutStamp)
+	
 
 	err = k.SendIBCSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, timeoutHeight, timeoutStamp, packet)
 

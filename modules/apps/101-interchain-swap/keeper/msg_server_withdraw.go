@@ -22,22 +22,22 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolCoin.Denom)
 
 	if !found {
-		return nil, errorsmod.Wrapf(types.ErrNotFoundPool, "failed to withdraw because of %s")
+		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", types.ErrNotFoundPool)
 	}
 
 	if pool.Status != types.PoolStatus_POOL_STATUS_READY {
-		return nil, errorsmod.Wrapf(types.ErrNotReadyForSwap, "failed to withdraw because of %s")
+		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", types.ErrNotReadyForSwap)
 	}
 
 	asset, err := pool.FindAssetByDenom(msg.DenomOut)
 
 	if err != nil {
-		return nil, errorsmod.Wrapf(types.ErrEmptyDenom, "failed to withdraw because of %s in pool")
+		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s in pool", types.ErrEmptyDenom)
 	}
 
 	// validate asset
 	if asset.Side != types.PoolSide_NATIVE {
-		return nil, errorsmod.Wrapf(types.ErrNotNativeDenom, "failed to withdraw because of %s")
+		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", types.ErrNotNativeDenom)
 	}
 
 	// lock pool token to the swap module
@@ -55,7 +55,7 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 		Data: rawMsgData,
 	}
 
-	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut()
+	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&ctx)
 
 	k.SendIBCSwapPacket(ctx, pool.EncounterPartyPort, pool.EncounterPartyChannel, timeoutHeight, uint64(timeoutStamp), packet)
 	return &types.MsgWithdrawResponse{}, nil

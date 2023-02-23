@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
 )
 
@@ -15,7 +15,7 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 	// validate msg.
 	err := msg.ValidateBasic()
 	if err != nil {
-		return nil, errorsmod.Wrapf(err, "failed to swap because of %s")
+		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "failed to swap because of %s", err)
 	}
 
 	pool, found := k.GetInterchainLiquidityPool(ctx, types.GetPoolId([]string{
@@ -23,7 +23,7 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 	}))
 
 	if !found {
-		return nil, errorsmod.Wrapf(types.ErrNotFoundPool, "failed to swap because of %s")
+		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "because of %s", types.ErrNotFoundPool)
 	}
 
 	//lock swap-in token to the swap module
@@ -51,7 +51,7 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 		Data: rawMsgData,
 	}
 
-	timeOutHeight, timeoutStamp := types.GetDefaultTimeOut()
+	timeOutHeight, timeoutStamp := types.GetDefaultTimeOut(&ctx)
 
 	err = k.SendIBCSwapPacket(
 		ctx,
