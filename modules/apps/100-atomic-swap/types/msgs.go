@@ -24,8 +24,8 @@ func NewMsgMakeSwap(
 	senderAddress, senderReceivingAddress, desiredTaker string,
 	timeoutHeight clienttypes.Height, timeoutTimestamp uint64,
 	createdTimestamp int64,
-) *MsgMakeSwapRequest {
-	return &MsgMakeSwapRequest{
+) *MakeSwapMsg {
+	return &MakeSwapMsg{
 		SourcePort:            sourcePort,
 		SourceChannel:         sourceChannel,
 		SellToken:             sellToken,
@@ -33,19 +33,19 @@ func NewMsgMakeSwap(
 		MakerAddress:          senderAddress,
 		MakerReceivingAddress: senderReceivingAddress,
 		DesiredTaker:          desiredTaker,
-		TimeoutHeight:         timeoutHeight,
+		TimeoutHeight:         &timeoutHeight,
 		TimeoutTimestamp:      timeoutTimestamp,
-		CreateTimestamp:       createdTimestamp,
+		CreationTimestamp:     uint64(createdTimestamp),
 	}
 }
 
 // Route implements sdk.Msg
-func (*MsgMakeSwapRequest) Route() string {
+func (*MakeSwapMsg) Route() string {
 	return RouterKey
 }
 
 // Type implements sdk.Msg
-func (*MsgMakeSwapRequest) Type() string {
+func (*MakeSwapMsg) Type() string {
 	return TypeMsgMakeSwap
 }
 
@@ -53,7 +53,7 @@ func (*MsgMakeSwapRequest) Type() string {
 // NOTE: timeout height or timestamp values can be 0 to disable the timeout.
 // NOTE: The recipient addresses format is not validated as the format defined by
 // the chain is not known to IBC.
-func (msg *MsgMakeSwapRequest) ValidateBasic() error {
+func (msg *MakeSwapMsg) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.SourcePort); err != nil {
 		return sdkerrors.Wrap(err, "invalid source port ID")
 	}
@@ -85,12 +85,12 @@ func (msg *MsgMakeSwapRequest) ValidateBasic() error {
 }
 
 // GetSignBytes implements sdk.Msg.
-func (msg *MsgMakeSwapRequest) GetSignBytes() []byte {
+func (msg *MakeSwapMsg) GetSignBytes() []byte {
 	return sdk.MustSortJSON(AminoCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners implements sdk.Msg
-func (msg *MsgMakeSwapRequest) GetSigners() []sdk.AccAddress {
+func (msg *MakeSwapMsg) GetSigners() []sdk.AccAddress {
 	signer, err := sdk.AccAddressFromBech32(msg.MakerAddress)
 	if err != nil {
 		panic(err)
@@ -132,7 +132,7 @@ func (*MsgTakeSwapRequest) Type() string {
 // NOTE: timeout height or timestamp values can be 0 to disable the timeout.
 // NOTE: The recipient addresses format is not validated as the format defined by
 // the chain is not known to IBC.
-func (msg *MsgTakeSwapRequest) ValidateBasic() error {
+func (msg *TakeSwapMsg) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.SourcePort); err != nil {
 		return sdkerrors.Wrap(err, "invalid source port ID")
 	}
@@ -200,7 +200,7 @@ func (*MsgCancelSwapRequest) Type() string {
 // NOTE: timeout height or timestamp values can be 0 to disable the timeout.
 // NOTE: The recipient addresses format is not validated as the format defined by
 // the chain is not known to IBC.
-func (msg *MsgCancelSwapRequest) ValidateBasic() error {
+func (msg *CancelSwapMsg) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.SourcePort); err != nil {
 		return sdkerrors.Wrap(err, "invalid source port ID")
 	}

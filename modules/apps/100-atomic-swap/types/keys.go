@@ -35,6 +35,9 @@ var (
 	LimitOrderBookKey = []byte{0x02}
 	// OTCOrderBookKey defines the key to store the denomination trace info in store
 	OTCOrderBookKey = []byte{0x03}
+
+	// OrderBookKey defines the key to store the denomination trace info in store
+	OrderBookKey = []byte{0x04}
 )
 
 // GetEscrowAddress returns the escrow address for the specified channel.

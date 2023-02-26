@@ -22,7 +22,7 @@ func NewAtomicOrder(msg *MsgMakeSwapRequest, channelId string) AtomicSwapOrder {
 	}
 }
 
-func NewMakerFromMsg(msg *MsgMakeSwapRequest) *SwapMaker {
+func NewMakerFromMsg(msg *MakeSwapMsg) *SwapMaker {
 	return &SwapMaker{
 		SourcePort:            msg.SourcePort,
 		SourceChannel:         msg.SourceChannel,
@@ -35,7 +35,7 @@ func NewMakerFromMsg(msg *MsgMakeSwapRequest) *SwapMaker {
 	}
 }
 
-func NewTakerFromMsg(msg *MsgTakeSwapRequest) *SwapTaker {
+func NewTakerFromMsg(msg *TakeSwapMsg) *SwapTaker {
 	return &SwapTaker{
 		OrderId:               msg.OrderId,
 		SellToken:             msg.SellToken,
