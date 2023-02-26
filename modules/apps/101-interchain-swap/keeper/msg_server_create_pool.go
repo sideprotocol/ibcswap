@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
@@ -64,13 +63,12 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolReq
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&ctx)
-	fmt.Println("Timeout-:", timeoutStamp)
-	
-
 	err = k.SendIBCSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, timeoutHeight, timeoutStamp, packet)
 
 	if err != nil {
 		return nil, err
 	}
-	return &types.MsgCreatePoolResponse{}, nil
+	return &types.MsgCreatePoolResponse{
+		PoolId: pool.PoolId,
+	}, nil
 }

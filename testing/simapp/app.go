@@ -208,7 +208,6 @@ type SimApp struct {
 	// keepers
 	AccountKeeper           authkeeper.AccountKeeper
 	BankKeeper              bankkeeper.Keeper
-	BankViewKeeper          bankkeeper.BaseViewKeeper
 	CapabilityKeeper        *capabilitykeeper.Keeper
 	StakingKeeper           stakingkeeper.Keeper
 	SlashingKeeper          slashingkeeper.Keeper
@@ -332,8 +331,6 @@ func NewSimApp(
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.ModuleAccountAddrs(),
 	)
-	app.BankViewKeeper = bankkeeper.NewBaseViewKeeper(appCodec, keys[banktypes.StoreKey], app.AccountKeeper)
-
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
 	)
@@ -432,7 +429,6 @@ func NewSimApp(
 		&app.IBCKeeper.PortKeeper,
 		scopedIBCInterchainswapKeeper,
 		app.BankKeeper,
-		app.BankViewKeeper,
 	)
 
 	// Mock Module Stack

@@ -21,8 +21,5 @@ type BankKeeper interface {
 	MintCoins(ctx sdk.Context, moduleName string, amounts sdk.Coins) error
 
 	HasSupply(ctx sdk.Context, denom string) bool
-}
-
-type BankViewKeeper interface {
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 }

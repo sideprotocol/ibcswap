@@ -2,8 +2,10 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	//channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/keeper"
 	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
+	//ibctesting "github.com/sideprotocol/ibcswap/v4/testing"
 )
 
 func (suite *KeeperTestSuite) TestMsgCreatePool() {
@@ -40,8 +42,6 @@ func (suite *KeeperTestSuite) TestMsgCreatePool() {
 		msgSrv := keeper.NewMsgServerImpl(suite.chainA.GetSimApp().IBCInterchainSwapKeeper)
 		res, err := msgSrv.CreatePool(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 
-		suite.Require().NoError(err)
-		suite.Require().Equal(true, true)
 		if tc.expPass {
 			suite.Require().NoError(err)
 			suite.Require().NotNil(res)

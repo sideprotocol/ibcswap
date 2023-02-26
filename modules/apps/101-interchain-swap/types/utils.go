@@ -31,3 +31,4 @@ func GetPoolId(denoms []string) string {
 	poolId := "pool" + fmt.Sprintf("%v", poolIdHash.Sum(nil))
 	return poolId
 }
+

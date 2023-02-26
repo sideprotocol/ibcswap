@@ -19,15 +19,14 @@ import (
 
 type (
 	Keeper struct {
-		cdc            codec.BinaryCodec
-		storeKey       storetypes.StoreKey
-		paramstore     paramtypes.Subspace
-		ics4Wrapper    types.ICS4Wrapper
-		channelKeeper  types.ChannelKeeper
-		portKeeper     types.PortKeeper
-		scopedKeeper   capabilitykeeper.ScopedKeeper
-		bankKeeper     types.BankKeeper
-		bankViewKeeper types.BankViewKeeper
+		cdc           codec.BinaryCodec
+		storeKey      storetypes.StoreKey
+		paramstore    paramtypes.Subspace
+		ics4Wrapper   types.ICS4Wrapper
+		channelKeeper types.ChannelKeeper
+		portKeeper    types.PortKeeper
+		scopedKeeper  capabilitykeeper.ScopedKeeper
+		bankKeeper    types.BankKeeper
 	}
 )
 
@@ -40,7 +39,6 @@ func NewKeeper(
 	portKeeper types.PortKeeper,
 	scopedKeeper capabilitykeeper.ScopedKeeper,
 	bankKeeper types.BankKeeper,
-	bankViewKeeper types.BankViewKeeper,
 
 ) *Keeper {
 	// set KeyTable if it has not already been set
@@ -49,15 +47,14 @@ func NewKeeper(
 	}
 
 	return &Keeper{
-		cdc:            cdc,
-		storeKey:       storeKey,
-		paramstore:     ps,
-		ics4Wrapper:    ics4Wrapper,
-		channelKeeper:  channelKeeper,
-		portKeeper:     portKeeper,
-		scopedKeeper:   scopedKeeper,
-		bankKeeper:     bankKeeper,
-		bankViewKeeper: bankViewKeeper,
+		cdc:           cdc,
+		storeKey:      storeKey,
+		paramstore:    ps,
+		ics4Wrapper:   ics4Wrapper,
+		channelKeeper: channelKeeper,
+		portKeeper:    portKeeper,
+		scopedKeeper:  scopedKeeper,
+		bankKeeper:    bankKeeper,
 	}
 }
 
@@ -113,4 +110,12 @@ func (k Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+func (k Keeper) GetBalance(ctx sdk.Context, sender sdk.AccAddress) sdk.Coin {
+	return k.bankKeeper.GetBalance(ctx, sender, sdk.DefaultBondDenom)
+}
+
+func (k Keeper) SingleDepositTest(ctx sdk.Context, sender sdk.AccAddress) sdk.Coin {
+	return k.bankKeeper.GetBalance(ctx, sender, sdk.DefaultBondDenom)
 }

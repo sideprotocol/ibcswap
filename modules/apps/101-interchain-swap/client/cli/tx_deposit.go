@@ -16,12 +16,18 @@ func CmdDeposit() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deposit [pool-id] [sender]",
 		Short: "Broadcast message Deposit",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argPoolId := args[0]
 			argSender := args[1]
+			argTokens := args[3]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			tokens, err := GetTokens(argTokens)
 			if err != nil {
 				return err
 			}
@@ -29,6 +35,7 @@ func CmdDeposit() *cobra.Command {
 			msg := types.NewMsgDeposit(
 				argPoolId,
 				argSender,
+				tokens,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

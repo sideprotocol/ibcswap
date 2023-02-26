@@ -18,11 +18,21 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-func (k Keeper) onCreatePoolAcknowledged(ctx sdk.Context, msg *types.MsgCreatePoolRequest) {
-	//TODO:
+func (k Keeper) OnCreatePoolAcknowledged(ctx sdk.Context, msg *types.MsgCreatePoolRequest) {
+	//save pool after complete create operation in counter party chain.
+	k.SetInterchainLiquidityPool(
+		ctx, *types.NewInterchainLiquidityPool(
+			ctx,
+			k.bankKeeper,
+			msg.Denoms,
+			msg.Decimals,
+			msg.Weight,
+			msg.SourcePort,
+			msg.SourceChannel,
+		))
 }
 
-func (k Keeper) onSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgDepositRequest, res *types.MsgDepositResponse) error {
+func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgDepositRequest, res *types.MsgDepositResponse) error {
 	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolId)
 	if !found {
 		return types.ErrNotFoundPool
@@ -38,7 +48,7 @@ func (k Keeper) onSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgDepos
 	return nil
 }
 
-func (k Keeper) onWithdrawAcknowledged(ctx sdk.Context, req *types.MsgWithdrawRequest, res *types.MsgWithdrawResponse) error {
+func (k Keeper) OnWithdrawAcknowledged(ctx sdk.Context, req *types.MsgWithdrawRequest, res *types.MsgWithdrawResponse) error {
 	pool, found := k.GetInterchainLiquidityPool(ctx, "")
 	if !found {
 		return types.ErrNotFoundPool
@@ -55,7 +65,7 @@ func (k Keeper) onWithdrawAcknowledged(ctx sdk.Context, req *types.MsgWithdrawRe
 	return nil
 }
 
-func (k Keeper) onSwapAcknowledged(ctx sdk.Context, req *types.MsgSwapRequest, res *types.MsgSwapResponse) error {
+func (k Keeper) OnSwapAcknowledged(ctx sdk.Context, req *types.MsgSwapRequest, res *types.MsgSwapResponse) error {
 	pooId := types.GetPoolId([]string{req.TokenIn.Denom, req.TokenOut.Denom})
 	pool, found := k.GetInterchainLiquidityPool(ctx, pooId)
 	if !found {

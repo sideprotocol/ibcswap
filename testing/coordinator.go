@@ -37,6 +37,7 @@ func NewCoordinator(t *testing.T, n int) *Coordinator {
 		chainID := GetChainID(i)
 		chains[chainID] = NewTestChain(t, coord, chainID)
 	}
+
 	coord.Chains = chains
 
 	return coord
