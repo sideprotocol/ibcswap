@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap/types"
+	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
 )
 
 // SwapUnmarshaler defines the expected encoding store functions.

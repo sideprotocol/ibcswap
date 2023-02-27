@@ -44,7 +44,6 @@ func CmdCreatePool() *cobra.Command {
 			}
 
 			msg := types.NewMsgCreatePool(
-				clientCtx.GetFromAddress().String(),
 				argSourcePort,
 				argSourceChannel,
 				argSender,

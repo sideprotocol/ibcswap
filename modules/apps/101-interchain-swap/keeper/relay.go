@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
@@ -54,12 +54,12 @@ func (k Keeper) SendIBCSwapPacket(
 		destinationPort,
 		destinationChannel,
 		timeoutHeight,
-		timeoutTimestamp,
-	)
+		timeoutTimestamp)
 
 	if err := k.ics4Wrapper.SendPacket(ctx, channelCap, packet); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -132,7 +132,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				return err
 			}
-			k.onCreatePoolAcknowledged(ctx, &msg)
+			k.OnCreatePoolAcknowledged(ctx, &msg)
 		case types.MessageType_DEPOSIT:
 			var msg types.MsgDepositRequest
 			var res types.MsgDepositResponse
@@ -143,7 +143,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
 				return err
 			}
-			if err := k.onSingleDepositAcknowledged(ctx, &msg, &res); err != nil {
+			if err := k.OnSingleDepositAcknowledged(ctx, &msg, &res); err != nil {
 				return err
 			}
 		case types.MessageType_WITHDRAW:
@@ -156,7 +156,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
 				return err
 			}
-			if err := k.onWithdrawAcknowledged(ctx, &msg, &res); err != nil {
+			if err := k.OnWithdrawAcknowledged(ctx, &msg, &res); err != nil {
 				return err
 			}
 		case types.MessageType_LEFTSWAP, types.MessageType_RIGHTSWAP:
@@ -169,7 +169,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
 				return err
 			}
-			if err := k.onSwapAcknowledged(ctx, &msg, &res); err != nil {
+			if err := k.OnSwapAcknowledged(ctx, &msg, &res); err != nil {
 				return err
 			}
 		}

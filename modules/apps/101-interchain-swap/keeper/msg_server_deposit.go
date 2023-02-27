@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 
-	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
 )
 
-func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) (*types.MsgDepositResponse, error) {
+func (k Keeper) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) (*types.MsgDepositResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// validate message
@@ -20,13 +20,17 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) 
 
 	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
 	if !found {
-		return nil, errorsmod.Wrapf(types.ErrNotFoundPool, "failed to deposit because of %s")
+		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "%s", types.ErrNotFoundPool)
 	}
 
 	// Deposit token to Escrow account
 	var coins sdk.Coins
 	for _, denom := range msg.Tokens {
-		balance := k.bankViewKeeper.GetBalance(ctx, sdk.AccAddress(msg.Sender), denom.Denom)
+		accAddress, err := sdk.AccAddressFromBech32(msg.Sender)
+		if err != nil {
+			return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "%s", types.ErrInvalidAddress)
+		}
+		balance := k.bankKeeper.GetBalance(ctx, accAddress, denom.Denom)
 		if balance.Amount.Equal(sdk.NewInt(0)) {
 			return nil, types.ErrInvalidAmount
 		}
@@ -38,9 +42,9 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) 
 	}
 
 	escrowAccount := types.GetEscrowAddress(pool.EncounterPartyPort, pool.EncounterPartyChannel)
-	k.Keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, escrowAccount, types.ModuleName, coins)
+	k.bankKeeper.SendCoinsFromAccountToModule(ctx, escrowAccount, types.ModuleName, coins)
 
-	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut()
+	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&ctx)
 
 	// construct ibc packet
 	rawMsgData, err := json.Marshal(msg)

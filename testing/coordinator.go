@@ -37,6 +37,7 @@ func NewCoordinator(t *testing.T, n int) *Coordinator {
 		chainID := GetChainID(i)
 		chains[chainID] = NewTestChain(t, coord, chainID)
 	}
+
 	coord.Chains = chains
 
 	return coord
@@ -146,6 +147,12 @@ func (coord *Coordinator) CreateSwapChannels(path *Path) {
 	path.EndpointA.ChannelConfig.PortID = SwapPort
 	path.EndpointB.ChannelConfig.PortID = SwapPort
 
+	coord.CreateChannels(path)
+}
+
+func (coord *Coordinator) CreateInterchainSwapChannels(path *Path) {
+	path.EndpointA.ChannelConfig.PortID = InterChainSwapPort
+	path.EndpointB.ChannelConfig.PortID = InterChainSwapPort
 	coord.CreateChannels(path)
 }
 

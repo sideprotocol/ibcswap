@@ -1,0 +1,15 @@
+syntax = "proto3";
+package ibc.applications.interchain_swap.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain_swap/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+   // swap_enabled enables or disables all cross-chain token transfers from this chain.
+   bool swap_enabled = 1 [(gogoproto.moretags) = "yaml:\"swap_enabled\""];
+   // max_fee_rate set a max value of fee, it's base point, 1/10000
+   uint32 max_fee_rate = 2 [(gogoproto.moretags) = "yaml:\"max_fee_rate\""];
+}

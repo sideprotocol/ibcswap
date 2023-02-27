@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package ibc.applications.interchain_swap.v1;
+
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain_swap/types";
+
+enum PoolSide {
+    NATIVE = 0;
+    REMOTE = 1;
+}
+
+enum PoolStatus {
+    POOL_STATUS_INITIAL = 0;
+    POOL_STATUS_READY = 1;
+}
+message PoolAsset {
+    PoolSide side = 1;
+    cosmos.base.v1beta1.Coin balance = 2;
+    uint32 weight = 3;
+    uint32 decimal = 4;
+}
+
+message InterchainLiquidityPool {
+    string poolId = 1;
+    repeated PoolAsset assets = 2;
+    cosmos.base.v1beta1.Coin supply = 3;
+    PoolStatus status = 4;
+    string encounterPartyPort = 5; 
+    string encounterPartyChannel = 6; 
+}
+
+message InterchainMarketMaker {
+    string poolId = 1; 
+    InterchainLiquidityPool pool = 2;
+    uint64 feeRate = 3; 
+  }

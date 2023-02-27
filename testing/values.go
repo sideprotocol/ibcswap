@@ -6,6 +6,7 @@ package ibctesting
 
 import (
 	ibcswaptypes "github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap/types"
+	ibcinterchainswaptypes "github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,6 +36,8 @@ const (
 	// Application Ports
 	TransferPort = ibctransfertypes.ModuleName
 	SwapPort     = ibcswaptypes.ModuleName
+	InterChainSwapPort = ibcinterchainswaptypes.ModuleName
+
 	MockPort     = mock.ModuleName
 	MockFeePort  = simapp.MockFeePort
 

@@ -208,7 +208,6 @@ type SimApp struct {
 	// keepers
 	AccountKeeper           authkeeper.AccountKeeper
 	BankKeeper              bankkeeper.Keeper
-	BankViewKeeper          bankkeeper.BaseViewKeeper
 	CapabilityKeeper        *capabilitykeeper.Keeper
 	StakingKeeper           stakingkeeper.Keeper
 	SlashingKeeper          slashingkeeper.Keeper
@@ -285,7 +284,7 @@ func NewSimApp(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, icacontrollertypes.StoreKey, icahosttypes.StoreKey, capabilitytypes.StoreKey,
-		authzkeeper.StoreKey, ibcfeetypes.StoreKey, ibcswaptypes.StoreKey,
+		authzkeeper.StoreKey, ibcfeetypes.StoreKey, ibcswaptypes.StoreKey, ibcinterchainswaptypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -321,7 +320,6 @@ func NewSimApp(
 	scopedFeeMockKeeper := app.CapabilityKeeper.ScopeToModule(MockFeePort)
 	scopedICAMockKeeper := app.CapabilityKeeper.ScopeToModule(ibcmock.ModuleName + icacontrollertypes.SubModuleName)
 	// scopedIBCSwapMockKeeper := app.CapabilityKeeper.ScopeToModule(ibcswaptypes.ModuleName + "mock")
-
 	// seal capability keeper after scoping modules
 	app.CapabilityKeeper.Seal()
 
@@ -333,8 +331,6 @@ func NewSimApp(
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.ModuleAccountAddrs(),
 	)
-	app.BankViewKeeper = bankkeeper.NewBaseViewKeeper(appCodec, keys[banktypes.StoreKey], app.AccountKeeper)
-
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
 	)
@@ -427,13 +423,12 @@ func NewSimApp(
 
 	app.IBCInterchainSwapKeeper = *ibcinterchainswapkeeper.NewKeeper(
 		appCodec, keys[ibcinterchainswaptypes.StoreKey],
-		memKeys[ibcinterchainswaptypes.StoreKey],
 		app.GetSubspace(ibcinterchainswaptypes.ModuleName),
+		app.IBCFeeKeeper,
 		app.IBCKeeper.ChannelKeeper,
 		&app.IBCKeeper.PortKeeper,
 		scopedIBCInterchainswapKeeper,
 		app.BankKeeper,
-		app.BankViewKeeper,
 	)
 
 	// Mock Module Stack
@@ -471,8 +466,14 @@ func NewSimApp(
 	swapStack = ibcswap.NewIBCModule(app.IBCSwapKeeper)
 	// swapStack = ibcfee.NewIBCMiddleware(swapStack, app.IBCFeeKeeper)
 
+	// interchain swap module
+	interchainSwapStack := ibcinterchainswap.NewIBCModule(app.IBCInterchainSwapKeeper)
+
 	// Add swap stack to IBC Router
 	ibcRouter.AddRoute(ibcswaptypes.ModuleName, swapStack)
+
+	// // Add interchainswap stack to IBC Router
+	ibcRouter.AddRoute(ibcinterchainswaptypes.ModuleName, interchainSwapStack)
 
 	// Create Interchain Accounts Stack
 	// SendPacket, since it is originating from the application to core IBC:
@@ -563,6 +564,8 @@ func NewSimApp(
 		ibcfee.NewAppModule(app.IBCFeeKeeper),
 		ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper),
 		ibcswap.NewAppModule(app.IBCSwapKeeper),
+		ibcinterchainswap.NewAppModule(app.IBCInterchainSwapKeeper),
+
 		mockModule,
 	)
 
@@ -575,13 +578,13 @@ func NewSimApp(
 		upgradetypes.ModuleName, capabilitytypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName, ibctransfertypes.ModuleName, authtypes.ModuleName,
 		banktypes.ModuleName, govtypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName, authz.ModuleName, feegrant.ModuleName,
-		paramstypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, ibcfeetypes.ModuleName, ibcmock.ModuleName, ibcswaptypes.ModuleName,
+		paramstypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, ibcfeetypes.ModuleName, ibcmock.ModuleName, ibcswaptypes.ModuleName, ibcinterchainswaptypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName, ibctransfertypes.ModuleName,
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
 		minttypes.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName, feegrant.ModuleName, paramstypes.ModuleName,
-		upgradetypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, ibcfeetypes.ModuleName, ibcmock.ModuleName, ibcswaptypes.ModuleName,
+		upgradetypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, ibcfeetypes.ModuleName, ibcmock.ModuleName, ibcswaptypes.ModuleName, ibcinterchainswaptypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -595,6 +598,7 @@ func NewSimApp(
 		ibchost.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName, ibctransfertypes.ModuleName,
 		icatypes.ModuleName, ibcfeetypes.ModuleName, ibcmock.ModuleName, feegrant.ModuleName, paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
 		ibcswaptypes.ModuleName,
+		ibcinterchainswaptypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -625,6 +629,7 @@ func NewSimApp(
 		ibc.NewAppModule(app.IBCKeeper),
 		transfer.NewAppModule(app.TransferKeeper),
 		ibcswap.NewAppModule(app.IBCSwapKeeper),
+		ibcinterchainswap.NewAppModule(app.IBCInterchainSwapKeeper),
 	)
 
 	app.sm.RegisterStoreDecoders()
@@ -668,7 +673,7 @@ func NewSimApp(
 	app.ScopedICAControllerKeeper = scopedICAControllerKeeper
 	app.ScopedICAHostKeeper = scopedICAHostKeeper
 	app.ScopedIBCSwapKeeper = scopedIBCSwapKeeper
-	app.ScopedIBCInterchainSwapKeeper = scopedIBCSwapKeeper
+	app.ScopedIBCInterchainSwapKeeper = scopedIBCInterchainswapKeeper
 
 	// NOTE: the IBC mock keeper and application module is used only for testing core IBC. Do
 	// note replicate if you do not need to test core IBC or light clients.
@@ -881,6 +886,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
 	paramsKeeper.Subspace(ibcswaptypes.ModuleName)
+	paramsKeeper.Subspace(ibcinterchainswaptypes.ModuleName)
 
 	return paramsKeeper
 }

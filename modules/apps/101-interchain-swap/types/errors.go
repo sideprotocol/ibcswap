@@ -16,7 +16,7 @@ var (
 	ErrInvalidVersion       = errorsmod.Register(ModuleName, 1501, "invalid version")
 	ErrNotFoundPool         = errorsmod.Register(ModuleName, 1502, "did not find pool")
 	ErrInvalidAmount        = errorsmod.Register(ModuleName, 1503, "Invalid token amount")
-	ErrInvalidTokenLength        = errorsmod.Register(ModuleName, 1504, "Invalid token length")
+	ErrInvalidTokenLength   = errorsmod.Register(ModuleName, 1504, "Invalid token length")
 	ErrUnknownDataPacket    = errorsmod.Register(ModuleName, 1505, "unknown packet")
 	ErrInvalidAddress       = errorsmod.Register(ModuleName, 1506, "invalid address")
 	ErrInvalidPort          = errorsmod.Register(ModuleName, 1507, "invalid port")
@@ -31,4 +31,22 @@ var (
 	ErrNotReadyForSwap     = errorsmod.Register(ModuleName, 1515, "pool is not ready for swap")
 	ErrNumberOfLocalAsset  = errorsmod.Register(ModuleName, 1516, "should have 1 native asset on the chain")
 	ErrNotNativeDenom      = errorsmod.Register(ModuleName, 1517, "invalid native denom")
+
+	//msg srv errors
+	ErrFailedCreatePool = errorsmod.Register(ModuleName, 1518, "failed to create pool")
+	ErrFailedDeposit    = errorsmod.Register(ModuleName, 1519, "failed to deposit")
+	ErrFailedWithdraw   = errorsmod.Register(ModuleName, 1520, "failed to withdraw")
+	ErrFailedSwap       = errorsmod.Register(ModuleName, 1521, "failed to interchain swap")
+
+	ErrFailedOnCreatePoolReceived = errorsmod.Register(ModuleName, 1522, "failed to treat create pool msg!")
+	ErrFailedOnDepositReceived    = errorsmod.Register(ModuleName, 1523, "failed to treat deposit msg!")
+	ErrFailedOnWithdrawReceived   = errorsmod.Register(ModuleName, 1524, "failed to treat withdraw msg!")
+	ErrFailedOnSwapReceived       = errorsmod.Register(ModuleName, 1525, "failed to treat swap msg!")
+
+	ErrFailedOnCreatePoolAck = errorsmod.Register(ModuleName, 1526, "failed to treat create pool ack!")
+	ErrFailedOnDepositAck    = errorsmod.Register(ModuleName, 1527, "failed to treat deposit ack!")
+	ErrFailedOnWithdrawAck   = errorsmod.Register(ModuleName, 1528, "failed to treat withdraw ack!")
+	ErrFailedOnSwapAck       = errorsmod.Register(ModuleName, 1529, "failed to treat swap ack!")
+
+	ErrMaxTransferChannels = errorsmod.Register(ModuleName, 1530, "max transfer channels")
 )
