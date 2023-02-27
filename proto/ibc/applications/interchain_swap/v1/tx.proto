@@ -7,78 +7,61 @@ option go_package = "github.com/sideprotocol/ibcswap/v4/modules/apps/101-interch
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "ibc/core/client/v1/client.proto";
-import "ibc/applications/interchain_swap/v1/swap.proto";
 
-// Msg defines the ibc/swap Msg service.
+// Msg defines the Msg service.
 service Msg {
-  rpc DelegateCreatePool(MsgCreatePoolRequest) returns (MsgCreatePoolResponse);
-  rpc DelegateSingleDeposit(MsgDepositSingleRequest) returns (MsgSingleDepositResponse);
-  rpc DelegateWithdraw(MsgWithDrawRequest) returns (MsgWithdrawResponse);
-  rpc DelegateLeftSwap(MsgLeftSwapRequest) returns (MsgSwapResonse);
-  rpc DelegateRightSwap(MsgRightSwapRequest) returns (MsgSwapResonse);
+  rpc CreatePool (MsgCreatePoolRequest) returns (MsgCreatePoolResponse);
+  rpc Deposit    (MsgDepositRequest   ) returns (MsgDepositResponse   );
+  rpc Withdraw   (MsgWithdrawRequest  ) returns (MsgWithdrawResponse  );
+  rpc Swap       (MsgSwapRequest             ) returns (MsgSwapResponse      );
 }
-
 message MsgCreatePoolRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
-  // the port on which the packet will be sent
-  string source_port = 1 [(gogoproto.moretags) = "yaml:\"source_port\""];
-  // the channel by which the packet will be sent
-  string source_channel = 2 [(gogoproto.moretags) = "yaml:\"source_channel\""];
-  string sender = 3 [(gogoproto.moretags) = "yaml:\"sender\""];
-  repeated string denoms = 4;
-  repeated uint32 decimals = 5;
-  string weight = 6;
+           string sourcePort    = 1;
+           string sourceChannel = 2;
+           string sender        = 3;
+  repeated string denoms        = 4;
+  repeated uint32 decimals      = 5;
+           string weight        = 6;
 }
 
-message MsgCreatePoolResponse {}
-
-message MsgDepositSingleRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-  string pool_id = 1;
-  string sender = 3 [(gogoproto.moretags) = "yaml:\"sender\""];
-  repeated ibc.applications.interchain_swap.v1.Coin tokens = 4;
+message MsgCreatePoolResponse {
+  string poolId = 1;
 }
 
-message MsgSingleDepositResponse  {
-    ibc.applications.interchain_swap.v1.Coin pool_token = 1;
+message MsgDepositRequest {
+           string                         poolId = 1;
+           string                         sender = 2;
+  repeated cosmos.base.v1beta1.Coin tokens = 3;
 }
 
-message MsgWithDrawRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-  string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
-  ibc.applications.interchain_swap.v1.Coin pool_coin = 2;
-  string denom_out = 3;
+message MsgDepositResponse {
+  cosmos.base.v1beta1.Coin poolToken = 1;
 }
 
-message MsgWithdrawResponse  {
-    repeated ibc.applications.interchain_swap.v1.Coin tokens = 1;
+message MsgWithdrawRequest {
+  string                         sender   = 1;
+  cosmos.base.v1beta1.Coin poolCoin = 2;
+  string                         denomOut = 3;
 }
 
-
-message MsgLeftSwapRequest {
-    option (gogoproto.equal)           = false;
-    option (gogoproto.goproto_getters) = false;
-    string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
-    ibc.applications.interchain_swap.v1.Coin token_in = 2;
-    ibc.applications.interchain_swap.v1.Coin token_out = 3;
-    uint32 slippage = 4;
-    string recipient = 5;
+message MsgWithdrawResponse {
+  repeated cosmos.base.v1beta1.Coin tokens = 1;
 }
 
-message MsgRightSwapRequest {
-    option (gogoproto.equal)           = false;
-    option (gogoproto.goproto_getters) = false;
-    string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
-    ibc.applications.interchain_swap.v1.Coin token_in = 2;
-    ibc.applications.interchain_swap.v1.Coin token_out = 3;
-    uint32 slippage = 4;
-    string recipient = 5;
+enum SwapMsgType {
+  LEFT = 0;
+  RIGHT = 1;
+}
+message MsgSwapRequest {
+  SwapMsgType swap_type = 1;
+  string sender    = 2;
+  cosmos.base.v1beta1.Coin tokenIn = 3;
+  cosmos.base.v1beta1.Coin tokenOut = 4;
+  uint64 slippage  = 5;
+  string recipient = 6;
 }
 
-message MsgSwapResonse  {
-    repeated ibc.applications.interchain_swap.v1.Coin tokens = 1;
+message MsgSwapResponse {
+  SwapMsgType swap_type = 1;
+  repeated cosmos.base.v1beta1.Coin tokens = 2;
 }

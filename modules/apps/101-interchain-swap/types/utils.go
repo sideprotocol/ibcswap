@@ -7,16 +7,20 @@ import (
 	"strings"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
 )
 
-func GetDefaultTimeOut() (clienttypes.Height, uint64) {
-	timeoutHeight := clienttypes.Height{
-		RevisionNumber: 0,
-		RevisionHeight: 10,
-	}
-	timeoutStamp := time.Now().UTC().Unix()
-	return timeoutHeight, uint64(timeoutStamp)
+func GetDefaultTimeOut(ctx *sdk.Context) (clienttypes.Height, uint64) {
+
+	// 100 block later than current block
+	outBlockHeight := ctx.BlockHeight() + 100
+
+	// 10 min later current block time.
+	waitDuration, _ := time.ParseDuration("10m")
+	timeoutStamp := ctx.BlockTime().Add(waitDuration)
+	timeoutHeight := clienttypes.NewHeight(clienttypes.ParseChainID(ctx.ChainID()), uint64(outBlockHeight))
+	return timeoutHeight, uint64(timeoutStamp.UTC().UnixNano())
 }
 
 func GetPoolId(denoms []string) string {
@@ -27,3 +31,4 @@ func GetPoolId(denoms []string) string {
 	poolId := "pool" + fmt.Sprintf("%v", poolIdHash.Sum(nil))
 	return poolId
 }
+

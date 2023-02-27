@@ -3,10 +3,10 @@ package types
 import (
 	"testing"
 
-	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
-	
-
 	"github.com/cosmos/cosmos-sdk/types"
+	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/sideprotocol/ibcswap/v4/testing/testutil/sample"
 	"github.com/stretchr/testify/require"
 )
@@ -17,6 +17,22 @@ func TestMsgSwap_ValidateBasic(t *testing.T) {
 		msg  MsgSwapRequest
 		err  error
 	}{
+		{
+			name: "success",
+			msg: MsgSwapRequest{
+				SwapType: SwapMsgType_LEFT,
+				Sender:   sample.AccAddress(),
+				TokenIn: &sdk.Coin{
+					Denom:  sdk.DefaultBondDenom,
+					Amount: sdk.NewInt(100),
+				},
+				TokenOut: &sdk.Coin{
+					Denom:  sdk.DefaultBondDenom,
+					Amount: sdk.NewInt(100),
+				},
+			},
+			err: errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", ""),
+		},
 		{
 			name: "invalid sender address",
 			msg: MsgSwapRequest{

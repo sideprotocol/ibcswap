@@ -1,6 +1,7 @@
 package swap_test
 
 import (
+	"fmt"
 	"math"
 
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -89,6 +90,8 @@ func (suite *SwapTestSuite) TestOnChanOpenInit() {
 			version, err := swapModule.OnChanOpenInit(suite.chainA.GetContext(), channel.Ordering, channel.GetConnectionHops(),
 				path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, chanCap, counterparty, channel.GetVersion(),
 			)
+
+			fmt.Println("Version:", version)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

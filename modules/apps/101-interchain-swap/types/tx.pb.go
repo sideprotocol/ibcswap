@@ -655,20 +655,19 @@ type MsgServer interface {
 	Swap(context.Context, *MsgSwapRequest) (*MsgSwapResponse, error)
 }
 
-// UnimplementedMsgServer can be embedded to have forward compatible implementations.
-type UnimplementedMsgServer struct {
+type msgServer struct {
 }
 
-func (*UnimplementedMsgServer) CreatePool(ctx context.Context, req *MsgCreatePoolRequest) (*MsgCreatePoolResponse, error) {
+func (*msgServer) CreatePool(ctx context.Context, req *MsgCreatePoolRequest) (*MsgCreatePoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreatePool not implemented")
 }
-func (*UnimplementedMsgServer) Deposit(ctx context.Context, req *MsgDepositRequest) (*MsgDepositResponse, error) {
+func (*msgServer) Deposit(ctx context.Context, req *MsgDepositRequest) (*MsgDepositResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Deposit not implemented")
 }
-func (*UnimplementedMsgServer) Withdraw(ctx context.Context, req *MsgWithdrawRequest) (*MsgWithdrawResponse, error) {
+func (*msgServer) Withdraw(ctx context.Context, req *MsgWithdrawRequest) (*MsgWithdrawResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Withdraw not implemented")
 }
-func (*UnimplementedMsgServer) Swap(ctx context.Context, req *MsgSwapRequest) (*MsgSwapResponse, error) {
+func (*msgServer) Swap(ctx context.Context, req *MsgSwapRequest) (*MsgSwapResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Swap not implemented")
 }
 

@@ -9,10 +9,11 @@ const TypeMsgDeposit = "deposit"
 
 var _ sdk.Msg = &MsgDepositRequest{}
 
-func NewMsgDeposit(poolId string, sender string) *MsgDepositRequest {
+func NewMsgDeposit(poolId string, sender string, tokens []*sdk.Coin) *MsgDepositRequest {
 	return &MsgDepositRequest{
 		PoolId: poolId,
 		Sender: sender,
+		Tokens: tokens,
 	}
 }
 

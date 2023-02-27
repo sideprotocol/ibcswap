@@ -31,7 +31,6 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MsgMakeSwapRequest) (
 	if err1 != nil {
 		return nil, err1
 	}
-
 	// lock sell token into module
 	if err := k.bankKeeper.SendCoinsFromAccountToModule(
 		ctx, sender, types.ModuleName, sdk.NewCoins(msg.SellToken),

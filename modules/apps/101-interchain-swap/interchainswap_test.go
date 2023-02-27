@@ -51,6 +51,9 @@ func (suite *InterchainSwapTestSuite) TestHandleMsgInterchainSwap() {
 	suite.Require().True(ok)
 	coinToSendToB := sdk.NewCoin(sdk.DefaultBondDenom, amount)
 	_ = coinToSendToB
+
+
+	
 	// // send from chainA to chainB
 	// msg := types.NewMsgCreatePool(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID,
 	// 	coinToSendToB, coinToSendToB,

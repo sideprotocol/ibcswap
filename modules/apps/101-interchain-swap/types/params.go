@@ -1,8 +1,21 @@
 package types
 
 import (
+	"fmt"
+
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"gopkg.in/yaml.v2"
+)
+
+const (
+	DefaultSwapEnabled = true
+	// DefaultMaxFeeRate is 0.0010
+	DefaultMaxFeeRate = 10
+)
+
+var (
+	KeySwapEnabled    = []byte("SwapEnabled")
+	KeySwapMaxFeeRate = []byte("MaxFeeRate")
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
@@ -13,18 +26,40 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams() Params {
-	return Params{}
+func NewParams(enable bool, feeRate uint32) Params {
+	return Params{
+		SwapEnabled: enable,
+		MaxFeeRate:  feeRate,
+	}
 }
 
 // DefaultParams returns a default set of parameters
 func DefaultParams() Params {
-	return NewParams()
+	return NewParams(DefaultSwapEnabled, DefaultMaxFeeRate)
 }
 
 // ParamSetPairs get the params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
-	return paramtypes.ParamSetPairs{}
+	return paramtypes.ParamSetPairs{
+		paramtypes.NewParamSetPair(KeySwapEnabled, p.SwapEnabled, validateEnabled),
+		paramtypes.NewParamSetPair(KeySwapMaxFeeRate, p.MaxFeeRate, validateMaxFeeRate),
+	}
+}
+
+func validateEnabled(i interface{}) error {
+	_, ok := i.(bool)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return nil
+}
+
+func validateMaxFeeRate(i interface{}) error {
+	_, ok := i.(uint32)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return nil
 }
 
 // Validate validates the set of params
