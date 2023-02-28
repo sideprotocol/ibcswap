@@ -20,16 +20,16 @@ var _ types.MsgServer = msgServer{}
 
 func (k Keeper) OnCreatePoolAcknowledged(ctx sdk.Context, msg *types.MsgCreatePoolRequest) {
 	//save pool after complete create operation in counter party chain.
-	k.SetInterchainLiquidityPool(
-		ctx, *types.NewInterchainLiquidityPool(
-			ctx,
-			k.bankKeeper,
-			msg.Denoms,
-			msg.Decimals,
-			msg.Weight,
-			msg.SourcePort,
-			msg.SourceChannel,
-		))
+	pool := types.NewInterchainLiquidityPool(
+		ctx,
+		k.bankKeeper,
+		msg.Denoms,
+		msg.Decimals,
+		msg.Weight,
+		msg.SourcePort,
+		msg.SourceChannel,
+	)
+	k.SetInterchainLiquidityPool(ctx, *pool)
 }
 
 func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgDepositRequest, res *types.MsgDepositResponse) error {
@@ -98,26 +98,35 @@ func (k Keeper) OnCreatePoolReceived(ctx sdk.Context, msg *types.MsgCreatePoolRe
 	}
 
 	pooId := types.GetPoolId(msg.Denoms)
-	pool, found := k.GetInterchainLiquidityPool(ctx, pooId)
+	_, found := k.GetInterchainLiquidityPool(ctx, pooId)
 
-	if !found {
-		return nil, types.ErrNotFoundPool
+	if found {
+		return nil, types.ErrAlreadyExistPool
 	}
 
-	//count native tokens
-	count := 0
-	for _, denom := range msg.Denoms {
-		if k.bankKeeper.HasSupply(ctx, denom) {
-			count += 1
-			pool.UpdateAssetPoolSide(denom, types.PoolSide_NATIVE)
-		} else {
-			pool.UpdateAssetPoolSide(denom, types.PoolSide_REMOTE)
-		}
-	}
+	pool := *types.NewInterchainLiquidityPool(
+		ctx,
+		k.bankKeeper,
+		msg.Denoms,
+		msg.Decimals,
+		msg.Weight,
+		msg.SourcePort,
+		msg.SourceChannel,
+	)
+	// //count native tokens
+	// count := 0
+	// for _, denom := range msg.Denoms {
+	// 	if k.bankKeeper.HasSupply(ctx, denom) {
+	// 		count += 1
+	// 		pool.UpdateAssetPoolSide(denom, types.PoolSide_NATIVE)
+	// 	} else {
+	// 		pool.UpdateAssetPoolSide(denom, types.PoolSide_REMOTE)
+	// 	}
+	// }
 
-	if count == 1 {
-		return nil, types.ErrInvalidDenomPair
-	}
+	// if count != 1 {
+	// 	return nil, types.ErrInvalidDenomPair
+	// }
 
 	k.SetInterchainLiquidityPool(ctx, pool)
 	ctx.EventManager().EmitTypedEvents(msg)

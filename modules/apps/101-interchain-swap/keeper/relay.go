@@ -70,7 +70,6 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-
 		pooId, err := k.OnCreatePoolReceived(ctx, &msg, packet.DestinationPort, packet.DestinationChannel)
 		if err != nil {
 			return nil, err
@@ -85,12 +84,11 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		_, err := k.OnDepositReceived(ctx, &msg)
+		res, err := k.OnDepositReceived(ctx, &msg)
 		if err != nil {
 			return nil, err
-		} else {
-			return nil, nil
 		}
+		return res, nil
 
 	case types.MessageType_WITHDRAW:
 		var msg types.MsgWithdrawRequest
@@ -122,6 +120,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 }
 
 func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, data *types.IBCSwapDataPacket, ack channeltypes.Acknowledgement) error {
+
 	switch ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Error:
 		return k.refundPacketToken(ctx, packet, data)
@@ -136,7 +135,6 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 		case types.MessageType_DEPOSIT:
 			var msg types.MsgDepositRequest
 			var res types.MsgDepositResponse
-
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				return err
 			}

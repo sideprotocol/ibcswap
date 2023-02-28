@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
@@ -11,7 +10,6 @@ import (
 
 func (k Keeper) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) (*types.MsgDepositResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
 	// validate message
 	err := msg.ValidateBasic()
 	if err != nil {
@@ -47,7 +45,7 @@ func (k Keeper) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) (*t
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&ctx)
 
 	// construct ibc packet
-	rawMsgData, err := json.Marshal(msg)
+	rawMsgData, err := types.ModuleCdc.Marshal(msg)
 	if err != nil {
 		return nil, err
 	}

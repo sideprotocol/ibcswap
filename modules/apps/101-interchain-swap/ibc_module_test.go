@@ -20,7 +20,6 @@ func (suite *InterchainSwapTestSuite) TestOnChanOpenInit() {
 		chanCap      *capabilitytypes.Capability
 		counterparty channeltypes.Counterparty
 	)
-
 	testCases := []struct {
 		name     string
 		malleate func()

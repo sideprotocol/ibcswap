@@ -143,7 +143,7 @@ func (im IBCModule) OnRecvPacket(
 	var data types.IBCSwapDataPacket
 	var ackErr error
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		ackErr = errorsmod.Wrapf(types.ErrInvalidType, "cannot unmarshal ICS-20 transfer packet data")
+		ackErr = errorsmod.Wrapf(types.ErrInvalidType, "cannot unmarshal ICS-101 packet data")
 		ack = channeltypes.NewErrorAcknowledgement(ackErr)
 	}
 
@@ -155,10 +155,13 @@ func (im IBCModule) OnRecvPacket(
 			ack = channeltypes.NewErrorAcknowledgement(err)
 			ackErr = err
 		} else {
-
+			res, err := json.Marshal(res)
+			if err != nil {
+				ackErr = err
+			} else {
+				ack = channeltypes.NewResultAcknowledgement(res)
+			}
 		}
-		result, _ := json.Marshal(res)
-		ack = channeltypes.NewResultAcknowledgement(result)
 	}
 
 	eventAttributes := []sdk.Attribute{
@@ -190,19 +193,24 @@ func (im IBCModule) OnAcknowledgementPacket(
 ) error {
 	var ack channeltypes.Acknowledgement
 	if err := types.ModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
-		return errorsmod.Wrapf(types.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
+		return errorsmod.Wrapf(types.ErrUnknownRequest, "cannot unmarshal ICS-101  packet acknowledgement: %v", err)
 	}
 	var data types.IBCSwapDataPacket
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		return errorsmod.Wrapf(types.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
-	}
-
-	if err := im.keeper.OnAcknowledgementPacket(ctx, packet, &data, ack); err != nil {
-		return err
+		return errorsmod.Wrapf(types.ErrUnknownRequest, "cannot unmarshal ICS-101 packet data: %s", err.Error())
 	}
 
 	switch resp := ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Result:
+		if err := im.keeper.OnAcknowledgementPacket(ctx, packet, &data, ack); err != nil {
+			ctx.EventManager().EmitEvent(
+				sdk.NewEvent(
+					types.EventTypePacket,
+					sdk.NewAttribute("Can't parser packet:", err.Error()),
+				),
+			)
+			return nil
+		}
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypePacket,
@@ -219,7 +227,6 @@ func (im IBCModule) OnAcknowledgementPacket(
 	}
 
 	ctx.EventManager().EmitTypedEvents(&data)
-
 	return nil
 }
 

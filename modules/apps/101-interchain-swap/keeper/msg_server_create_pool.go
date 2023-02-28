@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
@@ -29,21 +28,6 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolReq
 		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "because of %s", err)
 	}
 
-	pool := types.NewInterchainLiquidityPool(
-		ctx,
-		k.bankKeeper,
-		msg.Denoms,
-		msg.Decimals,
-		msg.Weight,
-		msg.SourcePort,
-		msg.SourceChannel,
-	)
-
-	poolData, err := json.Marshal(pool)
-	if err != nil {
-		return nil, err
-	}
-
 	localAssetCount := 0
 	for _, denom := range msg.Denoms {
 		if k.bankKeeper.HasSupply(ctx, denom) {
@@ -54,6 +38,21 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolReq
 	// should have 1 native asset on the chain
 	if localAssetCount < 1 {
 		return nil, types.ErrNumberOfLocalAsset
+	}
+
+	pool := types.NewInterchainLiquidityPool(
+		ctx,
+		k.bankKeeper,
+		msg.Denoms,
+		msg.Decimals,
+		msg.Weight,
+		msg.SourcePort,
+		msg.SourceChannel,
+	)
+
+	poolData, err := types.ModuleCdc.Marshal(pool)
+	if err != nil {
+		return nil, err
 	}
 
 	// construct IBC data packet
@@ -68,6 +67,8 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolReq
 	if err != nil {
 		return nil, err
 	}
+
+	//k.SetInterchainLiquidityPool(ctx, *pool)
 	return &types.MsgCreatePoolResponse{
 		PoolId: pool.PoolId,
 	}, nil

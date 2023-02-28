@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
@@ -45,7 +44,7 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 	k.Keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, string(escrowAccount), sdk.AccAddress(msg.Sender), sdk.NewCoins(*msg.PoolCoin))
 
 	// construct the IBC data packet
-	rawMsgData, err := json.Marshal(msg)
+	rawMsgData, err := types.ModuleCdc.Marshal(msg)
 	if err != nil {
 		return nil, err
 	}
