@@ -133,12 +133,6 @@ func (*MsgTakeSwapRequest) Type() string {
 // NOTE: The recipient addresses format is not validated as the format defined by
 // the chain is not known to IBC.
 func (msg *TakeSwapMsg) ValidateBasic() error {
-	if err := host.PortIdentifierValidator(msg.SourcePort); err != nil {
-		return sdkerrors.Wrap(err, "invalid source port ID")
-	}
-	if err := host.ChannelIdentifierValidator(msg.SourceChannel); err != nil {
-		return sdkerrors.Wrap(err, "invalid source channel ID")
-	}
 	if !msg.SellToken.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.SellToken.String())
 	}
@@ -201,12 +195,6 @@ func (*MsgCancelSwapRequest) Type() string {
 // NOTE: The recipient addresses format is not validated as the format defined by
 // the chain is not known to IBC.
 func (msg *CancelSwapMsg) ValidateBasic() error {
-	if err := host.PortIdentifierValidator(msg.SourcePort); err != nil {
-		return sdkerrors.Wrap(err, "invalid source port ID")
-	}
-	if err := host.ChannelIdentifierValidator(msg.SourceChannel); err != nil {
-		return sdkerrors.Wrap(err, "invalid source channel ID")
-	}
 	// NOTE: sender format must be validated as it is required by the GetSigners function.
 	_, err := sdk.AccAddressFromBech32(msg.MakerAddress)
 	if err != nil {

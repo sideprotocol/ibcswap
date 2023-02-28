@@ -40,7 +40,7 @@ message SwapMaker {
   // only the desired_taker is allowed to take this order
   // this is address on destination chain
   string desired_taker = 7;
-  int64 create_timestamp = 8;
+  uint64 create_timestamp = 8;
 }
 
 message SwapTaker {
@@ -51,7 +51,7 @@ message SwapTaker {
   string taker_address = 3 [(gogoproto.moretags) = "yaml:\"taker_address\""];
   // the sender's address on the destination chain
   string taker_receiving_address = 4 [(gogoproto.moretags) = "yaml:\"taker_receiving_address\""];
-  int64 create_timestamp = 5;
+  uint64 create_timestamp = 5;
 }
 
 message AtomicSwapOrder {
