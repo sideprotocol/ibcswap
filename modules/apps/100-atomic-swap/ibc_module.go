@@ -164,6 +164,10 @@ func (im IBCModule) OnChanCloseConfirm(
 // OnRecvPacket implements the IBCModule interface. A successful acknowledgement
 // is returned if the packet data is successfully decoded and the receive application
 // logic returns without error.
+//
+// The method is executed in steps 2 (Relay Make Packet), step 6 (Relay Take Packet),
+// step 8 (Relay Acknowledge Packet), step 11 (Relay Cancel Packet) and step 13 (Acknowledge Cancel Packet)
+// of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap.
 func (im IBCModule) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
