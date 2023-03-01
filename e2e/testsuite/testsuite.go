@@ -8,13 +8,16 @@ import (
 	"strings"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"crypto/sha256"
+
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/ibc-go/e2e/testconfig"
 	feetypes "github.com/cosmos/ibc-go/v4/modules/apps/29-fee/types"
 	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	interchainswaptypes "github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	dockerclient "github.com/docker/docker/client"
 	"github.com/strangelove-ventures/ibctest"
 	"github.com/strangelove-ventures/ibctest/broadcast"
@@ -367,4 +370,32 @@ func GetNativeChainBalance(ctx context.Context, chain ibc.Chain, user *ibctest.U
 		return -1, err
 	}
 	return bal, nil
+}
+
+// Token allocation
+func (s *E2ETestSuite) SendCoinsFromModuleToAccount(
+	ctx context.Context, chain *cosmos.CosmosChain, wallet *ibctest.User, coins sdk.Coins,
+) error {
+	// Construct the message to send coins from the module to the account.
+	msg := banktypes.NewMsgSend(
+		sdk.AccAddress(getAddressHash([]byte(chain.Config().Name), 20)), // sender address (the module's address)
+		sdk.MustAccAddressFromBech32(wallet.Bech32Address("cosmos")),    // recipient address (the account's address)
+		coins, // coins to send
+	)
+	// Broadcast the message and check for errors.
+	_, err := s.BroadcastMessages(ctx, chain, wallet, msg)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func getAddressHash(address []byte, addressLength int) []byte {
+	// Compute the SHA256 hash of the module address
+	hash := sha256.Sum256(address)
+
+	// Truncate the hash to the desired address length
+	addressHash := hash[:addressLength]
+
+	return addressHash
 }

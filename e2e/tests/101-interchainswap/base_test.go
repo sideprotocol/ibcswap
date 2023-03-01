@@ -3,6 +3,7 @@ package e2e
 import (
 	//"context"
 	"context"
+	"fmt"
 	"testing"
 
 	//"time"
@@ -12,6 +13,7 @@ import (
 	//"github.com/strangelove-ventures/ibctest/ibc"
 	//"github.com/strangelove-ventures/ibctest/test"
 	//"github.com/stretchr/testify/suite"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/ibc-go/e2e/testsuite"
 	"github.com/cosmos/ibc-go/e2e/testvalues"
@@ -41,13 +43,16 @@ func (s *InterchainswapTestSuite) TestMsgCreatePool() {
 	chainA, chainB := s.GetChains()
 
 	chainADenom := chainA.Config().Denom
+	chainBDenom := chainB.Config().Denom
 
 	// // create wallets for testing
 	chainAWallet := s.CreateUserOnChainA(ctx, testvalues.StartingTokenAmount)
 	chainAAddress := chainAWallet.Bech32Address("cosmos")
 
 	// allocate tokens to the new account
-	//initialBalances := sdk.NewCoins(sdk.NewCoin("marscoin", sdk.NewInt(1000)))
+	initialBalances := sdk.NewCoins(sdk.NewCoin(chainADenom, sdk.NewInt(1000)))
+	err := s.SendCoinsFromModuleToAccount(ctx, chainA, chainAWallet, initialBalances)
+	s.Require().NoError(err)
 
 	//s.Require().NoError(err)
 
@@ -65,7 +70,7 @@ func (s *InterchainswapTestSuite) TestMsgCreatePool() {
 			channelA.ChannelID,
 			chainAAddress,
 			"1:2",
-			[]string{chainADenom, "marscoin"},
+			[]string{chainADenom, chainBDenom},
 			[]uint32{10, 100},
 		)
 
@@ -82,17 +87,38 @@ func (s *InterchainswapTestSuite) TestMsgCreatePool() {
 			1,
 		)
 
-		//poolId := types.GetPoolId([]string{chainADenom, "marscoin"})
-		//_, err = s.QueryInterchainswapPool(ctx, chainA, poolId)
-		//s.Require().NoError(err)
+		poolId := types.GetPoolId(msg.Denoms)
+		poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
+		s.Require().NoError(err)
+		poolInfo := poolRes.InterchainLiquidityPool
+		s.Require().EqualValues(msg.SourceChannel, poolInfo.EncounterPartyChannel)
+		s.Require().EqualValues(msg.SourcePort, poolInfo.EncounterPartyPort)
 	})
 
-	// t.Run("send deposit pool message", func(t *testing.T) {
-	// 	poolId := types.GetPoolId([]string{chainADenom, "marscoin"})
-	// 	msg := types.NewMsgDeposit(
-	// 		poolId,
-	// 		chainAAddress,
-	// 		[]*sdk.Coin{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(1000)}},
+	t.Run("send deposit message", func(t *testing.T) {
+		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
+		msg := types.NewMsgDeposit(
+			poolId,
+			chainAAddress,
+			[]*sdk.Coin{{Denom: chainADenom, Amount: sdk.NewInt(1000)}},
+		)
+		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+		fmt.Println(resp)
+		s.AssertValidTxResponse(resp)
+		s.Require().NoError(err)
+	})
+
+	//withdraw 
+	// t.Run("send withdraw message", func(t *testing.T) {
+
+	// 	denomOut := chainADenom
+	// 	sender := chainAAddress
+
+	// 	coin := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(1000)}
+	// 	msg := types.NewMsgWithdraw(
+	// 		sender,
+	// 		denomOut,
+	// 		&coin,
 	// 	)
 	// 	resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
 	// 	fmt.Println(resp)
