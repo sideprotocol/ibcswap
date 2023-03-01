@@ -13,7 +13,7 @@ const (
 
 	// Version defines the current version the IBC swap
 	// module supports
-	Version = "ics31-1"
+	Version = "ics100-1"
 
 	// PortID is the default port id that swap module binds to
 	PortID = ModuleName
