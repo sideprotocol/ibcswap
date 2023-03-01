@@ -108,23 +108,23 @@ func (s *InterchainswapTestSuite) TestMsgCreatePool() {
 		s.Require().NoError(err)
 	})
 
-	//withdraw 
-	// t.Run("send withdraw message", func(t *testing.T) {
+	//withdraw
+	t.Run("send withdraw message", func(t *testing.T) {
 
-	// 	denomOut := chainADenom
-	// 	sender := chainAAddress
+		denomOut := chainADenom
+		sender := chainAAddress
 
-	// 	coin := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(1000)}
-	// 	msg := types.NewMsgWithdraw(
-	// 		sender,
-	// 		denomOut,
-	// 		&coin,
-	// 	)
-	// 	resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-	// 	fmt.Println(resp)
-	// 	s.AssertValidTxResponse(resp)
-	// 	s.Require().NoError(err)
-	// })
+		coin := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(1000)}
+		msg := types.NewMsgWithdraw(
+			sender,
+			&coin,
+			denomOut,
+		)
+		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+		fmt.Println(resp)
+		s.AssertValidTxResponse(resp)
+		s.Require().NoError(err)
+	})
 }
 
 // interchainswapChannelOptions configures both of the chains to have interchainswap enabled.
