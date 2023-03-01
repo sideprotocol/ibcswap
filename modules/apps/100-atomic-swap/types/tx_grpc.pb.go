@@ -18,9 +18,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MsgClient interface {
-	MakeSwap(ctx context.Context, in *MsgMakeSwapRequest, opts ...grpc.CallOption) (*MsgMakeSwapResponse, error)
-	TakeSwap(ctx context.Context, in *MsgTakeSwapRequest, opts ...grpc.CallOption) (*MsgTakeSwapResponse, error)
-	CancelSwap(ctx context.Context, in *MsgCancelSwapRequest, opts ...grpc.CallOption) (*MsgCancelSwapResponse, error)
+	MakeSwap(ctx context.Context, in *MakeSwapMsg, opts ...grpc.CallOption) (*MakeSwapMsgResponse, error)
+	TakeSwap(ctx context.Context, in *TakeSwapMsg, opts ...grpc.CallOption) (*TakeSwapMsgResponse, error)
+	CancelSwap(ctx context.Context, in *CancelSwapMsg, opts ...grpc.CallOption) (*CancelSwapMsgResponse, error)
 }
 
 type msgClient struct {
@@ -31,8 +31,8 @@ func NewMsgClient(cc grpc.ClientConnInterface) MsgClient {
 	return &msgClient{cc}
 }
 
-func (c *msgClient) MakeSwap(ctx context.Context, in *MsgMakeSwapRequest, opts ...grpc.CallOption) (*MsgMakeSwapResponse, error) {
-	out := new(MsgMakeSwapResponse)
+func (c *msgClient) MakeSwap(ctx context.Context, in *MakeSwapMsg, opts ...grpc.CallOption) (*MakeSwapMsgResponse, error) {
+	out := new(MakeSwapMsgResponse)
 	err := c.cc.Invoke(ctx, "/ibc.applications.atomic_swap.v1.Msg/MakeSwap", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -40,8 +40,8 @@ func (c *msgClient) MakeSwap(ctx context.Context, in *MsgMakeSwapRequest, opts .
 	return out, nil
 }
 
-func (c *msgClient) TakeSwap(ctx context.Context, in *MsgTakeSwapRequest, opts ...grpc.CallOption) (*MsgTakeSwapResponse, error) {
-	out := new(MsgTakeSwapResponse)
+func (c *msgClient) TakeSwap(ctx context.Context, in *TakeSwapMsg, opts ...grpc.CallOption) (*TakeSwapMsgResponse, error) {
+	out := new(TakeSwapMsgResponse)
 	err := c.cc.Invoke(ctx, "/ibc.applications.atomic_swap.v1.Msg/TakeSwap", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -49,8 +49,8 @@ func (c *msgClient) TakeSwap(ctx context.Context, in *MsgTakeSwapRequest, opts .
 	return out, nil
 }
 
-func (c *msgClient) CancelSwap(ctx context.Context, in *MsgCancelSwapRequest, opts ...grpc.CallOption) (*MsgCancelSwapResponse, error) {
-	out := new(MsgCancelSwapResponse)
+func (c *msgClient) CancelSwap(ctx context.Context, in *CancelSwapMsg, opts ...grpc.CallOption) (*CancelSwapMsgResponse, error) {
+	out := new(CancelSwapMsgResponse)
 	err := c.cc.Invoke(ctx, "/ibc.applications.atomic_swap.v1.Msg/CancelSwap", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -62,22 +62,22 @@ func (c *msgClient) CancelSwap(ctx context.Context, in *MsgCancelSwapRequest, op
 // All implementations should embed UnimplementedMsgServer
 // for forward compatibility
 type MsgServer interface {
-	MakeSwap(context.Context, *MsgMakeSwapRequest) (*MsgMakeSwapResponse, error)
-	TakeSwap(context.Context, *MsgTakeSwapRequest) (*MsgTakeSwapResponse, error)
-	CancelSwap(context.Context, *MsgCancelSwapRequest) (*MsgCancelSwapResponse, error)
+	MakeSwap(context.Context, *MakeSwapMsg) (*MakeSwapMsgResponse, error)
+	TakeSwap(context.Context, *TakeSwapMsg) (*TakeSwapMsgResponse, error)
+	CancelSwap(context.Context, *CancelSwapMsg) (*CancelSwapMsgResponse, error)
 }
 
 // UnimplementedMsgServer should be embedded to have forward compatible implementations.
 type UnimplementedMsgServer struct {
 }
 
-func (UnimplementedMsgServer) MakeSwap(context.Context, *MsgMakeSwapRequest) (*MsgMakeSwapResponse, error) {
+func (UnimplementedMsgServer) MakeSwap(context.Context, *MakeSwapMsg) (*MakeSwapMsgResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MakeSwap not implemented")
 }
-func (UnimplementedMsgServer) TakeSwap(context.Context, *MsgTakeSwapRequest) (*MsgTakeSwapResponse, error) {
+func (UnimplementedMsgServer) TakeSwap(context.Context, *TakeSwapMsg) (*TakeSwapMsgResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TakeSwap not implemented")
 }
-func (UnimplementedMsgServer) CancelSwap(context.Context, *MsgCancelSwapRequest) (*MsgCancelSwapResponse, error) {
+func (UnimplementedMsgServer) CancelSwap(context.Context, *CancelSwapMsg) (*CancelSwapMsgResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CancelSwap not implemented")
 }
 
@@ -93,7 +93,7 @@ func RegisterMsgServer(s grpc.ServiceRegistrar, srv MsgServer) {
 }
 
 func _Msg_MakeSwap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgMakeSwapRequest)
+	in := new(MakeSwapMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -105,13 +105,13 @@ func _Msg_MakeSwap_Handler(srv interface{}, ctx context.Context, dec func(interf
 		FullMethod: "/ibc.applications.atomic_swap.v1.Msg/MakeSwap",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).MakeSwap(ctx, req.(*MsgMakeSwapRequest))
+		return srv.(MsgServer).MakeSwap(ctx, req.(*MakeSwapMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_TakeSwap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgTakeSwapRequest)
+	in := new(TakeSwapMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -123,13 +123,13 @@ func _Msg_TakeSwap_Handler(srv interface{}, ctx context.Context, dec func(interf
 		FullMethod: "/ibc.applications.atomic_swap.v1.Msg/TakeSwap",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).TakeSwap(ctx, req.(*MsgTakeSwapRequest))
+		return srv.(MsgServer).TakeSwap(ctx, req.(*TakeSwapMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_CancelSwap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCancelSwapRequest)
+	in := new(CancelSwapMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -141,7 +141,7 @@ func _Msg_CancelSwap_Handler(srv interface{}, ctx context.Context, dec func(inte
 		FullMethod: "/ibc.applications.atomic_swap.v1.Msg/CancelSwap",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CancelSwap(ctx, req.(*MsgCancelSwapRequest))
+		return srv.(MsgServer).CancelSwap(ctx, req.(*CancelSwapMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
