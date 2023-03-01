@@ -44,9 +44,10 @@ func (suite *KeeperTestSuite) TestMsgWithdraw() {
 		fmt.Println(pooId)
 
 		//
+		coin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))
 		msg = types.NewMsgWithdraw(
-			*pooId,
 			suite.chainA.SenderAccount.GetAddress().String(),
+			&coin,
 			sdk.DefaultBondDenom,
 		)
 

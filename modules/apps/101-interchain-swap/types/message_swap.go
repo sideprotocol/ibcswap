@@ -3,19 +3,21 @@ package types
 import (
 	"strings"
 
-	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const TypeMsgSwap = "swap"
 
 var _ sdk.Msg = &MsgSwapRequest{}
 
-func NewMsgSwap(sender string, slippage uint64, recipient string) *MsgSwapRequest {
+func NewMsgSwap(sender string, slippage uint64, recipient string, tokenIn, tokenOut *sdk.Coin) *MsgSwapRequest {
 	return &MsgSwapRequest{
 		Sender:    sender,
 		Slippage:  slippage,
 		Recipient: recipient,
+		TokenIn:   tokenIn,
+		TokenOut:  tokenOut,
 	}
 }
 

@@ -3,6 +3,7 @@ package testsuite
 import (
 	"context"
 
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	types "github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
@@ -45,6 +46,23 @@ func (s *E2ETestSuite) QueryInterchainswapPool(ctx context.Context, chain ibc.Ch
 		},
 	)
 
+	if err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
+// QueryClientStatus queries the status of the client by clientID
+func (s *E2ETestSuite) QueryBalance(ctx context.Context, chain ibc.Chain, addr string, denom string) (*banktypes.QueryBalanceResponse, error) {
+	queryClient := s.GetChainGRCPClients(chain).BankQueryClient
+	
+	res, err := queryClient.Balance(
+		ctx,
+		&banktypes.QueryBalanceRequest{
+			Address: addr,
+			Denom:   denom,
+		},
+	)
 	if err != nil {
 		return res, err
 	}

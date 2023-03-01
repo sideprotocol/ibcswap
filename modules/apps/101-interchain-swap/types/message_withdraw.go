@@ -3,17 +3,18 @@ package types
 import (
 	"strings"
 
-	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const TypeMsgWithdraw = "withdraw"
 
 var _ sdk.Msg = &MsgWithdrawRequest{}
 
-func NewMsgWithdraw(creator string, sender string, denomOut string) *MsgWithdrawRequest {
+func NewMsgWithdraw(sender string, poolCoin *sdk.Coin, denomOut string) *MsgWithdrawRequest {
 	return &MsgWithdrawRequest{
 		Sender:   sender,
+		PoolCoin: poolCoin,
 		DenomOut: denomOut,
 	}
 }

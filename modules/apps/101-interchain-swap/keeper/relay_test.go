@@ -85,8 +85,11 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 			func() {
 				suite.coordinator.CreateInterchainSwapChannels(path)
 				msg := types.NewMsgWithdraw(
-					"test_id",
 					suite.chainA.SenderAccount.GetAddress().String(),
+					&sdk.Coin{
+						Denom:  sdk.DefaultBondDenom,
+						Amount: sdk.NewInt(10),
+					},
 					sdk.DefaultBondDenom,
 				)
 

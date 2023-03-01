@@ -59,6 +59,7 @@ type GRPCClients struct {
 	InterchainQueryClient interchainswaptypes.QueryClient
 	ClientQueryClient     clienttypes.QueryClient
 	ChannelQueryClient    channeltypes.QueryClient
+	BankQueryClient       banktypes.QueryClient
 }
 
 // path is a pairing of two chains which will be used in a test.
@@ -298,6 +299,7 @@ func (s *E2ETestSuite) initGRPCClients(chain *cosmos.CosmosChain) {
 		ChannelQueryClient:    channeltypes.NewQueryClient(grpcConn),
 		FeeQueryClient:        feetypes.NewQueryClient(grpcConn),
 		InterchainQueryClient: interchainswaptypes.NewQueryClient(grpcConn),
+		BankQueryClient:       banktypes.NewQueryClient(grpcConn),
 		// ICAQueryClient:     controllertypes.NewQueryClient(grpcConn),
 		// InterTxQueryClient: intertxtypes.NewQueryClient(grpcConn),
 		// GovQueryClient:     govtypesv1beta1.NewQueryClient(grpcConn),

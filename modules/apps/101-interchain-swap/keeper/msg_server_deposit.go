@@ -10,6 +10,7 @@ import (
 
 func (k Keeper) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) (*types.MsgDepositResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	// validate message
 	err := msg.ValidateBasic()
 	if err != nil {
@@ -20,30 +21,31 @@ func (k Keeper) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) (*t
 	if !found {
 		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "%s", types.ErrNotFoundPool)
 	}
+	// // Deposit token to Escrow account
+	// coins := []sdk.Coin{}
+	// for _, coin := range msg.Tokens {
+	// 	accAddress, err := sdk.AccAddressFromBech32(msg.Sender)
+	// 	if err != nil {
+	// 		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "%s", types.ErrInvalidAddress)
+	// 	}
+	// 	balance := k.bankKeeper.GetBalance(ctx, accAddress, coin.Denom)
+	// 	if balance.Amount.Equal(sdk.NewInt(0)) {
+	// 		return nil, types.ErrInvalidAmount
+	// 	}
+	// 	coins = append(coins, *coin)
+	// }
 
-	// Deposit token to Escrow account
-	var coins sdk.Coins
-	for _, denom := range msg.Tokens {
-		accAddress, err := sdk.AccAddressFromBech32(msg.Sender)
-		if err != nil {
-			return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "%s", types.ErrInvalidAddress)
-		}
-		balance := k.bankKeeper.GetBalance(ctx, accAddress, denom.Denom)
-		if balance.Amount.Equal(sdk.NewInt(0)) {
-			return nil, types.ErrInvalidAmount
-		}
-		coin := sdk.Coin{
-			Denom:  denom.Denom,
-			Amount: denom.Amount,
-		}
-		coins.Add(coin)
-	}
+	// if len(coins) == 0 {
+	// 	return nil, types.ErrInvalidTokenLength
+	// }
 
-	escrowAccount := types.GetEscrowAddress(pool.EncounterPartyPort, pool.EncounterPartyChannel)
-	k.bankKeeper.SendCoinsFromAccountToModule(ctx, escrowAccount, types.ModuleName, coins)
+	// // create escrow module account  here
+	// err = k.LockTokens(ctx, pool.EncounterPartyPort, pool.EncounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Sender), coins)
+	// if err != nil {
+	// 	return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "%s", err)
+	// }
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&ctx)
-
 	// construct ibc packet
 	rawMsgData, err := types.ModuleCdc.Marshal(msg)
 	if err != nil {
@@ -58,7 +60,6 @@ func (k Keeper) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) (*t
 	if err != nil {
 		return nil, err
 	}
-
 	return &types.MsgDepositResponse{
 		PoolToken: pool.Supply,
 	}, nil

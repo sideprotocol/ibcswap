@@ -430,6 +430,7 @@ func NewSimApp(
 		&app.IBCKeeper.PortKeeper,
 		scopedIBCInterchainswapKeeper,
 		app.BankKeeper,
+		app.AccountKeeper,
 	)
 
 	// Mock Module Stack

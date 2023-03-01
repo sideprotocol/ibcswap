@@ -18,7 +18,7 @@ func CmdSwap() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "swap [sender] [slippage] [recipient]",
 		Short: "Broadcast message Swap",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argSender := args[0]
 			argSlippage, err := cast.ToUint64E(args[1])
@@ -32,10 +32,25 @@ func CmdSwap() *cobra.Command {
 				return err
 			}
 			fmt.Println(argSender)
+			argTokenIn := args[3]
+			argTokenOut := args[4]
+
+			tokenIn, err := GetTokens(argTokenIn)
+			if err != nil {
+				return err
+			}
+
+			tokenOut, err := GetTokens(argTokenOut)
+			if err != nil {
+				return err
+			}
+
 			msg := types.NewMsgSwap(
 				clientCtx.GetFromAddress().String(),
 				argSlippage,
 				argRecipient,
+				tokenIn[0],
+				tokenOut[0],
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

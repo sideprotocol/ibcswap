@@ -27,6 +27,7 @@ type (
 		portKeeper    types.PortKeeper
 		scopedKeeper  capabilitykeeper.ScopedKeeper
 		bankKeeper    types.BankKeeper
+		authKeeper    types.AccountKeeper
 	}
 )
 
@@ -39,6 +40,7 @@ func NewKeeper(
 	portKeeper types.PortKeeper,
 	scopedKeeper capabilitykeeper.ScopedKeeper,
 	bankKeeper types.BankKeeper,
+	authKeeper types.AccountKeeper,
 
 ) *Keeper {
 	// set KeyTable if it has not already been set
@@ -55,6 +57,7 @@ func NewKeeper(
 		portKeeper:    portKeeper,
 		scopedKeeper:  scopedKeeper,
 		bankKeeper:    bankKeeper,
+		authKeeper:    authKeeper,
 	}
 }
 

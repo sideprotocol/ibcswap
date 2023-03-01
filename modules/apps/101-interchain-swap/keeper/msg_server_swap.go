@@ -27,8 +27,8 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 	}
 
 	//lock swap-in token to the swap module
-	escrowAddr := types.GetEscrowAddress(pool.EncounterPartyPort, pool.EncounterPartyChannel)
-	k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.MustAccAddressFromBech32(msg.Sender), escrowAddr.String(), sdk.NewCoins(*msg.TokenIn))
+	//escrowAddr := types.GetEscrowAddress(pool.EncounterPartyPort, pool.EncounterPartyChannel)
+	k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.MustAccAddressFromBech32(msg.Sender), types.ModuleName, sdk.NewCoins(*msg.TokenIn))
 
 	//constructs the IBC data packet
 	rawMsgData, err := json.Marshal(msg)

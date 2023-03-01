@@ -9,6 +9,10 @@ import (
 type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
 	// Methods imported from account should be defined here
+
+	NewAccount(ctx sdk.Context, acc types.AccountI) types.AccountI
+	SetModuleAccount(ctx sdk.Context, macc types.ModuleAccountI)
+	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
@@ -19,7 +23,9 @@ type BankKeeper interface {
 
 	// Methods imported from bank should be defined here
 	MintCoins(ctx sdk.Context, moduleName string, amounts sdk.Coins) error
+	BurnCoins(ctx sdk.Context, moduleName string, amounts sdk.Coins) error
 
 	HasSupply(ctx sdk.Context, denom string) bool
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 }

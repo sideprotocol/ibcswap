@@ -10,8 +10,8 @@ cleanup-ibc-test-containers:
 e2e-test: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh $(suite) $(test)
 
-e2e-test-interchainswap: cleanup-ibc-test-containers
-	./scripts/run-e2e.sh TestInterchainswapTestSuite TestMsgCreatePool
+e2e-test-interchainswap-basic: cleanup-ibc-test-containers
+	./scripts/run-e2e.sh TestInterchainswapTestSuite TestBasicMsgPacket
 
 e2e-test-fee: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh TestFeeMiddlewareTestSuite TestMultiMsg_MsgPayPacketFeeSingleSender

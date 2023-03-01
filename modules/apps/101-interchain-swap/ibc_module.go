@@ -1,7 +1,6 @@
 package interchainswap
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 	"strings"
@@ -137,14 +136,15 @@ func (im IBCModule) OnRecvPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) ibcexported.Acknowledgement {
+
 	var ack channeltypes.Acknowledgement
 
-	ack = channeltypes.NewResultAcknowledgement([]byte{byte(1)})
 	var data types.IBCSwapDataPacket
 	var ackErr error
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		ackErr = errorsmod.Wrapf(types.ErrInvalidType, "cannot unmarshal ICS-101 packet data")
 		ack = channeltypes.NewErrorAcknowledgement(ackErr)
+		return ack
 	}
 
 	// only attempt the application logic if the packet data
@@ -155,12 +155,7 @@ func (im IBCModule) OnRecvPacket(
 			ack = channeltypes.NewErrorAcknowledgement(err)
 			ackErr = err
 		} else {
-			res, err := json.Marshal(res)
-			if err != nil {
-				ackErr = err
-			} else {
-				ack = channeltypes.NewResultAcknowledgement(res)
-			}
+			ack = channeltypes.NewResultAcknowledgement(res)
 		}
 	}
 
@@ -179,7 +174,6 @@ func (im IBCModule) OnRecvPacket(
 			eventAttributes...,
 		),
 	)
-
 	// NOTE: acknowledgement will be written synchronously during IBC handler execution.
 	return ack
 }

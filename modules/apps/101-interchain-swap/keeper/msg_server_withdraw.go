@@ -18,30 +18,39 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 		return nil, err
 	}
 
+	// PoolCoin.Denom is just poolID.
 	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolCoin.Denom)
 
 	if !found {
 		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", types.ErrNotFoundPool)
 	}
 
-	if pool.Status != types.PoolStatus_POOL_STATUS_READY {
-		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", types.ErrNotReadyForSwap)
-	}
+	// if pool.Status != types.PoolStatus_POOL_STATUS_READY {
+	// 	return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", types.ErrNotReadyForSwap)
+	// }
 
-	asset, err := pool.FindAssetByDenom(msg.DenomOut)
+	outToken, err := pool.FindAssetByDenom(msg.DenomOut)
 
 	if err != nil {
 		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s in pool", types.ErrEmptyDenom)
 	}
 
 	// validate asset
-	if asset.Side != types.PoolSide_NATIVE {
+	if outToken.Side != types.PoolSide_NATIVE {
 		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", types.ErrNotNativeDenom)
 	}
 
 	// lock pool token to the swap module
-	escrowAccount := types.GetEscrowAddress(pool.EncounterPartyPort, pool.EncounterPartyChannel)
-	k.Keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, string(escrowAccount), sdk.AccAddress(msg.Sender), sdk.NewCoins(*msg.PoolCoin))
+	err = k.LockTokens(
+		ctx,
+		pool.EncounterPartyPort,
+		pool.EncounterPartyChannel,
+		sdk.MustAccAddressFromBech32(msg.Sender),
+		sdk.NewCoins(*msg.PoolCoin),
+	)
+	if err != nil {
+		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", err)
+	}
 
 	// construct the IBC data packet
 	rawMsgData, err := types.ModuleCdc.Marshal(msg)

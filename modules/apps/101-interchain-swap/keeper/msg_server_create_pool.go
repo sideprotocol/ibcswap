@@ -40,17 +40,7 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolReq
 		return nil, types.ErrNumberOfLocalAsset
 	}
 
-	pool := types.NewInterchainLiquidityPool(
-		ctx,
-		k.bankKeeper,
-		msg.Denoms,
-		msg.Decimals,
-		msg.Weight,
-		msg.SourcePort,
-		msg.SourceChannel,
-	)
-
-	poolData, err := types.ModuleCdc.Marshal(pool)
+	poolData, err := types.ModuleCdc.Marshal(msg)
 	if err != nil {
 		return nil, err
 	}
@@ -68,8 +58,8 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolReq
 		return nil, err
 	}
 
-	//k.SetInterchainLiquidityPool(ctx, *pool)
+	poolId := types.GetPoolId(msg.Denoms)
 	return &types.MsgCreatePoolResponse{
-		PoolId: pool.PoolId,
+		PoolId: poolId,
 	}, nil
 }

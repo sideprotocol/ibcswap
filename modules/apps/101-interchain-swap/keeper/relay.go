@@ -30,7 +30,7 @@ func (k Keeper) SendIBCSwapPacket(
 	destinationPort := sourceChannelEnd.GetCounterparty().GetPortID()
 	destinationChannel := sourceChannelEnd.GetCounterparty().GetChannelID()
 
-	// // get the next sequence
+	// get the next sequence
 	sequence, found := k.channelKeeper.GetNextSequenceSend(ctx, sourcePort, sourceChannel)
 	if !found {
 		return errorsmod.Wrapf(
@@ -63,7 +63,7 @@ func (k Keeper) SendIBCSwapPacket(
 	return nil
 }
 
-func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.IBCSwapDataPacket) (interface{}, error) {
+func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.IBCSwapDataPacket) ([]byte, error) {
 	switch data.Type {
 	case types.MessageType_CREATE:
 		var msg types.MsgCreatePoolRequest
@@ -74,13 +74,11 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err != nil {
 			return nil, err
 		}
-		return &types.MsgCreatePoolResponse{
-			PoolId: *pooId,
-		}, nil
+		data, err := types.ModuleCdc.Marshal(&types.MsgCreatePoolResponse{PoolId: *pooId})
+		return data, err
 
 	case types.MessageType_DEPOSIT:
 		var msg types.MsgDepositRequest
-
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
@@ -88,7 +86,8 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err != nil {
 			return nil, err
 		}
-		return res, nil
+		data, err := types.ModuleCdc.Marshal(res)
+		return data, err
 
 	case types.MessageType_WITHDRAW:
 		var msg types.MsgWithdrawRequest
@@ -96,11 +95,13 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		if res, err2 := k.OndWithdrawReceive(ctx, &msg); err2 != nil {
+		res, err2 := k.OndWithdrawReceive(ctx, &msg)
+		if err2 != nil {
 			return nil, err2
-		} else {
-			return res, nil
 		}
+
+		data, err := types.ModuleCdc.Marshal(res)
+		return data, err
 
 	case types.MessageType_LEFTSWAP, types.MessageType_RIGHTSWAP:
 		var msg types.MsgSwapRequest
@@ -108,12 +109,12 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		if res, err2 := k.OnSwapReceived(ctx, &msg); err2 != nil {
-			return nil, err2
-		} else {
-			return res, nil
+		res, err := k.OnSwapReceived(ctx, &msg)
+		if err != nil {
+			return nil, err
 		}
-
+		data, err := types.ModuleCdc.Marshal(res)
+		return data, err
 	default:
 		return nil, types.ErrUnknownDataPacket
 	}
@@ -145,6 +146,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				return err
 			}
 		case types.MessageType_WITHDRAW:
+
 			var msg types.MsgWithdrawRequest
 			var res types.MsgWithdrawResponse
 
