@@ -49,6 +49,7 @@ type E2ETestSuite struct {
 	DockerClient   *dockerclient.Client
 	network        string
 	startRelayerFn func(relayer ibc.Relayer)
+	stopRelayerFn  func(relayer ibc.Relayer)
 }
 
 // GRPCClients holds a reference to any GRPC clients that are needed by the tests.
@@ -150,6 +151,20 @@ func (s *E2ETestSuite) SetupChainsRelayerAndChannel(ctx context.Context, channel
 		time.Sleep(time.Second * 10)
 	}
 
+	s.stopRelayerFn = func(relayer ibc.Relayer) {
+		err := relayer.StopRelayer(ctx, eRep)
+		s.Require().NoError(err, fmt.Sprintf("failed to stop relayer: %s", err))
+		s.T().Cleanup(func() {
+			if !s.T().Failed() {
+				if err := relayer.StopRelayer(ctx, eRep); err != nil {
+					s.T().Logf("error stopping relayer: %v", err)
+				}
+			}
+		})
+		// wait for relayer to start.
+		time.Sleep(time.Second * 10)
+	}
+
 	s.initGRPCClients(chainA)
 	s.initGRPCClients(chainB)
 
@@ -238,6 +253,25 @@ func (s *E2ETestSuite) StartRelayer(relayer ibc.Relayer) {
 		panic("cannot start relayer before it is created!")
 	}
 
+	s.startRelayerFn(relayer)
+}
+
+// StopRelayer starts the given relayer.
+func (s *E2ETestSuite) StopRelayer(relayer ibc.Relayer) {
+	if s.stopRelayerFn == nil {
+		panic("cannot start relayer before it is created!")
+	}
+
+	s.stopRelayerFn(relayer)
+}
+
+// StopRelayer starts the given relayer.
+func (s *E2ETestSuite) RestartRelayer(relayer ibc.Relayer) {
+	if s.stopRelayerFn == nil {
+		panic("cannot start relayer before it is created!")
+	}
+
+	s.stopRelayerFn(relayer)
 	s.startRelayerFn(relayer)
 }
 

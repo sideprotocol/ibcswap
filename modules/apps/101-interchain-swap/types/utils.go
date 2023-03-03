@@ -31,6 +31,7 @@ func GetPoolId(denoms []string) string {
 	poolIdHash := sha256.New()
 	poolIdHash.Write([]byte(strings.Join(denoms, "")))
 	poolId := "pool" + fmt.Sprintf("%v", hex.EncodeToString(poolIdHash.Sum(nil)))
+	//poolId := "pool" + fmt.Sprintf("%v", hex.EncodeToString(poolIdHash.Sum(nil)))
 	return poolId
 }
 

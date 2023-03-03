@@ -20,6 +20,7 @@ var _ types.MsgServer = msgServer{}
 
 func (k Keeper) OnCreatePoolAcknowledged(ctx sdk.Context, msg *types.MsgCreatePoolRequest) {
 	//save pool after complete create operation in counter party chain.
+
 	pool := types.NewInterchainLiquidityPool(
 		ctx,
 		k.bankKeeper,
@@ -33,29 +34,24 @@ func (k Keeper) OnCreatePoolAcknowledged(ctx sdk.Context, msg *types.MsgCreatePo
 }
 
 func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgDepositRequest, res *types.MsgDepositResponse) error {
-
 	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolId)
 	if !found {
 		return types.ErrNotFoundPool
 	}
-
-	ctx.EventManager().EmitEvent(sdk.NewEvent(
-		"Pool Token",
-		sdk.NewAttribute("Denom", res.PoolToken.Denom),
-		sdk.NewAttribute("Amount", res.PoolToken.Amount.String()),
-	))
-
-	// mint voucher token
-	voucher := sdk.NewCoin(
-		pool.PoolId,
-		sdk.NewInt(1000000),
-	)
-	pool.Supply.Amount.Add(voucher.Amount)
-	err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(req.Sender), voucher)
+	pool.Supply.Amount.Add(res.PoolToken.Amount)
+	// mint voucher
+	err := k.MintTokens(ctx, sdk.AccAddress(req.Sender), *res.PoolToken)
 	if err != nil {
 		return err
 	}
 	k.SetInterchainLiquidityPool(ctx, pool)
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		"Deposit Ack3:",
+		sdk.NewAttribute(
+			"Deposit",
+			pool.Supply.Amount.String(),
+		),
+	))
 	return nil
 }
 
@@ -70,20 +66,20 @@ func (k Keeper) OnWithdrawAcknowledged(ctx sdk.Context, req *types.MsgWithdrawRe
 	k.SetInterchainLiquidityPool(ctx, pool)
 
 	// burn voucher token.
-	err := k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(req.Sender), *req.PoolCoin)
-	if err != nil {
-		return err
-	}
-	// unlock token
-	err = k.UnlockTokens(ctx,
-		pool.EncounterPartyPort,
-		pool.EncounterPartyChannel,
-		sdk.MustAccAddressFromBech32(req.Sender),
-		sdk.NewCoins(*res.Tokens[0]),
-	)
-	if err != nil {
-		return err
-	}
+	// err := k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(req.Sender), *req.PoolCoin)
+	// if err != nil {
+	// 	return err
+	// }
+	// // unlock token
+	// err = k.UnlockTokens(ctx,
+	// 	pool.EncounterPartyPort,
+	// 	pool.EncounterPartyChannel,
+	// 	sdk.MustAccAddressFromBech32(req.Sender),
+	// 	sdk.NewCoins(*res.Tokens[0]),
+	// )
+	// if err != nil {
+	// 	return err
+	// }
 	return nil
 }
 
@@ -150,8 +146,8 @@ func (k Keeper) OnCreatePoolReceived(ctx sdk.Context, msg *types.MsgCreatePoolRe
 		return nil, types.ErrInvalidDenomPair
 	}
 
+	// save pool status
 	k.SetInterchainLiquidityPool(ctx, pool)
-
 	// emit events
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -177,7 +173,6 @@ func (k Keeper) OnDepositReceived(ctx sdk.Context, msg *types.MsgDepositRequest)
 	}
 
 	//TODO: Need to implement params module and market maker.
-
 	amm := types.NewInterchainMarketMaker(
 		pool,
 		323,
@@ -202,10 +197,10 @@ func (k Keeper) OnDepositReceived(ctx sdk.Context, msg *types.MsgDepositRequest)
 	}
 
 	// is ready for swap.
-	amm.Pool.UpdateAssetPoolSide(msg.Tokens[0].Denom, types.PoolSide(types.PoolStatus_POOL_STATUS_READY)) //= types.PoolStatus_POOL_STATUS_READY
+	//amm.Pool.UpdateAssetPoolSide(msg.Tokens[0].Denom, types.PoolSide(types.PoolStatus_POOL_STATUS_READY)) //= types.PoolStatus_POOL_STATUS_READY
 
 	k.SetInterchainLiquidityPool(ctx, *amm.Pool)
-	ctx.EventManager().EmitTypedEvents(amm.Pool)
+	k.SetInterchainMarketMaker(ctx, *amm)
 	return &types.MsgDepositResponse{
 		PoolToken: poolToken,
 	}, nil
@@ -237,6 +232,7 @@ func (k Keeper) OndWithdrawReceive(ctx sdk.Context, msg *types.MsgWithdrawReques
 	}
 
 	k.SetInterchainLiquidityPool(ctx, *amm.Pool)
+	k.SetInterchainMarketMaker(ctx, *amm)
 	ctx.EventManager().EmitTypedEvents(msg)
 	return &types.MsgWithdrawResponse{
 		Tokens: []*sdk.Coin{outToken},
@@ -285,7 +281,7 @@ func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest) (*typ
 	}
 
 	escrowAddr := types.GetEscrowAddress(pool.EncounterPartyPort, pool.EncounterPartyChannel)
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, escrowAddr.String(), sdk.AccAddress(msg.Recipient), sdk.NewCoins(*outToken))
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, escrowAddr.String(), sdk.MustAccAddressFromBech32(msg.Recipient), sdk.NewCoins(*outToken))
 
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "failed to move assets from escrow address to recipient!")

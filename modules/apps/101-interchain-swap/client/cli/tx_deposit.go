@@ -14,13 +14,13 @@ var _ = strconv.Itoa(0)
 
 func CmdDeposit() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "deposit [pool-id] [sender]",
+		Use:   "deposit [pool-id] [sender] [pool-token]",
 		Short: "Broadcast message Deposit",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argPoolId := args[0]
 			argSender := args[1]
-			argTokens := args[3]
+			argTokens := args[2]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

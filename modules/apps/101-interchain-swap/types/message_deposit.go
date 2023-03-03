@@ -46,10 +46,6 @@ func (msg *MsgDepositRequest) ValidateBasic() error {
 	if len(msg.Tokens) == 0 {
 		return errorsmod.Wrapf(ErrInvalidTokenLength, "invalid token length (%d)", len(msg.Tokens))
 	}
-	if len(msg.Tokens) == 0 {
-		return errorsmod.Wrapf(ErrInvalidTokenLength, "invalid token length (%d)", len(msg.Tokens))
-	}
-
 	denoms := map[string]int{}
 	for _, token := range msg.Tokens{
 		if _,ok := denoms[token.Denom]; ok{

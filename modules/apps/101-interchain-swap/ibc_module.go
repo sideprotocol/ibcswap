@@ -137,14 +137,15 @@ func (im IBCModule) OnRecvPacket(
 	relayer sdk.AccAddress,
 ) ibcexported.Acknowledgement {
 
-	var ack channeltypes.Acknowledgement
+	logger := im.keeper.Logger(ctx)
+	ack := channeltypes.NewResultAcknowledgement([]byte{byte(1)})
 
 	var data types.IBCSwapDataPacket
 	var ackErr error
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		ackErr = errorsmod.Wrapf(types.ErrInvalidType, "cannot unmarshal ICS-101 packet data")
+		logger.Error(fmt.Sprintf("%s sequence %d", ackErr.Error(), packet.Sequence))
 		ack = channeltypes.NewErrorAcknowledgement(ackErr)
-		return ack
 	}
 
 	// only attempt the application logic if the packet data
@@ -154,8 +155,10 @@ func (im IBCModule) OnRecvPacket(
 		if err != nil {
 			ack = channeltypes.NewErrorAcknowledgement(err)
 			ackErr = err
+			logger.Error(fmt.Sprintf("%s sequence %d", ackErr.Error(), packet.Sequence))
 		} else {
 			ack = channeltypes.NewResultAcknowledgement(res)
+			logger.Info("successfully handled ICS-101 packet sequence: %d", packet.Sequence)
 		}
 	}
 
@@ -187,24 +190,27 @@ func (im IBCModule) OnAcknowledgementPacket(
 ) error {
 	var ack channeltypes.Acknowledgement
 	if err := types.ModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
-		return errorsmod.Wrapf(types.ErrUnknownRequest, "cannot unmarshal ICS-101  packet acknowledgement: %v", err)
+		return errorsmod.Wrapf(errorsmod.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
 	}
 	var data types.IBCSwapDataPacket
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		return errorsmod.Wrapf(types.ErrUnknownRequest, "cannot unmarshal ICS-101 packet data: %s", err.Error())
+		return errorsmod.Wrapf(errorsmod.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
+
+	// if err := im.keeper.OnAcknowledgementPacket(ctx, packet, &data, ack); err != nil {
+	// 	return err
+	// }
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypePacket,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+			sdk.NewAttribute(sdk.AttributeKeySender, data.GetType().String()),
+		),
+	)
 
 	switch resp := ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Result:
-		if err := im.keeper.OnAcknowledgementPacket(ctx, packet, &data, ack); err != nil {
-			ctx.EventManager().EmitEvent(
-				sdk.NewEvent(
-					types.EventTypePacket,
-					sdk.NewAttribute("Can't parser packet:", err.Error()),
-				),
-			)
-			return nil
-		}
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypePacket,
@@ -220,7 +226,6 @@ func (im IBCModule) OnAcknowledgementPacket(
 		)
 	}
 
-	ctx.EventManager().EmitTypedEvents(&data)
 	return nil
 }
 
@@ -232,7 +237,7 @@ func (im IBCModule) OnTimeoutPacket(
 ) error {
 	var data types.IBCSwapDataPacket
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		return errorsmod.Wrapf(types.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
+		return errorsmod.Wrapf(types.ErrUnknownRequest, "cannot unmarshal ICS-101 transfer packet data: %s", err.Error())
 	}
 	// refund tokens
 	if err := im.keeper.OnTimeoutPacket(ctx, packet, &data); err != nil {
