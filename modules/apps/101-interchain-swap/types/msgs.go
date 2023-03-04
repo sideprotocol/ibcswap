@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
-	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 )
 
 // msg types
@@ -125,6 +125,7 @@ func (*MsgSingleDepositRequest) Type() string {
 // ValidateBasic performs a basic check of the MsgDepositRequest fields.
 // NOTE: timeout height or timestamp values can be 0 to disable the timeout.
 func (m *MsgSingleDepositRequest) ValidateBasic() error {
+	// ICS 24 host
 	if err := host.PortIdentifierValidator(m.SourcePort); err != nil {
 		return sdkerrors.Wrap(err, "invalid source port ID")
 	}

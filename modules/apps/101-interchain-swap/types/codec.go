@@ -24,11 +24,11 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSingleDepositRequest{})
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgLeftSwapRequest{})
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgRightSwapRequest{})
-
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgCreatePoolResponse{})
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSingleDepositResponse{})
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgWithdrawResponse{})
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSwapResponse{})
+	//
+	//registry.RegisterImplementations((*sdk.Msg)(nil), &MsgCreatePoolResponse{})
+	//registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSingleDepositResponse{})
+	//registry.RegisterImplementations((*sdk.Msg)(nil), &MsgWithdrawResponse{})
+	//registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSwapResponse{})
 
 	//msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

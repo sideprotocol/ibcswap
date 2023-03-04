@@ -2,25 +2,27 @@ package keeper
 
 import (
 	"encoding/hex"
+	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/types"
+	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
 
 // Keeper defines the IBC Swap keeper
 type Keeper struct {
-	storeKey   sdk.StoreKey
+	storeKey   storetypes.StoreKey
 	cdc        codec.BinaryCodec
 	paramSpace paramtypes.Subspace
 
-	ics4Wrapper   types.ICS4Wrapper
+	ics4Wrapper   porttypes.ICS4Wrapper
 	channelKeeper types.ChannelKeeper
 	portKeeper    types.PortKeeper
 	authKeeper    types.AccountKeeper
@@ -30,8 +32,8 @@ type Keeper struct {
 
 // NewKeeper creates a new IBC transfer Keeper instance
 func NewKeeper(
-	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
-	ics4Wrapper types.ICS4Wrapper, channelKeeper types.ChannelKeeper, portKeeper types.PortKeeper,
+	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace paramtypes.Subspace,
+	ics4Wrapper porttypes.ICS4Wrapper, channelKeeper types.ChannelKeeper, portKeeper types.PortKeeper,
 	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
 ) Keeper {
 	// ensure ibc transfer module account is set
@@ -112,7 +114,8 @@ func (k Keeper) GetAtomicOrder(ctx sdk.Context, orderId string) (types.AtomicSwa
 		return types.AtomicSwapOrder{}, false
 	}
 
-	order := k.MustUnmarshalOTCOrder(bz)
+	// order := k.MustUnmarshalOTCOrder(bz)
+	order := types.AtomicSwapOrder{}
 	return order, true
 }
 
@@ -128,9 +131,9 @@ func (k Keeper) HasAtomicOrder(ctx sdk.Context, orderId string) bool {
 
 // SetAtomicOrder sets a new OTCOrder to the store.
 func (k Keeper) SetAtomicOrder(ctx sdk.Context, order types.AtomicSwapOrder) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKey)
-	bz := k.MustMarshalOTCOrder(order)
-	store.Set([]byte(order.Id), bz)
+	//store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKey)
+	//bz := k.MustMarshalOTCOrder(order)
+	//store.Set([]byte(order.Id), bz)
 }
 
 // IterateAtomicOrders iterates over the limit orders in the store
@@ -142,10 +145,10 @@ func (k Keeper) IterateAtomicOrders(ctx sdk.Context, cb func(order types.AtomicS
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 
-		order := k.MustUnmarshalOTCOrder(iterator.Value())
-		if cb(order) {
-			break
-		}
+		//order := k.MustUnmarshalOTCOrder(iterator.Value())
+		//if cb(order) {
+		//	break
+		//}
 	}
 }
 

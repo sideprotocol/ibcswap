@@ -20,6 +20,9 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgMakeSwapRequest{})
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgTakeSwapRequest{})
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgCancelSwapRequest{})
+	//registry.RegisterImplementations((*sdk.Msg)(nil), &MsgMakeSwapResponse{})
+	//registry.RegisterImplementations((*sdk.Msg)(nil), &MsgTakeSwapResponse{})
+	//registry.RegisterImplementations((*sdk.Msg)(nil), &MsgCancelSwapResponse{})
 
 	// msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

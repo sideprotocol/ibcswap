@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"cosmossdk.io/math"
 	"encoding/json"
 	"math/rand"
 	"testing"
@@ -11,8 +12,8 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/simulation"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/types"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/simulation"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.
@@ -30,7 +31,7 @@ func TestRandomizedGenState(t *testing.T) {
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),
-		InitialStake: 1000,
+		InitialStake: math.NewInt(1000),
 		GenState:     make(map[string]json.RawMessage),
 	}
 

@@ -3,10 +3,10 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/101-interchain-swap/types"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 func (k Keeper) CreateIBCSwapAMM(ctx sdk.Context, poolId string) (types.BalancerAMM, error) {
@@ -39,17 +39,17 @@ func (k Keeper) SendIBCSwapDelegationDataPacket(
 		return types.ErrSendDisabled
 	}
 
-	sourceChannelEnd, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
+	_, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
 		return sdkerrors.Wrapf(channeltypes.ErrChannelNotFound, "port ID (%s) channel ID (%s)", sourcePort, sourceChannel)
 	}
 
-	destinationPort := sourceChannelEnd.GetCounterparty().GetPortID()
-	destinationChannel := sourceChannelEnd.GetCounterparty().GetChannelID()
+	//destinationPort := sourceChannelEnd.GetCounterparty().GetPortID()
+	//destinationChannel := sourceChannelEnd.GetCounterparty().GetChannelID()
 
 	// get the next sequence
-	sequence, found := k.channelKeeper.GetNextSequenceSend(ctx, sourcePort, sourceChannel)
-	if !found {
+	_, found2 := k.channelKeeper.GetNextSequenceSend(ctx, sourcePort, sourceChannel)
+	if !found2 {
 		return sdkerrors.Wrapf(
 			channeltypes.ErrSequenceSendNotFound,
 			"source port: %s, source channel: %s", sourcePort, sourceChannel,
@@ -63,18 +63,19 @@ func (k Keeper) SendIBCSwapDelegationDataPacket(
 		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 
-	packet := channeltypes.NewPacket(
-		swapPacket.GetBytes(),
-		sequence,
-		sourcePort,
-		sourceChannel,
-		destinationPort,
-		destinationChannel,
-		timeoutHeight,
-		timeoutTimestamp,
-	)
+	//packet := channeltypes.NewPacket(
+	//	swapPacket.GetBytes(),
+	//	sequence,
+	//	sourcePort,
+	//	sourceChannel,
+	//	destinationPort,
+	//	destinationChannel,
+	//	timeoutHeight,
+	//	timeoutTimestamp,
+	//)
 
-	if err := k.ics4Wrapper.SendPacket(ctx, channelCap, packet); err != nil {
+	_, err := k.ics4Wrapper.SendPacket(ctx, channelCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, swapPacket.GetBytes())
+	if err != nil {
 		return err
 	}
 
@@ -176,11 +177,7 @@ func (k Keeper) OnWithdrawReceived(ctx sdk.Context, msg *types.MsgWithdrawReques
 	k.SetBalancerPool(ctx, *amm.Pool) // update pool states
 
 	// only output one asset in the pool
-	return &types.MsgWithdrawResponse{
-		Tokens: []*sdk.Coin{
-			&outToken,
-		},
-	}, nil
+	return &types.MsgWithdrawResponse{Token: &outToken}, nil
 }
 
 func (k Keeper) OnLeftSwapReceived(ctx sdk.Context, msg *types.MsgLeftSwapRequest) (*types.MsgSwapResponse, error) {
@@ -235,25 +232,60 @@ func (k Keeper) OnRightSwapReceived(ctx sdk.Context, msg *types.MsgRightSwapRequ
 
 func (k Keeper) OnCreatePoolAcknowledged(ctx sdk.Context, request *types.MsgCreatePoolRequest, response *types.MsgCreatePoolResponse) error {
 	//TODO implement me
-	panic("implement me")
+	// do nothing
+	return nil
 }
 
 func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, request *types.MsgSingleDepositRequest, response *types.MsgSingleDepositResponse) error {
-	//TODO implement me
-	panic("implement me")
+	if err := request.ValidateBasic(); err != nil {
+		return err
+	}
+
+	if pool, ok := k.GetBalancerPool(ctx, request.PoolId); !ok {
+		return types.ErrInvalidPoolId
+	} else {
+		pool.PoolToken.Add(*response.PoolToken)
+		length := len(request.Tokens)
+		for i := 0; i < length; i++ {
+			pool.UpdateBalance(*request.Tokens[i], true)
+		}
+		k.SetBalancerPool(ctx, pool) // update pool states
+	}
+
+	receiver := sdk.MustAccAddressFromBech32(request.Sender)
+	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(*response.PoolToken)); err != nil {
+		return err
+	}
+	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiver, sdk.NewCoins(*response.PoolToken))
 }
 
 func (k Keeper) OnWithdrawAcknowledged(ctx sdk.Context, request *types.MsgWithdrawRequest, response *types.MsgWithdrawResponse) error {
+	sender := sdk.MustAccAddressFromBech32(request.Sender)
+	escrowAddr := types.GetEscrowAddress(request.SourcePort, request.SourceChannel)
+	if pool, ok := k.GetBalancerPool(ctx, request.PoolToken.Denom); !ok {
+		return types.ErrInvalidPoolId
+	} else {
+		pool.PoolToken.Sub(*request.PoolToken)
+		pool.UpdateBalance(*response.Token, false)
+		k.SetBalancerPool(ctx, pool) // update pool states
+	}
+	// currently, only one asset is allowed to withdraw, which is what you deposited, what you can withdraw
+	if err := k.bankKeeper.SendCoins(ctx, escrowAddr, sender, sdk.NewCoins(*response.Token)); err != nil {
+		return err
+	}
+	// burn pool token deposited of the request message
+	// TODO check if we need transfer from escrowAddress first before burn
+	return k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(*request.PoolToken))
+}
+
+func (k Keeper) OnLeftSwapAcknowledged(ctx sdk.Context,
+	packet channeltypes.Packet, request *types.MsgLeftSwapRequest, response *types.MsgSwapResponse) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (k Keeper) OnLeftSwapAcknowledged(ctx sdk.Context, request *types.MsgLeftSwapRequest, response *types.MsgSwapResponse) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (k Keeper) OnRightSwapAcknowledged(ctx sdk.Context, request *types.MsgRightSwapRequest, response *types.MsgSwapResponse) error {
+func (k Keeper) OnRightSwapAcknowledged(ctx sdk.Context,
+	packet channeltypes.Packet, request *types.MsgRightSwapRequest, response *types.MsgSwapResponse) error {
 	//TODO implement me
 	panic("implement me")
 }

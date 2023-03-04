@@ -11,9 +11,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 
-	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
-	channelutils "github.com/cosmos/ibc-go/v4/modules/core/04-channel/client/utils"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/types"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	channelutils "github.com/cosmos/ibc-go/v6/modules/core/04-channel/client/utils"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
 const (

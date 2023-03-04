@@ -25,14 +25,16 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	tmversion "github.com/tendermint/tendermint/version"
 
-	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
-	commitmenttypes "github.com/cosmos/ibc-go/v4/modules/core/23-commitment/types"
-	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
-	"github.com/cosmos/ibc-go/v4/modules/core/exported"
-	"github.com/cosmos/ibc-go/v4/modules/core/types"
-	ibctmtypes "github.com/cosmos/ibc-go/v4/modules/light-clients/07-tendermint/types"
-	"github.com/ibcswap/ibcswap/v4/testing/mock"
-	"github.com/ibcswap/ibcswap/v4/testing/simapp"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	commitmenttypes "github.com/cosmos/ibc-go/v6/modules/core/23-commitment/types"
+	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
+	"github.com/cosmos/ibc-go/v6/modules/core/exported"
+	"github.com/cosmos/ibc-go/v6/modules/core/types"
+	ibctmtypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
+	//"github.com/cosmos/ibc-go/v6/testing/mock"
+	//"github.com/cosmos/ibc-go/v6/testing/simapp"
+	"github.com/ibcswap/ibcswap/v6/testing/mock"
+	"github.com/ibcswap/ibcswap/v6/testing/simapp"
 )
 
 var MaxAccounts = 10
@@ -120,12 +122,6 @@ func NewTestChainWithValSet(t *testing.T, coord *Coordinator, chainID string, va
 		senderAccs = append(senderAccs, senderAcc)
 	}
 
-	// add mock module account balance
-	genBals = append(genBals, banktypes.Balance{
-		Address: authtypes.NewModuleAddress(mock.ModuleName).String(),
-		Coins:   sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000000))},
-	})
-
 	app := SetupWithGenesisValSet(t, valSet, genAccs, chainID, sdk.DefaultPowerReduction, genBals...)
 
 	// create current header and call begin block
@@ -154,10 +150,6 @@ func NewTestChainWithValSet(t *testing.T, coord *Coordinator, chainID string, va
 		SenderAccount:  senderAccs[0].SenderAccount,
 		SenderAccounts: senderAccs,
 	}
-
-	// creates mock module account
-	mockModuleAcc := chain.GetSimApp().AccountKeeper.GetModuleAccount(chain.GetContext(), mock.ModuleName)
-	require.NotNil(t, mockModuleAcc)
 
 	coord.CommitBlock(chain)
 
@@ -211,7 +203,7 @@ func (chain *TestChain) QueryProof(key []byte) ([]byte, clienttypes.Height) {
 	return chain.QueryProofAtHeight(key, chain.App.LastBlockHeight())
 }
 
-// QueryProofAtHeight performs an abci query with the given key and returns the proto encoded merkle proof
+// QueryProof performs an abci query with the given key and returns the proto encoded merkle proof
 // for the query and the height at which the proof will succeed on a tendermint verifier.
 func (chain *TestChain) QueryProofAtHeight(key []byte, height int64) ([]byte, clienttypes.Height) {
 	res := chain.App.Query(abci.RequestQuery{
@@ -301,6 +293,7 @@ func (chain *TestChain) NextBlock() {
 		Time:               chain.CurrentHeader.Time,
 		ValidatorsHash:     chain.Vals.Hash(),
 		NextValidatorsHash: chain.NextVals.Hash(),
+		ProposerAddress:    chain.CurrentHeader.ProposerAddress,
 	}
 
 	chain.App.BeginBlock(abci.RequestBeginBlock{Header: chain.CurrentHeader})
@@ -338,7 +331,10 @@ func (chain *TestChain) SendMsgs(msgs ...sdk.Msg) (*sdk.Result, error) {
 	chain.NextBlock()
 
 	// increment sequence for successful transaction execution
-	chain.SenderAccount.SetSequence(chain.SenderAccount.GetSequence() + 1)
+	err = chain.SenderAccount.SetSequence(chain.SenderAccount.GetSequence() + 1)
+	if err != nil {
+		return nil, err
+	}
 
 	chain.Coordinator.IncrementTime()
 
@@ -397,7 +393,7 @@ func (chain *TestChain) ConstructUpdateTMClientHeader(counterparty *TestChain, c
 	return chain.ConstructUpdateTMClientHeaderWithTrustedHeight(counterparty, clientID, clienttypes.ZeroHeight())
 }
 
-// ConstructUpdateTMClientHeaderWithTrustedHeight will construct a valid 07-tendermint Header to update the
+// ConstructUpdateTMClientHeader will construct a valid 07-tendermint Header to update the
 // light client on the source chain.
 func (chain *TestChain) ConstructUpdateTMClientHeaderWithTrustedHeight(counterparty *TestChain, clientID string, trustedHeight clienttypes.Height) (*ibctmtypes.Header, error) {
 	header := counterparty.LastHeader
@@ -485,8 +481,8 @@ func (chain *TestChain) CreateTMClientHeader(chainID string, blockHeight int64, 
 	// MakeCommit expects a signer array in the same order as the validator array.
 	// Thus we iterate over the ordered validator set and construct a signer array
 	// from the signer map in the same order.
-	var signerArr []tmtypes.PrivValidator
-	for _, v := range tmValSet.Validators {
+	var signerArr []tmtypes.PrivValidator   //nolint:prealloc // using prealloc here would be needlessly complex
+	for _, v := range tmValSet.Validators { //nolint:staticcheck // need to check for nil validator set
 		signerArr = append(signerArr, signers[v.Address.String()])
 	}
 
@@ -498,7 +494,7 @@ func (chain *TestChain) CreateTMClientHeader(chainID string, blockHeight int64, 
 		Commit: commit.ToProto(),
 	}
 
-	if tmValSet != nil {
+	if tmValSet != nil { //nolint:staticcheck
 		valSet, err = tmValSet.ToProto()
 		require.NoError(chain.T, err)
 	}

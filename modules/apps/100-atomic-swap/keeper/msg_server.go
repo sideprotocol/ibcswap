@@ -3,8 +3,8 @@ package keeper
 import (
 	"context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/types"
+	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
 var (

@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	ibctesting "github.com/ibcswap/ibcswap/v4/testing"
+	ibctesting "github.com/ibcswap/ibcswap/v6/testing"
 )
 
 type TypesTestSuite struct {

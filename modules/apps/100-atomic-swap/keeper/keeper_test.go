@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/types"
-	ibctesting "github.com/ibcswap/ibcswap/v4/testing"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	ibctesting "github.com/ibcswap/ibcswap/v6/testing"
 )
 
 type KeeperTestSuite struct {

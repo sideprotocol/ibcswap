@@ -2,22 +2,24 @@ package keeper
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/101-interchain-swap/types"
+	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
+	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
 
 // Keeper defines the IBC Swap keeper
 type Keeper struct {
-	storeKey   sdk.StoreKey
+	storeKey   storetypes.StoreKey
 	cdc        codec.BinaryCodec
 	paramSpace paramtypes.Subspace
 
-	ics4Wrapper   types.ICS4Wrapper
+	ics4Wrapper   porttypes.ICS4Wrapper
 	channelKeeper types.ChannelKeeper
 	portKeeper    types.PortKeeper
 	authKeeper    types.AccountKeeper
@@ -27,18 +29,18 @@ type Keeper struct {
 
 // NewKeeper creates a new IBC swap Keeper instance
 func NewKeeper(
-	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
-	ics4Wrapper types.ICS4Wrapper, channelKeeper types.ChannelKeeper, portKeeper types.PortKeeper,
+	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace paramtypes.Subspace,
+	ics4Wrapper porttypes.ICS4Wrapper, channelKeeper types.ChannelKeeper, portKeeper types.PortKeeper,
 	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
 ) Keeper {
 	// ensure ibc swap module account is set
-	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
-		panic("the IBC swap module account has not been set")
-	}
+	//if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
+	//	panic("the IBC swap module account has not been set")
+	//}
 
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+		//paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
 	return Keeper{

@@ -5,11 +5,11 @@ import (
 
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 
-	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
-	ibcswap "github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/types"
-	ibctesting "github.com/ibcswap/ibcswap/v4/testing"
+	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
+	ibcswap "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	ibctesting "github.com/ibcswap/ibcswap/v6/testing"
 )
 
 func (suite *SwapTestSuite) TestOnChanOpenInit() {
@@ -55,7 +55,7 @@ func (suite *SwapTestSuite) TestOnChanOpenInit() {
 		},
 		{
 			"capability already claimed", func() {
-				err := suite.chainA.GetSimApp().ScopedIBCSwapKeeper.ClaimCapability(suite.chainA.GetContext(), chanCap, host.ChannelCapabilityPath(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID))
+				err := suite.chainA.GetSimApp().ScopedAtomicSwapKeeper.ClaimCapability(suite.chainA.GetContext(), chanCap, host.ChannelCapabilityPath(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID))
 				suite.Require().NoError(err)
 			}, false,
 		},
@@ -80,12 +80,12 @@ func (suite *SwapTestSuite) TestOnChanOpenInit() {
 			}
 
 			var err error
-			chanCap, err = suite.chainA.App.GetScopedIBCKeeper().NewCapability(suite.chainA.GetContext(), host.ChannelCapabilityPath(ibctesting.SwapPort, path.EndpointA.ChannelID))
+			chanCap, err = suite.chainA.App.GetScopedIBCKeeper().NewCapability(suite.chainA.GetContext(), host.ChannelCapabilityPath(ibctesting.AtomicSwapPort, path.EndpointA.ChannelID))
 			suite.Require().NoError(err)
 
 			tc.malleate() // explicitly change fields in channel and testChannel
 
-			swapModule := ibcswap.NewIBCModule(suite.chainA.GetSimApp().IBCSwapKeeper)
+			swapModule := ibcswap.NewIBCModule(suite.chainA.GetSimApp().AtomicSwapKeeper)
 			version, err := swapModule.OnChanOpenInit(suite.chainA.GetContext(), channel.Ordering, channel.GetConnectionHops(),
 				path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, chanCap, counterparty, channel.GetVersion(),
 			)
@@ -125,7 +125,7 @@ func (suite *SwapTestSuite) TestOnChanOpenTry() {
 		},
 		{
 			"capability already claimed", func() {
-				err := suite.chainA.GetSimApp().ScopedIBCSwapKeeper.ClaimCapability(
+				err := suite.chainA.GetSimApp().ScopedAtomicSwapKeeper.ClaimCapability(
 					suite.chainA.GetContext(), chanCap,
 					host.ChannelCapabilityPath(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID))
 				suite.Require().NoError(err)
@@ -168,10 +168,10 @@ func (suite *SwapTestSuite) TestOnChanOpenTry() {
 			}
 			counterpartyVersion = types.Version
 
-			module, _, err := suite.chainA.App.GetIBCKeeper().PortKeeper.LookupModuleByPort(suite.chainA.GetContext(), ibctesting.SwapPort)
+			module, _, err := suite.chainA.App.GetIBCKeeper().PortKeeper.LookupModuleByPort(suite.chainA.GetContext(), ibctesting.AtomicSwapPort)
 			suite.Require().NoError(err)
 
-			chanCap, err = suite.chainA.App.GetScopedIBCKeeper().NewCapability(suite.chainA.GetContext(), host.ChannelCapabilityPath(ibctesting.SwapPort, path.EndpointA.ChannelID))
+			chanCap, err = suite.chainA.App.GetScopedIBCKeeper().NewCapability(suite.chainA.GetContext(), host.ChannelCapabilityPath(ibctesting.AtomicSwapPort, path.EndpointA.ChannelID))
 			suite.Require().NoError(err)
 
 			cbs, ok := suite.chainA.App.GetIBCKeeper().Router.GetRoute(module)
@@ -223,7 +223,7 @@ func (suite *SwapTestSuite) TestOnChanOpenAck() {
 			path.EndpointA.ChannelID = ibctesting.FirstChannelID
 			counterpartyVersion = types.Version
 
-			module, _, err := suite.chainA.App.GetIBCKeeper().PortKeeper.LookupModuleByPort(suite.chainA.GetContext(), ibctesting.SwapPort)
+			module, _, err := suite.chainA.App.GetIBCKeeper().PortKeeper.LookupModuleByPort(suite.chainA.GetContext(), ibctesting.AtomicSwapPort)
 			suite.Require().NoError(err)
 
 			cbs, ok := suite.chainA.App.GetIBCKeeper().Router.GetRoute(module)

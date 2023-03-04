@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ibcswap/ibcswap/v4/modules/apps/101-interchain-swap/types"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 // InitGenesis initializes the ibc-swap state and binds to PortID.
@@ -23,7 +23,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 		}
 	}
 
-	k.SetParams(ctx, state.Params)
+	//k.SetParams(ctx, state.Params)
 }
 
 // ExportGenesis exports ibc-swap module's portID and params into its genesis state.

@@ -8,12 +8,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 
-	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
-	channelutils "github.com/cosmos/ibc-go/v4/modules/core/04-channel/client/utils"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/101-interchain-swap/types"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	channelutils "github.com/cosmos/ibc-go/v6/modules/core/04-channel/client/utils"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 const (
@@ -42,18 +41,18 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 			if err != nil {
 				return err
 			}
-			sender := clientCtx.GetFromAddress().String()
+			//sender := clientCtx.GetFromAddress().String()
 			srcChannel := args[0]
-			receivingAddress := args[2]
-
-			fromCoin, err := sdk.ParseCoinNormalized(args[1])
-			if err != nil {
-				return err
-			}
-			toCoin, err2 := sdk.ParseCoinNormalized(args[3])
-			if err2 != nil {
-				return err
-			}
+			//receivingAddress := args[2]
+			//
+			//fromCoin, err := sdk.ParseCoinNormalized(args[1])
+			//if err != nil {
+			//	return err
+			//}
+			//toCoin, err2 := sdk.ParseCoinNormalized(args[3])
+			//if err2 != nil {
+			//	return err
+			//}
 
 			//if !strings.HasPrefix(coin.Denom, "ibc/") {
 			//	denomTrace := types.ParseDenomTrace(coin.Denom)
@@ -79,7 +78,7 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 				return err
 			}
 
-			expectedCounterparty, err := cmd.Flags().GetString(flagExpectedCounterparty)
+			//expectedCounterparty, err := cmd.Flags().GetString(flagExpectedCounterparty)
 			if err != nil {
 				return err
 			}
@@ -123,7 +122,7 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 			//	sender, receivingAddress, expectedCounterparty,
 			//	timeoutHeight, timeoutTimestamp, time.Now().UTC().Unix(),
 			//)
-			println(types.PortID, srcChannel, fromCoin, toCoin, sender, receivingAddress, expectedCounterparty, timeoutHeight, timeoutTimestamp)
+			// println(types.PortID, srcChannel, fromCoin, toCoin, sender, receivingAddress, expectedCounterparty, timeoutHeight, timeoutTimestamp)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), nil)
 		},
 	}

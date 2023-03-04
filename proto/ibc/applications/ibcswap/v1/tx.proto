@@ -95,7 +95,7 @@ message MsgWithdrawRequest {
 }
 
 message MsgWithdrawResponse {
-  repeated cosmos.base.v1beta1.Coin tokens = 1;
+  cosmos.base.v1beta1.Coin token = 1;
 }
 
 message MsgLeftSwapRequest {
@@ -110,7 +110,7 @@ message MsgLeftSwapRequest {
   string sender = 3 [(gogoproto.moretags) = "yaml:\"sender\""];
   // the pool token needs to be withdraw
   cosmos.base.v1beta1.Coin token_in = 4  [(gogoproto.moretags) = "yaml:\"pool_token\""];
-  // denomOut
+  // the denomination of swap out token
   string denom_out = 5;
   // max slippage would accepted by sender
   uint32 slippage = 6;

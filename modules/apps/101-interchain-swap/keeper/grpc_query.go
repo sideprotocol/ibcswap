@@ -6,7 +6,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/ibcswap/ibcswap/v4/modules/apps/101-interchain-swap/types"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 var _ types.QueryServer = Keeper{}

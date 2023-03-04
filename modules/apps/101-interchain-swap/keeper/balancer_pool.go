@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/101-interchain-swap/types"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 /// Balancer Liquidity Pool

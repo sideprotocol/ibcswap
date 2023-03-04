@@ -9,7 +9,7 @@ import (
 
 const (
 	// ModuleName defines the IBC swap name
-	ModuleName = "atomicswap"
+	ModuleName = "swap"
 
 	// Version defines the current version the IBC swap
 	// module supports

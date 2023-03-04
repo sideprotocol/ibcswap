@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/types"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
 // Test that there is domain separation between the port id and the channel id otherwise an

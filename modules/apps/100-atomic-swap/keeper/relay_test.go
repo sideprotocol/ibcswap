@@ -6,10 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/types"
-	ibctesting "github.com/ibcswap/ibcswap/v4/testing"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	ibctesting "github.com/ibcswap/ibcswap/v6/testing"
 )
 
 // test sending from chainA to chainB using both coin that orignate on

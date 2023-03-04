@@ -17,11 +17,11 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/client/cli"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/keeper"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/simulation"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/types"
+	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/client/cli"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/keeper"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/simulation"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
 var (

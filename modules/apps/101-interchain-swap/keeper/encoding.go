@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/ibcswap/ibcswap/v4/modules/apps/101-interchain-swap/types"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 // UnmarshalBalancerLiquidityPool attempts to decode and return an BalancerLiquidityPool object from

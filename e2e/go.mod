@@ -5,8 +5,8 @@ go 1.18
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 require (
-	github.com/cosmos/cosmos-sdk v0.45.6
-	github.com/cosmos/ibc-go/v4 v4.0.0-rc0
+	github.com/cosmos/cosmos-sdk v0.46.7
+	github.com/cosmos/ibc-go/v6 v6.1.0
 	github.com/docker/docker v20.10.17+incompatible
 	github.com/strangelove-ventures/ibctest v0.0.0-20220713213153-930886d8db30
 	github.com/stretchr/testify v1.8.0

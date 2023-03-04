@@ -17,7 +17,7 @@ var (
 )
 
 // Coordinator is a testing struct which contains N TestChain's. It handles keeping all chains
-// in sync in regard to time.
+// in sync with regards to time.
 type Coordinator struct {
 	*testing.T
 
@@ -90,7 +90,7 @@ func (coord *Coordinator) SetupClients(path *Path) {
 	require.NoError(coord.T, err)
 }
 
-// SetupConnections is a helper function to create clients and the appropriate
+// SetupClientConnections is a helper function to create clients and the appropriate
 // connections on both the source and counterparty chain. It assumes the caller does not
 // anticipate any errors.
 func (coord *Coordinator) SetupConnections(path *Path) {
@@ -99,7 +99,7 @@ func (coord *Coordinator) SetupConnections(path *Path) {
 	coord.CreateConnections(path)
 }
 
-// CreateConnections constructs and executes connection handshake messages in order to create
+// CreateConnection constructs and executes connection handshake messages in order to create
 // OPEN channels on chainA and chainB. The connection information of for chainA and chainB
 // are returned within a TestConnection struct. The function expects the connections to be
 // successfully opened otherwise testing will fail.
@@ -142,14 +142,14 @@ func (coord *Coordinator) CreateTransferChannels(path *Path) {
 	coord.CreateChannels(path)
 }
 
-func (coord *Coordinator) CreateSwapChannels(path *Path) {
-	path.EndpointA.ChannelConfig.PortID = SwapPort
-	path.EndpointB.ChannelConfig.PortID = SwapPort
+func (coord *Coordinator) CreateAtomicChannels(path *Path) {
+	path.EndpointA.ChannelConfig.PortID = AtomicSwapPort
+	path.EndpointB.ChannelConfig.PortID = AtomicSwapPort
 
 	coord.CreateChannels(path)
 }
 
-// CreateChannels constructs and executes channel handshake messages in order to create
+// CreateChannel constructs and executes channel handshake messages in order to create
 // OPEN channels on chainA and chainB. The function expects the channels to be successfully
 // opened otherwise testing will fail.
 func (coord *Coordinator) CreateChannels(path *Path) {

@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/100-atomic-swap/types"
-	ibctesting "github.com/ibcswap/ibcswap/v4/testing"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	ibctesting "github.com/ibcswap/ibcswap/v6/testing"
 )
 
 func (suite *KeeperTestSuite) TestQueryParams() {

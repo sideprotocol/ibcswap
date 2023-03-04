@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
 
-	"github.com/ibcswap/ibcswap/v4/modules/apps/101-interchain-swap/types"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 // GetCmdParams returns the command handler for ibc-transfer parameter querying.

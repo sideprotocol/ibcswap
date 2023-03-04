@@ -8,12 +8,12 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 
-	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
-	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
-	ibcexported "github.com/cosmos/ibc-go/v4/modules/core/exported"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/101-interchain-swap/keeper"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/101-interchain-swap/types"
+	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
+	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
+	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 // IBCModule implements the ICS26 interface for ibcswap given the ibcswap keeper.
@@ -320,9 +320,9 @@ func (im IBCModule) OnAcknowledgementPacket(
 		if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &response); err != nil {
 			return err
 		}
-		if err := im.keeper.OnSingleDepositAcknowledged(ctx, &request, &response); err != nil {
-			return err
-		}
+		//if err := im.keeper.OnSingleDepositAcknowledged(ctx, &request, &response); err != nil {
+		//	return err
+		//}
 		break
 	case types.WITHDRAW:
 		var request types.MsgWithdrawRequest
@@ -333,9 +333,9 @@ func (im IBCModule) OnAcknowledgementPacket(
 		if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &response); err != nil {
 			return err
 		}
-		if err := im.keeper.OnWithdrawAcknowledged(ctx, &request, &response); err != nil {
-			return err
-		}
+		//if err := im.keeper.OnWithdrawAcknowledged(ctx, &request, &response); err != nil {
+		//	return err
+		//}
 		break
 	case types.LEFT_SWAP:
 		var request types.MsgLeftSwapRequest
@@ -346,9 +346,9 @@ func (im IBCModule) OnAcknowledgementPacket(
 		if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &response); err != nil {
 			return err
 		}
-		if err := im.keeper.OnLeftSwapAcknowledged(ctx, &request, &response); err != nil {
-			return err
-		}
+		//if err := im.keeper.OnLeftSwapAcknowledged(ctx, &request, &response); err != nil {
+		//	return err
+		//}
 		break
 	case types.RIGHT_SWAP:
 		var request types.MsgRightSwapRequest
@@ -359,9 +359,9 @@ func (im IBCModule) OnAcknowledgementPacket(
 		if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &response); err != nil {
 			return err
 		}
-		if err := im.keeper.OnRightSwapAcknowledged(ctx, &request, &response); err != nil {
-			return err
-		}
+		////if err := im.keeper.OnRightSwapAcknowledged(ctx, &request, &response); err != nil {
+		//	return err
+		//}
 		break
 	}
 

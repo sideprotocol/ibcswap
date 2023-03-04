@@ -14,10 +14,10 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/101-interchain-swap/client/cli"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/101-interchain-swap/keeper"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/101-interchain-swap/types"
+	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/client/cli"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 var (
@@ -36,6 +36,7 @@ func (AppModuleBasic) Name() string {
 
 // RegisterLegacyAminoCodec implements AppModuleBasic interface
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+
 	types.RegisterLegacyAminoCodec(cdc)
 }
 

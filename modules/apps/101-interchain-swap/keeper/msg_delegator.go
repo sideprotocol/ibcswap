@@ -6,7 +6,7 @@ import (
 
 	//sdk "github.com/cosmos/cosmos-sdk/types"
 	//channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-	"github.com/ibcswap/ibcswap/v4/modules/apps/101-interchain-swap/types"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 var (
@@ -81,7 +81,8 @@ func (k Keeper) DelegateSingleDeposit(goctx context.Context, msg *types.MsgSingl
 	for i := 0; i < length; i++ {
 		coins[i] = *msg.Tokens[i]
 	}
-	k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, sdk.NewCoins(coins...))
+	escrowAddr := types.GetEscrowAddress(msg.SourcePort, msg.SourceChannel)
+	k.bankKeeper.SendCoins(ctx, sender, escrowAddr, sdk.NewCoins(coins...))
 
 	msgByte, err0 := types.ModuleCdc.Marshal(msg)
 	if err0 != nil {
@@ -93,6 +94,7 @@ func (k Keeper) DelegateSingleDeposit(goctx context.Context, msg *types.MsgSingl
 		return nil, err
 	}
 
+	// k.bankKeeper.MintCoins()
 	ctx.EventManager().EmitTypedEvents(msg)
 
 	return &types.MsgSingleDepositResponse{}, nil
@@ -111,7 +113,8 @@ func (k Keeper) DelegateWithdraw(ctx2 context.Context, msg *types.MsgWithdrawReq
 	}
 
 	// deposit assets to the swap module
-	k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, sdk.NewCoins(*msg.PoolToken))
+	escrowAddr := types.GetEscrowAddress(msg.SourcePort, msg.SourceChannel)
+	k.bankKeeper.SendCoins(ctx, sender, escrowAddr, sdk.NewCoins(*msg.PoolToken))
 
 	msgByte, err0 := types.ModuleCdc.Marshal(msg)
 	if err0 != nil {
@@ -141,7 +144,8 @@ func (k Keeper) DelegateLeftSwap(goctx context.Context, msg *types.MsgLeftSwapRe
 	}
 
 	// deposit assets to the swap module
-	k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, sdk.NewCoins(*msg.TokenIn))
+	escrowAddr := types.GetEscrowAddress(msg.SourcePort, msg.SourceChannel)
+	k.bankKeeper.SendCoins(ctx, sender, escrowAddr, sdk.NewCoins(*msg.TokenIn))
 
 	msgByte, err0 := types.ModuleCdc.Marshal(msg)
 	if err0 != nil {
@@ -170,7 +174,8 @@ func (k Keeper) DelegateRightSwap(goctx context.Context, msg *types.MsgRightSwap
 		return nil, err1
 	}
 
-	k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, sdk.NewCoins(*msg.TokenIn))
+	escrowAddr := types.GetEscrowAddress(msg.SourcePort, msg.SourceChannel)
+	k.bankKeeper.SendCoins(ctx, sender, escrowAddr, sdk.NewCoins(*msg.TokenIn))
 
 	msgByte, err0 := types.ModuleCdc.Marshal(msg)
 	if err0 != nil {
