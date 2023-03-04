@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestMsgWithdraw() {
 		)
 
 		tc.malleate()
-		msgSrv := keeper.NewMsgServerImpl(suite.chainA.GetSimApp().IBCInterchainSwapKeeper)
+		msgSrv := keeper.NewMsgServerImpl(suite.chainA.GetSimApp().InterchainSwapKeeper)
 
 		res, err := msgSrv.Withdraw(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 

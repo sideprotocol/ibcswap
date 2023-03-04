@@ -29,14 +29,14 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(2))
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.chainA.GetContext(), suite.chainA.GetSimApp().InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, suite.chainA.GetSimApp().IBCInterchainSwapKeeper)
+	types.RegisterQueryServer(queryHelper, suite.chainA.GetSimApp().InterchainSwapKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
 func NewInterchainSwapPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA, chainB)
-	path.EndpointA.ChannelConfig.PortID = ibctesting.InterChainSwapPort
-	path.EndpointB.ChannelConfig.PortID = ibctesting.InterChainSwapPort
+	path.EndpointA.ChannelConfig.PortID = ibctesting.InterchainAtomicSwapPort
+	path.EndpointB.ChannelConfig.PortID = ibctesting.InterchainAtomicSwapPort
 	path.EndpointA.ChannelConfig.Version = types.Version
 	path.EndpointB.ChannelConfig.Version = types.Version
 	return path

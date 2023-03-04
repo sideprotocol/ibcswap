@@ -22,17 +22,25 @@ func (k Keeper) SendIBCSwapPacket(
 		return err
 	}
 
-	sourceChannelEnd, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
+	if err := swapPacket.ValidateBasic(); err != nil {
+		return err
+	}
+
+	if !k.GetSwapEnabled(ctx) {
+		return types.ErrSwapEnabled
+	}
+
+	_, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
 		return errorsmod.Wrapf(channeltypes.ErrChannelNotFound, "port ID (%s) channel ID (%s)", sourcePort, sourceChannel)
 	}
 
-	destinationPort := sourceChannelEnd.GetCounterparty().GetPortID()
-	destinationChannel := sourceChannelEnd.GetCounterparty().GetChannelID()
+	//destinationPort := sourceChannelEnd.GetCounterparty().GetPortID()
+	//destinationChannel := sourceChannelEnd.GetCounterparty().GetChannelID()
 
 	// get the next sequence
-	sequence, found := k.channelKeeper.GetNextSequenceSend(ctx, sourcePort, sourceChannel)
-	if !found {
+	_, found2 := k.channelKeeper.GetNextSequenceSend(ctx, sourcePort, sourceChannel)
+	if !found2 {
 		return errorsmod.Wrapf(
 			channeltypes.ErrSequenceSendNotFound,
 			"source port: %s, source channel: %s", sourcePort, sourceChannel,
@@ -46,17 +54,8 @@ func (k Keeper) SendIBCSwapPacket(
 		return errorsmod.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 
-	packet := channeltypes.NewPacket(
-		swapPacket.GetBytes(),
-		sequence,
-		sourcePort,
-		sourceChannel,
-		destinationPort,
-		destinationChannel,
-		timeoutHeight,
-		timeoutTimestamp)
-
-	if err := k.ics4Wrapper.SendPacket(ctx, channelCap, packet); err != nil {
+	_, err := k.ics4Wrapper.SendPacket(ctx, channelCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, swapPacket.GetBytes())
+	if err != nil {
 		return err
 	}
 

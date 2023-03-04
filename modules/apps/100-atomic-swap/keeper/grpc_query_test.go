@@ -29,7 +29,7 @@ func (suite *KeeperTestSuite) TestEscrowAddress() {
 			"success",
 			func() {
 				req = &types.QueryEscrowAddressRequest{
-					PortId:    ibctesting.SwapPort,
+					PortId:    ibctesting.AtomicSwapPort,
 					ChannelId: ibctesting.FirstChannelID,
 				}
 			},
@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) TestEscrowAddress() {
 
 			if tc.expPass {
 				suite.Require().NoError(err)
-				expected := types.GetEscrowAddress(ibctesting.SwapPort, ibctesting.FirstChannelID).String()
+				expected := types.GetEscrowAddress(ibctesting.AtomicSwapPort, ibctesting.FirstChannelID).String()
 				suite.Require().Equal(expected, res.EscrowAddress)
 			} else {
 				suite.Require().Error(err)

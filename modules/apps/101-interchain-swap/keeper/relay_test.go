@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	ibctesting "github.com/ibcswap/ibcswap/v6/testing"
 	"github.com/ibcswap/ibcswap/v6/testing/testutil/sample"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 // test sending from chainA to chainB using both coin that orignate on
@@ -113,7 +113,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 				Data: msgbyte,
 			}
 
-			err = suite.chainA.GetSimApp().IBCInterchainSwapKeeper.SendIBCSwapPacket(
+			err = suite.chainA.GetSimApp().InterchainSwapKeeper.SendIBCSwapPacket(
 				suite.chainA.GetContext(),
 				path.EndpointA.ChannelConfig.PortID,
 				path.EndpointA.ChannelID,
@@ -171,7 +171,7 @@ func (suite *KeeperTestSuite) TestOnReceived() {
 				)
 				destPort := types.ModuleName
 				destChannel := "channel-0"
-				poolId, err := suite.chainA.GetSimApp().IBCInterchainSwapKeeper.OnCreatePoolReceived(
+				poolId, err := suite.chainA.GetSimApp().InterchainSwapKeeper.OnCreatePoolReceived(
 					ctx,
 					msg, destPort,
 					destChannel,

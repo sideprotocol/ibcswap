@@ -34,11 +34,11 @@ const (
 	InvalidID             = "IDisInvalid"
 
 	// Application Ports
-	TransferPort       = ibctransfertypes.ModuleName
-	MockPort           = mock.ModuleName
-	MockFeePort        = simapp.MockFeePort
-	AtomicSwapPort     = atomicswaptypes.ModuleName
-	InterchainSwapPort = interchainswaptypes.ModuleName
+	TransferPort             = ibctransfertypes.ModuleName
+	MockPort                 = mock.ModuleName
+	MockFeePort              = simapp.MockFeePort
+	AtomicSwapPort           = atomicswaptypes.ModuleName
+	InterchainAtomicSwapPort = interchainswaptypes.ModuleName
 
 	// used for testing proposals
 	Title       = "title"

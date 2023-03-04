@@ -30,7 +30,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 		{
 			"successful transfer from source chain",
 			func() {
-				suite.coordinator.CreateSwapChannels(path)
+				suite.coordinator.CreateAtomicChannels(path)
 				amount = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 			}, true, true,
 		},
@@ -38,7 +38,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 			"successful transfer with coin from counterparty chain",
 			func() {
 				// send coin from chainA back to chainB
-				suite.coordinator.CreateSwapChannels(path)
+				suite.coordinator.CreateAtomicChannels(path)
 				amount = types.GetTransferCoin(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, sdk.DefaultBondDenom, sdk.NewInt(100))
 			}, false, true,
 		},
@@ -46,7 +46,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 			"source channel not found",
 			func() {
 				// channel references wrong ID
-				suite.coordinator.CreateSwapChannels(path)
+				suite.coordinator.CreateAtomicChannels(path)
 				path.EndpointA.ChannelID = ibctesting.InvalidID
 				amount = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 			}, true, false,
@@ -72,18 +72,18 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 		{
 			"send coin failed",
 			func() {
-				suite.coordinator.CreateSwapChannels(path)
+				suite.coordinator.CreateAtomicChannels(path)
 				amount = sdk.NewCoin("randomdenom", sdk.NewInt(100))
 			}, true, false,
 		},
 		{
 			"channel capability not found",
 			func() {
-				suite.coordinator.CreateSwapChannels(path)
+				suite.coordinator.CreateAtomicChannels(path)
 				cap := suite.chainA.GetChannelCapability(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID)
 
 				// Release channel capability
-				suite.chainA.GetSimApp().ScopedIBCSwapKeeper.ReleaseCapability(suite.chainA.GetContext(), cap)
+				suite.chainA.GetSimApp().ScopedAtomicSwapKeeper.ReleaseCapability(suite.chainA.GetContext(), cap)
 				amount = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 			}, true, false,
 		},
@@ -113,7 +113,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 
 			packet := types.NewAtomicSwapPacketData(types.MAKE_SWAP, msgbyte, "")
 
-			err = suite.chainA.GetSimApp().IBCSwapKeeper.SendSwapPacket(
+			err = suite.chainA.GetSimApp().AtomicSwapKeeper.SendSwapPacket(
 				suite.chainA.GetContext(), path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID,
 				clienttypes.NewHeight(0, 110), 0,
 				packet,

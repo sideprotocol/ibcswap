@@ -23,7 +23,7 @@ func (suite *KeeperTestSuite) SetupPool() (*string, error) {
 	)
 
 	ctx := suite.chainA.GetContext()
-	suite.chainA.GetSimApp().IBCInterchainSwapKeeper.OnCreatePoolAcknowledged(ctx, msg)
+	suite.chainA.GetSimApp().InterchainSwapKeeper.OnCreatePoolAcknowledged(ctx, msg)
 	poolId := types.GetPoolId(msg.Denoms)
 	return &poolId, nil
 }
@@ -70,7 +70,7 @@ func (suite *KeeperTestSuite) TestMsgDeposit() {
 		)
 
 		tc.malleate()
-		msgSrv := keeper.NewMsgServerImpl(suite.chainA.GetSimApp().IBCInterchainSwapKeeper)
+		msgSrv := keeper.NewMsgServerImpl(suite.chainA.GetSimApp().InterchainSwapKeeper)
 
 		res, err := msgSrv.Deposit(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 

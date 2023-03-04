@@ -63,7 +63,7 @@ func (suite *KeeperTestSuite) TestMsgSwap() {
 		}
 
 		tc.malleate()
-		msgSrv := keeper.NewMsgServerImpl(suite.chainA.GetSimApp().IBCInterchainSwapKeeper)
+		msgSrv := keeper.NewMsgServerImpl(suite.chainA.GetSimApp().InterchainSwapKeeper)
 
 		res, err := msgSrv.Swap(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 

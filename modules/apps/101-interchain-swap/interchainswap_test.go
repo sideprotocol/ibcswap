@@ -71,7 +71,7 @@ func (suite *InterchainSwapTestSuite) TestHandleMsgInterchainSwap() {
 
 	// order := types.NewOTCOrder(msg, path.EndpointA.ChannelID)
 	// suite.chainB.NextBlock()
-	// has := suite.chainB.GetSimApp().IBCSwapKeeper.HasOTCOrder(suite.chainB.GetContext(), order.Id)
+	// has := suite.chainB.GetSimApp().AtomicSwapKeeper.HasOTCOrder(suite.chainB.GetContext(), order.Id)
 	suite.Require().True(true)
 
 }

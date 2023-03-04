@@ -15,6 +15,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 )
 
 type (
@@ -22,7 +23,7 @@ type (
 		cdc           codec.BinaryCodec
 		storeKey      storetypes.StoreKey
 		paramstore    paramtypes.Subspace
-		ics4Wrapper   types.ICS4Wrapper
+		ics4Wrapper   porttypes.ICS4Wrapper
 		channelKeeper types.ChannelKeeper
 		portKeeper    types.PortKeeper
 		scopedKeeper  capabilitykeeper.ScopedKeeper
@@ -35,7 +36,7 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	ps paramtypes.Subspace,
-	ics4Wrapper types.ICS4Wrapper,
+	ics4Wrapper porttypes.ICS4Wrapper,
 	channelKeeper types.ChannelKeeper,
 	portKeeper types.PortKeeper,
 	scopedKeeper capabilitykeeper.ScopedKeeper,

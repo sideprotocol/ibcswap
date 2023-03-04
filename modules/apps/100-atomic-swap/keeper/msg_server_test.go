@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
@@ -62,7 +63,7 @@ func (suite *KeeperTestSuite) TestMsgSwap() {
 
 		tc.malleate()
 
-		res, err := suite.chainA.GetSimApp().IBCSwapKeeper.MakeSwap(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+		res, err := suite.chainA.GetSimApp().AtomicSwapKeeper.MakeSwap(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 
 		if tc.expPass {
 			suite.Require().NoError(err)

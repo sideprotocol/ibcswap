@@ -99,6 +99,7 @@ import (
 	ibcfee "github.com/cosmos/ibc-go/v6/modules/apps/29-fee"
 	ibcfeekeeper "github.com/cosmos/ibc-go/v6/modules/apps/29-fee/keeper"
 	ibcfeetypes "github.com/cosmos/ibc-go/v6/modules/apps/29-fee/types"
+
 	transfer "github.com/cosmos/ibc-go/v6/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
@@ -117,6 +118,10 @@ import (
 	atomicswap "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap"
 	atomicswapkeeper "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/keeper"
 	atomicswaptypes "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+
+	interchainswap "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap"
+	interchainswapkeeper "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
+	interchainswaptypes "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	//interchainswap "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap"
 	//interchainswapkeeper "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
 	//interchainswaptypes "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
@@ -171,6 +176,7 @@ var (
 
 		//atomic swap
 		atomicswap.AppModuleBasic{},
+		interchainswap.AppModuleBasic{},
 		//interchainswap.AppModuleBasic{},
 	)
 
@@ -183,6 +189,7 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		atomicswaptypes.ModuleName:     nil,
+		interchainswaptypes.ModuleName: nil,
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		ibcfeetypes.ModuleName:         nil,
 		icatypes.ModuleName:            nil,
@@ -233,8 +240,8 @@ type SimApp struct {
 	TransferKeeper      ibctransferkeeper.Keeper
 	FeeGrantKeeper      feegrantkeeper.Keeper
 
-	AtomicSwapKeeper atomicswapkeeper.Keeper
-	//InterchainSwapKeeper interchainswapkeeper.Keeper
+	AtomicSwapKeeper     atomicswapkeeper.Keeper
+	InterchainSwapKeeper interchainswapkeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
@@ -293,7 +300,8 @@ func NewSimApp(
 		govtypes.StoreKey, group.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, icacontrollertypes.StoreKey, icahosttypes.StoreKey, capabilitytypes.StoreKey,
 		authzkeeper.StoreKey, ibcfeetypes.StoreKey,
-		atomicswaptypes.StoreKey, // interchainswaptypes.StoreKey,
+		atomicswaptypes.StoreKey,
+		interchainswaptypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -322,7 +330,7 @@ func NewSimApp(
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 
 	scopedAtomicSwapKeeper := app.CapabilityKeeper.ScopeToModule(atomicswaptypes.ModuleName)
-	//scopedInterchainSwapKeeper := app.CapabilityKeeper.ScopeToModule(interchainswaptypes.ModuleName)
+	scopedInterchainSwapKeeper := app.CapabilityKeeper.ScopeToModule(interchainswaptypes.ModuleName)
 
 	// NOTE: the IBC mock keeper and application module is used only for testing core IBC. Do
 	// not replicate if you do not need to test core IBC or light clients.
@@ -457,11 +465,17 @@ func NewSimApp(
 		app.AccountKeeper, app.BankKeeper, scopedAtomicSwapKeeper,
 	)
 
-	//app.InterchainSwapKeeper = interchainswapkeeper.NewKeeper(
-	//	appCodec, keys[ibctransfertypes.StoreKey], app.GetSubspace(interchainswaptypes.ModuleName),
-	//	app.IBCFeeKeeper, app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
-	//	app.AccountKeeper, app.BankKeeper, scopedInterchainSwapKeeper,
-	//)
+	app.InterchainSwapKeeper = *interchainswapkeeper.NewKeeper(
+		appCodec,
+		keys[ibctransfertypes.StoreKey],
+		app.GetSubspace(interchainswaptypes.ModuleName),
+		app.IBCFeeKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		scopedInterchainSwapKeeper,
+		app.BankKeeper,
+		app.AccountKeeper,
+	)
 
 	// Mock Module Stack
 
@@ -496,9 +510,15 @@ func NewSimApp(
 	// atomic stack
 	var atomicStack porttypes.IBCModule
 	atomicStack = atomicswap.NewIBCModule(app.AtomicSwapKeeper)
+
+	// interchain stack
+	var interchainStack porttypes.IBCModule
+	interchainStack = interchainswap.NewIBCModule(app.InterchainSwapKeeper)
+
 	//atomicStack = ibcfee.NewIBCMiddleware(atomicStack, app.IBCFeeKeeper)
 
 	ibcRouter.AddRoute(atomicswaptypes.ModuleName, atomicStack)
+	ibcRouter.AddRoute(interchainswaptypes.ModuleName, interchainStack)
 
 	// Create Interchain Accounts Stack
 	// SendPacket, since it is originating from the application to core IBC:
@@ -591,7 +611,7 @@ func NewSimApp(
 		ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper),
 		// swap modules
 		atomicswap.NewAppModule(app.AtomicSwapKeeper),
-		//interchainswap.NewAppModule(app.InterchainSwapKeeper),
+		interchainswap.NewAppModule(app.InterchainSwapKeeper),
 		mockModule,
 	)
 
@@ -603,13 +623,13 @@ func NewSimApp(
 	app.mm.SetOrderBeginBlockers(
 		upgradetypes.ModuleName, capabilitytypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName, ibctransfertypes.ModuleName, authtypes.ModuleName,
-		atomicswaptypes.ModuleName, //interchainswaptypes.ModuleName,
+		atomicswaptypes.ModuleName, interchainswaptypes.ModuleName,
 		banktypes.ModuleName, govtypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName, authz.ModuleName, feegrant.ModuleName,
 		paramstypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, ibcfeetypes.ModuleName, ibcmock.ModuleName, group.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName, ibctransfertypes.ModuleName,
-		atomicswaptypes.ModuleName, //interchainswaptypes.ModuleName,
+		atomicswaptypes.ModuleName, interchainswaptypes.ModuleName,
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
 		minttypes.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName, feegrant.ModuleName, paramstypes.ModuleName,
 		upgradetypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, ibcfeetypes.ModuleName, ibcmock.ModuleName, group.ModuleName,
@@ -624,7 +644,7 @@ func NewSimApp(
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
 		ibchost.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName, ibctransfertypes.ModuleName,
-		atomicswaptypes.ModuleName, //interchainswaptypes.ModuleName,
+		atomicswaptypes.ModuleName, interchainswaptypes.ModuleName,
 		icatypes.ModuleName, ibcfeetypes.ModuleName, ibcmock.ModuleName, feegrant.ModuleName, paramstypes.ModuleName, upgradetypes.ModuleName,
 		vestingtypes.ModuleName, group.ModuleName,
 	)
@@ -658,7 +678,7 @@ func NewSimApp(
 		transfer.NewAppModule(app.TransferKeeper),
 		ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper),
 		atomicswap.NewAppModule(app.AtomicSwapKeeper),
-		// interchainswap.NewAppModule(app.InterchainSwapKeeper),
+		interchainswap.NewAppModule(app.InterchainSwapKeeper),
 	)
 
 	app.sm.RegisterStoreDecoders()
@@ -705,7 +725,7 @@ func NewSimApp(
 	app.ScopedICAHostKeeper = scopedICAHostKeeper
 
 	app.ScopedAtomicSwapKeeper = scopedAtomicSwapKeeper
-	//app.ScopedInterchainSwapKeeper = scopedInterchainSwapKeeper
+	app.ScopedInterchainSwapKeeper = scopedInterchainSwapKeeper
 
 	// NOTE: the IBC mock keeper and application module is used only for testing core IBC. Do
 	// note replicate if you do not need to test core IBC or light clients.

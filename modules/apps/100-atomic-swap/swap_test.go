@@ -1,8 +1,9 @@
 package swap_test
 
 import (
-	"github.com/tendermint/tendermint/types/time"
 	"testing"
+
+	"github.com/tendermint/tendermint/types/time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
@@ -71,7 +72,7 @@ func (suite *SwapTestSuite) TestHandleMsgSwap() {
 
 	//order := types.NewAtomicOrder(msg, path.EndpointA.ChannelID)
 	//suite.chainB.NextBlock()
-	//has := suite.chainB.GetSimApp().IBCSwapKeeper.HasOTCOrder(suite.chainB.GetContext(), order.Id)
+	//has := suite.chainB.GetSimApp().AtomicSwapKeeper.HasOTCOrder(suite.chainB.GetContext(), order.Id)
 	//suite.Require().True(has)
 
 }

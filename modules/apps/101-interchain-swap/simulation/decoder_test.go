@@ -14,7 +14,7 @@ import (
 
 func TestDecodeStore(t *testing.T) {
 	app := simapp.Setup(false)
-	dec := simulation.NewDecodeStore(app.IBCSwapKeeper)
+	dec := simulation.NewDecodeStore(app.InterchainSwapKeeper)
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{

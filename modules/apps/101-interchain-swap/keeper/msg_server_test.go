@@ -55,7 +55,7 @@ func (suite *KeeperTestSuite) TestMsgInterchainSwap() {
 
 	// 	tc.malleate()
 
-	// 	res, err := suite.chainA.GetSimApp().IBCSwapKeeper.MakeSwap(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+	// 	res, err := suite.chainA.GetSimApp().AtomicSwapKeeper.MakeSwap(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 
 	// 	if tc.expPass {
 	// 		suite.Require().NoError(err)
