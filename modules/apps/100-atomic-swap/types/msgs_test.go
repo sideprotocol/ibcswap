@@ -52,12 +52,13 @@ func TestMsgSwapRoute(t *testing.T) {
 func TestMsgSwapType(t *testing.T) {
 	msg := NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix())
 
-	require.Equal(t, "swap", msg.Type())
+	require.Equal(t, "make_swap", msg.Type())
 }
 
 func TestMsgSwapGetSignBytes(t *testing.T) {
-	msg := NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix())
-	expected := fmt.Sprintf(`{"type":"cosmos-sdk/MsgTransfer","value":{"receiver":"%s","sender":"%s","source_channel":"testchannel","source_port":"testportid","timeout_height":{"revision_height":"10"},"token":{"amount":"100","denom":"atom"}}}`, addr2, addr1)
+	creationTime := time.Now().UTC().Unix()
+	msg := NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, creationTime)
+	expected := fmt.Sprintf(`{"type":"cosmos-sdk/MakeSwapMsg","value":{"buy_token":{"amount":"500","denom":"osmo"},"creation_timestamp":"%d","maker_address":"%s","maker_receivingAddress":"%s","packet":{"timeout_height":{}},"sell_token":{"amount":"100","denom":"atom"},"source_channel":"testchannel","source_port":"testportid","timeout_height":{"revision_height":"10"}}}`, creationTime, addr1, addr2)
 	require.NotPanics(t, func() {
 		res := msg.GetSignBytes()
 		require.Equal(t, expected, string(res))
@@ -68,7 +69,7 @@ func TestMsgSwapGetSignBytes(t *testing.T) {
 func TestMsgSwapValidation(t *testing.T) {
 	testCases := []struct {
 		name    string
-		msg     *MsgMakeSwapRequest
+		msg     *MakeSwapMsg
 		expPass bool
 	}{
 		{"valid msg with base denom", NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), true},

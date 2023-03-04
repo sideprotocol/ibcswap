@@ -98,33 +98,13 @@ func (msg *MakeSwapMsg) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{signer}
 }
 
-// NewMsgTakeSwap creates a new MsgTakeSwapRequest instance
-func NewMsgTakeSwap(
-	sourcePort, sourceChannel string,
-	sellToken sdk.Coin,
-	senderAddress, senderReceivingAddress string,
-	timeoutHeight clienttypes.Height, timeoutTimestamp uint64,
-	createdTimestamp int64,
-) *MsgTakeSwapRequest {
-	return &MsgTakeSwapRequest{
-		SourcePort:            sourcePort,
-		SourceChannel:         sourceChannel,
-		SellToken:             sellToken,
-		TakerAddress:          senderAddress,
-		TakerReceivingAddress: senderReceivingAddress,
-		TimeoutHeight:         timeoutHeight,
-		TimeoutTimestamp:      timeoutTimestamp,
-		CreateTimestamp:       createdTimestamp,
-	}
-}
-
 // Route implements sdk.Msg
-func (*MsgTakeSwapRequest) Route() string {
+func (*TakeSwapMsg) Route() string {
 	return RouterKey
 }
 
 // Type implements sdk.Msg
-func (*MsgTakeSwapRequest) Type() string {
+func (*TakeSwapMsg) Type() string {
 	return TypeMsgTakeSwap
 }
 
@@ -151,12 +131,12 @@ func (msg *TakeSwapMsg) ValidateBasic() error {
 }
 
 // GetSignBytes implements sdk.Msg.
-func (msg *MsgTakeSwapRequest) GetSignBytes() []byte {
+func (msg *TakeSwapMsg) GetSignBytes() []byte {
 	return sdk.MustSortJSON(AminoCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners implements sdk.Msg
-func (msg *MsgTakeSwapRequest) GetSigners() []sdk.AccAddress {
+func (msg *TakeSwapMsg) GetSigners() []sdk.AccAddress {
 	signer, err := sdk.AccAddressFromBech32(msg.TakerAddress)
 	if err != nil {
 		panic(err)
@@ -169,24 +149,22 @@ func NewMsgCancelSwap(
 	sourcePort, sourceChannel string,
 	senderAddress, orderId string,
 	timeoutHeight clienttypes.Height, timeoutTimestamp uint64,
-) *MsgCancelSwapRequest {
-	return &MsgCancelSwapRequest{
-		SourcePort:       sourcePort,
-		SourceChannel:    sourceChannel,
+) *CancelSwapMsg {
+	return &CancelSwapMsg{
 		MakerAddress:     senderAddress,
 		OrderId:          orderId,
-		TimeoutHeight:    timeoutHeight,
+		TimeoutHeight:    &timeoutHeight,
 		TimeoutTimestamp: timeoutTimestamp,
 	}
 }
 
 // Route implements sdk.Msg
-func (*MsgCancelSwapRequest) Route() string {
+func (*CancelSwapMsg) Route() string {
 	return RouterKey
 }
 
 // Type implements sdk.Msg
-func (*MsgCancelSwapRequest) Type() string {
+func (*CancelSwapMsg) Type() string {
 	return TypeMsgCancelSwap
 }
 
@@ -207,12 +185,12 @@ func (msg *CancelSwapMsg) ValidateBasic() error {
 }
 
 // GetSignBytes implements sdk.Msg.
-func (msg *MsgCancelSwapRequest) GetSignBytes() []byte {
+func (msg *CancelSwapMsg) GetSignBytes() []byte {
 	return sdk.MustSortJSON(AminoCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners implements sdk.Msg
-func (msg *MsgCancelSwapRequest) GetSigners() []sdk.AccAddress {
+func (msg *CancelSwapMsg) GetSigners() []sdk.AccAddress {
 	signer, err := sdk.AccAddressFromBech32(msg.MakerAddress)
 	if err != nil {
 		panic(err)
