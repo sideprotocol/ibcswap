@@ -1,13 +1,13 @@
-package swap
+package interchainswap
 
 import (
+	"fmt"
 	"math"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
@@ -16,48 +16,14 @@ import (
 	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
-// IBCModule implements the ICS26 interface for ibcswap given the ibcswap keeper.
 type IBCModule struct {
 	keeper keeper.Keeper
 }
 
-// NewIBCModule creates a new IBCModule given the keeper
 func NewIBCModule(k keeper.Keeper) IBCModule {
 	return IBCModule{
 		keeper: k,
 	}
-}
-
-// ValidateSwapChannelParams does validation of a newly created ibcswap channel. A ibcswap
-// channel must be ORDERED, use the correct port (by default 'ibcswap'), and use the current
-// supported version. Only 2^32 channels are allowed to be created.
-func ValidateSwapChannelParams(
-	ctx sdk.Context,
-	keeper keeper.Keeper,
-	order channeltypes.Order,
-	portID string,
-	channelID string,
-) error {
-	// NOTE: for escrow address security only 2^32 channels are allowed to be created
-	// Issue: https://github.com/cosmos/cosmos-sdk/issues/7737
-	channelSequence, err := channeltypes.ParseChannelSequence(channelID)
-	if err != nil {
-		return err
-	}
-	if channelSequence > uint64(math.MaxUint32) {
-		return sdkerrors.Wrapf(types.ErrMaxTransferChannels, "channel sequence %d is greater than max allowed ibcswap channels %d", channelSequence, uint64(math.MaxUint32))
-	}
-	if order != channeltypes.ORDERED {
-		return sdkerrors.Wrapf(channeltypes.ErrInvalidChannelOrdering, "expected %s channel, got %s ", channeltypes.ORDERED, order)
-	}
-
-	// Require portID is the portID transfer module is bound to
-	boundPort := keeper.GetPort(ctx)
-	if boundPort != portID {
-		return sdkerrors.Wrapf(porttypes.ErrInvalidPort, "invalid port: %s, expected %s", portID, boundPort)
-	}
-
-	return nil
 }
 
 // OnChanOpenInit implements the IBCModule interface
@@ -71,7 +37,8 @@ func (im IBCModule) OnChanOpenInit(
 	counterparty channeltypes.Counterparty,
 	version string,
 ) (string, error) {
-	if err := ValidateSwapChannelParams(ctx, im.keeper, order, portID, channelID); err != nil {
+
+	if err := ValidateInterchainSwapChannelParams(ctx, im.keeper, order, portID, channelID); err != nil {
 		return "", err
 	}
 
@@ -80,7 +47,7 @@ func (im IBCModule) OnChanOpenInit(
 	}
 
 	if version != types.Version {
-		return "", sdkerrors.Wrapf(types.ErrInvalidVersion, "got %s, expected %s", version, types.Version)
+		return "", errorsmod.Wrapf(types.ErrInvalidVersion, "got %s, expected %s", version, types.Version)
 	}
 
 	// Claim channel capability passed back by IBC module
@@ -88,10 +55,12 @@ func (im IBCModule) OnChanOpenInit(
 		return "", err
 	}
 
+	fmt.Println("Here is version", version)
+
 	return version, nil
 }
 
-// OnChanOpenTry implements the IBCModule interface.
+// OnChanOpenTry implements the IBCModule interface
 func (im IBCModule) OnChanOpenTry(
 	ctx sdk.Context,
 	order channeltypes.Order,
@@ -102,12 +71,13 @@ func (im IBCModule) OnChanOpenTry(
 	counterparty channeltypes.Counterparty,
 	counterpartyVersion string,
 ) (string, error) {
-	if err := ValidateSwapChannelParams(ctx, im.keeper, order, portID, channelID); err != nil {
+
+	if err := ValidateInterchainSwapChannelParams(ctx, im.keeper, order, portID, channelID); err != nil {
 		return "", err
 	}
 
 	if counterpartyVersion != types.Version {
-		return "", sdkerrors.Wrapf(types.ErrInvalidVersion, "invalid counterparty version: got: %s, expected %s", counterpartyVersion, types.Version)
+		return "", errorsmod.Wrapf(types.ErrInvalidVersion, "invalid counterparty version: got: %s, expected %s", counterpartyVersion, types.Version)
 	}
 
 	// OpenTry must claim the channelCapability that IBC passes into the callback
@@ -123,11 +93,11 @@ func (im IBCModule) OnChanOpenAck(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	_ string,
+	_,
 	counterpartyVersion string,
 ) error {
 	if counterpartyVersion != types.Version {
-		return sdkerrors.Wrapf(types.ErrInvalidVersion, "invalid counterparty version: %s, expected %s", counterpartyVersion, types.Version)
+		return errorsmod.Wrapf(types.ErrInvalidVersion, "invalid counterparty version: %s, expected %s", counterpartyVersion, types.Version)
 	}
 	return nil
 }
@@ -147,8 +117,8 @@ func (im IBCModule) OnChanCloseInit(
 	portID,
 	channelID string,
 ) error {
-	// Disallow user-initiated channel closing for transfer channels
-	return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "user cannot close channel")
+	// Disallow user-initiated channel closing for channels
+	return errorsmod.Wrap(types.ErrInvalidRequest, "user cannot close channel")
 }
 
 // OnChanCloseConfirm implements the IBCModule interface
@@ -160,123 +130,53 @@ func (im IBCModule) OnChanCloseConfirm(
 	return nil
 }
 
-// OnRecvPacket implements the IBCModule interface. A successful acknowledgement
-// is returned if the packet data is successfully decoded and the receive application
-// logic returns without error.
+// OnRecvPacket implements the IBCModule interface
 func (im IBCModule) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) ibcexported.Acknowledgement {
+
+	logger := im.keeper.Logger(ctx)
 	ack := channeltypes.NewResultAcknowledgement([]byte{byte(1)})
 
-	var data types.IBCSwapPacketData
+	var data types.IBCSwapDataPacket
 	var ackErr error
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap packet data")
+		ackErr = errorsmod.Wrapf(types.ErrInvalidType, "cannot unmarshal ICS-101 packet data")
+		logger.Error(fmt.Sprintf("%s sequence %d", ackErr.Error(), packet.Sequence))
 		ack = channeltypes.NewErrorAcknowledgement(ackErr)
 	}
 
 	// only attempt the application logic if the packet data
 	// was successfully decoded
 	if ack.Success() {
-
-		switch data.Type {
-		case types.CREATE_POOL:
-			var msg types.MsgCreatePoolRequest
-			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
-				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
-				ack = channeltypes.NewErrorAcknowledgement(ackErr)
-			}
-			if res, err := im.keeper.OnCreatePoolReceived(ctx, &msg); err != nil {
-				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
-				ack = channeltypes.NewErrorAcknowledgement(ackErr)
-			} else if result, errEncode := types.ModuleCdc.Marshal(res); errEncode != nil {
-				ack = channeltypes.NewErrorAcknowledgement(errEncode)
-			} else {
-				ack = channeltypes.NewResultAcknowledgement(result)
-			}
-			break
-		case types.SINGLE_DEPOSIT:
-			var msg types.MsgSingleDepositRequest
-			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
-				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
-				ack = channeltypes.NewErrorAcknowledgement(ackErr)
-			}
-			if res, err := im.keeper.OnSingleDepositReceived(ctx, &msg); err != nil {
-				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
-				ack = channeltypes.NewErrorAcknowledgement(ackErr)
-			} else if result, errEncode := types.ModuleCdc.Marshal(res); errEncode != nil {
-				ack = channeltypes.NewErrorAcknowledgement(errEncode)
-			} else {
-				ack = channeltypes.NewResultAcknowledgement(result)
-			}
-			break
-		case types.WITHDRAW:
-			var msg types.MsgWithdrawRequest
-			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
-				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
-				ack = channeltypes.NewErrorAcknowledgement(ackErr)
-			}
-			if res, err := im.keeper.OnWithdrawReceived(ctx, &msg); err != nil {
-				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
-				ack = channeltypes.NewErrorAcknowledgement(ackErr)
-			} else if result, errEncode := types.ModuleCdc.Marshal(res); errEncode != nil {
-				ack = channeltypes.NewErrorAcknowledgement(errEncode)
-			} else {
-				ack = channeltypes.NewResultAcknowledgement(result)
-			}
-			break
-		case types.LEFT_SWAP:
-			var msg types.MsgLeftSwapRequest
-			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
-				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
-				ack = channeltypes.NewErrorAcknowledgement(ackErr)
-			}
-			if res, err := im.keeper.OnLeftSwapReceived(ctx, &msg); err != nil {
-				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
-				ack = channeltypes.NewErrorAcknowledgement(ackErr)
-			} else if result, errEncode := types.ModuleCdc.Marshal(res); errEncode != nil {
-				ack = channeltypes.NewErrorAcknowledgement(errEncode)
-			} else {
-				ack = channeltypes.NewResultAcknowledgement(result)
-			}
-			break
-		case types.RIGHT_SWAP:
-			var msg types.MsgRightSwapRequest
-			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
-				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
-				ack = channeltypes.NewErrorAcknowledgement(ackErr)
-			}
-			if res, err := im.keeper.OnRightSwapReceived(ctx, &msg); err != nil {
-				ackErr = sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "cannot unmarshal ICS-101 interchain swap message")
-				ack = channeltypes.NewErrorAcknowledgement(ackErr)
-			} else if result, errEncode := types.ModuleCdc.Marshal(res); errEncode != nil {
-				ack = channeltypes.NewErrorAcknowledgement(errEncode)
-			} else {
-				ack = channeltypes.NewResultAcknowledgement(result)
-			}
-			break
+		res, err := im.keeper.OnRecvPacket(ctx, packet, data)
+		if err != nil {
+			ack = channeltypes.NewErrorAcknowledgement(err)
+			ackErr = err
+			logger.Error(fmt.Sprintf("%s sequence %d", ackErr.Error(), packet.Sequence))
+		} else {
+			ack = channeltypes.NewResultAcknowledgement(res)
+			logger.Info("successfully handled ICS-101 packet sequence: %d", packet.Sequence)
 		}
-
 	}
 
-	//eventAttributes := []sdk.Attribute{
-	//	sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-	//	sdk.NewAttribute(types.AttributeKeyAckSuccess, fmt.Sprintf("%t", ack.Success())),
-	//}
-	//
-	//if ackErr != nil {
-	//	eventAttributes = append(eventAttributes, sdk.NewAttribute(types.AttributeKeyAckError, ackErr.Error()))
-	//}
+	eventAttributes := []sdk.Attribute{
+		sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		sdk.NewAttribute(types.AttributeKeyAckSuccess, fmt.Sprintf("%t", ack.Success())),
+	}
 
-	//ctx.EventManager().EmitEvent(
-	//	sdk.NewEvent(
-	//		types.EventTypePacket,
-	//		eventAttributes...,
-	//	),
-	//)
+	if ackErr != nil {
+		eventAttributes = append(eventAttributes, sdk.NewAttribute(types.AttributeKeyAckError, ackErr.Error()))
+	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypePacket,
+			eventAttributes...,
+		),
+	)
 	// NOTE: acknowledgement will be written synchronously during IBC handler execution.
 	return ack
 }
@@ -290,81 +190,41 @@ func (im IBCModule) OnAcknowledgementPacket(
 ) error {
 	var ack channeltypes.Acknowledgement
 	if err := types.ModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-101 ibcswap packet acknowledgement: %v", err)
+		return errorsmod.Wrapf(errorsmod.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
 	}
-	var data types.IBCSwapPacketData
+	var data types.IBCSwapDataPacket
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-101 ibcswap packet data: %s", err.Error())
+		return errorsmod.Wrapf(errorsmod.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
 
-	switch data.Type {
-	case types.CREATE_POOL:
-		var request types.MsgCreatePoolRequest
-		if err := types.ModuleCdc.Unmarshal(data.Data, &request); err != nil {
-			return err
-		}
-		var response types.MsgCreatePoolResponse
-		if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &response); err != nil {
-			return err
-		}
-		if err := im.keeper.OnCreatePoolAcknowledged(ctx, &request, &response); err != nil {
-			return err
-		}
-		break
-	case types.SINGLE_DEPOSIT:
-		var request types.MsgSingleDepositRequest
-		if err := types.ModuleCdc.Unmarshal(data.Data, &request); err != nil {
-			return err
-		}
-		var response types.MsgSingleDepositResponse
-		if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &response); err != nil {
-			return err
-		}
-		//if err := im.keeper.OnSingleDepositAcknowledged(ctx, &request, &response); err != nil {
-		//	return err
-		//}
-		break
-	case types.WITHDRAW:
-		var request types.MsgWithdrawRequest
-		if err := types.ModuleCdc.Unmarshal(data.Data, &request); err != nil {
-			return err
-		}
-		var response types.MsgWithdrawResponse
-		if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &response); err != nil {
-			return err
-		}
-		//if err := im.keeper.OnWithdrawAcknowledged(ctx, &request, &response); err != nil {
-		//	return err
-		//}
-		break
-	case types.LEFT_SWAP:
-		var request types.MsgLeftSwapRequest
-		if err := types.ModuleCdc.Unmarshal(data.Data, &request); err != nil {
-			return err
-		}
-		var response types.MsgSwapResponse
-		if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &response); err != nil {
-			return err
-		}
-		//if err := im.keeper.OnLeftSwapAcknowledged(ctx, &request, &response); err != nil {
-		//	return err
-		//}
-		break
-	case types.RIGHT_SWAP:
-		var request types.MsgRightSwapRequest
-		if err := types.ModuleCdc.Unmarshal(data.Data, &request); err != nil {
-			return err
-		}
-		var response types.MsgSwapResponse
-		if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &response); err != nil {
-			return err
-		}
-		////if err := im.keeper.OnRightSwapAcknowledged(ctx, &request, &response); err != nil {
-		//	return err
-		//}
-		break
+	if err := im.keeper.OnAcknowledgementPacket(ctx, packet, &data, ack); err != nil {
+		return err
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypePacket,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+			sdk.NewAttribute(sdk.AttributeKeySender, data.GetType().String()),
+		),
+	)
+
+	switch resp := ack.Response.(type) {
+	case *channeltypes.Acknowledgement_Result:
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypePacket,
+				sdk.NewAttribute(types.AttributeKeyAckSuccess, string(resp.Result)),
+			),
+		)
+	case *channeltypes.Acknowledgement_Error:
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypePacket,
+				sdk.NewAttribute(types.AttributeKeyAckError, resp.Error),
+			),
+		)
+	}
 	return nil
 }
 
@@ -374,16 +234,50 @@ func (im IBCModule) OnTimeoutPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) error {
-	var data types.IBCSwapPacketData
+	var data types.IBCSwapDataPacket
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
+		return errorsmod.Wrapf(types.ErrUnknownRequest, "cannot unmarshal ICS-101 transfer packet data: %s", err.Error())
 	}
 	// refund tokens
-	//if err := im.keeper.OnTimeoutPacket(ctx, packet, &data); err != nil {
-	//	return err
-	//}
+	if err := im.keeper.OnTimeoutPacket(ctx, packet, &data); err != nil {
+		return err
+	}
 
-	ctx.EventManager().EmitTypedEvents(&data)
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeTimeout,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
+	return nil
+}
+
+func ValidateInterchainSwapChannelParams(
+	ctx sdk.Context,
+	keeper keeper.Keeper,
+	order channeltypes.Order,
+	portID string,
+	channelID string,
+) error {
+	// NOTE: for escrow address security only 2^32 channels are allowed to be created
+	// Issue: https://github.com/cosmos/cosmos-sdk/issues/7737
+	channelSequence, err := channeltypes.ParseChannelSequence(channelID)
+	if err != nil {
+		return err
+	}
+	if channelSequence > uint64(math.MaxUint32) {
+		return errorsmod.Wrapf(types.ErrMaxTransferChannels, "channel sequence %d is greater than max allowed transfer channels %d", channelSequence, uint64(math.MaxUint32))
+	}
+	if order != channeltypes.UNORDERED {
+		return errorsmod.Wrapf(channeltypes.ErrInvalidChannelOrdering, "expected %s channel, got %s ", channeltypes.UNORDERED, order)
+	}
+
+	// Require portID is the portID transfer module is bound to
+	boundPort := keeper.GetPort(ctx)
+	if boundPort != portID {
+		return errorsmod.Wrapf(porttypes.ErrInvalidPort, "invalid port: %s, expected %s", portID, boundPort)
+	}
 
 	return nil
 }

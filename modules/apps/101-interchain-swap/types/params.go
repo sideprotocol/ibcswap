@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -13,16 +14,18 @@ const (
 )
 
 var (
-	KeySwapEnabled    = []byte("AmmSwapEnabled")
-	KeySwapMaxFeeRate = []byte("AmmSwapMaxFeeRate")
+	KeySwapEnabled    = []byte("SwapEnabled")
+	KeySwapMaxFeeRate = []byte("MaxFeeRate")
 )
 
-// ParamKeyTable type declaration for parameters
+var _ paramtypes.ParamSet = (*Params)(nil)
+
+// ParamKeyTable the param key table for launch module
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-// NewParams creates a new parameter configuration for the ibc transfer module
+// NewParams creates a new Params instance
 func NewParams(enable bool, feeRate uint32) Params {
 	return Params{
 		SwapEnabled: enable,
@@ -30,25 +33,16 @@ func NewParams(enable bool, feeRate uint32) Params {
 	}
 }
 
-// DefaultParams is the default parameter configuration for the ibc-transfer module
+// DefaultParams returns a default set of parameters
 func DefaultParams() Params {
 	return NewParams(DefaultSwapEnabled, DefaultMaxFeeRate)
 }
 
-// Validate all ibc-swap module parameters
-func (m Params) Validate() error {
-
-	if err := validateMaxFeeRate(m.MaxFeeRate); err != nil {
-		return err
-	}
-	return validateEnabled(m.SwapEnabled)
-}
-
-// ParamSetPairs implements params.ParamSet
-func (m *Params) ParamSetPairs() paramtypes.ParamSetPairs {
+// ParamSetPairs get the params.ParamSet
+func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeySwapEnabled, m.SwapEnabled, validateEnabled),
-		paramtypes.NewParamSetPair(KeySwapMaxFeeRate, m.MaxFeeRate, validateMaxFeeRate),
+		paramtypes.NewParamSetPair(KeySwapEnabled, p.SwapEnabled, validateEnabled),
+		paramtypes.NewParamSetPair(KeySwapMaxFeeRate, p.MaxFeeRate, validateMaxFeeRate),
 	}
 }
 
@@ -66,4 +60,15 @@ func validateMaxFeeRate(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	return nil
+}
+
+// Validate validates the set of params
+func (p Params) Validate() error {
+	return nil
+}
+
+// String implements the Stringer interface.
+func (p Params) String() string {
+	out, _ := yaml.Marshal(p)
+	return string(out)
 }

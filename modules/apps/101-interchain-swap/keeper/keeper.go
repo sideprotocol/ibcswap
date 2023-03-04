@@ -1,86 +1,100 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
+	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
-// Keeper defines the IBC Swap keeper
-type Keeper struct {
-	storeKey   storetypes.StoreKey
-	cdc        codec.BinaryCodec
-	paramSpace paramtypes.Subspace
+type (
+	Keeper struct {
+		cdc           codec.BinaryCodec
+		storeKey      storetypes.StoreKey
+		paramstore    paramtypes.Subspace
+		ics4Wrapper   types.ICS4Wrapper
+		channelKeeper types.ChannelKeeper
+		portKeeper    types.PortKeeper
+		scopedKeeper  capabilitykeeper.ScopedKeeper
+		bankKeeper    types.BankKeeper
+		authKeeper    types.AccountKeeper
+	}
+)
 
-	ics4Wrapper   porttypes.ICS4Wrapper
-	channelKeeper types.ChannelKeeper
-	portKeeper    types.PortKeeper
-	authKeeper    types.AccountKeeper
-	bankKeeper    types.BankKeeper
-	scopedKeeper  capabilitykeeper.ScopedKeeper
-}
-
-// NewKeeper creates a new IBC swap Keeper instance
 func NewKeeper(
-	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace paramtypes.Subspace,
-	ics4Wrapper porttypes.ICS4Wrapper, channelKeeper types.ChannelKeeper, portKeeper types.PortKeeper,
-	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, scopedKeeper capabilitykeeper.ScopedKeeper,
-) Keeper {
-	// ensure ibc swap module account is set
-	//if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
-	//	panic("the IBC swap module account has not been set")
-	//}
+	cdc codec.BinaryCodec,
+	storeKey storetypes.StoreKey,
+	ps paramtypes.Subspace,
+	ics4Wrapper types.ICS4Wrapper,
+	channelKeeper types.ChannelKeeper,
+	portKeeper types.PortKeeper,
+	scopedKeeper capabilitykeeper.ScopedKeeper,
+	bankKeeper types.BankKeeper,
+	authKeeper types.AccountKeeper,
 
+) *Keeper {
 	// set KeyTable if it has not already been set
-	if !paramSpace.HasKeyTable() {
-		//paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	if !ps.HasKeyTable() {
+		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return Keeper{
+	return &Keeper{
 		cdc:           cdc,
-		storeKey:      key,
-		paramSpace:    paramSpace,
+		storeKey:      storeKey,
+		paramstore:    ps,
 		ics4Wrapper:   ics4Wrapper,
 		channelKeeper: channelKeeper,
 		portKeeper:    portKeeper,
-		authKeeper:    authKeeper,
-		bankKeeper:    bankKeeper,
 		scopedKeeper:  scopedKeeper,
+		bankKeeper:    bankKeeper,
+		authKeeper:    authKeeper,
 	}
 }
 
-// Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/"+host.ModuleName+"-"+types.ModuleName)
+// ----------------------------------------------------------------------------
+// IBC Keeper Logic
+// ----------------------------------------------------------------------------
+
+// ChanCloseInit defines a wrapper function for the channel Keeper's function.
+func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
+	capName := host.ChannelCapabilityPath(portID, channelID)
+	chanCap, ok := k.scopedKeeper.GetCapability(ctx, capName)
+	if !ok {
+		return sdkerrors.Wrapf(channeltypes.ErrChannelCapabilityNotFound, "could not retrieve channel capability at: %s", capName)
+	}
+	return k.channelKeeper.ChanCloseInit(ctx, portID, channelID, chanCap)
 }
 
-// IsBound checks if the transfer module is already bound to the desired port
+// IsBound checks if the IBC app module is already bound to the desired port
 func (k Keeper) IsBound(ctx sdk.Context, portID string) bool {
 	_, ok := k.scopedKeeper.GetCapability(ctx, host.PortPath(portID))
 	return ok
 }
 
-// BindPort defines a wrapper function for the ort Keeper's function in
+// BindPort defines a wrapper function for the port Keeper's function in
 // order to expose it to module's InitGenesis function
 func (k Keeper) BindPort(ctx sdk.Context, portID string) error {
 	cap := k.portKeeper.BindPort(ctx, portID)
 	return k.ClaimCapability(ctx, cap, host.PortPath(portID))
 }
 
-// GetPort returns the portID for the swap module. Used in ExportGenesis
+// GetPort returns the portID for the IBC app module. Used in ExportGenesis
 func (k Keeper) GetPort(ctx sdk.Context) string {
 	store := ctx.KVStore(k.storeKey)
 	return string(store.Get(types.PortKey))
 }
 
-// SetPort sets the portID for the swap module. Used in InitGenesis
+// SetPort sets the portID for the IBC app module. Used in InitGenesis
 func (k Keeper) SetPort(ctx sdk.Context, portID string) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.PortKey, []byte(portID))
@@ -91,8 +105,20 @@ func (k Keeper) AuthenticateCapability(ctx sdk.Context, cap *capabilitytypes.Cap
 	return k.scopedKeeper.AuthenticateCapability(ctx, cap, name)
 }
 
-// ClaimCapability allows the swap module that can claim a capability that IBC module
+// ClaimCapability allows the IBC app module to claim a capability that core IBC
 // passes to it
 func (k Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error {
 	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
+}
+
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+func (k Keeper) GetBalance(ctx sdk.Context, sender sdk.AccAddress) sdk.Coin {
+	return k.bankKeeper.GetBalance(ctx, sender, sdk.DefaultBondDenom)
+}
+
+func (k Keeper) SingleDepositTest(ctx sdk.Context, sender sdk.AccAddress) sdk.Coin {
+	return k.bankKeeper.GetBalance(ctx, sender, sdk.DefaultBondDenom)
 }

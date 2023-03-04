@@ -1,23 +1,30 @@
-package swap
+package interchainswap
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
+
+	// this line is used by starport scaffolding # 1
+
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/client/cli"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/simulation"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	"github.com/spf13/cobra"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
-
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/client/cli"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 var (
@@ -36,8 +43,7 @@ func (AppModuleBasic) Name() string {
 
 // RegisterLegacyAminoCodec implements AppModuleBasic interface
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-
-	types.RegisterLegacyAminoCodec(cdc)
+	types.RegisterCodec(cdc)
 }
 
 // RegisterInterfaces registers module concrete types into protobuf Any.
@@ -48,7 +54,7 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 // DefaultGenesis returns default genesis state as raw bytes for the ibc
 // transfer module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+	return cdc.MustMarshalJSON(types.DefaultGenesis())
 }
 
 // ValidateGenesis performs genesis state validation for the ibc transfer module.
@@ -72,7 +78,7 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *r
 
 // GetTxCmd implements AppModuleBasic interface
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.NewTxCmd()
+	return cli.GetTxCmd()
 }
 
 // GetQueryCmd implements AppModuleBasic interface
@@ -86,7 +92,7 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
-// NewAppModule creates a new module
+// NewAppModule creates a new 20-transfer module
 func NewAppModule(k keeper.Keeper) AppModule {
 	return AppModule{
 		keeper: k,
@@ -115,7 +121,7 @@ func (am AppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier {
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), am.keeper)
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
 	//m := keeper.NewMigrator(am.keeper)
@@ -153,28 +159,29 @@ func (am AppModule) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) []abci.V
 }
 
 // AppModuleSimulation functions
-//
-//// GenerateGenesisState creates a randomized GenState of the transfer module.
-//func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-//	simulation.RandomizedGenState(simState)
-//}
-//
-//// ProposalContents doesn't return any content functions for governance proposals.
-//func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
-//	return nil
-//}
-//
-//// RandomizedParams creates randomized ibc-transfer param changes for the simulator.
-//func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-//	return simulation.ParamChanges(r)
-//}
-//
-//// RegisterStoreDecoder registers a decoder for transfer module's types
-//func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-//	sdr[types.StoreKey] = simulation.NewDecodeStore(am.keeper)
-//}
-//
-//// WeightedOperations returns the all the transfer module operations with their respective weights.
-//func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
-//	return nil
-//}
+
+// GenerateGenesisState creates a randomized GenState of the transfer module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+
+}
+
+// ProposalContents doesn't return any content functions for governance proposals.
+func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
+	return nil
+}
+
+// RandomizedParams creates randomized ibc-transfer param changes for the simulator.
+func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+	return simulation.ParamChanges(r)
+}
+
+// RegisterStoreDecoder registers a decoder for transfer module's types
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.keeper)
+}
+
+// WeightedOperations returns the all the transfer module operations with their respective weights.
+func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
+	return nil
+}
