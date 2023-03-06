@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
@@ -31,7 +32,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 			"successful transfer from source chain",
 			func() {
 				suite.coordinator.CreateAtomicChannels(path)
-				amount = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
+				amount = sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))
 			}, true, true,
 		},
 		{
@@ -48,7 +49,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 				// channel references wrong ID
 				suite.coordinator.CreateAtomicChannels(path)
 				path.EndpointA.ChannelID = ibctesting.InvalidID
-				amount = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
+				amount = sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))
 			}, true, false,
 		},
 		{

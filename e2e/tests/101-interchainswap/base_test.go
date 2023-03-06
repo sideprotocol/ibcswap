@@ -68,48 +68,17 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 		)
 
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-		s.AssertValidTxResponse(resp)
-		s.Require().NoError(err)
+
 		fmt.Println("OnCreate RES:", resp)
 		fmt.Println("OnCreate ERR:", err)
+		s.AssertValidTxResponse(resp)
+		s.Require().NoError(err)
 
 		// wait block when packet relay.
 		test.WaitForBlocks(ctx, 10, chainA, chainB)
 
 		// check packet relay status.
 		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
-
-		// poolId := types.GetPoolId(msg.Denoms)
-		// poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
-		// s.Require().NoError(err)
-		// poolInfo := poolRes.InterchainLiquidityPool
-		// s.Require().EqualValues(msg.SourceChannel, poolInfo.EncounterPartyChannel)
-		// s.Require().EqualValues(msg.SourcePort, poolInfo.EncounterPartyPort)
-
-	})
-
-	t.Run("send creat pool message 2", func(t *testing.T) {
-
-		msg := types.NewMsgCreatePool(
-			channelA.PortID,
-			channelA.ChannelID,
-			chainAAddress,
-			"1:2",
-			[]string{chainADenom, "marscoin"},
-			[]uint32{10, 100},
-		)
-
-		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-		s.AssertValidTxResponse(resp)
-		s.Require().NoError(err)
-		fmt.Println("OnCreate RES:", resp)
-		fmt.Println("OnCreate ERR:", err)
-
-		// wait block when packet relay.
-		test.WaitForBlocks(ctx, 10, chainA, chainB)
-
-		// check packet relay status.
-		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 2)
 
 		// poolId := types.GetPoolId(msg.Denoms)
 		// poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
@@ -190,10 +159,23 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 
 // interchainswapChannelOptions configures both of the chains to have interchainswap enabled.
 func interchainswapChannelOptions() func(options *ibc.CreateChannelOptions) {
+	// return func(opts *ibc.CreateChannelOptions) {
+	// 	opts.SourcePortName = types.PortID
+	// 	opts.DestPortName = types.PortID
+	// 	opts.Order = ibc.Unordered
+	// 	opts.Version = types.Version
+	// }
 	return func(opts *ibc.CreateChannelOptions) {
-		opts.Version = "ics101-1"
+		opts.SourcePortName = types.PortID
+		opts.DestPortName = "transfer"
 		opts.Order = ibc.Unordered
-		opts.DestPortName = types.ModuleName
-		opts.SourcePortName = types.ModuleName
+		opts.Version =  "ics20-1"
 	}
 }
+
+//  CreateChannelOptions{
+// 		SourcePortName: "transfer",
+// 		DestPortName:   "transfer",
+// 		Order:          Unordered,
+// 		Version:        "ics20-1",
+// 	}

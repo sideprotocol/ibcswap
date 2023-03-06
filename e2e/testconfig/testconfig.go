@@ -28,7 +28,7 @@ const (
 	// the value will default to the same value as Chain A.
 	ChainBTagEnv = "CHAIN_B_TAG"
 	// GoRelayerTagEnv specifies the go relayer version. Defaults to "main"
-	GoRelayerTagEnv = "RLY_TAG"
+	GoRelayerTagEnv = "RELAYER_TAG"
 	// ChainBinaryEnv binary is the binary that will be used for both chains.
 	ChainBinaryEnv = "CHAIN_BINARY"
 	// ChainUpgradeTagEnv specifies the upgrade version tag
@@ -37,16 +37,16 @@ const (
 	defaultBinary = "simd"
 	// defaultRlyTag is the tag that will be used if no relayer tag is specified.
 	// all images are here https://github.com/cosmos/relayer/pkgs/container/relayer/versions
-	defaultRlyTag = "v2.1.2"
+	defaultRlyTag = "v2.2.0"
 	// defaultChainTag is the tag that will be used for the chains if none is specified.
-	defaultChainTag = "main"
+	defaultChainTag = "latest"
 )
 
 func getChainImage(binary string) string {
 	if binary == "" {
 		binary = defaultBinary
 	}
-	return fmt.Sprintf("ghcr.io/cosmos/ibc-go-%s", binary)
+	return binary //fmt.Sprintf("ghcr.io/cosmos/ibc-go-%s", binary)
 }
 
 // TestConfig holds various fields used in the E2E tests.

@@ -122,9 +122,6 @@ import (
 	interchainswap "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap"
 	interchainswapkeeper "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
 	interchainswaptypes "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
-	//interchainswap "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap"
-	//interchainswapkeeper "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
-	//interchainswaptypes "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 const appName = "SimApp"
@@ -938,6 +935,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
 	paramsKeeper.Subspace(atomicswaptypes.ModuleName)
+	paramsKeeper.Subspace(interchainswaptypes.ModuleName)
 
 	return paramsKeeper
 }

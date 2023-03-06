@@ -93,7 +93,7 @@ func (m *GenesisState) GetInterchainMarketMakerList() []InterchainMarketMaker {
 }
 
 func init() {
-	proto.RegisterType((*GenesisState)(nil), "ibcswap.v4.interchainswap.GenesisState")
+	proto.RegisterType((*GenesisState)(nil), "ibcswap.v6.interchainswap.GenesisState")
 }
 
 func init() {

@@ -57,7 +57,7 @@ func (MessageType) EnumDescriptor() ([]byte, []int) {
 }
 
 type IBCSwapDataPacket struct {
-	Type MessageType `protobuf:"varint,1,opt,name=type,proto3,enum=ibcswap.v4.interchainswap.MessageType" json:"type,omitempty"`
+	Type MessageType `protobuf:"varint,1,opt,name=type,proto3,enum=ibcswap.v6.interchainswap.MessageType" json:"type,omitempty"`
 	Data []byte      `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
 }
 
@@ -109,8 +109,8 @@ func (m *IBCSwapDataPacket) GetData() []byte {
 }
 
 func init() {
-	proto.RegisterEnum("ibcswap.v4.interchainswap.MessageType", MessageType_name, MessageType_value)
-	proto.RegisterType((*IBCSwapDataPacket)(nil), "ibcswap.v4.interchainswap.IBCSwapDataPacket")
+	proto.RegisterEnum("ibcswap.v6.interchainswap.MessageType", MessageType_name, MessageType_value)
+	proto.RegisterType((*IBCSwapDataPacket)(nil), "ibcswap.v6.interchainswap.IBCSwapDataPacket")
 }
 
 func init() {

@@ -171,6 +171,7 @@ func (s *E2ETestSuite) SetupChainsRelayerAndChannel(ctx context.Context, channel
 	s.initGRPCClients(chainB)
 
 	chainAChannels, err := r.GetChannels(ctx, eRep, chainA.Config().ChainID)
+
 	s.Require().NoError(err)
 	return r, chainAChannels[len(chainAChannels)-1]
 }
@@ -425,10 +426,11 @@ func (s *E2ETestSuite) createCosmosChains(chainOptions testconfig.ChainOptions) 
 
 	logger := zaptest.NewLogger(s.T())
 
-	numValidators, numFullNodes := 4, 1
+	numValidators, numFullNodes := 1, 1
 
 	chainA := cosmos.NewCosmosChain(s.T().Name(), *chainOptions.ChainAConfig, numValidators, numFullNodes, logger)
 	chainB := cosmos.NewCosmosChain(s.T().Name(), *chainOptions.ChainBConfig, numValidators, numFullNodes, logger)
+
 	return chainA, chainB
 }
 

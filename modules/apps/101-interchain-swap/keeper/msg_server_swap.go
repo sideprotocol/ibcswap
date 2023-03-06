@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
@@ -27,9 +27,10 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 	}
 
 	//lock swap-in token to the swap module
-	//escrowAddr := types.GetEscrowAddress(pool.EncounterPartyPort, pool.EncounterPartyChannel)
-	k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.MustAccAddressFromBech32(msg.Sender), types.ModuleName, sdk.NewCoins(*msg.TokenIn))
-
+	err = k.LockTokens(ctx, pool.EncounterPartyPort, pool.EncounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Sender), sdk.NewCoins(*msg.TokenIn))
+	if err != nil {
+		return nil, err
+	}
 	//constructs the IBC data packet
 	rawMsgData, err := json.Marshal(msg)
 	if err != nil {

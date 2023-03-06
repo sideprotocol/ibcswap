@@ -490,16 +490,16 @@ func (m *QueryAllInterchainMarketMakerResponse) GetPagination() *query.PageRespo
 }
 
 func init() {
-	proto.RegisterType((*QueryParamsRequest)(nil), "ibcswap.v4.interchainswap.QueryParamsRequest")
-	proto.RegisterType((*QueryParamsResponse)(nil), "ibcswap.v4.interchainswap.QueryParamsResponse")
-	proto.RegisterType((*QueryGetInterchainLiquidityPoolRequest)(nil), "ibcswap.v4.interchainswap.QueryGetInterchainLiquidityPoolRequest")
-	proto.RegisterType((*QueryGetInterchainLiquidityPoolResponse)(nil), "ibcswap.v4.interchainswap.QueryGetInterchainLiquidityPoolResponse")
-	proto.RegisterType((*QueryAllInterchainLiquidityPoolRequest)(nil), "ibcswap.v4.interchainswap.QueryAllInterchainLiquidityPoolRequest")
-	proto.RegisterType((*QueryAllInterchainLiquidityPoolResponse)(nil), "ibcswap.v4.interchainswap.QueryAllInterchainLiquidityPoolResponse")
-	proto.RegisterType((*QueryGetInterchainMarketMakerRequest)(nil), "ibcswap.v4.interchainswap.QueryGetInterchainMarketMakerRequest")
-	proto.RegisterType((*QueryGetInterchainMarketMakerResponse)(nil), "ibcswap.v4.interchainswap.QueryGetInterchainMarketMakerResponse")
-	proto.RegisterType((*QueryAllInterchainMarketMakerRequest)(nil), "ibcswap.v4.interchainswap.QueryAllInterchainMarketMakerRequest")
-	proto.RegisterType((*QueryAllInterchainMarketMakerResponse)(nil), "ibcswap.v4.interchainswap.QueryAllInterchainMarketMakerResponse")
+	proto.RegisterType((*QueryParamsRequest)(nil), "ibcswap.v6.interchainswap.QueryParamsRequest")
+	proto.RegisterType((*QueryParamsResponse)(nil), "ibcswap.v6.interchainswap.QueryParamsResponse")
+	proto.RegisterType((*QueryGetInterchainLiquidityPoolRequest)(nil), "ibcswap.v6.interchainswap.QueryGetInterchainLiquidityPoolRequest")
+	proto.RegisterType((*QueryGetInterchainLiquidityPoolResponse)(nil), "ibcswap.v6.interchainswap.QueryGetInterchainLiquidityPoolResponse")
+	proto.RegisterType((*QueryAllInterchainLiquidityPoolRequest)(nil), "ibcswap.v6.interchainswap.QueryAllInterchainLiquidityPoolRequest")
+	proto.RegisterType((*QueryAllInterchainLiquidityPoolResponse)(nil), "ibcswap.v6.interchainswap.QueryAllInterchainLiquidityPoolResponse")
+	proto.RegisterType((*QueryGetInterchainMarketMakerRequest)(nil), "ibcswap.v6.interchainswap.QueryGetInterchainMarketMakerRequest")
+	proto.RegisterType((*QueryGetInterchainMarketMakerResponse)(nil), "ibcswap.v6.interchainswap.QueryGetInterchainMarketMakerResponse")
+	proto.RegisterType((*QueryAllInterchainMarketMakerRequest)(nil), "ibcswap.v6.interchainswap.QueryAllInterchainMarketMakerRequest")
+	proto.RegisterType((*QueryAllInterchainMarketMakerResponse)(nil), "ibcswap.v6.interchainswap.QueryAllInterchainMarketMakerResponse")
 }
 
 func init() {
@@ -584,7 +584,7 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 
 func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error) {
 	out := new(QueryParamsResponse)
-	err := c.cc.Invoke(ctx, "/ibcswap.v4.interchainswap.Query/Params", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ibcswap.v6.interchainswap.Query/Params", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -593,7 +593,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 
 func (c *queryClient) InterchainLiquidityPool(ctx context.Context, in *QueryGetInterchainLiquidityPoolRequest, opts ...grpc.CallOption) (*QueryGetInterchainLiquidityPoolResponse, error) {
 	out := new(QueryGetInterchainLiquidityPoolResponse)
-	err := c.cc.Invoke(ctx, "/ibcswap.v4.interchainswap.Query/InterchainLiquidityPool", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ibcswap.v6.interchainswap.Query/InterchainLiquidityPool", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -602,7 +602,7 @@ func (c *queryClient) InterchainLiquidityPool(ctx context.Context, in *QueryGetI
 
 func (c *queryClient) InterchainLiquidityPoolAll(ctx context.Context, in *QueryAllInterchainLiquidityPoolRequest, opts ...grpc.CallOption) (*QueryAllInterchainLiquidityPoolResponse, error) {
 	out := new(QueryAllInterchainLiquidityPoolResponse)
-	err := c.cc.Invoke(ctx, "/ibcswap.v4.interchainswap.Query/InterchainLiquidityPoolAll", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ibcswap.v6.interchainswap.Query/InterchainLiquidityPoolAll", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -611,7 +611,7 @@ func (c *queryClient) InterchainLiquidityPoolAll(ctx context.Context, in *QueryA
 
 func (c *queryClient) InterchainMarketMaker(ctx context.Context, in *QueryGetInterchainMarketMakerRequest, opts ...grpc.CallOption) (*QueryGetInterchainMarketMakerResponse, error) {
 	out := new(QueryGetInterchainMarketMakerResponse)
-	err := c.cc.Invoke(ctx, "/ibcswap.v4.interchainswap.Query/InterchainMarketMaker", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ibcswap.v6.interchainswap.Query/InterchainMarketMaker", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -620,7 +620,7 @@ func (c *queryClient) InterchainMarketMaker(ctx context.Context, in *QueryGetInt
 
 func (c *queryClient) InterchainMarketMakerAll(ctx context.Context, in *QueryAllInterchainMarketMakerRequest, opts ...grpc.CallOption) (*QueryAllInterchainMarketMakerResponse, error) {
 	out := new(QueryAllInterchainMarketMakerResponse)
-	err := c.cc.Invoke(ctx, "/ibcswap.v4.interchainswap.Query/InterchainMarketMakerAll", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ibcswap.v6.interchainswap.Query/InterchainMarketMakerAll", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -673,7 +673,7 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ibcswap.v4.interchainswap.Query/Params",
+		FullMethod: "/ibcswap.v6.interchainswap.Query/Params",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Params(ctx, req.(*QueryParamsRequest))
@@ -691,7 +691,7 @@ func _Query_InterchainLiquidityPool_Handler(srv interface{}, ctx context.Context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ibcswap.v4.interchainswap.Query/InterchainLiquidityPool",
+		FullMethod: "/ibcswap.v6.interchainswap.Query/InterchainLiquidityPool",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).InterchainLiquidityPool(ctx, req.(*QueryGetInterchainLiquidityPoolRequest))
@@ -709,7 +709,7 @@ func _Query_InterchainLiquidityPoolAll_Handler(srv interface{}, ctx context.Cont
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ibcswap.v4.interchainswap.Query/InterchainLiquidityPoolAll",
+		FullMethod: "/ibcswap.v6.interchainswap.Query/InterchainLiquidityPoolAll",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).InterchainLiquidityPoolAll(ctx, req.(*QueryAllInterchainLiquidityPoolRequest))
@@ -727,7 +727,7 @@ func _Query_InterchainMarketMaker_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ibcswap.v4.interchainswap.Query/InterchainMarketMaker",
+		FullMethod: "/ibcswap.v6.interchainswap.Query/InterchainMarketMaker",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).InterchainMarketMaker(ctx, req.(*QueryGetInterchainMarketMakerRequest))
@@ -745,7 +745,7 @@ func _Query_InterchainMarketMakerAll_Handler(srv interface{}, ctx context.Contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ibcswap.v4.interchainswap.Query/InterchainMarketMakerAll",
+		FullMethod: "/ibcswap.v6.interchainswap.Query/InterchainMarketMakerAll",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).InterchainMarketMakerAll(ctx, req.(*QueryAllInterchainMarketMakerRequest))
@@ -754,7 +754,7 @@ func _Query_InterchainMarketMakerAll_Handler(srv interface{}, ctx context.Contex
 }
 
 var _Query_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "ibcswap.v4.interchainswap.Query",
+	ServiceName: "ibcswap.v6.interchainswap.Query",
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
