@@ -29,8 +29,7 @@ func (s *AtomicSwapTestSuite) TestMakeSwap() {
 	ctx := context.TODO()
 
 	// setup relayers and connection-0 between two chains.
-	relayer, channelA, _ := s.SetupChainsRelayerAndChannel(ctx, atomicSwapChannelOptions())
-	_, channelB, _ := s.SetupChainsRelayerAndChannel(ctx, atomicSwapChannelOptions())
+	relayer, channelA, _ := s.SetupChainsRelayerAndChannel(ctx /*, atomicSwapChannelOptions()*/)
 
 	chainA, chainB := s.GetChains()
 
@@ -67,8 +66,8 @@ func (s *AtomicSwapTestSuite) TestMakeSwap() {
 			0,
 			channelA.PortID,
 			channelA.ChannelID,
-			channelB.PortID,
-			channelB.ChannelID,
+			"",
+			"",
 			clienttypes.NewHeight(0, 100),
 			0,
 		)
