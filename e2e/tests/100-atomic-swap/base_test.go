@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -73,6 +74,7 @@ func (s *AtomicSwapTestSuite) TestMakeSwap() {
 		)
 
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+		fmt.Printf("Response: %#v\n", resp)
 		s.AssertValidTxResponse(resp)
 		s.Require().NoError(err)
 
