@@ -38,9 +38,9 @@ func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgDepos
 	if !found {
 		return types.ErrNotFoundPool
 	}
-	pool.Supply.Amount.Add(res.PoolToken.Amount)
+	pool.Supply.Amount = pool.Supply.Amount.Add(res.PoolToken.Amount)
 	// mint voucher
-	err := k.MintTokens(ctx, sdk.AccAddress(req.Sender), *res.PoolToken)
+	err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(req.Sender), *res.PoolToken)
 	if err != nil {
 		return err
 	}

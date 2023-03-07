@@ -190,11 +190,11 @@ func (im IBCModule) OnAcknowledgementPacket(
 ) error {
 	var ack channeltypes.Acknowledgement
 	if err := types.ModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
-		return errorsmod.Wrapf(errorsmod.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
+		return errorsmod.Wrapf(errorsmod.ErrUnknownRequest, "cannot unmarshal ICS-101 transfer packet acknowledgement: %v", err)
 	}
 	var data types.IBCSwapDataPacket
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		return errorsmod.Wrapf(errorsmod.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
+		return errorsmod.Wrapf(errorsmod.ErrUnknownRequest, "cannot unmarshal ICS-101 transfer packet data: %s", err.Error())
 	}
 
 	if err := im.keeper.OnAcknowledgementPacket(ctx, packet, &data, ack); err != nil {
@@ -281,5 +281,3 @@ func ValidateInterchainSwapChannelParams(
 
 	return nil
 }
-
-

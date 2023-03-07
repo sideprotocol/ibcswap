@@ -174,7 +174,6 @@ var (
 		//atomic swap
 		atomicswap.AppModuleBasic{},
 		interchainswap.AppModuleBasic{},
-		//interchainswap.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -186,7 +185,7 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		atomicswaptypes.ModuleName:     nil,
-		interchainswaptypes.ModuleName: nil,
+		interchainswaptypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		ibcfeetypes.ModuleName:         nil,
 		icatypes.ModuleName:            nil,
@@ -325,7 +324,6 @@ func NewSimApp(
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedICAControllerKeeper := app.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
-
 	scopedAtomicSwapKeeper := app.CapabilityKeeper.ScopeToModule(atomicswaptypes.ModuleName)
 	scopedInterchainSwapKeeper := app.CapabilityKeeper.ScopeToModule(interchainswaptypes.ModuleName)
 
@@ -334,9 +332,6 @@ func NewSimApp(
 	scopedIBCMockKeeper := app.CapabilityKeeper.ScopeToModule(ibcmock.ModuleName)
 	scopedFeeMockKeeper := app.CapabilityKeeper.ScopeToModule(MockFeePort)
 	scopedICAMockKeeper := app.CapabilityKeeper.ScopeToModule(ibcmock.ModuleName + icacontrollertypes.SubModuleName)
-
-	//scopedAtomicSwapMockKeeper := app.CapabilityKeeper.ScopeToModule(atomicswaptypes.ModuleName)
-	//scopedInterchainSwapMockKeeper := app.CapabilityKeeper.ScopeToModule(interchainswaptypes.ModuleName)
 
 	// seal capability keeper after scoping modules
 	app.CapabilityKeeper.Seal()
@@ -380,7 +375,6 @@ func NewSimApp(
 	app.AuthzKeeper = authzkeeper.NewKeeper(keys[authzkeeper.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper)
 
 	// IBC Keepers
-
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
 	)
@@ -456,22 +450,27 @@ func NewSimApp(
 	)
 
 	app.AtomicSwapKeeper = atomicswapkeeper.NewKeeper(
-		appCodec, keys[ibctransfertypes.StoreKey], app.GetSubspace(atomicswaptypes.ModuleName),
+		appCodec,
+		keys[atomicswaptypes.StoreKey],
+		app.GetSubspace(atomicswaptypes.ModuleName),
 		app.IBCFeeKeeper,
-		app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
-		app.AccountKeeper, app.BankKeeper, scopedAtomicSwapKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		app.AccountKeeper,
+		app.BankKeeper,
+		scopedAtomicSwapKeeper,
 	)
 
 	app.InterchainSwapKeeper = *interchainswapkeeper.NewKeeper(
 		appCodec,
-		keys[ibctransfertypes.StoreKey],
+		keys[interchainswaptypes.StoreKey],
 		app.GetSubspace(interchainswaptypes.ModuleName),
 		app.IBCFeeKeeper,
 		app.IBCKeeper.ChannelKeeper,
 		&app.IBCKeeper.PortKeeper,
-		scopedInterchainSwapKeeper,
 		app.BankKeeper,
 		app.AccountKeeper,
+		scopedInterchainSwapKeeper,
 	)
 
 	// Mock Module Stack
@@ -606,7 +605,8 @@ func NewSimApp(
 		transfer.NewAppModule(app.TransferKeeper),
 		ibcfee.NewAppModule(app.IBCFeeKeeper),
 		ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper),
-		// swap modules
+
+		// Swap modules
 		atomicswap.NewAppModule(app.AtomicSwapKeeper),
 		interchainswap.NewAppModule(app.InterchainSwapKeeper),
 		mockModule,
@@ -620,16 +620,16 @@ func NewSimApp(
 	app.mm.SetOrderBeginBlockers(
 		upgradetypes.ModuleName, capabilitytypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName, ibctransfertypes.ModuleName, authtypes.ModuleName,
-		atomicswaptypes.ModuleName, interchainswaptypes.ModuleName,
 		banktypes.ModuleName, govtypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName, authz.ModuleName, feegrant.ModuleName,
 		paramstypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, ibcfeetypes.ModuleName, ibcmock.ModuleName, group.ModuleName,
+		atomicswaptypes.ModuleName, interchainswaptypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName, ibctransfertypes.ModuleName,
-		atomicswaptypes.ModuleName, interchainswaptypes.ModuleName,
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
 		minttypes.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName, feegrant.ModuleName, paramstypes.ModuleName,
 		upgradetypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, ibcfeetypes.ModuleName, ibcmock.ModuleName, group.ModuleName,
+		atomicswaptypes.ModuleName, interchainswaptypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -641,9 +641,9 @@ func NewSimApp(
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
 		ibchost.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName, ibctransfertypes.ModuleName,
-		atomicswaptypes.ModuleName, interchainswaptypes.ModuleName,
 		icatypes.ModuleName, ibcfeetypes.ModuleName, ibcmock.ModuleName, feegrant.ModuleName, paramstypes.ModuleName, upgradetypes.ModuleName,
 		vestingtypes.ModuleName, group.ModuleName,
+		atomicswaptypes.ModuleName, interchainswaptypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)

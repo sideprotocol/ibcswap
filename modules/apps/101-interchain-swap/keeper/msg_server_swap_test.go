@@ -48,10 +48,13 @@ func (suite *KeeperTestSuite) TestMsgSwap() {
 		suite.Require().NoError(err)
 		fmt.Println(pooId)
 
+		sender := suite.chainA.SenderAccount
 		//
 		msg = &types.MsgSwapRequest{
-			SwapType: types.SwapMsgType_LEFT,
-			Sender:   sample.AccAddress(),
+			SwapType:  types.SwapMsgType_LEFT,
+			Sender:    sender.GetAddress().String(),
+			Recipient: sample.AccAddress(),
+			Slippage:  10,
 			TokenIn: &sdk.Coin{
 				Denom:  sdk.DefaultBondDenom,
 				Amount: sdk.NewInt(100),

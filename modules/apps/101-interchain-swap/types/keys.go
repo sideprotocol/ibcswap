@@ -9,7 +9,7 @@ const (
 	Version = "ics101-1"
 
 	// PortID is the default port id that swap module binds to
-	PortID = "interchainswap"
+	PortID = ModuleName
 
 	// StoreKey is the store key string for IBC swap
 	StoreKey = ModuleName

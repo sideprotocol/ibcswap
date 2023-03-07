@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/ibc-go/e2e/testsuite"
 	"github.com/cosmos/ibc-go/e2e/testvalues"
+	//atomicswaptypes "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 	types "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	"github.com/strangelove-ventures/ibctest/v6/ibc"
 	test "github.com/strangelove-ventures/ibctest/v6/testutil"
@@ -159,23 +160,20 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 
 // interchainswapChannelOptions configures both of the chains to have interchainswap enabled.
 func interchainswapChannelOptions() func(options *ibc.CreateChannelOptions) {
-	// return func(opts *ibc.CreateChannelOptions) {
-	// 	opts.SourcePortName = types.PortID
-	// 	opts.DestPortName = types.PortID
-	// 	opts.Order = ibc.Unordered
-	// 	opts.Version = types.Version
-	// }
 	return func(opts *ibc.CreateChannelOptions) {
 		opts.SourcePortName = types.PortID
-		opts.DestPortName = "transfer"
+		opts.DestPortName = types.PortID
 		opts.Order = ibc.Unordered
-		opts.Version =  "ics20-1"
+		opts.Version = types.Version
 	}
 }
 
-//  CreateChannelOptions{
-// 		SourcePortName: "transfer",
-// 		DestPortName:   "transfer",
-// 		Order:          Unordered,
-// 		Version:        "ics20-1",
+// // interchainswapChannelOptions configures both of the chains to have interchainswap enabled.
+// func atomicswapChannelOptions() func(options *ibc.CreateChannelOptions) {
+// 	return func(opts *ibc.CreateChannelOptions) {
+// 		opts.SourcePortName = atomicswaptypes.PortID
+// 		opts.DestPortName = atomicswaptypes.PortID
+// 		opts.Order = ibc.Unordered
+// 		opts.Version = atomicswaptypes.Version
 // 	}
+// }

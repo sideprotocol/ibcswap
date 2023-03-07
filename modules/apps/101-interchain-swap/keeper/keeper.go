@@ -14,8 +14,8 @@ import (
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 type (
@@ -39,9 +39,9 @@ func NewKeeper(
 	ics4Wrapper porttypes.ICS4Wrapper,
 	channelKeeper types.ChannelKeeper,
 	portKeeper types.PortKeeper,
-	scopedKeeper capabilitykeeper.ScopedKeeper,
 	bankKeeper types.BankKeeper,
 	authKeeper types.AccountKeeper,
+	scopedKeeper capabilitykeeper.ScopedKeeper,
 
 ) *Keeper {
 	// set KeyTable if it has not already been set

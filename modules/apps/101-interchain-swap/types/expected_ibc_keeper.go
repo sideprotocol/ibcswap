@@ -19,13 +19,6 @@ type PortKeeper interface {
 	BindPort(ctx sdk.Context, portID string) *capabilitytypes.Capability
 }
 
-// ScopedKeeper defines the expected IBC scoped keeper.
-type ScopedKeeper interface {
-	GetCapability(ctx sdk.Context, name string) (*capabilitytypes.Capability, bool)
-	AuthenticateCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) bool
-	ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error
-}
-
 // ICS4Wrapper defines the expected ICS4Wrapper for middleware
 type ICS4Wrapper interface {
 	SendPacket(ctx sdk.Context, channelCap *capabilitytypes.Capability, packet ibcexported.PacketI) error

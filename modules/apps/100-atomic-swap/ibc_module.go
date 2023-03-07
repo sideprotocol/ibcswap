@@ -258,7 +258,7 @@ func (im IBCModule) OnTimeoutPacket(
 ) error {
 	var data types.AtomicSwapPacketData
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-101 transfer packet data: %s", err.Error())
 	}
 	// refund tokens
 	if err := im.keeper.OnTimeoutPacket(ctx, packet, &data); err != nil {

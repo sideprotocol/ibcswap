@@ -390,7 +390,7 @@ func (m *MsgWithdrawResponse) GetTokens() []*types.Coin {
 }
 
 type MsgSwapRequest struct {
-	SwapType  SwapMsgType `protobuf:"varint,1,opt,name=swap_type,json=swapType,proto3,enum=ibcswap.v6.interchainswap.SwapMsgType" json:"swap_type,omitempty"`
+	SwapType  SwapMsgType `protobuf:"varint,1,opt,name=swap_type,json=swapType,proto3,enum=ibcswap.v4.interchainswap.SwapMsgType" json:"swap_type,omitempty"`
 	Sender    string      `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty"`
 	TokenIn   *types.Coin `protobuf:"bytes,3,opt,name=tokenIn,proto3" json:"tokenIn,omitempty"`
 	TokenOut  *types.Coin `protobuf:"bytes,4,opt,name=tokenOut,proto3" json:"tokenOut,omitempty"`
@@ -474,7 +474,7 @@ func (m *MsgSwapRequest) GetRecipient() string {
 }
 
 type MsgSwapResponse struct {
-	SwapType SwapMsgType   `protobuf:"varint,1,opt,name=swap_type,json=swapType,proto3,enum=ibcswap.v6.interchainswap.SwapMsgType" json:"swap_type,omitempty"`
+	SwapType SwapMsgType   `protobuf:"varint,1,opt,name=swap_type,json=swapType,proto3,enum=ibcswap.v4.interchainswap.SwapMsgType" json:"swap_type,omitempty"`
 	Tokens   []*types.Coin `protobuf:"bytes,2,rep,name=tokens,proto3" json:"tokens,omitempty"`
 }
 
@@ -526,15 +526,15 @@ func (m *MsgSwapResponse) GetTokens() []*types.Coin {
 }
 
 func init() {
-	proto.RegisterEnum("ibcswap.v6.interchainswap.SwapMsgType", SwapMsgType_name, SwapMsgType_value)
-	proto.RegisterType((*MsgCreatePoolRequest)(nil), "ibcswap.v6.interchainswap.MsgCreatePoolRequest")
-	proto.RegisterType((*MsgCreatePoolResponse)(nil), "ibcswap.v6.interchainswap.MsgCreatePoolResponse")
-	proto.RegisterType((*MsgDepositRequest)(nil), "ibcswap.v6.interchainswap.MsgDepositRequest")
-	proto.RegisterType((*MsgDepositResponse)(nil), "ibcswap.v6.interchainswap.MsgDepositResponse")
-	proto.RegisterType((*MsgWithdrawRequest)(nil), "ibcswap.v6.interchainswap.MsgWithdrawRequest")
-	proto.RegisterType((*MsgWithdrawResponse)(nil), "ibcswap.v6.interchainswap.MsgWithdrawResponse")
-	proto.RegisterType((*MsgSwapRequest)(nil), "ibcswap.v6.interchainswap.MsgSwapRequest")
-	proto.RegisterType((*MsgSwapResponse)(nil), "ibcswap.v6.interchainswap.MsgSwapResponse")
+	proto.RegisterEnum("ibcswap.v4.interchainswap.SwapMsgType", SwapMsgType_name, SwapMsgType_value)
+	proto.RegisterType((*MsgCreatePoolRequest)(nil), "ibcswap.v4.interchainswap.MsgCreatePoolRequest")
+	proto.RegisterType((*MsgCreatePoolResponse)(nil), "ibcswap.v4.interchainswap.MsgCreatePoolResponse")
+	proto.RegisterType((*MsgDepositRequest)(nil), "ibcswap.v4.interchainswap.MsgDepositRequest")
+	proto.RegisterType((*MsgDepositResponse)(nil), "ibcswap.v4.interchainswap.MsgDepositResponse")
+	proto.RegisterType((*MsgWithdrawRequest)(nil), "ibcswap.v4.interchainswap.MsgWithdrawRequest")
+	proto.RegisterType((*MsgWithdrawResponse)(nil), "ibcswap.v4.interchainswap.MsgWithdrawResponse")
+	proto.RegisterType((*MsgSwapRequest)(nil), "ibcswap.v4.interchainswap.MsgSwapRequest")
+	proto.RegisterType((*MsgSwapResponse)(nil), "ibcswap.v4.interchainswap.MsgSwapResponse")
 }
 
 func init() { proto.RegisterFile("ibcswap/interchainswap/tx.proto", fileDescriptor_4f12fdd0a6378b90) }
@@ -613,7 +613,7 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 
 func (c *msgClient) CreatePool(ctx context.Context, in *MsgCreatePoolRequest, opts ...grpc.CallOption) (*MsgCreatePoolResponse, error) {
 	out := new(MsgCreatePoolResponse)
-	err := c.cc.Invoke(ctx, "/ibcswap.v6.interchainswap.Msg/CreatePool", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ibcswap.v4.interchainswap.Msg/CreatePool", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -622,7 +622,7 @@ func (c *msgClient) CreatePool(ctx context.Context, in *MsgCreatePoolRequest, op
 
 func (c *msgClient) Deposit(ctx context.Context, in *MsgDepositRequest, opts ...grpc.CallOption) (*MsgDepositResponse, error) {
 	out := new(MsgDepositResponse)
-	err := c.cc.Invoke(ctx, "/ibcswap.v6.interchainswap.Msg/Deposit", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ibcswap.v4.interchainswap.Msg/Deposit", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -631,7 +631,7 @@ func (c *msgClient) Deposit(ctx context.Context, in *MsgDepositRequest, opts ...
 
 func (c *msgClient) Withdraw(ctx context.Context, in *MsgWithdrawRequest, opts ...grpc.CallOption) (*MsgWithdrawResponse, error) {
 	out := new(MsgWithdrawResponse)
-	err := c.cc.Invoke(ctx, "/ibcswap.v6.interchainswap.Msg/Withdraw", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ibcswap.v4.interchainswap.Msg/Withdraw", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -640,7 +640,7 @@ func (c *msgClient) Withdraw(ctx context.Context, in *MsgWithdrawRequest, opts .
 
 func (c *msgClient) Swap(ctx context.Context, in *MsgSwapRequest, opts ...grpc.CallOption) (*MsgSwapResponse, error) {
 	out := new(MsgSwapResponse)
-	err := c.cc.Invoke(ctx, "/ibcswap.v6.interchainswap.Msg/Swap", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ibcswap.v4.interchainswap.Msg/Swap", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -685,7 +685,7 @@ func _Msg_CreatePool_Handler(srv interface{}, ctx context.Context, dec func(inte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ibcswap.v6.interchainswap.Msg/CreatePool",
+		FullMethod: "/ibcswap.v4.interchainswap.Msg/CreatePool",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).CreatePool(ctx, req.(*MsgCreatePoolRequest))
@@ -703,7 +703,7 @@ func _Msg_Deposit_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ibcswap.v6.interchainswap.Msg/Deposit",
+		FullMethod: "/ibcswap.v4.interchainswap.Msg/Deposit",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).Deposit(ctx, req.(*MsgDepositRequest))
@@ -721,7 +721,7 @@ func _Msg_Withdraw_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ibcswap.v6.interchainswap.Msg/Withdraw",
+		FullMethod: "/ibcswap.v4.interchainswap.Msg/Withdraw",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).Withdraw(ctx, req.(*MsgWithdrawRequest))
@@ -739,7 +739,7 @@ func _Msg_Swap_Handler(srv interface{}, ctx context.Context, dec func(interface{
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ibcswap.v6.interchainswap.Msg/Swap",
+		FullMethod: "/ibcswap.v4.interchainswap.Msg/Swap",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).Swap(ctx, req.(*MsgSwapRequest))
@@ -748,7 +748,7 @@ func _Msg_Swap_Handler(srv interface{}, ctx context.Context, dec func(interface{
 }
 
 var _Msg_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "ibcswap.v6.interchainswap.Msg",
+	ServiceName: "ibcswap.v4.interchainswap.Msg",
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

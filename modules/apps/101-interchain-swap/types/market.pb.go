@@ -74,7 +74,7 @@ func (PoolStatus) EnumDescriptor() ([]byte, []int) {
 }
 
 type PoolAsset struct {
-	Side    PoolSide    `protobuf:"varint,1,opt,name=side,proto3,enum=ibcswap.v6.interchainswap.PoolSide" json:"side,omitempty"`
+	Side    PoolSide    `protobuf:"varint,1,opt,name=side,proto3,enum=ibcswap.v4.interchainswap.PoolSide" json:"side,omitempty"`
 	Balance *types.Coin `protobuf:"bytes,2,opt,name=balance,proto3" json:"balance,omitempty"`
 	Weight  uint32      `protobuf:"varint,3,opt,name=weight,proto3" json:"weight,omitempty"`
 	Decimal uint32      `protobuf:"varint,4,opt,name=decimal,proto3" json:"decimal,omitempty"`
@@ -145,7 +145,7 @@ type InterchainLiquidityPool struct {
 	PoolId                string       `protobuf:"bytes,1,opt,name=poolId,proto3" json:"poolId,omitempty"`
 	Assets                []*PoolAsset `protobuf:"bytes,2,rep,name=assets,proto3" json:"assets,omitempty"`
 	Supply                *types.Coin  `protobuf:"bytes,3,opt,name=supply,proto3" json:"supply,omitempty"`
-	Status                PoolStatus   `protobuf:"varint,4,opt,name=status,proto3,enum=ibcswap.v6.interchainswap.PoolStatus" json:"status,omitempty"`
+	Status                PoolStatus   `protobuf:"varint,4,opt,name=status,proto3,enum=ibcswap.v4.interchainswap.PoolStatus" json:"status,omitempty"`
 	EncounterPartyPort    string       `protobuf:"bytes,5,opt,name=encounterPartyPort,proto3" json:"encounterPartyPort,omitempty"`
 	EncounterPartyChannel string       `protobuf:"bytes,6,opt,name=encounterPartyChannel,proto3" json:"encounterPartyChannel,omitempty"`
 }
@@ -286,11 +286,11 @@ func (m *InterchainMarketMaker) GetFeeRate() uint64 {
 }
 
 func init() {
-	proto.RegisterEnum("ibcswap.v6.interchainswap.PoolSide", PoolSide_name, PoolSide_value)
-	proto.RegisterEnum("ibcswap.v6.interchainswap.PoolStatus", PoolStatus_name, PoolStatus_value)
-	proto.RegisterType((*PoolAsset)(nil), "ibcswap.v6.interchainswap.PoolAsset")
-	proto.RegisterType((*InterchainLiquidityPool)(nil), "ibcswap.v6.interchainswap.InterchainLiquidityPool")
-	proto.RegisterType((*InterchainMarketMaker)(nil), "ibcswap.v6.interchainswap.InterchainMarketMaker")
+	proto.RegisterEnum("ibcswap.v4.interchainswap.PoolSide", PoolSide_name, PoolSide_value)
+	proto.RegisterEnum("ibcswap.v4.interchainswap.PoolStatus", PoolStatus_name, PoolStatus_value)
+	proto.RegisterType((*PoolAsset)(nil), "ibcswap.v4.interchainswap.PoolAsset")
+	proto.RegisterType((*InterchainLiquidityPool)(nil), "ibcswap.v4.interchainswap.InterchainLiquidityPool")
+	proto.RegisterType((*InterchainMarketMaker)(nil), "ibcswap.v4.interchainswap.InterchainMarketMaker")
 }
 
 func init() {

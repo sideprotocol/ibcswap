@@ -11,7 +11,9 @@ import (
 )
 
 var (
-	ChainIDPrefix   = "testchain"
+	ChainIDPrefix = "testchain"
+	// to disable revision format, set ChainIDSuffix to ""
+	ChainIDSuffix   = "-1"
 	globalStartTime = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 	TimeIncrement   = time.Second * 5
 )
@@ -145,13 +147,12 @@ func (coord *Coordinator) CreateTransferChannels(path *Path) {
 func (coord *Coordinator) CreateAtomicChannels(path *Path) {
 	path.EndpointA.ChannelConfig.PortID = AtomicSwapPort
 	path.EndpointB.ChannelConfig.PortID = AtomicSwapPort
-
 	coord.CreateChannels(path)
 }
 
 func (coord *Coordinator) CreateInterchainSwapChannels(path *Path) {
-	path.EndpointA.ChannelConfig.PortID = InterchainAtomicSwapPort
-	path.EndpointB.ChannelConfig.PortID = InterchainAtomicSwapPort
+	path.EndpointA.ChannelConfig.PortID = InterchainSwapPort
+	path.EndpointB.ChannelConfig.PortID = InterchainSwapPort
 	coord.CreateChannels(path)
 }
 
@@ -186,7 +187,7 @@ func (coord *Coordinator) GetChain(chainID string) *TestChain {
 
 // GetChainID returns the chainID used for the provided index.
 func GetChainID(index int) string {
-	return ChainIDPrefix + strconv.Itoa(index)
+	return ChainIDPrefix + strconv.Itoa(index) + ChainIDSuffix
 }
 
 // CommitBlock commits a block on the provided indexes and then increments the global time.

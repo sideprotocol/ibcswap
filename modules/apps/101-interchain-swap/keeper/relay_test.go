@@ -30,7 +30,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 		{
 			"successful transfer swap request",
 			func() {
-				suite.coordinator.CreateInterchainSwapChannels(path)
+				suite.coordinator.CreateChannels(path) //CreateInterchainSwapChannels(path)
 				msg := &types.MsgSwapRequest{
 					SwapType: types.SwapMsgType_LEFT,
 					Sender:   sample.AccAddress(),
@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 		{
 			"successful transfer creat pool request",
 			func() {
-				suite.coordinator.CreateInterchainSwapChannels(path)
+				suite.coordinator.CreateChannels(path)
 				msg := types.NewMsgCreatePool(
 					path.EndpointA.ChannelConfig.PortID,
 					path.EndpointA.ChannelID,
@@ -69,7 +69,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 		{
 			"successful transfer deposit request",
 			func() {
-				suite.coordinator.CreateInterchainSwapChannels(path)
+				suite.coordinator.CreateChannels(path)
 				msg := types.NewMsgDeposit(
 					"test pool id",
 					suite.chainA.SenderAccount.GetAddress().String(),
@@ -83,7 +83,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 		{
 			"successful transfer withdraw request",
 			func() {
-				suite.coordinator.CreateInterchainSwapChannels(path)
+				suite.coordinator.CreateChannels(path)
 				msg := types.NewMsgWithdraw(
 					suite.chainA.SenderAccount.GetAddress().String(),
 					&sdk.Coin{

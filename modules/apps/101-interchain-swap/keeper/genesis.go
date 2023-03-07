@@ -10,7 +10,6 @@ import (
 // InitGenesis initializes the ibc-transfer state and binds to PortID.
 func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 	k.SetPort(ctx, state.PortId)
-
 	// Only try to bind to port if it is not already bound, since we may already own
 	// port capability from capability InitGenesis
 	if !k.IsBound(ctx, state.PortId) {

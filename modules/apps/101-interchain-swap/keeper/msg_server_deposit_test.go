@@ -18,7 +18,7 @@ func (suite *KeeperTestSuite) SetupPool() (*string, error) {
 		path.EndpointA.ChannelID,
 		suite.chainA.SenderAccount.GetAddress().String(),
 		"1:2",
-		[]string{sdk.DefaultBondDenom, "venuscoin"},
+		[]string{sdk.DefaultBondDenom, sdk.DefaultBondDenom},
 		[]uint32{10, 100},
 	)
 

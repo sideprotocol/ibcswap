@@ -81,7 +81,7 @@ func (suite *InterchainSwapTestSuite) TestOnChanOpenInit() {
 			}
 
 			var err error
-			chanCap, err = suite.chainA.App.GetScopedIBCKeeper().NewCapability(suite.chainA.GetContext(), host.ChannelCapabilityPath(ibctesting.InterchainAtomicSwapPort, path.EndpointA.ChannelID))
+			chanCap, err = suite.chainA.App.GetScopedIBCKeeper().NewCapability(suite.chainA.GetContext(), host.ChannelCapabilityPath(ibctesting.InterchainSwapPort, path.EndpointA.ChannelID))
 			suite.Require().NoError(err)
 
 			tc.malleate() // explicitly change fields in channel and testChannel
@@ -119,37 +119,37 @@ func (suite *InterchainSwapTestSuite) TestOnChanOpenTry() {
 		malleate func()
 		expPass  bool
 	}{
-		// {
-		// 	"success", func() {}, true,
-		// },
-		// {
-		// 	"max channels reached", func() {
-		// 		path.EndpointA.ChannelID = channeltypes.FormatChannelIdentifier(math.MaxUint32 + 1)
-		// 	}, false,
-		// },
-		// {
-		// 	"capability already claimed", func() {
-		// 		err := suite.chainA.GetSimApp().ScopedAtomicSwapKeeper.ClaimCapability(
-		// 			suite.chainA.GetContext(), chanCap,
-		// 			host.ChannelCapabilityPath(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID))
-		// 		suite.Require().NoError(err)
-		// 	}, false,
-		// },
+		{
+			"success", func() {}, true,
+		},
+		{
+			"max channels reached", func() {
+				path.EndpointA.ChannelID = channeltypes.FormatChannelIdentifier(math.MaxUint32 + 1)
+			}, false,
+		},
+		{
+			"capability already claimed", func() {
+				err := suite.chainA.GetSimApp().ScopedInterchainSwapKeeper.ClaimCapability(
+					suite.chainA.GetContext(), chanCap,
+					host.ChannelCapabilityPath(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID))
+				suite.Require().NoError(err)
+			}, false,
+		},
 		{
 			"invalid order - ORDERED", func() {
 				channel.Ordering = channeltypes.ORDERED
 			}, false,
 		},
-		// {
-		// 	"invalid port ID", func() {
-		// 		path.EndpointA.ChannelConfig.PortID = ibctesting.MockPort
-		// 	}, false,
-		// },
-		// {
-		// 	"invalid counterparty version", func() {
-		// 		counterpartyVersion = "version"
-		// 	}, false,
-		// },
+		{
+			"invalid port ID", func() {
+				path.EndpointA.ChannelConfig.PortID = ibctesting.MockPort
+			}, false,
+		},
+		{
+			"invalid counterparty version", func() {
+				counterpartyVersion = "version"
+			}, false,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -172,10 +172,10 @@ func (suite *InterchainSwapTestSuite) TestOnChanOpenTry() {
 			}
 			counterpartyVersion = types.Version
 
-			module, _, err := suite.chainA.App.GetIBCKeeper().PortKeeper.LookupModuleByPort(suite.chainA.GetContext(), ibctesting.InterchainAtomicSwapPort)
+			module, _, err := suite.chainA.App.GetIBCKeeper().PortKeeper.LookupModuleByPort(suite.chainA.GetContext(), ibctesting.InterchainSwapPort)
 			suite.Require().NoError(err)
 
-			chanCap, err = suite.chainA.App.GetScopedIBCKeeper().NewCapability(suite.chainA.GetContext(), host.ChannelCapabilityPath(ibctesting.InterchainAtomicSwapPort, path.EndpointA.ChannelID))
+			chanCap, err = suite.chainA.App.GetScopedIBCKeeper().NewCapability(suite.chainA.GetContext(), host.ChannelCapabilityPath(ibctesting.InterchainSwapPort, path.EndpointA.ChannelID))
 			suite.Require().NoError(err)
 
 			cbs, ok := suite.chainA.App.GetIBCKeeper().Router.GetRoute(module)
@@ -227,7 +227,7 @@ func (suite *InterchainSwapTestSuite) TestOnChanOpenAck() {
 			path.EndpointA.ChannelID = ibctesting.FirstChannelID
 			counterpartyVersion = types.Version
 
-			module, _, err := suite.chainA.App.GetIBCKeeper().PortKeeper.LookupModuleByPort(suite.chainA.GetContext(), ibctesting.InterchainAtomicSwapPort)
+			module, _, err := suite.chainA.App.GetIBCKeeper().PortKeeper.LookupModuleByPort(suite.chainA.GetContext(), ibctesting.InterchainSwapPort)
 			suite.Require().NoError(err)
 
 			cbs, ok := suite.chainA.App.GetIBCKeeper().Router.GetRoute(module)

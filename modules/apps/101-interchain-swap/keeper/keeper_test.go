@@ -35,8 +35,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func NewInterchainSwapPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA, chainB)
-	path.EndpointA.ChannelConfig.PortID = ibctesting.InterchainAtomicSwapPort
-	path.EndpointB.ChannelConfig.PortID = ibctesting.InterchainAtomicSwapPort
+	path.EndpointA.ChannelConfig.PortID = ibctesting.InterchainSwapPort
+	path.EndpointB.ChannelConfig.PortID = ibctesting.InterchainSwapPort
 	path.EndpointA.ChannelConfig.Version = types.Version
 	path.EndpointB.ChannelConfig.Version = types.Version
 	return path
