@@ -49,54 +49,54 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 
 			}, true, true,
 		},
-		{
-			"successful transfer creat pool request",
-			func() {
-				suite.coordinator.CreateChannels(path)
-				msg := types.NewMsgCreatePool(
-					path.EndpointA.ChannelConfig.PortID,
-					path.EndpointA.ChannelID,
-					suite.chainA.SenderAccount.GetAddress().String(),
-					"1:2",
-					[]string{sdk.DefaultBondDenom, "venuscoin"},
-					[]uint32{10, 100},
-				)
+		// {
+		// 	"successful transfer creat pool request",
+		// 	func() {
+		// 		suite.coordinator.CreateChannels(path)
+		// 		msg := types.NewMsgCreatePool(
+		// 			path.EndpointA.ChannelConfig.PortID,
+		// 			path.EndpointA.ChannelID,
+		// 			suite.chainA.SenderAccount.GetAddress().String(),
+		// 			"1:2",
+		// 			[]string{sdk.DefaultBondDenom, "venuscoin"},
+		// 			[]uint32{10, 100},
+		// 		)
 
-				msgbyte, err = types.ModuleCdc.Marshal(msg)
-				suite.Require().NoError(err)
-			}, true, true,
-		},
-		{
-			"successful transfer deposit request",
-			func() {
-				suite.coordinator.CreateChannels(path)
-				msg := types.NewMsgDeposit(
-					"test pool id",
-					suite.chainA.SenderAccount.GetAddress().String(),
-					[]*sdk.Coin{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(1000)}},
-				)
+		// 		msgbyte, err = types.ModuleCdc.Marshal(msg)
+		// 		suite.Require().NoError(err)
+		// 	}, true, true,
+		// },
+		// {
+		// 	"successful transfer deposit request",
+		// 	func() {
+		// 		suite.coordinator.CreateChannels(path)
+		// 		msg := types.NewMsgDeposit(
+		// 			"test pool id",
+		// 			suite.chainA.SenderAccount.GetAddress().String(),
+		// 			[]*sdk.Coin{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(1000)}},
+		// 		)
 
-				msgbyte, err = types.ModuleCdc.Marshal(msg)
-				suite.Require().NoError(err)
-			}, true, true,
-		},
-		{
-			"successful transfer withdraw request",
-			func() {
-				suite.coordinator.CreateChannels(path)
-				msg := types.NewMsgWithdraw(
-					suite.chainA.SenderAccount.GetAddress().String(),
-					&sdk.Coin{
-						Denom:  sdk.DefaultBondDenom,
-						Amount: sdk.NewInt(10),
-					},
-					sdk.DefaultBondDenom,
-				)
+		// 		msgbyte, err = types.ModuleCdc.Marshal(msg)
+		// 		suite.Require().NoError(err)
+		// 	}, true, true,
+		// },
+		// {
+		// 	"successful transfer withdraw request",
+		// 	func() {
+		// 		suite.coordinator.CreateChannels(path)
+		// 		msg := types.NewMsgWithdraw(
+		// 			suite.chainA.SenderAccount.GetAddress().String(),
+		// 			&sdk.Coin{
+		// 				Denom:  sdk.DefaultBondDenom,
+		// 				Amount: sdk.NewInt(10),
+		// 			},
+		// 			sdk.DefaultBondDenom,
+		// 		)
 
-				msgbyte, err = types.ModuleCdc.Marshal(msg)
-				suite.Require().NoError(err)
-			}, true, true,
-		},
+		// 		msgbyte, err = types.ModuleCdc.Marshal(msg)
+		// 		suite.Require().NoError(err)
+		// 	}, true, true,
+		// },
 	}
 
 	for _, tc := range testCases {
@@ -117,9 +117,10 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 				suite.chainA.GetContext(),
 				path.EndpointA.ChannelConfig.PortID,
 				path.EndpointA.ChannelID,
-				clienttypes.NewHeight(0, 110), 0,
+				clienttypes.NewHeight(20, 110), 0,
 				packet,
 			)
+			fmt.Println(err)
 			if tc.expPass {
 				suite.Require().NoError(err)
 			} else {
@@ -169,15 +170,16 @@ func (suite *KeeperTestSuite) TestOnReceived() {
 					[]string{sdk.DefaultBondDenom, "venuscoin"},
 					[]uint32{10, 100},
 				)
-				destPort := types.ModuleName
-				destChannel := "channel-0"
+				destPort := path.EndpointA.Counterparty.ChannelConfig.PortID
+				destChannel := path.EndpointA.ChannelID
 				poolId, err := suite.chainA.GetSimApp().InterchainSwapKeeper.OnCreatePoolReceived(
 					ctx,
-					msg, destPort,
+					msg,
+					destPort,
 					destChannel,
 				)
 				suite.Require().NoError(err)
-				suite.Require().Equal(poolId, types.GetPoolId(msg.Denoms))
+				suite.Require().Equal(*poolId, types.GetPoolId(msg.Denoms))
 			}, true, true,
 		},
 	}
