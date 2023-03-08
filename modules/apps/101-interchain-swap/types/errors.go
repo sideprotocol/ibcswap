@@ -49,4 +49,6 @@ var (
 	ErrFailedOnSwapAck       = errorsmod.Register(ModuleName, 1529, "failed to treat swap ack!")
 
 	ErrMaxTransferChannels = errorsmod.Register(ModuleName, 1530, "max transfer channels")
+	ErrAlreadyExistPool    = errorsmod.Register(ModuleName, 1531, "already exist pool!")
+	ErrSwapEnabled         = errorsmod.Register(ModuleName, 1532, "swap is disabled!")
 )

@@ -2,10 +2,8 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	//channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/keeper"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
-	//ibctesting "github.com/sideprotocol/ibcswap/v4/testing"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 func (suite *KeeperTestSuite) TestMsgCreatePool() {
@@ -39,7 +37,7 @@ func (suite *KeeperTestSuite) TestMsgCreatePool() {
 			[]string{sdk.DefaultBondDenom, "venuscoin"},
 			[]uint32{10, 100},
 		)
-		msgSrv := keeper.NewMsgServerImpl(suite.chainA.GetSimApp().IBCInterchainSwapKeeper)
+		msgSrv := keeper.NewMsgServerImpl(suite.chainA.GetSimApp().InterchainSwapKeeper)
 		res, err := msgSrv.CreatePool(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 
 		if tc.expPass {

@@ -1,8 +1,8 @@
 package types
 
 import (
-	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const TypeMsgDeposit = "deposit"
@@ -46,5 +46,16 @@ func (msg *MsgDepositRequest) ValidateBasic() error {
 	if len(msg.Tokens) == 0 {
 		return errorsmod.Wrapf(ErrInvalidTokenLength, "invalid token length (%d)", len(msg.Tokens))
 	}
+	denoms := map[string]int{}
+	for _, token := range msg.Tokens{
+		if _,ok := denoms[token.Denom]; ok{
+			return errorsmod.Wrapf(ErrFailedDeposit, "because of %s", ErrInvalidDecimalPair)
+		}
+		denoms[token.Denom] = 1
+		if token.Amount.Equal(sdk.NewInt(0)) {
+			return errorsmod.Wrapf(ErrFailedDeposit, "because of %s", ErrInvalidAmount)
+		}
+	}
+	
 	return nil
 }

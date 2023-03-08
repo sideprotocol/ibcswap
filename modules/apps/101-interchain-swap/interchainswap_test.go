@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
-	ibctesting "github.com/sideprotocol/ibcswap/v4/testing"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	ibctesting "github.com/ibcswap/ibcswap/v6/testing"
 )
 
 type InterchainSwapTestSuite struct {
@@ -52,8 +52,6 @@ func (suite *InterchainSwapTestSuite) TestHandleMsgInterchainSwap() {
 	coinToSendToB := sdk.NewCoin(sdk.DefaultBondDenom, amount)
 	_ = coinToSendToB
 
-
-	
 	// // send from chainA to chainB
 	// msg := types.NewMsgCreatePool(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID,
 	// 	coinToSendToB, coinToSendToB,
@@ -73,7 +71,7 @@ func (suite *InterchainSwapTestSuite) TestHandleMsgInterchainSwap() {
 
 	// order := types.NewOTCOrder(msg, path.EndpointA.ChannelID)
 	// suite.chainB.NextBlock()
-	// has := suite.chainB.GetSimApp().IBCSwapKeeper.HasOTCOrder(suite.chainB.GetContext(), order.Id)
+	// has := suite.chainB.GetSimApp().AtomicSwapKeeper.HasOTCOrder(suite.chainB.GetContext(), order.Id)
 	suite.Require().True(true)
 
 }

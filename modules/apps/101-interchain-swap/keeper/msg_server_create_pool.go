@@ -2,12 +2,11 @@ package keeper
 
 import (
 	"context"
-	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
-	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
+	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolRequest) (*types.MsgCreatePoolResponse, error) {
@@ -29,21 +28,6 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolReq
 		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "because of %s", err)
 	}
 
-	pool := types.NewInterchainLiquidityPool(
-		ctx,
-		k.bankKeeper,
-		msg.Denoms,
-		msg.Decimals,
-		msg.Weight,
-		msg.SourcePort,
-		msg.SourceChannel,
-	)
-
-	poolData, err := json.Marshal(pool)
-	if err != nil {
-		return nil, err
-	}
-
 	localAssetCount := 0
 	for _, denom := range msg.Denoms {
 		if k.bankKeeper.HasSupply(ctx, denom) {
@@ -56,6 +40,11 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolReq
 		return nil, types.ErrNumberOfLocalAsset
 	}
 
+	poolData, err := types.ModuleCdc.Marshal(msg)
+	if err != nil {
+		return nil, err
+	}
+
 	// construct IBC data packet
 	packet := types.IBCSwapDataPacket{
 		Type: types.MessageType_CREATE,
@@ -64,11 +53,11 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolReq
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&ctx)
 	err = k.SendIBCSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, timeoutHeight, timeoutStamp, packet)
-
 	if err != nil {
 		return nil, err
 	}
+	poolId := types.GetPoolId(msg.Denoms)
 	return &types.MsgCreatePoolResponse{
-		PoolId: pool.PoolId,
+		PoolId: poolId,
 	}, nil
 }

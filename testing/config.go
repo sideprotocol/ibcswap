@@ -3,11 +3,10 @@ package ibctesting
 import (
 	"time"
 
-	connectiontypes "github.com/cosmos/ibc-go/v4/modules/core/03-connection/types"
-	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-	"github.com/cosmos/ibc-go/v4/modules/core/exported"
-	ibctmtypes "github.com/cosmos/ibc-go/v4/modules/light-clients/07-tendermint/types"
-	"github.com/sideprotocol/ibcswap/v4/testing/mock"
+	connectiontypes "github.com/cosmos/ibc-go/v6/modules/core/03-connection/types"
+	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	"github.com/cosmos/ibc-go/v6/modules/core/exported"
+	ibctmtypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
 )
 
 type ClientConfig interface {
@@ -58,7 +57,7 @@ type ChannelConfig struct {
 
 func NewChannelConfig() *ChannelConfig {
 	return &ChannelConfig{
-		PortID:  mock.PortID,
+		PortID:  AtomicSwapPort,
 		Version: DefaultChannelVersion,
 		Order:   channeltypes.UNORDERED,
 	}

@@ -3,9 +3,9 @@ package types
 import (
 	"testing"
 
-	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/sideprotocol/ibcswap/v4/testing/testutil/sample"
+	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/ibcswap/ibcswap/v6/testing/testutil/sample"
 	"github.com/stretchr/testify/require"
 )
 

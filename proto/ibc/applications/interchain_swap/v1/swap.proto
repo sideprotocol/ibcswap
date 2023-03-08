@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package ibc.applications.ibcswap.v1;
+
+option go_package = "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types";
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "ibc/applications/ibcswap/v1/tx.proto";
+
+// Params defines the set of IBC swap parameters.
+message Params {
+  // swap_enabled enables or disables all cross-chain token transfers from this chain.
+  bool swap_enabled = 1 [(gogoproto.moretags) = "yaml:\"swap_enabled\""];
+  // max_fee_rate set a max value of fee, it's base point, 1/10000
+  uint32 max_fee_rate = 2 [(gogoproto.moretags) = "yaml:\"max_fee_rate\""];
+  uint32 max_swap_ratio = 3 [(gogoproto.moretags) = "yaml:\"max_swap_ratio\""];
+}
+
+// AMM + Liquidity pool
+// invariant: K = X ** Wx * Y ** Wy
+
+// PoolSide defines an asset is native token or remote token on counter-party chain.
+enum PoolSide {
+  POOL_SIDE_PENDING = 0;
+  POOL_SIDE_NATIVE_ASSET = 1;
+  POOL_SIDE_REMOTE_ASSET = 2;
+}
+
+// PoolStatus defines if the pool is ready for trading
+enum PoolStatus {
+  POOL_STATUS_READY = 0;
+  POOL_STATUS_INITIAL = 1;
+}
+
+enum PoolType {
+  POOL_TYPE_WEIGHTED_CROSS_CHAIN = 0;
+  POOL_TYPE_WEIGHTED_INTERN_CHAIN = 1;
+}
+
+message PoolAsset {
+  PoolSide side = 1;
+  cosmos.base.v1beta1.Coin balance = 2;
+  // percentage
+  uint32 weight = 3;
+  uint32 decimals = 4;
+}
+
+message BalancerLiquidityPool {
+  string id = 1;
+  repeated PoolAsset assets = 2;
+  cosmos.base.v1beta1.Coin pool_token = 3;
+}

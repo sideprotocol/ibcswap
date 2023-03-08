@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package ibc.applications.atomic_swap.v1;
+
+option go_package = "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic_swap/types";
+
+import "google/protobuf/any.proto";
+import "gogoproto/gogo.proto";
+
+// Type defines a classification of swap messages
+enum SwapMessageType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // Default zero value enumeration
+  TYPE_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "UNSPECIFIED"];
+
+  TYPE_MSG_MAKE_SWAP = 1 [(gogoproto.enumvalue_customname) = "MAKE_SWAP"];
+  TYPE_MSG_TAKE_SWAP = 2 [(gogoproto.enumvalue_customname) = "TAKE_SWAP"];
+  TYPE_MSG_CANCEL_SWAP = 3 [(gogoproto.enumvalue_customname) = "CANCEL_SWAP"];
+}
+
+// AtomicSwapPacketData is comprised of a raw transaction, type of transaction and optional memo field.
+message AtomicSwapPacketData {
+  SwapMessageType   type = 1;
+  bytes  data = 2;
+  string memo = 3;
+}
+

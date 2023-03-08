@@ -1,85 +1,47 @@
 syntax = "proto3";
 
-package ibc.applications.interchain_swap.v1;
+package ibc.applications.ibcswap.v1;
+
+option go_package = "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types";
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "ibc/applications/interchain_swap/v1/params.proto";
-import "ibc/applications/interchain_swap/v1/market.proto";
+import "ibc/applications/ibcswap/v1/swap.proto";
 import "google/api/annotations.proto";
 
-option go_package = "github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain_swap/types";
-
-// Query defines the gRPC querier service.
+// Query provides defines the gRPC querier service.
 service Query {
-  
-  // Parameters queries the parameters of the module.
-  rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/ibcswap/v4/interchainswap/params";
-  
+
+  // Params queries all parameters of the ibc-transfer module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/ibc/apps/swap/v1/params";
   }
-  
-  // Queries a list of InterchainLiquidityPool items.
-  rpc InterchainLiquidityPool    (QueryGetInterchainLiquidityPoolRequest) returns (QueryGetInterchainLiquidityPoolResponse) {
-    option (google.api.http).get = "/ibcswap/v4/interchainswap/interchain_liquidity_pool/{poolId}";
-  
-  }
-  rpc InterchainLiquidityPoolAll (QueryAllInterchainLiquidityPoolRequest) returns (QueryAllInterchainLiquidityPoolResponse) {
-    option (google.api.http).get = "/ibcswap/v4/interchainswap/interchain_liquidity_pool";
-  
-  }
-  
-  // Queries a list of InterchainMarketMaker items.
-  rpc InterchainMarketMaker    (QueryGetInterchainMarketMakerRequest) returns (QueryGetInterchainMarketMakerResponse) {
-    option (google.api.http).get = "/ibcswap/v4/interchainswap/interchain_market_maker/{poolId}";
-  
-  }
-  rpc InterchainMarketMakerAll (QueryAllInterchainMarketMakerRequest) returns (QueryAllInterchainMarketMakerResponse) {
-    option (google.api.http).get = "/ibcswap/v4/interchainswap/interchain_market_maker";
-  
+
+  // EscrowAddress returns the escrow address for a particular port and channel id.
+  rpc EscrowAddress(QueryEscrowAddressRequest) returns (QueryEscrowAddressResponse) {
+    option (google.api.http).get = "/ibc/apps/swap/v1/channels/{channel_id}/ports/{port_id}/escrow_address";
   }
 }
-// QueryParamsRequest is request type for the Query/Params RPC method.
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
 message QueryParamsRequest {}
 
-// QueryParamsResponse is response type for the Query/Params RPC method.
+// QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
-  
-  // params holds all the parameters of this module.
-  ibc.applications.interchain_swap.v1.Params params = 1 [(gogoproto.nullable) = false];
+  // params defines the parameters of the module.
+  ibc.applications.ibcswap.v1.Params params = 1;
 }
 
-message QueryGetInterchainLiquidityPoolRequest {
-  string poolId = 1;
+// QueryEscrowAddressRequest is the request type for the EscrowAddress RPC method.
+message QueryEscrowAddressRequest {
+  // unique port identifier
+  string port_id = 1;
+  // unique channel identifier
+  string channel_id = 2;
 }
 
-message QueryGetInterchainLiquidityPoolResponse {
-  ibc.applications.interchain_swap.v1.InterchainLiquidityPool interchainLiquidityPool = 1 [(gogoproto.nullable) = false];
+// QueryEscrowAddressResponse is the response type of the EscrowAddress RPC method.
+message QueryEscrowAddressResponse {
+  // the escrow account address
+  string escrow_address = 1;
 }
-
-message QueryAllInterchainLiquidityPoolRequest {
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllInterchainLiquidityPoolResponse {
-  repeated ibc.applications.interchain_swap.v1.InterchainLiquidityPool                interchainLiquidityPool = 1 [(gogoproto.nullable) = false];
-           cosmos.base.query.v1beta1.PageResponse pagination              = 2;
-}
-
-message QueryGetInterchainMarketMakerRequest {
-  string poolId = 1;
-}
-
-message QueryGetInterchainMarketMakerResponse {
-  ibc.applications.interchain_swap.v1.InterchainMarketMaker interchainMarketMaker = 1 [(gogoproto.nullable) = false];
-}
-
-message QueryAllInterchainMarketMakerRequest {
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllInterchainMarketMakerResponse {
-  repeated ibc.applications.interchain_swap.v1.InterchainMarketMaker                  interchainMarketMaker = 1 [(gogoproto.nullable) = false];
-           cosmos.base.query.v1beta1.PageResponse pagination            = 2;
-}
-

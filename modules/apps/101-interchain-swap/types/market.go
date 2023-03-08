@@ -121,8 +121,12 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 	amount := float64(token.Amount.Uint64())
 	supply := float64(imm.Pool.Supply.Amount.Uint64())
 	weight := float64(asset.Weight) / 100
-	issueAmount := supply * mathtool.Pow(1+amount/float64(asset.Balance.Amount.Uint64()), float64(weight)-1)
-
+	var issueAmount float64
+	if supply == 0 {
+		issueAmount = float64(token.Amount.Uint64())
+	} else {
+		issueAmount = supply * mathtool.Pow(1+amount/float64(asset.Balance.Amount.Uint64()), float64(weight)-1)
+	}
 	return &types.Coin{
 		Amount: types.NewInt(int64(issueAmount)),
 		Denom:  imm.Pool.Supply.Denom,

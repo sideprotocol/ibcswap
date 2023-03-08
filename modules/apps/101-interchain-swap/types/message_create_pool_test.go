@@ -3,7 +3,7 @@ package types
 import (
 	"testing"
 
-	"github.com/sideprotocol/ibcswap/v4/testing/testutil/sample"
+	"github.com/ibcswap/ibcswap/v6/testing/testutil/sample"
 	"github.com/stretchr/testify/require"
 )
 

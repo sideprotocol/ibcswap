@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/keeper"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
-	"github.com/sideprotocol/ibcswap/v4/testing/testutil/sample"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	"github.com/ibcswap/ibcswap/v6/testing/testutil/sample"
 )
 
 func (suite *KeeperTestSuite) SetupPool() (*string, error) {
@@ -18,12 +18,12 @@ func (suite *KeeperTestSuite) SetupPool() (*string, error) {
 		path.EndpointA.ChannelID,
 		suite.chainA.SenderAccount.GetAddress().String(),
 		"1:2",
-		[]string{sdk.DefaultBondDenom, "venuscoin"},
+		[]string{sdk.DefaultBondDenom, sdk.DefaultBondDenom},
 		[]uint32{10, 100},
 	)
 
 	ctx := suite.chainA.GetContext()
-	suite.chainA.GetSimApp().IBCInterchainSwapKeeper.OnCreatePoolAcknowledged(ctx, msg)
+	suite.chainA.GetSimApp().InterchainSwapKeeper.OnCreatePoolAcknowledged(ctx, msg)
 	poolId := types.GetPoolId(msg.Denoms)
 	return &poolId, nil
 }
@@ -70,7 +70,7 @@ func (suite *KeeperTestSuite) TestMsgDeposit() {
 		)
 
 		tc.malleate()
-		msgSrv := keeper.NewMsgServerImpl(suite.chainA.GetSimApp().IBCInterchainSwapKeeper)
+		msgSrv := keeper.NewMsgServerImpl(suite.chainA.GetSimApp().InterchainSwapKeeper)
 
 		res, err := msgSrv.Deposit(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 

@@ -1,24 +1,32 @@
 syntax = "proto3";
 
-package ibc.applications.interchain_swap.v1;
+package ibc.applications.ibcswap.v1;
 
-option go_package = "github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain_swap/types";
+option go_package = "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types";
 
 import "google/protobuf/any.proto";
 import "gogoproto/gogo.proto";
 
 // Type defines a classification of swap messages
-enum MessageType {
-  CREATE = 0;
-  DEPOSIT = 1;
-  WITHDRAW = 2;
-  LEFTSWAP = 3;
-  RIGHTSWAP = 4;
+enum SwapMessageType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // Default zero value enumeration
+  TYPE_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "UNSPECIFIED"];
+
+  TYPE_CREATE_POOL = 1 [(gogoproto.enumvalue_customname) = "CREATE_POOL"];
+  TYPE_SINGLE_DEPOSIT = 2 [(gogoproto.enumvalue_customname) = "SINGLE_DEPOSIT"];
+  TYPE_WITHDRAW = 3 [(gogoproto.enumvalue_customname) = "WITHDRAW"];
+  TYPE_LEFT_SWAP = 4 [(gogoproto.enumvalue_customname) = "LEFT_SWAP"];
+  TYPE_RIGHT_SWAP = 5 [(gogoproto.enumvalue_customname) = "RIGHT_SWAP"];
+
 }
-message IBCSwapDataPacket {
-  MessageType type = 1;
-  bytes data = 2;
+
+// IBCSwapPacketData is comprised of a raw transaction, type of transaction and optional memo field.
+message IBCSwapPacketData {
+  SwapMessageType   type = 1;
+  // marshall data of transactions
+  bytes  data = 2;
+  // current pool states on source chain, could be empty.
+  bytes  states = 3;
 }
-
-
-

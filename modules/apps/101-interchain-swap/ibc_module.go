@@ -1,7 +1,6 @@
 package interchainswap
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 	"strings"
@@ -9,12 +8,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
-	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
-	ibcexported "github.com/cosmos/ibc-go/v4/modules/core/exported"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/keeper"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
+	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
+	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
+	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 type IBCModule struct {
@@ -137,13 +136,15 @@ func (im IBCModule) OnRecvPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) ibcexported.Acknowledgement {
-	var ack channeltypes.Acknowledgement
 
-	ack = channeltypes.NewResultAcknowledgement([]byte{byte(1)})
+	logger := im.keeper.Logger(ctx)
+	ack := channeltypes.NewResultAcknowledgement([]byte{byte(1)})
+
 	var data types.IBCSwapDataPacket
 	var ackErr error
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		ackErr = errorsmod.Wrapf(types.ErrInvalidType, "cannot unmarshal ICS-20 transfer packet data")
+		ackErr = errorsmod.Wrapf(types.ErrInvalidType, "cannot unmarshal ICS-101 packet data")
+		logger.Error(fmt.Sprintf("%s sequence %d", ackErr.Error(), packet.Sequence))
 		ack = channeltypes.NewErrorAcknowledgement(ackErr)
 	}
 
@@ -154,11 +155,11 @@ func (im IBCModule) OnRecvPacket(
 		if err != nil {
 			ack = channeltypes.NewErrorAcknowledgement(err)
 			ackErr = err
+			logger.Error(fmt.Sprintf("%s sequence %d", ackErr.Error(), packet.Sequence))
 		} else {
-
+			ack = channeltypes.NewResultAcknowledgement(res)
+			logger.Info("successfully handled ICS-101 packet sequence: %d", packet.Sequence)
 		}
-		result, _ := json.Marshal(res)
-		ack = channeltypes.NewResultAcknowledgement(result)
 	}
 
 	eventAttributes := []sdk.Attribute{
@@ -176,7 +177,6 @@ func (im IBCModule) OnRecvPacket(
 			eventAttributes...,
 		),
 	)
-
 	// NOTE: acknowledgement will be written synchronously during IBC handler execution.
 	return ack
 }
@@ -190,16 +190,28 @@ func (im IBCModule) OnAcknowledgementPacket(
 ) error {
 	var ack channeltypes.Acknowledgement
 	if err := types.ModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
-		return errorsmod.Wrapf(types.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
+		return errorsmod.Wrapf(errorsmod.ErrUnknownRequest, "cannot unmarshal ICS-101 transfer packet acknowledgement: %v", err)
 	}
 	var data types.IBCSwapDataPacket
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		return errorsmod.Wrapf(types.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
+		return errorsmod.Wrapf(errorsmod.ErrUnknownRequest, "cannot unmarshal ICS-101 transfer packet data: %s", err.Error())
 	}
+
+	logger := im.keeper.Logger(ctx)
+	logger.Debug(data.String())
+	
 
 	if err := im.keeper.OnAcknowledgementPacket(ctx, packet, &data, ack); err != nil {
 		return err
 	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypePacket,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+			sdk.NewAttribute(sdk.AttributeKeySender, data.GetType().String()),
+		),
+	)
 
 	switch resp := ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Result:
@@ -217,9 +229,6 @@ func (im IBCModule) OnAcknowledgementPacket(
 			),
 		)
 	}
-
-	ctx.EventManager().EmitTypedEvents(&data)
-
 	return nil
 }
 
@@ -231,8 +240,10 @@ func (im IBCModule) OnTimeoutPacket(
 ) error {
 	var data types.IBCSwapDataPacket
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		return errorsmod.Wrapf(types.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
+		return errorsmod.Wrapf(types.ErrUnknownRequest, "cannot unmarshal ICS-101 transfer packet data: %s", err.Error())
 	}
+
+
 	// refund tokens
 	if err := im.keeper.OnTimeoutPacket(ctx, packet, &data); err != nil {
 		return err

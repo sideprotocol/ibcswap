@@ -11,13 +11,15 @@ import (
 )
 
 var (
-	ChainIDPrefix   = "testchain"
+	ChainIDPrefix = "testchain"
+	// to disable revision format, set ChainIDSuffix to ""
+	ChainIDSuffix   = "-1"
 	globalStartTime = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
 	TimeIncrement   = time.Second * 5
 )
 
 // Coordinator is a testing struct which contains N TestChain's. It handles keeping all chains
-// in sync in regard to time.
+// in sync with regards to time.
 type Coordinator struct {
 	*testing.T
 
@@ -37,7 +39,6 @@ func NewCoordinator(t *testing.T, n int) *Coordinator {
 		chainID := GetChainID(i)
 		chains[chainID] = NewTestChain(t, coord, chainID)
 	}
-
 	coord.Chains = chains
 
 	return coord
@@ -91,7 +92,7 @@ func (coord *Coordinator) SetupClients(path *Path) {
 	require.NoError(coord.T, err)
 }
 
-// SetupConnections is a helper function to create clients and the appropriate
+// SetupClientConnections is a helper function to create clients and the appropriate
 // connections on both the source and counterparty chain. It assumes the caller does not
 // anticipate any errors.
 func (coord *Coordinator) SetupConnections(path *Path) {
@@ -100,7 +101,7 @@ func (coord *Coordinator) SetupConnections(path *Path) {
 	coord.CreateConnections(path)
 }
 
-// CreateConnections constructs and executes connection handshake messages in order to create
+// CreateConnection constructs and executes connection handshake messages in order to create
 // OPEN channels on chainA and chainB. The connection information of for chainA and chainB
 // are returned within a TestConnection struct. The function expects the connections to be
 // successfully opened otherwise testing will fail.
@@ -143,20 +144,19 @@ func (coord *Coordinator) CreateTransferChannels(path *Path) {
 	coord.CreateChannels(path)
 }
 
-func (coord *Coordinator) CreateSwapChannels(path *Path) {
-	path.EndpointA.ChannelConfig.PortID = SwapPort
-	path.EndpointB.ChannelConfig.PortID = SwapPort
-
+func (coord *Coordinator) CreateAtomicChannels(path *Path) {
+	path.EndpointA.ChannelConfig.PortID = AtomicSwapPort
+	path.EndpointB.ChannelConfig.PortID = AtomicSwapPort
 	coord.CreateChannels(path)
 }
 
 func (coord *Coordinator) CreateInterchainSwapChannels(path *Path) {
-	path.EndpointA.ChannelConfig.PortID = InterChainSwapPort
-	path.EndpointB.ChannelConfig.PortID = InterChainSwapPort
+	path.EndpointA.ChannelConfig.PortID = InterchainSwapPort
+	path.EndpointB.ChannelConfig.PortID = InterchainSwapPort
 	coord.CreateChannels(path)
 }
 
-// CreateChannels constructs and executes channel handshake messages in order to create
+// CreateChannel constructs and executes channel handshake messages in order to create
 // OPEN channels on chainA and chainB. The function expects the channels to be successfully
 // opened otherwise testing will fail.
 func (coord *Coordinator) CreateChannels(path *Path) {
@@ -187,7 +187,7 @@ func (coord *Coordinator) GetChain(chainID string) *TestChain {
 
 // GetChainID returns the chainID used for the provided index.
 func GetChainID(index int) string {
-	return ChainIDPrefix + strconv.Itoa(index)
+	return ChainIDPrefix + strconv.Itoa(index) + ChainIDSuffix
 }
 
 // CommitBlock commits a block on the provided indexes and then increments the global time.

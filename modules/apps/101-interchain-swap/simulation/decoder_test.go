@@ -7,14 +7,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/stretchr/testify/require"
 
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/simulation"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
-	"github.com/sideprotocol/ibcswap/v4/testing/simapp"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/simulation"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	"github.com/ibcswap/ibcswap/v6/testing/simapp"
 )
 
 func TestDecodeStore(t *testing.T) {
 	app := simapp.Setup(false)
-	dec := simulation.NewDecodeStore(app.IBCSwapKeeper)
+	dec := simulation.NewDecodeStore(app.InterchainSwapKeeper)
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{

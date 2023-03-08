@@ -10,6 +10,10 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/client/cli"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/simulation"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	"github.com/spf13/cobra"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -20,11 +24,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/client/cli"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/keeper"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/simulation"
-	types "github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
+	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 )
 
 var (
@@ -73,7 +73,11 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the ibc-transfer module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	if err != nil {
+		panic(err)
+	}
 }
 
 // GetTxCmd implements AppModuleBasic interface
@@ -124,10 +128,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
-	//m := keeper.NewMigrator(am.keeper)
-	//if err := cfg.RegisterMigration(types.ModuleName, 1, m.MigrateTraces); err != nil {
-	//	panic(fmt.Sprintf("failed to migrate transfer app from version 1 to 2: %v", err))
-	//}
+	// m := keeper.NewMigrator(am.keeper)
+	// if err := cfg.RegisterMigration(types.ModuleName, 1, m.MigrateTraces); err != nil {
+	// 	panic(fmt.Sprintf("failed to migrate transfer app from version 1 to 2: %v", err))
+	// }
 }
 
 // InitGenesis performs genesis initialization for the ibc-transfer module. It returns
@@ -163,7 +167,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) []abci.V
 // GenerateGenesisState creates a randomized GenState of the transfer module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
-	
+
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.

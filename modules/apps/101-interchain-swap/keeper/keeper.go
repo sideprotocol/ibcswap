@@ -10,11 +10,12 @@ import (
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
+	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
+	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 type (
@@ -22,11 +23,12 @@ type (
 		cdc           codec.BinaryCodec
 		storeKey      storetypes.StoreKey
 		paramstore    paramtypes.Subspace
-		ics4Wrapper   types.ICS4Wrapper
+		ics4Wrapper   porttypes.ICS4Wrapper
 		channelKeeper types.ChannelKeeper
 		portKeeper    types.PortKeeper
 		scopedKeeper  capabilitykeeper.ScopedKeeper
 		bankKeeper    types.BankKeeper
+		authKeeper    types.AccountKeeper
 	}
 )
 
@@ -34,11 +36,12 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	ps paramtypes.Subspace,
-	ics4Wrapper types.ICS4Wrapper,
+	ics4Wrapper porttypes.ICS4Wrapper,
 	channelKeeper types.ChannelKeeper,
 	portKeeper types.PortKeeper,
-	scopedKeeper capabilitykeeper.ScopedKeeper,
 	bankKeeper types.BankKeeper,
+	authKeeper types.AccountKeeper,
+	scopedKeeper capabilitykeeper.ScopedKeeper,
 
 ) *Keeper {
 	// set KeyTable if it has not already been set
@@ -55,6 +58,7 @@ func NewKeeper(
 		portKeeper:    portKeeper,
 		scopedKeeper:  scopedKeeper,
 		bankKeeper:    bankKeeper,
+		authKeeper:    authKeeper,
 	}
 }
 

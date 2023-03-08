@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/101-interchain-swap/types"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 type msgServer struct {
@@ -20,16 +20,18 @@ var _ types.MsgServer = msgServer{}
 
 func (k Keeper) OnCreatePoolAcknowledged(ctx sdk.Context, msg *types.MsgCreatePoolRequest) {
 	//save pool after complete create operation in counter party chain.
-	k.SetInterchainLiquidityPool(
-		ctx, *types.NewInterchainLiquidityPool(
-			ctx,
-			k.bankKeeper,
-			msg.Denoms,
-			msg.Decimals,
-			msg.Weight,
-			msg.SourcePort,
-			msg.SourceChannel,
-		))
+
+	pool := types.NewInterchainLiquidityPool(
+		ctx,
+		k.bankKeeper,
+		msg.Denoms,
+		msg.Decimals,
+		msg.Weight,
+		msg.SourcePort,
+		msg.SourceChannel,
+	)
+
+	k.SetInterchainLiquidityPool(ctx, *pool)
 }
 
 func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgDepositRequest, res *types.MsgDepositResponse) error {
@@ -37,31 +39,43 @@ func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgDepos
 	if !found {
 		return types.ErrNotFoundPool
 	}
-	pool.Supply.Amount.Add(res.PoolToken.Amount)
-	k.SetInterchainLiquidityPool(ctx, pool)
-	voucherAmount := sdk.NewCoins(*res.PoolToken)
-	err := k.bankKeeper.MintCoins(ctx, types.ModuleName, voucherAmount)
+
+	pool.Supply.Amount = pool.Supply.Amount.Add(res.PoolToken.Amount)
+
+	// mint voucher
+	err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(req.Sender), *res.PoolToken)
 	if err != nil {
 		return err
 	}
-	k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdk.AccAddress(req.Sender), voucherAmount)
+	k.SetInterchainLiquidityPool(ctx, pool)
 	return nil
 }
 
 func (k Keeper) OnWithdrawAcknowledged(ctx sdk.Context, req *types.MsgWithdrawRequest, res *types.MsgWithdrawResponse) error {
-	pool, found := k.GetInterchainLiquidityPool(ctx, "")
+
+	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolCoin.Denom)
 	if !found {
 		return types.ErrNotFoundPool
 	}
 	pool.Supply.Amount.Sub(res.Tokens[0].Amount)
+
 	k.SetInterchainLiquidityPool(ctx, pool)
 
-	voucherAmount := sdk.NewCoins(*res.Tokens[0])
-	err := k.bankKeeper.MintCoins(ctx, types.ModuleName, voucherAmount)
-	if err != nil {
-		return err
-	}
-	k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(req.Sender), types.ModuleName, voucherAmount)
+	// burn voucher token.
+	// err := k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(req.Sender), *req.PoolCoin)
+	// if err != nil {
+	// 	return err
+	// }
+	// // unlock token
+	// err = k.UnlockTokens(ctx,
+	// 	pool.EncounterPartyPort,
+	// 	pool.EncounterPartyChannel,
+	// 	sdk.MustAccAddressFromBech32(req.Sender),
+	// 	sdk.NewCoins(*res.Tokens[0]),
+	// )
+	// if err != nil {
+	// 	return err
+	// }
 	return nil
 }
 
@@ -98,12 +112,21 @@ func (k Keeper) OnCreatePoolReceived(ctx sdk.Context, msg *types.MsgCreatePoolRe
 	}
 
 	pooId := types.GetPoolId(msg.Denoms)
-	pool, found := k.GetInterchainLiquidityPool(ctx, pooId)
+	_, found := k.GetInterchainLiquidityPool(ctx, pooId)
 
-	if !found {
-		return nil, types.ErrNotFoundPool
+	if found {
+		return nil, types.ErrAlreadyExistPool
 	}
 
+	pool := *types.NewInterchainLiquidityPool(
+		ctx,
+		k.bankKeeper,
+		msg.Denoms,
+		msg.Decimals,
+		msg.Weight,
+		msg.SourcePort,
+		msg.SourceChannel,
+	)
 	//count native tokens
 	count := 0
 	for _, denom := range msg.Denoms {
@@ -115,12 +138,22 @@ func (k Keeper) OnCreatePoolReceived(ctx sdk.Context, msg *types.MsgCreatePoolRe
 		}
 	}
 
-	if count == 1 {
+	if count != 1 {
 		return nil, types.ErrInvalidDenomPair
 	}
 
+	// save pool status
 	k.SetInterchainLiquidityPool(ctx, pool)
-	ctx.EventManager().EmitTypedEvents(msg)
+	// emit events
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			"On Create",
+			sdk.NewAttribute(
+				"poolId",
+				pooId,
+			),
+		),
+	)
 	return &pooId, nil
 }
 
@@ -134,24 +167,23 @@ func (k Keeper) OnDepositReceived(ctx sdk.Context, msg *types.MsgDepositRequest)
 	if !found {
 		return nil, types.ErrNotFoundPool
 	}
-	_ = pool
 
 	//TODO: Need to implement params module and market maker.
-
 	amm := types.NewInterchainMarketMaker(
 		pool,
 		323,
 	)
 
 	poolToken, err := amm.DepositSingleAsset(*msg.Tokens[0])
-
 	if err != nil {
 		return nil, errorsmod.Wrapf(types.ErrFailedOnDepositReceived, "because of %s", err)
 	}
 
-	k.SetInterchainLiquidityPool(ctx, pool)
+	// is ready for swap.
+	//amm.Pool.UpdateAssetPoolSide(msg.Tokens[0].Denom, types.PoolSide(types.PoolStatus_POOL_STATUS_READY)) //= types.PoolStatus_POOL_STATUS_READY
 
-	ctx.EventManager().EmitTypedEvents(msg)
+	k.SetInterchainLiquidityPool(ctx, *amm.Pool)
+	k.SetInterchainMarketMaker(ctx, *amm)
 	return &types.MsgDepositResponse{
 		PoolToken: poolToken,
 	}, nil
@@ -168,7 +200,6 @@ func (k Keeper) OndWithdrawReceive(ctx sdk.Context, msg *types.MsgWithdrawReques
 		return nil, types.ErrNotFoundPool
 	}
 
-	_ = pool
 	//TODO: need to implement amm part.
 	//feeRate := parms.getPoolFeeRate()
 
@@ -178,11 +209,13 @@ func (k Keeper) OndWithdrawReceive(ctx sdk.Context, msg *types.MsgWithdrawReques
 	)
 
 	outToken, err := amm.Withdraw(*msg.PoolCoin, msg.DenomOut)
-
+	ctx.EventManager().EmitTypedEvents(outToken)
 	if err != nil {
 		return nil, errorsmod.Wrapf(types.ErrFailedOnDepositReceived, "because of %s!", err)
 	}
 
+	k.SetInterchainLiquidityPool(ctx, *amm.Pool)
+	k.SetInterchainMarketMaker(ctx, *amm)
 	ctx.EventManager().EmitTypedEvents(msg)
 	return &types.MsgWithdrawResponse{
 		Tokens: []*sdk.Coin{outToken},
@@ -231,13 +264,13 @@ func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest) (*typ
 	}
 
 	escrowAddr := types.GetEscrowAddress(pool.EncounterPartyPort, pool.EncounterPartyChannel)
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, escrowAddr.String(), sdk.AccAddress(msg.Recipient), sdk.NewCoins(*outToken))
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, escrowAddr.String(), sdk.MustAccAddressFromBech32(msg.Recipient), sdk.NewCoins(*outToken))
 
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "failed to move assets from escrow address to recipient!")
 	}
 
-	k.SetInterchainLiquidityPool(ctx, pool)
+	k.SetInterchainLiquidityPool(ctx, *amm.Pool)
 	ctx.EventManager().EmitTypedEvents(msg)
 	return &types.MsgSwapResponse{
 		Tokens: []*sdk.Coin{outToken},

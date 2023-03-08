@@ -2,7 +2,8 @@ package types
 
 import (
 	"fmt"
-	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
+
+	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 )
 
 // DefaultIndex is the default global index
