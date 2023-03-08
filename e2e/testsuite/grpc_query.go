@@ -6,6 +6,7 @@ import (
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesbeta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	intertxtypes "github.com/cosmos/interchain-accounts/x/inter-tx/types"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	"github.com/strangelove-ventures/ibctest/v6/chain/cosmos"
 	"github.com/strangelove-ventures/ibctest/v6/ibc"
 
@@ -14,6 +15,8 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
+
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // QueryClientState queries the client state on the given chain for the provided clientID.
@@ -143,4 +146,37 @@ func (s *E2ETestSuite) QueryProposalV1(ctx context.Context, chain ibc.Chain, pro
 	}
 
 	return *res.Proposal, nil
+}
+
+// QueryClientStatus queries the status of the client by clientID
+func (s *E2ETestSuite) QueryInterchainswapPool(ctx context.Context, chain ibc.Chain, poolID string) (*types.QueryGetInterchainLiquidityPoolResponse, error) {
+	queryClient := s.GetChainGRCPClients(chain).InterchainQueryClient
+	res, err := queryClient.InterchainLiquidityPool(
+		ctx,
+		&types.QueryGetInterchainLiquidityPoolRequest{
+			PoolId: poolID,
+		},
+	)
+
+	if err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
+// QueryClientStatus queries the status of the client by clientID
+func (s *E2ETestSuite) QueryBalance(ctx context.Context, chain ibc.Chain, addr string, denom string) (*banktypes.QueryBalanceResponse, error) {
+	queryClient := s.GetChainGRCPClients(chain).BankQueryClient
+	
+	res, err := queryClient.Balance(
+		ctx,
+		&banktypes.QueryBalanceRequest{
+			Address: addr,
+			Denom:   denom,
+		},
+	)
+	if err != nil {
+		return res, err
+	}
+	return res, nil
 }

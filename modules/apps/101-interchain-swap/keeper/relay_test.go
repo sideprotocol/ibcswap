@@ -49,54 +49,54 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 
 			}, true, true,
 		},
-		// {
-		// 	"successful transfer creat pool request",
-		// 	func() {
-		// 		suite.coordinator.CreateChannels(path)
-		// 		msg := types.NewMsgCreatePool(
-		// 			path.EndpointA.ChannelConfig.PortID,
-		// 			path.EndpointA.ChannelID,
-		// 			suite.chainA.SenderAccount.GetAddress().String(),
-		// 			"1:2",
-		// 			[]string{sdk.DefaultBondDenom, "venuscoin"},
-		// 			[]uint32{10, 100},
-		// 		)
+		{
+			"successful transfer creat pool request",
+			func() {
+				suite.coordinator.CreateChannels(path)
+				msg := types.NewMsgCreatePool(
+					path.EndpointA.ChannelConfig.PortID,
+					path.EndpointA.ChannelID,
+					suite.chainA.SenderAccount.GetAddress().String(),
+					"1:2",
+					[]string{sdk.DefaultBondDenom, "venuscoin"},
+					[]uint32{10, 100},
+				)
 
-		// 		msgbyte, err = types.ModuleCdc.Marshal(msg)
-		// 		suite.Require().NoError(err)
-		// 	}, true, true,
-		// },
-		// {
-		// 	"successful transfer deposit request",
-		// 	func() {
-		// 		suite.coordinator.CreateChannels(path)
-		// 		msg := types.NewMsgDeposit(
-		// 			"test pool id",
-		// 			suite.chainA.SenderAccount.GetAddress().String(),
-		// 			[]*sdk.Coin{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(1000)}},
-		// 		)
+				msgbyte, err = types.ModuleCdc.Marshal(msg)
+				suite.Require().NoError(err)
+			}, true, true,
+		},
+		{
+			"successful transfer deposit request",
+			func() {
+				suite.coordinator.CreateChannels(path)
+				msg := types.NewMsgDeposit(
+					"test pool id",
+					suite.chainA.SenderAccount.GetAddress().String(),
+					[]*sdk.Coin{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(1000)}},
+				)
 
-		// 		msgbyte, err = types.ModuleCdc.Marshal(msg)
-		// 		suite.Require().NoError(err)
-		// 	}, true, true,
-		// },
-		// {
-		// 	"successful transfer withdraw request",
-		// 	func() {
-		// 		suite.coordinator.CreateChannels(path)
-		// 		msg := types.NewMsgWithdraw(
-		// 			suite.chainA.SenderAccount.GetAddress().String(),
-		// 			&sdk.Coin{
-		// 				Denom:  sdk.DefaultBondDenom,
-		// 				Amount: sdk.NewInt(10),
-		// 			},
-		// 			sdk.DefaultBondDenom,
-		// 		)
+				msgbyte, err = types.ModuleCdc.Marshal(msg)
+				suite.Require().NoError(err)
+			}, true, true,
+		},
+		{
+			"successful transfer withdraw request",
+			func() {
+				suite.coordinator.CreateChannels(path)
+				msg := types.NewMsgWithdraw(
+					suite.chainA.SenderAccount.GetAddress().String(),
+					&sdk.Coin{
+						Denom:  sdk.DefaultBondDenom,
+						Amount: sdk.NewInt(10),
+					},
+					sdk.DefaultBondDenom,
+				)
 
-		// 		msgbyte, err = types.ModuleCdc.Marshal(msg)
-		// 		suite.Require().NoError(err)
-		// 	}, true, true,
-		// },
+				msgbyte, err = types.ModuleCdc.Marshal(msg)
+				suite.Require().NoError(err)
+			}, true, true,
+		},
 	}
 
 	for _, tc := range testCases {

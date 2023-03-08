@@ -2,6 +2,7 @@ package testsuite
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"strconv"
@@ -28,6 +29,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/ibc-go/e2e/testconfig"
 	"github.com/cosmos/ibc-go/e2e/testvalues"
 	controllertypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller/types"
@@ -35,6 +37,7 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	interchainswaptypes "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 const (
@@ -81,6 +84,12 @@ type GRPCClients struct {
 	GroupsQueryClient grouptypes.QueryClient
 	ParamsQueryClient paramsproposaltypes.QueryClient
 	AuthQueryClient   authtypes.QueryClient
+
+	// Interchainswap clients
+	InterchainQueryClient interchainswaptypes.QueryClient
+
+	// bank module
+	BankQueryClient banktypes.QueryClient
 }
 
 // path is a pairing of two chains which will be used in a test.
@@ -426,7 +435,7 @@ func (s *E2ETestSuite) createCosmosChains(chainOptions testconfig.ChainOptions) 
 
 	logger := zaptest.NewLogger(s.T())
 
-	numValidators, numFullNodes := 1, 1
+	numValidators, numFullNodes := 1, 0
 
 	chainA := cosmos.NewCosmosChain(s.T().Name(), *chainOptions.ChainAConfig, numValidators, numFullNodes, logger)
 	chainB := cosmos.NewCosmosChain(s.T().Name(), *chainOptions.ChainBConfig, numValidators, numFullNodes, logger)
@@ -544,4 +553,31 @@ func (s *E2ETestSuite) QueryModuleAccountAddress(ctx context.Context, moduleName
 // GetIBCToken returns the denomination of the full token denom sent to the receiving channel
 func GetIBCToken(fullTokenDenom string, portID, channelID string) transfertypes.DenomTrace {
 	return transfertypes.ParseDenomTrace(fmt.Sprintf("%s/%s/%s", portID, channelID, fullTokenDenom))
+}
+
+// Token allocation
+func (s *E2ETestSuite) SendCoinsFromModuleToAccount(
+	ctx context.Context, chain *cosmos.CosmosChain, wallet *ibc.Wallet, coins sdk.Coins,
+) error {
+	// Construct the message to send coins from the module to the account.
+	msg := banktypes.NewMsgSend(
+		sdk.AccAddress(getAddressHash([]byte(chain.Config().Name), 20)), // sender address (the module's address)
+		sdk.MustAccAddressFromBech32(wallet.Bech32Address("cosmos")),    // recipient address (the account's address)
+		coins, // coins to send
+	)
+	// Broadcast the message and check for errors.
+	_, err := s.BroadcastMessages(ctx, chain, wallet, msg)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func getAddressHash(address []byte, addressLength int) []byte {
+	// Compute the SHA256 hash of the module address
+	hash := sha256.Sum256(address)
+
+	// Truncate the hash to the desired address length
+	addressHash := hash[:addressLength]
+
+	return addressHash
 }

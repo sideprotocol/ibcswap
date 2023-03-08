@@ -34,7 +34,7 @@ const (
 	// ChainUpgradeTagEnv specifies the upgrade version tag
 	ChainUpgradeTagEnv = "CHAIN_UPGRADE_TAG"
 	// defaultBinary is the default binary that will be used by the chains.
-	defaultBinary = "simd"
+	defaultBinary = "testsimd"
 	// defaultRlyTag is the tag that will be used if no relayer tag is specified.
 	// all images are here https://github.com/cosmos/relayer/pkgs/container/relayer/versions
 	defaultRlyTag = "v2.0.0"
