@@ -9,9 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/ibc-go/e2e/testsuite"
 	"github.com/cosmos/ibc-go/e2e/testvalues"
-	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-	"github.com/sideprotocol/ibcswap/v4/modules/apps/31-atomic-swap/types"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 	"github.com/strangelove-ventures/ibctest/ibc"
 	"github.com/strangelove-ventures/ibctest/test"
 	"github.com/stretchr/testify/suite"
@@ -30,7 +29,7 @@ func (s *AtomicSwapTestSuite) TestMakeSwap() {
 	ctx := context.TODO()
 
 	// setup relayers and connection-0 between two chains.
-	relayer, channelA, _ := s.SetupChainsRelayerAndChannel(ctx /*, atomicSwapChannelOptions()*/)
+	relayer, channelA := s.SetupChainsRelayerAndChannel(ctx /*, atomicSwapChannelOptions()*/)
 
 	chainA, chainB := s.GetChains()
 
@@ -62,17 +61,6 @@ func (s *AtomicSwapTestSuite) TestMakeSwap() {
 		timeoutHeight := clienttypes.NewHeight(0, 110)
 
 		msg := types.NewMsgMakeSwap(channelA.PortID, channelA.ChannelID, sellToken, buyToken, senderAddress, senderReceivingAddress, "", timeoutHeight, 0, time.Now().UTC().Unix())
-		msg.Packet = channeltypes.NewPacket(
-			[]byte{},
-			0,
-			channelA.PortID,
-			channelA.ChannelID,
-			"",
-			"",
-			clienttypes.NewHeight(0, 100),
-			0,
-		)
-
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
 		fmt.Printf("Response: %#v\n", resp)
 		s.AssertValidTxResponse(resp)

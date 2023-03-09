@@ -185,7 +185,7 @@ func (im IBCModule) OnRecvPacket(
 	// only attempt the application logic if the packet data
 	// was successfully decoded
 	if ack.Success() {
-		if err := im.keeper.OnRecvPacket(ctx.Context(), packet); err != nil {
+		if err := im.keeper.OnRecvPacket(ctx, packet, data); err != nil {
 			ack = channeltypes.NewErrorAcknowledgement(err)
 			ackErr = err
 		}
@@ -227,7 +227,7 @@ func (im IBCModule) OnAcknowledgementPacket(
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
 
-	if err := im.keeper.OnAcknowledgePacket(ctx, packet); err != nil {
+	if err := im.keeper.OnAcknowledgementPacket(ctx, packet, &data, ack); err != nil {
 		return err
 	}
 
@@ -264,7 +264,7 @@ func (im IBCModule) OnTimeoutPacket(
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-101 transfer packet data: %s", err.Error())
 	}
 	// refund tokens
-	if err := im.keeper.OnTimeoutPacket(ctx, packet); err != nil {
+	if err := im.keeper.OnTimeoutPacket(ctx, packet, &data); err != nil {
 		return err
 	}
 
