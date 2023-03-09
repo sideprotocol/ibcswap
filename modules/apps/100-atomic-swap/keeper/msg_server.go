@@ -84,10 +84,7 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.MsgTakeSwapRequest) (
 	escrowAddr := types.GetEscrowAddress(msg.SourcePort, msg.SourceChannel)
 	// check order status
 	order, ok := k.GetAtomicOrder(ctx, msg.OrderId)
-	if ok {
-		//packet is not used at this step.
-		k.fillAtomicOrder(ctx, escrowAddr, order, msg, StepSend)
-	} else {
+	if !ok {
 		return nil, types.ErrOrderDoesNotExists
 	}
 
@@ -302,10 +299,19 @@ func (k Keeper) executeCancel(ctx sdk.Context, msg *types.MsgCancelSwapRequest, 
 
 // the following methods are executed On Destination chain.
 
+// OnReceivedMake is the step 3.1 (Save order) from the atomic swap:
+// https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
+// The step is executed on the Taker chain.
 func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg *types.MsgMakeSwapRequest) error {
 
 	if err := msg.ValidateBasic(); err != nil {
 		return err
+	}
+
+	// Check if buyToken is a valid token on the taker chain, could be either native or ibc token
+	supply := k.bankKeeper.GetSupply(ctx, msg.BuyToken.Denom)
+	if supply.Amount.Int64() <= 0 {
+		return errors.New("buy token does not exist on the taker chain")
 	}
 
 	order := types.NewAtomicOrder(msg, packet.DestinationChannel)
@@ -315,6 +321,8 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	return nil
 }
 
+// OnReceivedTake is step 7.1 (Transfer Make Token) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
+// The step is executed on the Maker chain.
 func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg *types.MsgTakeSwapRequest) error {
 
 	if err := msg.ValidateBasic(); err != nil {
@@ -324,25 +332,75 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	escrowAddr := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
 
 	// check order status
-	if order, ok := k.GetAtomicOrder(ctx, msg.OrderId); ok {
-		k.fillAtomicOrder(ctx, escrowAddr, order, msg, StepReceive)
-	} else {
+	order, ok := k.GetAtomicOrder(ctx, msg.OrderId)
+	if !ok {
 		return types.ErrOrderDoesNotExists
 	}
+
+	if order.Status != types.Status_SYNC {
+		return errors.New("invalid order status")
+	}
+
+	if msg.SellToken.Denom != order.Maker.BuyToken.Denom || msg.SellToken.Amount != order.Maker.BuyToken.Amount {
+		return errors.New("invalid sell token")
+	}
+
+	// If `desiredTaker` is set, only the desiredTaker can accept the order.
+	if order.Maker.DesiredTaker != "" && order.Maker.DesiredTaker != msg.TakerAddress {
+		return errors.New("invalid taker address")
+	}
+
+	takerReceivingAddr, err := sdk.AccAddressFromBech32(msg.TakerReceivingAddress)
+	if err != nil {
+		return err
+	}
+
+	// Send maker.sellToken to taker's receiving address
+	if err = k.bankKeeper.SendCoins(ctx, escrowAddr, takerReceivingAddr, sdk.NewCoins(order.Maker.SellToken)); err != nil {
+		return errors.New("transfer coins failed")
+	}
+
+	// Update status of order
+	order.Status = types.Status_COMPLETE
+	order.Takers = &types.SwapTaker{
+		OrderId:               msg.OrderId,
+		SellToken:             msg.SellToken,
+		TakerAddress:          msg.TakerAddress,
+		TakerReceivingAddress: msg.TakerReceivingAddress,
+		CreateTimestamp:       msg.CreateTimestamp,
+	}
+	order.CompleteTimestamp = msg.CreateTimestamp
+	k.SetAtomicOrder(ctx, order)
 
 	ctx.EventManager().EmitTypedEvents(msg)
 	return nil
 }
 
+// OnReceivedCancel is the step 12 (Cancel Order) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap.
+// This step is executed on the Taker chain.
 func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, msg *types.MsgCancelSwapRequest) error {
 	if err := msg.ValidateBasic(); err != nil {
 		return err
 	}
 	// check order status
 
-	if err := k.executeCancel(ctx, msg, StepReceive); err != nil {
-		return err
+	order, ok := k.GetAtomicOrder(ctx, msg.OrderId)
+	if !ok {
+		return errors.New("order not found")
 	}
+
+	if order.Status != types.Status_SYNC && order.Status != types.Status_INITIAL {
+		return errors.New("invalid order status")
+	}
+
+	if order.Takers != nil {
+		return errors.New("the maker order has already been occupied")
+	}
+
+	// Update status of order
+	order.Status = types.Status_CANCEL
+	order.CancelTimestamp = msg.CreateTimestamp
+	k.SetAtomicOrder(ctx, order)
 
 	ctx.EventManager().EmitTypedEvents(msg)
 	return nil
