@@ -61,6 +61,7 @@ func (k Keeper) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) (*t
 	if err != nil {
 		return nil, err
 	}
+
 	return &types.MsgDepositResponse{
 		PoolToken: pool.Supply,
 	}, nil

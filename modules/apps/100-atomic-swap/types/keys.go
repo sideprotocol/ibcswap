@@ -13,7 +13,7 @@ const (
 
 	// Version defines the current version the IBC swap
 	// module supports
-	Version = "ics31-1"
+	Version = "ics100-1"
 
 	// PortID is the default port id that swap module binds to
 	PortID = ModuleName
@@ -35,6 +35,9 @@ var (
 	LimitOrderBookKey = []byte{0x02}
 	// OTCOrderBookKey defines the key to store the denomination trace info in store
 	OTCOrderBookKey = []byte{0x03}
+
+	// OrderBookKey defines the key to store the denomination trace info in store
+	OrderBookKey = []byte{0x04}
 )
 
 // GetEscrowAddress returns the escrow address for the specified channel.
