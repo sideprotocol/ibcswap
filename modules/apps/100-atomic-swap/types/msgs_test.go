@@ -52,12 +52,12 @@ func TestMsgSwapRoute(t *testing.T) {
 func TestMsgSwapType(t *testing.T) {
 	msg := NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix())
 
-	require.Equal(t, "swap", msg.Type())
+	require.Equal(t, "make_swap", msg.Type())
 }
 
 func TestMsgSwapGetSignBytes(t *testing.T) {
 	msg := NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix())
-	expected := fmt.Sprintf(`{"type":"cosmos-sdk/MsgTransfer","value":{"receiver":"%s","sender":"%s","source_channel":"testchannel","source_port":"testportid","timeout_height":{"revision_height":"10"},"token":{"amount":"100","denom":"atom"}}}`, addr2, addr1)
+	expected := fmt.Sprintf(`{"type":"cosmos-sdk/MsgMakeSwap","value":{"receiver":"%s","sender":"%s","source_channel":"testchannel","source_port":"testportid","timeout_height":{"revision_height":"10"},"token":{"amount":"100","denom":"atom"}}}`, addr2, addr1)
 	require.NotPanics(t, func() {
 		res := msg.GetSignBytes()
 		require.Equal(t, expected, string(res))
