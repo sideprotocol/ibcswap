@@ -11,8 +11,8 @@ import (
 	"github.com/cosmos/ibc-go/e2e/testvalues"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
-	"github.com/strangelove-ventures/ibctest/ibc"
-	"github.com/strangelove-ventures/ibctest/test"
+	"github.com/strangelove-ventures/ibctest/v6/ibc"
+	test "github.com/strangelove-ventures/ibctest/v6/testutil"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -29,7 +29,7 @@ func (s *AtomicSwapTestSuite) TestMakeSwap() {
 	ctx := context.TODO()
 
 	// setup relayers and connection-0 between two chains.
-	relayer, channelA := s.SetupChainsRelayerAndChannel(ctx /*, atomicSwapChannelOptions()*/)
+	relayer, channelA := s.SetupChainsRelayerAndChannel(ctx, atomicSwapChannelOptions())
 
 	chainA, chainB := s.GetChains()
 
