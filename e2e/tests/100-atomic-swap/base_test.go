@@ -59,15 +59,26 @@ func (s *AtomicSwapTestSuite) TestMakeSwap() {
 		sellToken := sdk.NewCoin(chainA.Config().Denom, sdk.NewInt(100))
 		buyToken := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
 		timeoutHeight := clienttypes.NewHeight(0, 110)
+		msg := types.NewMsgMakeSwap(
+			channelA.PortID,
+			channelA.ChannelID,
+			sellToken,
+			buyToken,
+			senderAddress,
+			senderReceivingAddress,
+			"",
+			timeoutHeight,
+			0,
+			time.Now().UTC().Unix(),
+		)
 
-		msg := types.NewMsgMakeSwap(channelA.PortID, channelA.ChannelID, sellToken, buyToken, senderAddress, senderReceivingAddress, "", timeoutHeight, 0, time.Now().UTC().Unix())
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-		fmt.Printf("Response: %#v\n", resp)
+		fmt.Printf("Responseeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee: %#v\n", resp)
 		s.AssertValidTxResponse(resp)
 		s.Require().NoError(err)
 
 		// wait block when packet relay.
-		test.WaitForBlocks(ctx, 1, chainA, chainB)
+		test.WaitForBlocks(ctx, 10, chainA, chainB)
 
 		// check packet relay status.
 		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
