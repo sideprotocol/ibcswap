@@ -117,7 +117,16 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.MsgTakeSwapRequest) (
 	}
 
 	// Make sure the maker's buy token matches the taker's sell token
-	if order.Maker.BuyToken.Denom != msg.SellToken.Denom || order.Maker.BuyToken.Amount != msg.SellToken.Amount {
+	if order.Maker.BuyToken.Denom != msg.SellToken.Denom || !order.Maker.BuyToken.Amount.Equal(msg.SellToken.Amount) {
+		fmt.Println("++++++++++++++++++++++++++++++++++++++++++")
+		fmt.Println("order.Maker.BuyToken.Denom: ", order.Maker.BuyToken.Denom)
+		fmt.Println("msg.SellToken.Denom: ", msg.SellToken.Denom)
+		fmt.Println(order.Maker.BuyToken.Denom != msg.SellToken.Denom)
+
+		fmt.Println("order.Maker.BuyToken.Amount: ", order.Maker.BuyToken.Amount)
+		fmt.Println("msg.SellToken.Amount: ", msg.SellToken.Amount)
+		fmt.Println(order.Maker.BuyToken.Amount.Equal(msg.SellToken.Amount))
+		fmt.Println("+++++++++++++++++++++++++++++++++++++++++++++++++++++")
 		return &types.MsgTakeSwapResponse{}, errors.New("invalid sell token")
 	}
 

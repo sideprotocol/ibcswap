@@ -107,7 +107,7 @@ func (s *AtomicSwapTestSuite) TestMakeSwap() {
 			senderAddressB,
 			senderReceivingAddressA,
 			timeoutHeight2,
-			uint64(time.Now().Add(10*time.Minute).UTC().Unix()),
+			0,
 			time.Now().UTC().Unix(),
 		)
 		msgTake.OrderId = order.Id
