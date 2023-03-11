@@ -101,10 +101,21 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		}
 
 	case types.TAKE_SWAP:
-		var msg types.MsgTakeSwapRequest
+		fmt.Println()
+		fmt.Println("++++++++++++++++++++++++++++")
+		fmt.Println("ON Rec take decode ms take swap request")
+		fmt.Println("++++++++++++++++++++++++++++")
+		fmt.Println()
+		var msg types.SwapTaker
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
+
+		fmt.Println()
+		fmt.Println("++++++++++++++++++++++++++++")
+		fmt.Println("ON Rec take decode ms take swap request call next method")
+		fmt.Println("++++++++++++++++++++++++++++")
+		fmt.Println()
 		if err2 := k.OnReceivedTake(ctx, packet, &msg); err2 != nil {
 			return err2
 		} else {

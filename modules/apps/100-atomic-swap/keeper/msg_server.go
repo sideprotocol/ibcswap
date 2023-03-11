@@ -118,15 +118,6 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.MsgTakeSwapRequest) (
 
 	// Make sure the maker's buy token matches the taker's sell token
 	if order.Maker.BuyToken.Denom != msg.SellToken.Denom || !order.Maker.BuyToken.Amount.Equal(msg.SellToken.Amount) {
-		fmt.Println("++++++++++++++++++++++++++++++++++++++++++")
-		fmt.Println("order.Maker.BuyToken.Denom: ", order.Maker.BuyToken.Denom)
-		fmt.Println("msg.SellToken.Denom: ", msg.SellToken.Denom)
-		fmt.Println(order.Maker.BuyToken.Denom != msg.SellToken.Denom)
-
-		fmt.Println("order.Maker.BuyToken.Amount: ", order.Maker.BuyToken.Amount)
-		fmt.Println("msg.SellToken.Amount: ", msg.SellToken.Amount)
-		fmt.Println(order.Maker.BuyToken.Amount.Equal(msg.SellToken.Amount))
-		fmt.Println("+++++++++++++++++++++++++++++++++++++++++++++++++++++")
 		return &types.MsgTakeSwapResponse{}, errors.New("invalid sell token")
 	}
 
@@ -146,6 +137,9 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.MsgTakeSwapRequest) (
 	}
 
 	balance := k.bankKeeper.GetBalance(ctx, takerAddr, msg.SellToken.Denom)
+	fmt.Println("++++++++++++++++++++++++++++++++++++")
+	fmt.Println("Balance: ", balance.Amount.BigInt().Int64())
+	fmt.Println("++++++++++++++++++++++++++++++++++++")
 	if balance.Amount.BigInt().Cmp(msg.SellToken.Amount.BigInt()) < 0 {
 		return &types.MsgTakeSwapResponse{}, errors.New("insufficient balance")
 	}
@@ -368,13 +362,24 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg 
 
 // OnReceivedTake is step 7.1 (Transfer Make Token) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
 // The step is executed on the Maker chain.
-func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg *types.MsgTakeSwapRequest) error {
+func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg *types.SwapTaker) error {
 
-	if err := msg.ValidateBasic(); err != nil {
-		return err
-	}
+	fmt.Println()
+	fmt.Println("++++++++++++++++++++++++++++")
+	fmt.Println("FINAL STEPP ONRECEIVe TAKE step 7.1 maker chain")
+	fmt.Println("++++++++++++++++++++++++++++")
+	fmt.Println()
+	//if err := msg.ValidateBasic(); err != nil {
+	//	return err
+	//}
 
 	escrowAddr := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
+
+	fmt.Println()
+	fmt.Println("++++++++++++++++++++++++++++")
+	fmt.Println("Get order")
+	fmt.Println("++++++++++++++++++++++++++++")
+	fmt.Println()
 
 	// check order status
 	order, ok := k.GetAtomicOrder(ctx, msg.OrderId)
@@ -382,28 +387,66 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 		return types.ErrOrderDoesNotExists
 	}
 
+	fmt.Println()
+	fmt.Println("++++++++++++++++++++++++++++")
+	fmt.Println("Validate")
+	fmt.Println("++++++++++++++++++++++++++++")
+	fmt.Println()
+
 	if order.Status != types.Status_SYNC {
+		fmt.Println()
+		fmt.Println("++++++++++++++++++++++++++++")
+		fmt.Println("INVALID ORDER STATUS")
+		fmt.Println("++++++++++++++++++++++++++++")
+		fmt.Println()
 		return errors.New("invalid order status")
 	}
 
-	if msg.SellToken.Denom != order.Maker.BuyToken.Denom || msg.SellToken.Amount != order.Maker.BuyToken.Amount {
+	if msg.SellToken.Denom != order.Maker.BuyToken.Denom || !msg.SellToken.Amount.Equal(order.Maker.BuyToken.Amount) {
+		fmt.Println()
+		fmt.Println("++++++++++++++++++++++++++++")
+		fmt.Println("INVALID SELL token")
+		fmt.Println("++++++++++++++++++++++++++++")
+		fmt.Println()
 		return errors.New("invalid sell token")
 	}
 
 	// If `desiredTaker` is set, only the desiredTaker can accept the order.
 	if order.Maker.DesiredTaker != "" && order.Maker.DesiredTaker != msg.TakerAddress {
+		fmt.Println()
+		fmt.Println("++++++++++++++++++++++++++++")
+		fmt.Println("INVALID TAKER ADDRESS")
+		fmt.Println("++++++++++++++++++++++++++++")
+		fmt.Println()
 		return errors.New("invalid taker address")
 	}
 
 	takerReceivingAddr, err := sdk.AccAddressFromBech32(msg.TakerReceivingAddress)
 	if err != nil {
+		fmt.Println()
+		fmt.Println("++++++++++++++++++++++++++++")
+		fmt.Println("INVALID BENCH 32 address")
+		fmt.Println("++++++++++++++++++++++++++++")
+		fmt.Println()
 		return err
 	}
+
+	fmt.Println()
+	fmt.Println("++++++++++++++++++++++++++++")
+	fmt.Println("Send coins")
+	fmt.Println("++++++++++++++++++++++++++++")
+	fmt.Println()
 
 	// Send maker.sellToken to taker's receiving address
 	if err = k.bankKeeper.SendCoins(ctx, escrowAddr, takerReceivingAddr, sdk.NewCoins(order.Maker.SellToken)); err != nil {
 		return errors.New("transfer coins failed")
 	}
+
+	fmt.Println()
+	fmt.Println("++++++++++++++++++++++++++++")
+	fmt.Println("Complete")
+	fmt.Println("++++++++++++++++++++++++++++")
+	fmt.Println()
 
 	// Update status of order
 	order.Status = types.Status_COMPLETE

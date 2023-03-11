@@ -40,7 +40,7 @@ func (s *AtomicSwapTestSuite) TestMakeSwap() {
 	chainAWallet := s.CreateUserOnChainA(ctx, testvalues.StartingTokenAmount)
 	senderAddress := chainAWallet.Bech32Address("cosmos")
 	chainBWallet := s.CreateUserOnChainB(ctx, testvalues.StartingTokenAmount)
-	senderReceivingAddress := chainBWallet.Bech32Address("token")
+	senderReceivingAddress := chainBWallet.Bech32Address("cosmos")
 
 	// allocate tokens to the new account
 	initialBalances := sdk.NewCoins(sdk.NewCoin(chainADenom, sdk.NewInt(10000000000)))
@@ -96,7 +96,7 @@ func (s *AtomicSwapTestSuite) TestMakeSwap() {
 		fmt.Println("------------------------------------")
 		sellToken2 := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
 		senderAddressB := chainBWallet.Bech32Address("cosmos")
-		senderReceivingAddressA := chainAWallet.Bech32Address("CosmosA")
+		senderReceivingAddressA := chainAWallet.Bech32Address("cosmos")
 
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)
 		order := types.NewAtomicOrder(msg, msg.SourceChannel)
@@ -135,6 +135,26 @@ func (s *AtomicSwapTestSuite) TestMakeSwap() {
 
 		// check packet relay status.
 		//s.AssertPacketRelayed(ctx, chainB, channelA.PortID, channelA.ChannelID, 1)
+
+		b1, err := s.QueryBalance(ctx, chainA, senderAddress, chainA.Config().Denom)
+		s.Require().NoError(err)
+		fmt.Println("FINALLLLL 1")
+		fmt.Println(b1.Balance.String())
+
+		b2, err := s.QueryBalance(ctx, chainA, senderReceivingAddressA, chainA.Config().Denom)
+		s.Require().NoError(err)
+		fmt.Println("FINALLLLL 2")
+		fmt.Println(b2.Balance.String())
+
+		b3, err := s.QueryBalance(ctx, chainB, senderAddressB, chainB.Config().Denom)
+		s.Require().NoError(err)
+		fmt.Println("FINALLLLL 3")
+		fmt.Println(b3.Balance.String())
+
+		b4, err := s.QueryBalance(ctx, chainB, senderReceivingAddress, chainB.Config().Denom)
+		s.Require().NoError(err)
+		fmt.Println("FINALLLLL 4")
+		fmt.Println(b4.Balance.String())
 
 	})
 
