@@ -104,10 +104,6 @@ func (k Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability
 
 // GetAtomicOrder returns the OTCOrder for the swap module.
 func (k Keeper) GetAtomicOrder(ctx sdk.Context, orderId string) (types.AtomicSwapOrder, bool) {
-	//key, err := hex.DecodeString(orderId)
-	//if err != nil {
-	//	return types.AtomicSwapOrder{}, false
-	//}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKey)
 	bz := store.Get([]byte(orderId))
 	if bz == nil {

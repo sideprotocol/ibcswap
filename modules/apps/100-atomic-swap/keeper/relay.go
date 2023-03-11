@@ -138,15 +138,10 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				return err
 			}
 
-			o := types.NewAtomicOrder(&msg, msg.SourceChannel)
-
 			// check order status
+			o := types.NewAtomicOrder(&msg, msg.SourceChannel)
 			order, ok := k.GetAtomicOrder(ctx, o.Id)
 			if ok {
-				fmt.Println("+++++++++++++++++++++")
-				fmt.Println("NOT FOUNF")
-				fmt.Println("+++++++++++++++++++++")
-
 				for _, ord := range k.GetAllAtomicOrders(ctx) {
 					ord.Status = types.Status_SYNC
 					k.SetAtomicOrder(ctx, order)
@@ -161,27 +156,10 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 		case types.TAKE_SWAP:
 			// This is the step 9 (Transfer Take Token & Close order): https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
 			// The step is executed on the Taker chain.
-
-			fmt.Println()
-			fmt.Println("++++++++++++++++++++++++++++")
-			fmt.Println("ON Ack Take Swap")
-			fmt.Println("++++++++++++++++++++++++++++")
-			fmt.Println()
 			takeMsg := &types.SwapTaker{}
 			if err := types.ModuleCdc.Unmarshal(data.Data, takeMsg); err != nil {
-				fmt.Println()
-				fmt.Println("++++++++++++++++++++++++++++")
-				fmt.Println("Error parsing: ", err.Error())
-				fmt.Println("++++++++++++++++++++++++++++")
-				fmt.Println()
 				return err
 			}
-
-			fmt.Println()
-			fmt.Println("++++++++++++++++++++++++++++")
-			fmt.Printf("Parse Take Request: %#v: \n", takeMsg)
-			fmt.Println("++++++++++++++++++++++++++++")
-			fmt.Println()
 
 			order, _ := k.GetAtomicOrder(ctx, takeMsg.OrderId)
 			escrowAddr := types.GetEscrowAddress(packet.SourcePort, packet.SourceChannel)
@@ -190,21 +168,9 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				return err
 			}
 
-			fmt.Println()
-			fmt.Println("++++++++++++++++++++++++++++")
-			fmt.Println("Get addres")
-			fmt.Println("++++++++++++++++++++++++++++")
-			fmt.Println()
-
 			if err = k.bankKeeper.SendCoins(ctx, escrowAddr, makerReceivingAddr, sdk.NewCoins(takeMsg.SellToken)); err != nil {
 				return err
 			}
-
-			fmt.Println()
-			fmt.Println("++++++++++++++++++++++++++++")
-			fmt.Println("Sent coins and complete:", takeMsg.SellToken.Amount.Int64())
-			fmt.Println("++++++++++++++++++++++++++++")
-			fmt.Println()
 
 			order.Status = types.Status_COMPLETE
 			order.Takers = &types.SwapTaker{
