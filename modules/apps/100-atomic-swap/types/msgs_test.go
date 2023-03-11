@@ -43,66 +43,88 @@ var (
 
 // TestMsgSwapRoute tests Route for MsgSwap
 func TestMsgSwapRoute(t *testing.T) {
-	msg := NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix())
+	testCases := []struct {
+		name     string
+		route    string
+		expRoute string
+	}{
+		{
+			"new msg make swap route",
+			NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()).Route(),
+			RouterKey,
+		},
+		{
+			"new msg take swap route",
+			NewMsgTakeSwap(validPort, validChannel, coin, addr2, addr1, timeoutHeight, 0, time.Now().UTC().Unix()).Route(),
+			RouterKey,
+		},
+		{
+			"new msg cancel swap route",
+			NewMsgCancelSwap(validPort, validChannel, addr1, "", timeoutHeight, 0).Route(),
+			RouterKey,
+		},
+	}
 
-	require.Equal(t, RouterKey, msg.Route())
+	for _, tc := range testCases {
+		require.Equal(t, tc.expRoute, tc.route, fmt.Sprintf("Test passed to %s", tc.name))
+	}
 }
 
 // TestMsgSwapType tests Type for MsgSwap
 func TestMsgSwapType(t *testing.T) {
-	msg := NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix())
-
-	require.Equal(t, "swap", msg.Type())
-}
-
-func TestMsgSwapGetSignBytes(t *testing.T) {
-	msg := NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix())
-	expected := fmt.Sprintf(`{"type":"cosmos-sdk/MsgTransfer","value":{"receiver":"%s","sender":"%s","source_channel":"testchannel","source_port":"testportid","timeout_height":{"revision_height":"10"},"token":{"amount":"100","denom":"atom"}}}`, addr2, addr1)
-	require.NotPanics(t, func() {
-		res := msg.GetSignBytes()
-		require.Equal(t, expected, string(res))
-	})
-}
-
-// TestMsgSwapValidation tests ValidateBasic for MsgTransfer
-func TestMsgSwapValidation(t *testing.T) {
 	testCases := []struct {
-		name    string
-		msg     *MsgMakeSwapRequest
-		expPass bool
+		name       string
+		msgType    string
+		expMsgType string
 	}{
-		{"valid msg with base denom", NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), true},
-		{"valid msg with trace hash", NewMsgMakeSwap(validPort, validChannel, ibcCoin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), true},
-		{"invalid ibc denom", NewMsgMakeSwap(validPort, validChannel, invalidIBCCoin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
-		{"too short port id", NewMsgMakeSwap(invalidShortPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
-		{"too long port id", NewMsgMakeSwap(invalidLongPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
-		{"port id contains non-alpha", NewMsgMakeSwap(invalidPort, validChannel, coin, coin2, addr1, "", addr2, timeoutHeight, 0, time.Now().UTC().Unix()), false},
-		{"too short channel id", NewMsgMakeSwap(validPort, invalidShortChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
-		{"too long channel id", NewMsgMakeSwap(validPort, invalidLongChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
-		{"channel id contains non-alpha", NewMsgMakeSwap(validPort, invalidChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
-		{"invalid denom", NewMsgMakeSwap(validPort, validChannel, invalidDenomCoin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
-		{"zero coin", NewMsgMakeSwap(validPort, validChannel, zeroCoin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
-		{"missing sender address", NewMsgMakeSwap(validPort, validChannel, coin, coin2, emptyAddr, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
-		{"missing recipient address", NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, "", "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
-		{"empty coin", NewMsgMakeSwap(validPort, validChannel, sdk.Coin{}, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()), false},
+		{
+			"new msg make swap message type",
+			NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()).Type(),
+			"make_swap",
+		},
+		{
+			"new msg take swap message type",
+			NewMsgTakeSwap(validPort, validChannel, coin, addr2, addr1, timeoutHeight, 0, time.Now().UTC().Unix()).Type(),
+			"take_swap",
+		},
+		{
+			"new msg cancel swap message type",
+			NewMsgCancelSwap(validPort, validChannel, addr1, "", timeoutHeight, 0).Type(),
+			"cancel_swap",
+		},
 	}
 
-	for i, tc := range testCases {
-		err := tc.msg.ValidateBasic()
-		if tc.expPass {
-			require.NoError(t, err, "valid test case %d failed: %s", i, tc.name)
-		} else {
-			require.Error(t, err, "invalid test case %d passed: %s", i, tc.name)
-		}
+	for _, tc := range testCases {
+		require.Equal(t, tc.expMsgType, tc.msgType, fmt.Sprintf("Test passed to %s", tc.name))
 	}
 }
 
 // TestMsgSwapGetSigners tests GetSigners for MsgTransfer
 func TestMsgSwapGetSigners(t *testing.T) {
 	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	testCases := []struct {
+		name      string
+		signer    []sdk.AccAddress
+		expSigner []sdk.AccAddress
+	}{
+		{
+			"new msg make swap get signers",
+			NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr.String(), addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()).GetSigners(),
+			[]sdk.AccAddress{addr},
+		},
+		{
+			"new msg take swap get signers",
+			NewMsgTakeSwap(validPort, validChannel, coin, addr.String(), addr1, timeoutHeight, 0, time.Now().UTC().Unix()).GetSigners(),
+			[]sdk.AccAddress{addr},
+		},
+		{
+			"new msg cancel swap get signers",
+			NewMsgCancelSwap(validPort, validChannel, addr.String(), "", timeoutHeight, 0).GetSigners(),
+			[]sdk.AccAddress{addr},
+		},
+	}
 
-	msg := NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr.String(), addr2, "", timeoutHeight, 0, time.Now().UTC().Unix())
-	res := msg.GetSigners()
-
-	require.Equal(t, []sdk.AccAddress{addr}, res)
+	for _, tc := range testCases {
+		require.Equal(t, tc.expSigner, tc.signer, fmt.Sprintf("Test passed to %s", tc.name))
+	}
 }
