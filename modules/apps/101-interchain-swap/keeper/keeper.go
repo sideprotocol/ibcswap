@@ -123,3 +123,4 @@ func (k Keeper) GetBalance(ctx sdk.Context, sender sdk.AccAddress) sdk.Coin {
 func (k Keeper) SingleDepositTest(ctx sdk.Context, sender sdk.AccAddress) sdk.Coin {
 	return k.bankKeeper.GetBalance(ctx, sender, sdk.DefaultBondDenom)
 }
+

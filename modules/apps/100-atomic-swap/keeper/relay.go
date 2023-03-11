@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"errors"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
@@ -84,7 +86,6 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	switch data.Type {
 	case types.MAKE_SWAP:
 		var msg types.MsgMakeSwapRequest
-
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
@@ -92,11 +93,8 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 			return err
 		}
 
-		return nil
-
 	case types.TAKE_SWAP:
 		var msg types.MsgTakeSwapRequest
-
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
@@ -108,7 +106,6 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 
 	case types.CANCEL_SWAP:
 		var msg types.MsgCancelSwapRequest
-
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
@@ -123,7 +120,6 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	}
 
 	ctx.EventManager().EmitTypedEvents(&data)
-
 	return nil
 }
 
@@ -133,36 +129,76 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 		return k.refundPacketToken(ctx, packet, data)
 	default:
 		switch data.Type {
-		case types.TAKE_SWAP:
+		case types.MAKE_SWAP:
+			// This is the step 4 (Acknowledge Make Packet) of the atomic swap: https://github.com/liangping/ibc/blob/atomic-swap/spec/app/ics-100-atomic-swap/ibcswap.png
+			// This logic is executed when Taker chain acknowledge the make swap packet.
 			var msg types.MsgTakeSwapRequest
-
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				return err
 			}
 			// check order status
-			if order, ok := k.GetAtomicOrder(ctx, msg.OrderId); ok {
-				escrowAddr := types.GetEscrowAddress(msg.SourcePort, msg.SourceChannel)
-				k.fillAtomicOrder(ctx, escrowAddr, order, &msg, StepAcknowledgement)
-			} else {
+			order, ok := k.GetAtomicOrder(ctx, msg.OrderId)
+			if ok {
 				return types.ErrOrderDoesNotExists
 			}
-			break
+			order.Status = types.Status_SYNC
+			k.SetAtomicOrder(ctx, order)
+			return nil
 
+		case types.TAKE_SWAP:
+			// This is the step 9 (Transfer Take Token & Close order): https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
+			// The step is executed on the Taker chain.
+			takeMsg := &types.MsgTakeSwapRequest{}
+			if err := types.ModuleCdc.Unmarshal(data.Data, takeMsg); err != nil {
+				return err
+			}
+
+			order, _ := k.GetAtomicOrder(ctx, types.GenerateOrderId(packet))
+			escrowAddr := types.GetEscrowAddress(packet.SourcePort, packet.SourceChannel)
+			makerReceivingAddr, err := sdk.AccAddressFromBech32(order.Maker.MakerReceivingAddress)
+			if err != nil {
+				return err
+			}
+
+			if err = k.bankKeeper.SendCoins(ctx, escrowAddr, makerReceivingAddr, sdk.NewCoins(takeMsg.SellToken)); err != nil {
+				return err
+			}
+			order.Status = types.Status_COMPLETE
+			order.Takers = &types.SwapTaker{
+				OrderId:               takeMsg.OrderId,
+				SellToken:             takeMsg.SellToken,
+				TakerAddress:          takeMsg.TakerAddress,
+				TakerReceivingAddress: takeMsg.TakerReceivingAddress,
+				CreateTimestamp:       takeMsg.CreateTimestamp,
+			}
+			order.CompleteTimestamp = takeMsg.CreateTimestamp
+			k.SetAtomicOrder(ctx, order)
+			return nil
 		case types.CANCEL_SWAP:
+			// This is the step 14 (Cancel & refund) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
+			// It is executed on the Maker chain.
 			var msg types.MsgCancelSwapRequest
-
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				return err
 			}
-			if err2 := k.executeCancel(ctx, &msg, StepAcknowledgement); err2 != nil {
-				return err2
-			} else {
-				return nil
+
+			order, _ := k.GetAtomicOrder(ctx, types.GenerateOrderId(packet))
+			escrowAddr := types.GetEscrowAddress(packet.SourcePort, packet.SourceChannel)
+			makerReceivingAddr, err := sdk.AccAddressFromBech32(order.Maker.MakerReceivingAddress)
+			if err != nil {
+				return err
 			}
-			break
+			if err = k.bankKeeper.SendCoins(ctx, escrowAddr, makerReceivingAddr, sdk.NewCoins(order.Maker.SellToken)); err != nil {
+				return err
+			}
+			order.Status = types.Status_CANCEL
+			order.CancelTimestamp = msg.CreateTimestamp
+			k.SetAtomicOrder(ctx, order)
+			return nil
+		default:
+			return errors.New("unknown data packet")
 		}
 	}
-	return nil
 }
 
 func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, data *types.AtomicSwapPacketData) error {
@@ -170,8 +206,74 @@ func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, dat
 }
 
 func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, data *types.AtomicSwapPacketData) error {
+	swapPacket := &types.AtomicSwapPacketData{}
+	if err := swapPacket.Unmarshal(packet.GetData()); err != nil {
+		return err
+	}
 
-	ctx.Logger().Debug("refundPacketToken: %s", data)
+	escrowAddr := types.GetEscrowAddress(packet.SourcePort, packet.SourceChannel)
+
+	switch swapPacket.Type {
+	case types.MAKE_SWAP:
+		// This is the step 3.2 (Refund) of the atomic swap: https://github.com/liangping/ibc/blob/atomic-swap/spec/app/ics-100-atomic-swap/ibcswap.png
+		// This logic will be executed when Relayer sends make swap packet to the taker chain, but the request timeout
+		// and locked tokens form the first step (see the picture on the link above) MUST be returned to the account of
+		// the maker on the maker chain.
+		makeMsg := &types.MsgMakeSwapRequest{}
+		if err := makeMsg.Unmarshal(swapPacket.Data); err != nil {
+			return err
+		}
+
+		makerAddr, err := sdk.AccAddressFromBech32(makeMsg.MakerAddress)
+		if err != nil {
+			return err
+		}
+
+		// send tokens back to maker
+		err = k.bankKeeper.SendCoins(ctx, escrowAddr, makerAddr, sdk.NewCoins(makeMsg.SellToken))
+		if err != nil {
+			return err
+		}
+
+		orderID := types.GenerateOrderId(packet)
+		order, found := k.GetAtomicOrder(ctx, orderID)
+		if !found {
+			return fmt.Errorf("order not found for ID %s", orderID)
+		}
+		order.Status = types.Status_CANCEL
+		k.SetAtomicOrder(ctx, order)
+
+	case types.TAKE_SWAP:
+		// This is the step 7.2 (Unlock order and refund) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
+		// This step is executed on the Taker chain when Take Swap request timeout.
+		takeMsg := &types.MsgTakeSwapRequest{}
+		if err := takeMsg.Unmarshal(swapPacket.Data); err != nil {
+			return err
+		}
+
+		takerAddr, err := sdk.AccAddressFromBech32(takeMsg.TakerAddress)
+		if err != nil {
+			return err
+		}
+
+		// send tokens back to taker
+		err = k.bankKeeper.SendCoins(ctx, escrowAddr, takerAddr, sdk.NewCoins(takeMsg.SellToken))
+		if err != nil {
+			return err
+		}
+
+		orderID := types.GenerateOrderId(packet)
+		order, found := k.GetAtomicOrder(ctx, orderID)
+		if !found {
+			return fmt.Errorf("order not found for ID %s", orderID)
+		}
+		order.Takers = nil // release the occupation
+		k.SetAtomicOrder(ctx, order)
+	case types.CANCEL_SWAP:
+		// do nothing, only send tokens back when cancel msg is acknowledged.
+	default:
+		return errors.New("unknown data packet")
+	}
 
 	return nil
 }
