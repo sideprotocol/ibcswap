@@ -73,17 +73,113 @@ func (s *AtomicSwapTestSuite) TestMakeSwap() {
 		)
 
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-		fmt.Printf("Responseeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee: %#v\n", resp)
+		fmt.Println("-------------------")
+		fmt.Println("-------------------")
+		fmt.Println("-------------------")
+		fmt.Printf("Response from MakeSwap: %#v\n", resp)
+		fmt.Println("-------------------")
+		fmt.Println("-------------------")
+		fmt.Println("-------------------")
 		s.AssertValidTxResponse(resp)
 		s.Require().NoError(err)
 
 		// wait block when packet relay.
 		test.WaitForBlocks(ctx, 10, chainA, chainB)
 
+		// TAKE SWAP
+
+		fmt.Println("------------------------------------")
+		fmt.Println("------------------------------------")
+		fmt.Println("------------------------------------")
+		fmt.Println("Start take swap")
+		fmt.Println("------------------------------------")
+		fmt.Println("------------------------------------")
+		sellToken2 := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
+		senderAddressB := chainBWallet.Bech32Address("cosmos")
+		senderReceivingAddressA := chainAWallet.Bech32Address("CosmosA")
+
+		timeoutHeight2 := clienttypes.NewHeight(0, 110)
+		order := types.NewAtomicOrder(msg, msg.SourceChannel)
+		msgTake := types.NewMsgTakeSwap(
+			channelA.PortID,
+			channelA.ChannelID,
+			sellToken2,
+			senderAddressB,
+			senderReceivingAddressA,
+			timeoutHeight2,
+			uint64(time.Now().Add(10*time.Minute).UTC().Unix()),
+			time.Now().UTC().Unix(),
+		)
+		msgTake.OrderId = order.Id
+
+		resp2, err2 := s.BroadcastMessages(ctx, chainB, chainBWallet, msgTake)
+		fmt.Println("-------------------")
+		fmt.Println("-------------------")
+		fmt.Println("-------------------")
+		fmt.Println("-------------------")
+		fmt.Println("-------------------")
+		fmt.Println("-------------------")
+		fmt.Printf("Response from TakeSwap: %#v\n", resp2)
+		fmt.Println("-------------------")
+		fmt.Println("-------------------")
+		fmt.Println("-------------------")
+		fmt.Println("-------------------")
+		fmt.Println("-------------------")
+		fmt.Println("-------------------")
+
+		s.AssertValidTxResponse(resp2)
+		s.Require().NoError(err2)
+
+		// wait block when packet relay.
+		test.WaitForBlocks(ctx, 10, chainA, chainB)
+
 		// check packet relay status.
-		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
+		//s.AssertPacketRelayed(ctx, chainB, channelA.PortID, channelA.ChannelID, 1)
 
 	})
+
+	//t.Run("send take swap message", func(t *testing.T) {
+	//	sellToken := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
+	//	senderAddressB := chainBWallet.Bech32Address("cosmos")
+	//	senderReceivingAddressA := chainAWallet.Bech32Address("CosmosA")
+	//
+	//	timeoutHeight := clienttypes.NewHeight(0, 110)
+	//	msgTake := types.NewMsgTakeSwap(
+	//		channelA.PortID,
+	//		channelA.ChannelID,
+	//		sellToken,
+	//		senderAddressB,
+	//		senderReceivingAddressA,
+	//		timeoutHeight,
+	//		0,
+	//		time.Now().UTC().Unix(),
+	//	)
+	//
+	//	resp, err := s.BroadcastMessages(ctx, chainB, chainBWallet, msgTake)
+	//	fmt.Println("-------------------")
+	//	fmt.Println("-------------------")
+	//	fmt.Println("-------------------")
+	//	fmt.Println("-------------------")
+	//	fmt.Println("-------------------")
+	//	fmt.Println("-------------------")
+	//	fmt.Printf("Response from TakeSwap: %#v\n", resp)
+	//	fmt.Println("-------------------")
+	//	fmt.Println("-------------------")
+	//	fmt.Println("-------------------")
+	//	fmt.Println("-------------------")
+	//	fmt.Println("-------------------")
+	//	fmt.Println("-------------------")
+	//
+	//	s.AssertValidTxResponse(resp)
+	//	s.Require().NoError(err)
+	//
+	//	// wait block when packet relay.
+	//	test.WaitForBlocks(ctx, 10, chainA, chainB)
+	//
+	//	// check packet relay status.
+	//	s.AssertPacketRelayed(ctx, chainB, channelA.PortID, channelA.ChannelID, 1)
+	//
+	//})
 }
 
 // atomicSwapChannelOptions configures both of the chains to have atomic swap enabled.

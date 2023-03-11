@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	"time"
 )
 
 var (
@@ -51,6 +52,13 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MsgMakeSwapRequest) (
 	}
 
 	order := types.NewAtomicOrder(msg, msg.SourceChannel)
+	fmt.Println()
+	fmt.Println("+++++++++++++")
+	fmt.Println("+++++++++++++")
+	fmt.Println("Make swap order ID: ", order.Id)
+	fmt.Println("+++++++++++++")
+	fmt.Println("+++++++++++++")
+	fmt.Println()
 	k.SetAtomicOrder(ctx, order)
 
 	packet := types.AtomicSwapPacketData{
@@ -58,9 +66,23 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MsgMakeSwapRequest) (
 		Data: msgByte,
 		Memo: "",
 	}
+
+	fmt.Println("++++++++++++++++++++")
+	fmt.Println("++++++++++++++++++++")
+	fmt.Println("++++++++++++++++++++")
+	fmt.Println("++++++++++++++++++++")
+	fmt.Println("++++++++++++++++++++")
+	fmt.Println("Sending packet data")
+	fmt.Println("timeoutHight:", msg.TimeoutHeight.String())
+	fmt.Println("timeoutHight:", time.Unix(int64(msg.TimeoutTimestamp), 0))
 	if err := k.SendSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
 		return nil, err
 	}
+	fmt.Println("++++++++++++++++++++")
+	fmt.Println("++++++++++++++++++++")
+	fmt.Println("++++++++++++++++++++")
+	fmt.Println("++++++++++++++++++++")
+	fmt.Println("++++++++++++++++++++")
 
 	ctx.EventManager().EmitTypedEvents(msg)
 
@@ -83,6 +105,12 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.MsgTakeSwapRequest) (
 
 	escrowAddr := types.GetEscrowAddress(msg.SourcePort, msg.SourceChannel)
 	// check order status
+	orders := k.GetAllAtomicOrders(ctx)
+	fmt.Println("Len(orders):", len(orders))
+	for _, o := range orders {
+		fmt.Println("OrderID: ", o.Id)
+	}
+
 	order, ok := k.GetAtomicOrder(ctx, msg.OrderId)
 	if !ok {
 		return nil, types.ErrOrderDoesNotExists
@@ -303,7 +331,9 @@ func (k Keeper) executeCancel(ctx sdk.Context, msg *types.MsgCancelSwapRequest, 
 // https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
 // The step is executed on the Taker chain.
 func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg *types.MsgMakeSwapRequest) error {
-
+	fmt.Println("+++++++++++++++++++++++")
+	fmt.Println("On Receive make")
+	fmt.Println("++++++++++++++++++++++++")
 	if err := msg.ValidateBasic(); err != nil {
 		return err
 	}
@@ -315,7 +345,13 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	}
 
 	order := types.NewAtomicOrder(msg, packet.DestinationChannel)
+	fmt.Println("CREATE ATOMIC ORDER ON TAKER CHAIN with ID: ", order.Id)
+	orders := k.GetAllAtomicOrders(ctx)
+	fmt.Println("All orders before that: ", len(orders))
 	k.SetAtomicOrder(ctx, order)
+
+	orders2, ok := k.GetAtomicOrder(ctx, order.Id)
+	fmt.Println("Order after that: ", ok, orders2)
 
 	ctx.EventManager().EmitTypedEvents(msg)
 	return nil

@@ -82,7 +82,14 @@ func (k Keeper) SendSwapPacket(
 }
 
 func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.AtomicSwapPacketData) error {
-
+	fmt.Println("+++++++++++++++++++++++++")
+	fmt.Println("+++++++++++++++++++++++++")
+	fmt.Println("+++++++++++++++++++++++++")
+	fmt.Println("On Recv Packet: ", data.Type)
+	fmt.Println("+++++++++++++++++++++++++")
+	fmt.Println("+++++++++++++++++++++++++")
+	fmt.Println("+++++++++++++++++++++++++")
+	fmt.Println("+++++++++++++++++++++++++")
 	switch data.Type {
 	case types.MAKE_SWAP:
 		var msg types.MsgMakeSwapRequest
@@ -124,6 +131,14 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 }
 
 func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, data *types.AtomicSwapPacketData, ack channeltypes.Acknowledgement) error {
+	fmt.Println("+++++++++++++++++++++++++")
+	fmt.Println("+++++++++++++++++++++++++")
+	fmt.Println("+++++++++++++++++++++++++")
+	fmt.Println("On Ack Packet")
+	fmt.Println("+++++++++++++++++++++++++")
+	fmt.Println("+++++++++++++++++++++++++")
+	fmt.Println("+++++++++++++++++++++++++")
+	fmt.Println("+++++++++++++++++++++++++")
 	switch ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Error:
 		return k.refundPacketToken(ctx, packet, data)
@@ -202,6 +217,14 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 }
 
 func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, data *types.AtomicSwapPacketData) error {
+	fmt.Println("+++++++++++++++++++++++++")
+	fmt.Println("+++++++++++++++++++++++++")
+	fmt.Println("+++++++++++++++++++++++++")
+	fmt.Println("On Time out Packet")
+	fmt.Println("+++++++++++++++++++++++++")
+	fmt.Println("+++++++++++++++++++++++++")
+	fmt.Println("+++++++++++++++++++++++++")
+	fmt.Println("+++++++++++++++++++++++++")
 	return k.refundPacketToken(ctx, packet, data)
 }
 
