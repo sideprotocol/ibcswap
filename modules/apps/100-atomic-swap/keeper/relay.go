@@ -96,6 +96,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
+
 		if err := k.OnReceivedMake(ctx, packet, &msg); err != nil {
 			return err
 		}
@@ -145,7 +146,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 	fmt.Println("+++++++++++++++++++++++++")
 	fmt.Println("+++++++++++++++++++++++++")
 	fmt.Println("+++++++++++++++++++++++++")
-	fmt.Println("On Ack Packet")
+	fmt.Println("On Ack Packet: ", data.Type)
 	fmt.Println("+++++++++++++++++++++++++")
 	fmt.Println("+++++++++++++++++++++++++")
 	fmt.Println("+++++++++++++++++++++++++")
@@ -156,28 +157,66 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 	default:
 		switch data.Type {
 		case types.MAKE_SWAP:
+			fmt.Println()
+			fmt.Println("++++++++++++++++++++++++++++")
+			fmt.Println("TYPE MAKE SWAP")
+			fmt.Println("++++++++++++++++++++++++++++")
+			fmt.Println()
+
 			// This is the step 4 (Acknowledge Make Packet) of the atomic swap: https://github.com/liangping/ibc/blob/atomic-swap/spec/app/ics-100-atomic-swap/ibcswap.png
 			// This logic is executed when Taker chain acknowledge the make swap packet.
 			var msg types.MsgTakeSwapRequest
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+				fmt.Println()
+				fmt.Println("++++++++++++++++++++++++++++")
+				fmt.Println("INVALID UNMARSHAL: MSG MAKE SWAP")
+				fmt.Println("++++++++++++++++++++++++++++")
+				fmt.Println()
 				return err
 			}
+
+			fmt.Println()
+			fmt.Println("++++++++++++++++++++++++++++")
+			fmt.Println("SYNC Ordr: ", msg.OrderId)
+			fmt.Println("++++++++++++++++++++++++++++")
+			fmt.Println()
 			// check order status
 			order, ok := k.GetAtomicOrder(ctx, msg.OrderId)
 			if ok {
+				fmt.Println()
+				fmt.Println("++++++++++++++++++++++++++++")
+				fmt.Println("order not found:", msg.OrderId)
+				fmt.Println("++++++++++++++++++++++++++++")
+				fmt.Println()
 				return types.ErrOrderDoesNotExists
 			}
+			fmt.Println()
+			fmt.Println("++++++++++++++++++++++++++++")
+			fmt.Println("OK")
+			fmt.Println("++++++++++++++++++++++++++++")
+			fmt.Println()
 			order.Status = types.Status_SYNC
 			k.SetAtomicOrder(ctx, order)
 			return nil
 
 		case types.TAKE_SWAP:
+			fmt.Println()
+			fmt.Println("++++++++++++++++++++++++++++")
+			fmt.Println("TIPE TAKE SWAP: ")
+			fmt.Println("++++++++++++++++++++++++++++")
+			fmt.Println()
 			// This is the step 9 (Transfer Take Token & Close order): https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
 			// The step is executed on the Taker chain.
 			takeMsg := &types.MsgTakeSwapRequest{}
 			if err := types.ModuleCdc.Unmarshal(data.Data, takeMsg); err != nil {
 				return err
 			}
+
+			fmt.Println()
+			fmt.Println("++++++++++++++++++++++++++++")
+			fmt.Println("ComPLETE AD SEND TOKENS")
+			fmt.Println("++++++++++++++++++++++++++++")
+			fmt.Println()
 
 			order, _ := k.GetAtomicOrder(ctx, types.GenerateOrderId(packet))
 			escrowAddr := types.GetEscrowAddress(packet.SourcePort, packet.SourceChannel)
@@ -189,6 +228,13 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			if err = k.bankKeeper.SendCoins(ctx, escrowAddr, makerReceivingAddr, sdk.NewCoins(takeMsg.SellToken)); err != nil {
 				return err
 			}
+
+			fmt.Println()
+			fmt.Println("++++++++++++++++++++++++++++")
+			fmt.Println("COMPALYE")
+			fmt.Println("++++++++++++++++++++++++++++")
+			fmt.Println()
+
 			order.Status = types.Status_COMPLETE
 			order.Takers = &types.SwapTaker{
 				OrderId:               takeMsg.OrderId,

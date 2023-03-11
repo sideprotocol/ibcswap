@@ -396,7 +396,7 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	if order.Status != types.Status_SYNC {
 		fmt.Println()
 		fmt.Println("++++++++++++++++++++++++++++")
-		fmt.Println("INVALID ORDER STATUS")
+		fmt.Println("INVALID ORDER STATUS: ", order.Status)
 		fmt.Println("++++++++++++++++++++++++++++")
 		fmt.Println()
 		return errors.New("invalid order status")
