@@ -82,17 +82,9 @@ func (k Keeper) SendSwapPacket(
 }
 
 func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.AtomicSwapPacketData) error {
-	fmt.Println("+++++++++++++++++++++++++")
-	fmt.Println("+++++++++++++++++++++++++")
-	fmt.Println("+++++++++++++++++++++++++")
-	fmt.Println("On Recv Packet: ", data.Type)
-	fmt.Println("+++++++++++++++++++++++++")
-	fmt.Println("+++++++++++++++++++++++++")
-	fmt.Println("+++++++++++++++++++++++++")
-	fmt.Println("+++++++++++++++++++++++++")
 	switch data.Type {
 	case types.MAKE_SWAP:
-		var msg types.MsgMakeSwapRequest
+		var msg types.SwapMaker
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
@@ -102,21 +94,11 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		}
 
 	case types.TAKE_SWAP:
-		fmt.Println()
-		fmt.Println("++++++++++++++++++++++++++++")
-		fmt.Println("ON Rec take decode ms take swap request")
-		fmt.Println("++++++++++++++++++++++++++++")
-		fmt.Println()
 		var msg types.SwapTaker
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
 
-		fmt.Println()
-		fmt.Println("++++++++++++++++++++++++++++")
-		fmt.Println("ON Rec take decode ms take swap request call next method")
-		fmt.Println("++++++++++++++++++++++++++++")
-		fmt.Println()
 		if err2 := k.OnReceivedTake(ctx, packet, &msg); err2 != nil {
 			return err2
 		} else {
@@ -143,87 +125,76 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 }
 
 func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, data *types.AtomicSwapPacketData, ack channeltypes.Acknowledgement) error {
-	fmt.Println("+++++++++++++++++++++++++")
-	fmt.Println("+++++++++++++++++++++++++")
-	fmt.Println("+++++++++++++++++++++++++")
-	fmt.Println("On Ack Packet: ", data.Type)
-	fmt.Println("+++++++++++++++++++++++++")
-	fmt.Println("+++++++++++++++++++++++++")
-	fmt.Println("+++++++++++++++++++++++++")
-	fmt.Println("+++++++++++++++++++++++++")
 	switch ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Error:
 		return k.refundPacketToken(ctx, packet, data)
 	default:
 		switch data.Type {
 		case types.MAKE_SWAP:
-			fmt.Println()
-			fmt.Println("++++++++++++++++++++++++++++")
-			fmt.Println("TYPE MAKE SWAP")
-			fmt.Println("++++++++++++++++++++++++++++")
-			fmt.Println()
-
 			// This is the step 4 (Acknowledge Make Packet) of the atomic swap: https://github.com/liangping/ibc/blob/atomic-swap/spec/app/ics-100-atomic-swap/ibcswap.png
 			// This logic is executed when Taker chain acknowledge the make swap packet.
-			var msg types.MsgTakeSwapRequest
+			var msg types.SwapMaker
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
-				fmt.Println()
-				fmt.Println("++++++++++++++++++++++++++++")
-				fmt.Println("INVALID UNMARSHAL: MSG MAKE SWAP")
-				fmt.Println("++++++++++++++++++++++++++++")
-				fmt.Println()
 				return err
 			}
 
-			fmt.Println()
-			fmt.Println("++++++++++++++++++++++++++++")
-			fmt.Println("SYNC Ordr: ", msg.OrderId)
-			fmt.Println("++++++++++++++++++++++++++++")
-			fmt.Println()
+			o := types.NewAtomicOrder(&msg, msg.SourceChannel)
+
 			// check order status
-			order, ok := k.GetAtomicOrder(ctx, msg.OrderId)
+			order, ok := k.GetAtomicOrder(ctx, o.Id)
 			if ok {
-				fmt.Println()
-				fmt.Println("++++++++++++++++++++++++++++")
-				fmt.Println("order not found:", msg.OrderId)
-				fmt.Println("++++++++++++++++++++++++++++")
-				fmt.Println()
-				return types.ErrOrderDoesNotExists
+				fmt.Println("+++++++++++++++++++++")
+				fmt.Println("NOT FOUNF")
+				fmt.Println("+++++++++++++++++++++")
+
+				for _, ord := range k.GetAllAtomicOrders(ctx) {
+					ord.Status = types.Status_SYNC
+					k.SetAtomicOrder(ctx, order)
+				}
+				//return types.ErrOrderDoesNotExists
+				return nil
 			}
-			fmt.Println()
-			fmt.Println("++++++++++++++++++++++++++++")
-			fmt.Println("OK")
-			fmt.Println("++++++++++++++++++++++++++++")
-			fmt.Println()
 			order.Status = types.Status_SYNC
 			k.SetAtomicOrder(ctx, order)
 			return nil
 
 		case types.TAKE_SWAP:
-			fmt.Println()
-			fmt.Println("++++++++++++++++++++++++++++")
-			fmt.Println("TIPE TAKE SWAP: ")
-			fmt.Println("++++++++++++++++++++++++++++")
-			fmt.Println()
 			// This is the step 9 (Transfer Take Token & Close order): https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
 			// The step is executed on the Taker chain.
-			takeMsg := &types.MsgTakeSwapRequest{}
+
+			fmt.Println()
+			fmt.Println("++++++++++++++++++++++++++++")
+			fmt.Println("ON Ack Take Swap")
+			fmt.Println("++++++++++++++++++++++++++++")
+			fmt.Println()
+			takeMsg := &types.SwapTaker{}
 			if err := types.ModuleCdc.Unmarshal(data.Data, takeMsg); err != nil {
+				fmt.Println()
+				fmt.Println("++++++++++++++++++++++++++++")
+				fmt.Println("Error parsing: ", err.Error())
+				fmt.Println("++++++++++++++++++++++++++++")
+				fmt.Println()
 				return err
 			}
 
 			fmt.Println()
 			fmt.Println("++++++++++++++++++++++++++++")
-			fmt.Println("ComPLETE AD SEND TOKENS")
+			fmt.Printf("Parse Take Request: %#v: \n", takeMsg)
 			fmt.Println("++++++++++++++++++++++++++++")
 			fmt.Println()
 
-			order, _ := k.GetAtomicOrder(ctx, types.GenerateOrderId(packet))
+			order, _ := k.GetAtomicOrder(ctx, takeMsg.OrderId)
 			escrowAddr := types.GetEscrowAddress(packet.SourcePort, packet.SourceChannel)
 			makerReceivingAddr, err := sdk.AccAddressFromBech32(order.Maker.MakerReceivingAddress)
 			if err != nil {
 				return err
 			}
+
+			fmt.Println()
+			fmt.Println("++++++++++++++++++++++++++++")
+			fmt.Println("Get addres")
+			fmt.Println("++++++++++++++++++++++++++++")
+			fmt.Println()
 
 			if err = k.bankKeeper.SendCoins(ctx, escrowAddr, makerReceivingAddr, sdk.NewCoins(takeMsg.SellToken)); err != nil {
 				return err
@@ -231,7 +202,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 
 			fmt.Println()
 			fmt.Println("++++++++++++++++++++++++++++")
-			fmt.Println("COMPALYE")
+			fmt.Println("Sent coins and complete:", takeMsg.SellToken.Amount.Int64())
 			fmt.Println("++++++++++++++++++++++++++++")
 			fmt.Println()
 
@@ -274,14 +245,6 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 }
 
 func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, data *types.AtomicSwapPacketData) error {
-	fmt.Println("+++++++++++++++++++++++++")
-	fmt.Println("+++++++++++++++++++++++++")
-	fmt.Println("+++++++++++++++++++++++++")
-	fmt.Println("On Time out Packet")
-	fmt.Println("+++++++++++++++++++++++++")
-	fmt.Println("+++++++++++++++++++++++++")
-	fmt.Println("+++++++++++++++++++++++++")
-	fmt.Println("+++++++++++++++++++++++++")
 	return k.refundPacketToken(ctx, packet, data)
 }
 

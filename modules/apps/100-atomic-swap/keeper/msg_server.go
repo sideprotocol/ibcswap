@@ -19,15 +19,16 @@ var _ types.MsgServer = Keeper{}
 
 // MakeSwap is called when the maker wants to make atomic swap. The method create new order and lock tokens.
 // This is the step 1 (Create order & Lock Token) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap.
-func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MsgMakeSwapRequest) (*types.MsgMakeSwapResponse, error) {
+func (k Keeper) MakeSwap(goCtx context.Context, msgReq *types.MsgMakeSwapRequest) (*types.MsgMakeSwapResponse, error) {
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := msg.ValidateBasic(); err != nil {
+	if err := msgReq.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
-	msgByte, err0 := types.ModuleCdc.Marshal(types.NewMakerFromMsg(msg))
+	msg := types.NewMakerFromMsg(msgReq)
+	msgByte, err0 := types.ModuleCdc.Marshal(msg)
 	if err0 != nil {
 		return nil, err0
 	}
@@ -73,9 +74,9 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MsgMakeSwapRequest) (
 	fmt.Println("++++++++++++++++++++")
 	fmt.Println("++++++++++++++++++++")
 	fmt.Println("Sending packet data")
-	fmt.Println("timeoutHight:", msg.TimeoutHeight.String())
-	fmt.Println("timeoutHight:", time.Unix(int64(msg.TimeoutTimestamp), 0))
-	if err := k.SendSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
+	fmt.Println("timeoutHight:", msgReq.TimeoutHeight.String())
+	fmt.Println("timeoutHight:", time.Unix(int64(msgReq.TimeoutTimestamp), 0))
+	if err := k.SendSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, msgReq.TimeoutHeight, msgReq.TimeoutTimestamp, packet); err != nil {
 		return nil, err
 	}
 	fmt.Println("++++++++++++++++++++")
@@ -333,13 +334,10 @@ func (k Keeper) executeCancel(ctx sdk.Context, msg *types.MsgCancelSwapRequest, 
 // OnReceivedMake is the step 3.1 (Save order) from the atomic swap:
 // https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
 // The step is executed on the Taker chain.
-func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg *types.MsgMakeSwapRequest) error {
-	fmt.Println("+++++++++++++++++++++++")
-	fmt.Println("On Receive make")
-	fmt.Println("++++++++++++++++++++++++")
-	if err := msg.ValidateBasic(); err != nil {
-		return err
-	}
+func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg *types.SwapMaker) error {
+	//if err := msg.ValidateBasic(); err != nil {
+	//	return err
+	//}
 
 	// Check if buyToken is a valid token on the taker chain, could be either native or ibc token
 	supply := k.bankKeeper.GetSupply(ctx, msg.BuyToken.Denom)
@@ -348,13 +346,7 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	}
 
 	order := types.NewAtomicOrder(msg, packet.DestinationChannel)
-	fmt.Println("CREATE ATOMIC ORDER ON TAKER CHAIN with ID: ", order.Id)
-	orders := k.GetAllAtomicOrders(ctx)
-	fmt.Println("All orders before that: ", len(orders))
 	k.SetAtomicOrder(ctx, order)
-
-	orders2, ok := k.GetAtomicOrder(ctx, order.Id)
-	fmt.Println("Order after that: ", ok, orders2)
 
 	ctx.EventManager().EmitTypedEvents(msg)
 	return nil
@@ -389,18 +381,18 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 
 	fmt.Println()
 	fmt.Println("++++++++++++++++++++++++++++")
-	fmt.Println("Validate")
+	fmt.Printf("Validate: %#v: \n", order)
 	fmt.Println("++++++++++++++++++++++++++++")
 	fmt.Println()
 
-	if order.Status != types.Status_SYNC {
-		fmt.Println()
-		fmt.Println("++++++++++++++++++++++++++++")
-		fmt.Println("INVALID ORDER STATUS: ", order.Status)
-		fmt.Println("++++++++++++++++++++++++++++")
-		fmt.Println()
-		return errors.New("invalid order status")
-	}
+	//if order.Status != types.Status_SYNC {
+	//	fmt.Println()
+	//	fmt.Println("++++++++++++++++++++++++++++")
+	//	fmt.Println("INVALID ORDER STATUS: ", order.Status)
+	//	fmt.Println("++++++++++++++++++++++++++++")
+	//	fmt.Println()
+	//	return errors.New("invalid order status")
+	//}
 
 	if msg.SellToken.Denom != order.Maker.BuyToken.Denom || !msg.SellToken.Amount.Equal(order.Maker.BuyToken.Amount) {
 		fmt.Println()

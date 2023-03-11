@@ -9,8 +9,7 @@ import (
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 )
 
-func NewAtomicOrder(msg *MsgMakeSwapRequest, channelId string) AtomicSwapOrder {
-	maker := NewMakerFromMsg(msg)
+func NewAtomicOrder(maker *SwapMaker, channelId string) AtomicSwapOrder {
 	buf, _ := proto.Marshal(maker)
 	id := Hash(buf).String()
 	return AtomicSwapOrder{

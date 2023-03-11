@@ -73,13 +73,6 @@ func (s *AtomicSwapTestSuite) TestMakeSwap() {
 		)
 
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-		fmt.Println("-------------------")
-		fmt.Println("-------------------")
-		fmt.Println("-------------------")
-		fmt.Printf("Response from MakeSwap: %#v\n", resp)
-		fmt.Println("-------------------")
-		fmt.Println("-------------------")
-		fmt.Println("-------------------")
 		s.AssertValidTxResponse(resp)
 		s.Require().NoError(err)
 
@@ -88,18 +81,12 @@ func (s *AtomicSwapTestSuite) TestMakeSwap() {
 
 		// TAKE SWAP
 
-		fmt.Println("------------------------------------")
-		fmt.Println("------------------------------------")
-		fmt.Println("------------------------------------")
-		fmt.Println("Start take swap")
-		fmt.Println("------------------------------------")
-		fmt.Println("------------------------------------")
 		sellToken2 := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
 		senderAddressB := chainBWallet.Bech32Address("cosmos")
 		senderReceivingAddressA := chainAWallet.Bech32Address("cosmos")
 
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)
-		order := types.NewAtomicOrder(msg, msg.SourceChannel)
+		order := types.NewAtomicOrder(types.NewMakerFromMsg(msg), msg.SourceChannel)
 		msgTake := types.NewMsgTakeSwap(
 			channelA.PortID,
 			channelA.ChannelID,
@@ -113,19 +100,6 @@ func (s *AtomicSwapTestSuite) TestMakeSwap() {
 		msgTake.OrderId = order.Id
 
 		resp2, err2 := s.BroadcastMessages(ctx, chainB, chainBWallet, msgTake)
-		fmt.Println("-------------------")
-		fmt.Println("-------------------")
-		fmt.Println("-------------------")
-		fmt.Println("-------------------")
-		fmt.Println("-------------------")
-		fmt.Println("-------------------")
-		fmt.Printf("Response from TakeSwap: %#v\n", resp2)
-		fmt.Println("-------------------")
-		fmt.Println("-------------------")
-		fmt.Println("-------------------")
-		fmt.Println("-------------------")
-		fmt.Println("-------------------")
-		fmt.Println("-------------------")
 
 		s.AssertValidTxResponse(resp2)
 		s.Require().NoError(err2)
