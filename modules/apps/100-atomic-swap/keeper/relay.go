@@ -82,22 +82,23 @@ func (k Keeper) SendSwapPacket(
 }
 
 func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.AtomicSwapPacketData) error {
-
 	switch data.Type {
 	case types.MAKE_SWAP:
-		var msg types.MsgMakeSwapRequest
+		var msg types.SwapMaker
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
+
 		if err := k.OnReceivedMake(ctx, packet, &msg); err != nil {
 			return err
 		}
 
 	case types.TAKE_SWAP:
-		var msg types.MsgTakeSwapRequest
+		var msg types.SwapTaker
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
+
 		if err2 := k.OnReceivedTake(ctx, packet, &msg); err2 != nil {
 			return err2
 		} else {
@@ -132,14 +133,21 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 		case types.MAKE_SWAP:
 			// This is the step 4 (Acknowledge Make Packet) of the atomic swap: https://github.com/liangping/ibc/blob/atomic-swap/spec/app/ics-100-atomic-swap/ibcswap.png
 			// This logic is executed when Taker chain acknowledge the make swap packet.
-			var msg types.MsgTakeSwapRequest
+			var msg types.SwapMaker
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				return err
 			}
+
 			// check order status
-			order, ok := k.GetAtomicOrder(ctx, msg.OrderId)
+			o := types.NewAtomicOrder(&msg, msg.SourceChannel)
+			order, ok := k.GetAtomicOrder(ctx, o.Id)
 			if ok {
-				return types.ErrOrderDoesNotExists
+				for _, ord := range k.GetAllAtomicOrders(ctx) {
+					ord.Status = types.Status_SYNC
+					k.SetAtomicOrder(ctx, order)
+				}
+				//return types.ErrOrderDoesNotExists
+				return nil
 			}
 			order.Status = types.Status_SYNC
 			k.SetAtomicOrder(ctx, order)
@@ -148,12 +156,12 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 		case types.TAKE_SWAP:
 			// This is the step 9 (Transfer Take Token & Close order): https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
 			// The step is executed on the Taker chain.
-			takeMsg := &types.MsgTakeSwapRequest{}
+			takeMsg := &types.SwapTaker{}
 			if err := types.ModuleCdc.Unmarshal(data.Data, takeMsg); err != nil {
 				return err
 			}
 
-			order, _ := k.GetAtomicOrder(ctx, types.GenerateOrderId(packet))
+			order, _ := k.GetAtomicOrder(ctx, takeMsg.OrderId)
 			escrowAddr := types.GetEscrowAddress(packet.SourcePort, packet.SourceChannel)
 			makerReceivingAddr, err := sdk.AccAddressFromBech32(order.Maker.MakerReceivingAddress)
 			if err != nil {
@@ -163,6 +171,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			if err = k.bankKeeper.SendCoins(ctx, escrowAddr, makerReceivingAddr, sdk.NewCoins(takeMsg.SellToken)); err != nil {
 				return err
 			}
+
 			order.Status = types.Status_COMPLETE
 			order.Takers = &types.SwapTaker{
 				OrderId:               takeMsg.OrderId,

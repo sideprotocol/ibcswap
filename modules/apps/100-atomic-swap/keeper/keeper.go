@@ -104,18 +104,13 @@ func (k Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability
 
 // GetAtomicOrder returns the OTCOrder for the swap module.
 func (k Keeper) GetAtomicOrder(ctx sdk.Context, orderId string) (types.AtomicSwapOrder, bool) {
-	key, err := hex.DecodeString(orderId)
-	if err != nil {
-		return types.AtomicSwapOrder{}, false
-	}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKey)
-	bz := store.Get(key)
+	bz := store.Get([]byte(orderId))
 	if bz == nil {
 		return types.AtomicSwapOrder{}, false
 	}
 
-	// order := k.MustUnmarshalOTCOrder(bz)
-	order := types.AtomicSwapOrder{}
+	order := k.MustUnmarshalOrder(bz)
 	return order, true
 }
 
@@ -131,9 +126,9 @@ func (k Keeper) HasAtomicOrder(ctx sdk.Context, orderId string) bool {
 
 // SetAtomicOrder sets a new OTCOrder to the store.
 func (k Keeper) SetAtomicOrder(ctx sdk.Context, order types.AtomicSwapOrder) {
-	//store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKey)
-	//bz := k.MustMarshalOTCOrder(order)
-	//store.Set([]byte(order.Id), bz)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKey)
+	bz := k.MustMarshalOrder(order)
+	store.Set([]byte(order.Id), bz)
 }
 
 // IterateAtomicOrders iterates over the limit orders in the store
@@ -145,10 +140,10 @@ func (k Keeper) IterateAtomicOrders(ctx sdk.Context, cb func(order types.AtomicS
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 
-		//order := k.MustUnmarshalOTCOrder(iterator.Value())
-		//if cb(order) {
-		//	break
-		//}
+		order := k.MustUnmarshalOrder(iterator.Value())
+		if cb(order) {
+			break
+		}
 	}
 }
 

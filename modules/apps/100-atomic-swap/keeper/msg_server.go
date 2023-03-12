@@ -18,15 +18,16 @@ var _ types.MsgServer = Keeper{}
 
 // MakeSwap is called when the maker wants to make atomic swap. The method create new order and lock tokens.
 // This is the step 1 (Create order & Lock Token) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap.
-func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MsgMakeSwapRequest) (*types.MsgMakeSwapResponse, error) {
+func (k Keeper) MakeSwap(goCtx context.Context, msgReq *types.MsgMakeSwapRequest) (*types.MsgMakeSwapResponse, error) {
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := msg.ValidateBasic(); err != nil {
+	if err := msgReq.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
-	msgByte, err0 := types.ModuleCdc.Marshal(types.NewMakerFromMsg(msg))
+	msg := types.NewMakerFromMsg(msgReq)
+	msgByte, err0 := types.ModuleCdc.Marshal(msg)
 	if err0 != nil {
 		return nil, err0
 	}
@@ -58,7 +59,8 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MsgMakeSwapRequest) (
 		Data: msgByte,
 		Memo: "",
 	}
-	if err := k.SendSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
+
+	if err := k.SendSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, msgReq.TimeoutHeight, msgReq.TimeoutTimestamp, packet); err != nil {
 		return nil, err
 	}
 
@@ -82,14 +84,13 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.MsgTakeSwapRequest) (
 	}
 
 	escrowAddr := types.GetEscrowAddress(msg.SourcePort, msg.SourceChannel)
-	// check order status
 	order, ok := k.GetAtomicOrder(ctx, msg.OrderId)
 	if !ok {
 		return nil, types.ErrOrderDoesNotExists
 	}
 
 	// Make sure the maker's buy token matches the taker's sell token
-	if order.Maker.BuyToken.Denom != msg.SellToken.Denom || order.Maker.BuyToken.Amount != msg.SellToken.Amount {
+	if order.Maker.BuyToken.Denom != msg.SellToken.Denom || !order.Maker.BuyToken.Amount.Equal(msg.SellToken.Amount) {
 		return &types.MsgTakeSwapResponse{}, errors.New("invalid sell token")
 	}
 
@@ -302,12 +303,7 @@ func (k Keeper) executeCancel(ctx sdk.Context, msg *types.MsgCancelSwapRequest, 
 // OnReceivedMake is the step 3.1 (Save order) from the atomic swap:
 // https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
 // The step is executed on the Taker chain.
-func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg *types.MsgMakeSwapRequest) error {
-
-	if err := msg.ValidateBasic(); err != nil {
-		return err
-	}
-
+func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg *types.SwapMaker) error {
 	// Check if buyToken is a valid token on the taker chain, could be either native or ibc token
 	supply := k.bankKeeper.GetSupply(ctx, msg.BuyToken.Denom)
 	if supply.Amount.Int64() <= 0 {
@@ -323,12 +319,7 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg 
 
 // OnReceivedTake is step 7.1 (Transfer Make Token) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
 // The step is executed on the Maker chain.
-func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg *types.MsgTakeSwapRequest) error {
-
-	if err := msg.ValidateBasic(); err != nil {
-		return err
-	}
-
+func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg *types.SwapTaker) error {
 	escrowAddr := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
 
 	// check order status
@@ -337,11 +328,11 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 		return types.ErrOrderDoesNotExists
 	}
 
-	if order.Status != types.Status_SYNC {
-		return errors.New("invalid order status")
-	}
+	//if order.Status != types.Status_SYNC {
+	//	return errors.New("invalid order status")
+	//}
 
-	if msg.SellToken.Denom != order.Maker.BuyToken.Denom || msg.SellToken.Amount != order.Maker.BuyToken.Amount {
+	if msg.SellToken.Denom != order.Maker.BuyToken.Denom || !msg.SellToken.Amount.Equal(order.Maker.BuyToken.Amount) {
 		return errors.New("invalid sell token")
 	}
 
@@ -359,7 +350,7 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	if err = k.bankKeeper.SendCoins(ctx, escrowAddr, takerReceivingAddr, sdk.NewCoins(order.Maker.SellToken)); err != nil {
 		return errors.New("transfer coins failed")
 	}
-
+	
 	// Update status of order
 	order.Status = types.Status_COMPLETE
 	order.Takers = &types.SwapTaker{
