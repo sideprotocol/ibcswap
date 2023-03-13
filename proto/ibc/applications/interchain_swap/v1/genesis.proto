@@ -4,7 +4,7 @@ package ibc.applications.ibcswap.v1;
 
 option go_package = "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types";
 
-import "ibc/applications/ibcswap/v1/swap.proto";
+import "ibc/applications/interchain_swap/v1/swap.proto";
 import "gogoproto/gogo.proto";
 
 // GenesisState defines the ibc-transfer genesis state
