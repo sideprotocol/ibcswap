@@ -186,18 +186,61 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 		case types.CANCEL_SWAP:
 			// This is the step 14 (Cancel & refund) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
 			// It is executed on the Maker chain.
+
+			fmt.Println("----------------------------")
+			fmt.Println("----------------------------")
+			fmt.Println("On Ack Cancelll")
+			fmt.Println("----------------------------")
+			fmt.Println("----------------------------")
+
 			var msg types.MsgCancelSwapRequest
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+				fmt.Println("----------------------------")
+				fmt.Println("----------------------------")
+				fmt.Println("Unmarshal err: ", err.Error())
+				fmt.Println("----------------------------")
+				fmt.Println("----------------------------")
 				return err
 			}
 
-			order, _ := k.GetAtomicOrder(ctx, types.GenerateOrderId(packet))
+			fmt.Println("----------------------------")
+			fmt.Println("----------------------------")
+			fmt.Println("Get orderrr:", msg.OrderId, msg.MakerAddress)
+			fmt.Println("package: ", packet)
+			fmt.Println("----------------------------")
+			fmt.Println("----------------------------")
+
+			order, ok := k.GetAtomicOrder(ctx, msg.OrderId)
+
+			fmt.Println("----------------------------")
+			fmt.Println("----------------------------")
+			fmt.Println("IS orderr found: ", ok)
+			fmt.Println("Order: ", order)
+			fmt.Println("----------------------------")
+			fmt.Println("----------------------------")
+
 			escrowAddr := types.GetEscrowAddress(packet.SourcePort, packet.SourceChannel)
-			makerReceivingAddr, err := sdk.AccAddressFromBech32(order.Maker.MakerReceivingAddress)
+			makerAddr, err := sdk.AccAddressFromBech32(order.Maker.MakerAddress)
 			if err != nil {
+				fmt.Println("----------------------------")
+				fmt.Println("----------------------------")
+				fmt.Println("Now found: ", err.Error())
+				fmt.Println("----------------------------")
+				fmt.Println("----------------------------")
 				return err
 			}
-			if err = k.bankKeeper.SendCoins(ctx, escrowAddr, makerReceivingAddr, sdk.NewCoins(order.Maker.SellToken)); err != nil {
+
+			fmt.Println("----------------------------")
+			fmt.Println("----------------------------")
+			fmt.Println("Refund coins to: ", order.Maker, order.Maker.SellToken.Amount.Int64())
+			fmt.Println("----------------------------")
+			fmt.Println("----------------------------")
+			if err = k.bankKeeper.SendCoins(ctx, escrowAddr, makerAddr, sdk.NewCoins(order.Maker.SellToken)); err != nil {
+				fmt.Println("----------------------------")
+				fmt.Println("----------------------------")
+				fmt.Println("Failed send coins: ", err.Error())
+				fmt.Println("----------------------------")
+				fmt.Println("----------------------------")
 				return err
 			}
 			order.Status = types.Status_CANCEL

@@ -42,6 +42,12 @@ func (k Keeper) MakeSwap(goCtx context.Context, msgReq *types.MsgMakeSwapRequest
 		return &types.MsgMakeSwapResponse{}, errors.New("insufficient balance")
 	}
 
+	fmt.Println("----------------------")
+	fmt.Println("----------------------")
+	fmt.Println("Maker address: ", sender, msg.SellToken.Amount.Int64())
+	fmt.Println("----------------------")
+	fmt.Println("----------------------")
+
 	escrowAddr := types.GetEscrowAddress(msg.SourcePort, msg.SourceChannel)
 
 	// lock sell token into module
@@ -150,6 +156,12 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.MsgTakeSwapRequest) (
 func (k Keeper) CancelSwap(goCtx context.Context, msg *types.MsgCancelSwapRequest) (*types.MsgCancelSwapResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	fmt.Println("----------------")
+	fmt.Println("----------------")
+	fmt.Println("In Cancel swap")
+	fmt.Println("----------------")
+	fmt.Println("----------------")
+
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
 	}
@@ -158,20 +170,44 @@ func (k Keeper) CancelSwap(goCtx context.Context, msg *types.MsgCancelSwapReques
 		return nil, err
 	}
 
+	fmt.Println("----------------")
+	fmt.Println("----------------")
+	fmt.Println("Get order")
+	fmt.Println("----------------")
+	fmt.Println("----------------")
+
 	order, ok := k.GetAtomicOrder(ctx, msg.OrderId)
 	if !ok {
 		return &types.MsgCancelSwapResponse{}, types.ErrOrderDoesNotExists
 	}
+
+	fmt.Println("----------------")
+	fmt.Println("----------------")
+	fmt.Println("Check makerAddress: ", msg.MakerAddress)
+	fmt.Println("----------------")
+	fmt.Println("----------------")
 
 	// Make sure the sender is the maker of the order.
 	if order.Maker.MakerAddress != msg.MakerAddress {
 		return &types.MsgCancelSwapResponse{}, fmt.Errorf("sender is not the maker of the order")
 	}
 
+	fmt.Println("----------------")
+	fmt.Println("----------------")
+	fmt.Println("Check status: ", order.Status)
+	fmt.Println("----------------")
+	fmt.Println("----------------")
+
 	// Make sure the order is in a valid state for cancellation
 	if order.Status != types.Status_SYNC && order.Status != types.Status_INITIAL {
 		return &types.MsgCancelSwapResponse{}, fmt.Errorf("order is not in a valid state for cancellation")
 	}
+
+	fmt.Println("----------------")
+	fmt.Println("----------------")
+	fmt.Println("Send swap data")
+	fmt.Println("----------------")
+	fmt.Println("----------------")
 
 	packet := types.AtomicSwapPacketData{
 		Type: types.CANCEL_SWAP,
@@ -350,7 +386,7 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	if err = k.bankKeeper.SendCoins(ctx, escrowAddr, takerReceivingAddr, sdk.NewCoins(order.Maker.SellToken)); err != nil {
 		return errors.New("transfer coins failed")
 	}
-	
+
 	// Update status of order
 	order.Status = types.Status_COMPLETE
 	order.Takers = &types.SwapTaker{
@@ -375,10 +411,22 @@ func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, ms
 	}
 	// check order status
 
+	fmt.Println("------------------------")
+	fmt.Println("------------------------")
+	fmt.Println("ON Receive Cancel")
+	fmt.Println("------------------------")
+	fmt.Println("------------------------")
+
 	order, ok := k.GetAtomicOrder(ctx, msg.OrderId)
 	if !ok {
 		return errors.New("order not found")
 	}
+
+	fmt.Println("------------------------")
+	fmt.Println("------------------------")
+	fmt.Println("Check status:", order.Status)
+	fmt.Println("------------------------")
+	fmt.Println("------------------------")
 
 	if order.Status != types.Status_SYNC && order.Status != types.Status_INITIAL {
 		return errors.New("invalid order status")
