@@ -89,6 +89,10 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.MsgTakeSwapRequest) (
 		return nil, types.ErrOrderDoesNotExists
 	}
 
+	if order.Status != types.Status_SYNC && order.Status != types.Status_INITIAL {
+		return nil, errors.New("order is not in valid state")
+	}
+
 	// Make sure the maker's buy token matches the taker's sell token
 	if order.Maker.BuyToken.Denom != msg.SellToken.Denom || !order.Maker.BuyToken.Amount.Equal(msg.SellToken.Amount) {
 		return &types.MsgTakeSwapResponse{}, errors.New("invalid sell token")

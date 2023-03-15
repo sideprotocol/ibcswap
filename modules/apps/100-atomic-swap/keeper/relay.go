@@ -141,13 +141,9 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			// check order status
 			o := types.NewAtomicOrder(&msg, msg.SourceChannel)
 			order, ok := k.GetAtomicOrder(ctx, o.Id)
-			if ok {
-				for _, ord := range k.GetAllAtomicOrders(ctx) {
-					ord.Status = types.Status_SYNC
-					k.SetAtomicOrder(ctx, order)
-				}
-				//return types.ErrOrderDoesNotExists
-				return nil
+			if !ok {
+				return types.ErrOrderDoesNotExists
+				//return nil
 			}
 			order.Status = types.Status_SYNC
 			k.SetAtomicOrder(ctx, order)
