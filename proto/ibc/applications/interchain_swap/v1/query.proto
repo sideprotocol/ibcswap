@@ -14,12 +14,12 @@ service Query {
 
   // Params queries all parameters of the ibc-transfer module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/ibc/apps/swap/v1/params";
+    option (google.api.http).get = "/ibc/apps/interchainswap/v1/params";
   }
 
   // EscrowAddress returns the escrow address for a particular port and channel id.
   rpc EscrowAddress(QueryEscrowAddressRequest) returns (QueryEscrowAddressResponse) {
-    option (google.api.http).get = "/ibc/apps/swap/v1/channels/{channel_id}/ports/{port_id}/escrow_address";
+    option (google.api.http).get = "/ibc/apps/interchainswap/v1/channels/{channel_id}/ports/{port_id}/escrow_address";
   }
 }
 
