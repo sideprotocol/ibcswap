@@ -111,13 +111,13 @@ import (
 	ibchost "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
 	ibcmock "github.com/cosmos/ibc-go/v6/testing/mock"
-	simappparams "github.com/ibcswap/ibcswap/v6/testing/simapp/params"
-	simappupgrades "github.com/ibcswap/ibcswap/v6/testing/simapp/upgrades"
 	v6 "github.com/cosmos/ibc-go/v6/testing/simapp/upgrades/v6"
 	ibctestingtypes "github.com/cosmos/ibc-go/v6/testing/types"
 	atomicswap "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap"
 	atomicswapkeeper "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/keeper"
 	atomicswaptypes "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	simappparams "github.com/ibcswap/ibcswap/v6/testing/simapp/params"
+	simappupgrades "github.com/ibcswap/ibcswap/v6/testing/simapp/upgrades"
 
 	interchainswap "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap"
 	interchainswapkeeper "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
@@ -386,6 +386,7 @@ func NewSimApp(
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
+		AddRoute(interchainswaptypes.RouterKey, interchainswap.NewMarketFeeUpdateProposalHandler(app.InterchainSwapKeeper)).
 		//AddRoute(atomicswaptypes.RouterKey, ibcclient.NewClientProposalHandler(app.AtomicSwapKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper))
 

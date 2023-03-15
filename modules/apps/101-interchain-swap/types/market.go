@@ -231,3 +231,6 @@ func (imm *InterchainMarketMaker) RightSwap(amountIn types.Coin, amountOut types
 func (imm *InterchainMarketMaker) MinusFees(amount types.Int) float64 {
 	return float64(amount.Uint64()) * (1 - float64(imm.FeeRate)/10000)
 }
+
+
+

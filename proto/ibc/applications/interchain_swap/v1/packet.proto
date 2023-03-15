@@ -19,7 +19,6 @@ enum SwapMessageType {
   TYPE_WITHDRAW = 3 [(gogoproto.enumvalue_customname) = "WITHDRAW"];
   TYPE_LEFT_SWAP = 4 [(gogoproto.enumvalue_customname) = "LEFT_SWAP"];
   TYPE_RIGHT_SWAP = 5 [(gogoproto.enumvalue_customname) = "RIGHT_SWAP"];
-
 }
 
 // IBCSwapPacketData is comprised of a raw transaction, type of transaction and optional memo field.

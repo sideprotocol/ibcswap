@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package ibc.applications.interchain_swap.v1;
+import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types";
+
+
+enum PoolSide {
+  NATIVE = 0;
+  REMOTE = 1;
+}
+
+enum PoolStatus {
+  POOL_STATUS_INITIAL = 0;
+  POOL_STATUS_READY = 1;
+}
+message PoolAsset {
+  PoolSide side = 1;
+  cosmos.base.v1beta1.Coin balance = 2;
+  uint32 weight = 3;
+  uint32 decimal = 4;
+}
+
+message InterchainLiquidityPool {
+  string poolId = 1;
+  repeated PoolAsset assets = 2;
+  cosmos.base.v1beta1.Coin supply = 3;
+  PoolStatus status = 4;
+  string encounterPartyPort = 5; 
+  string encounterPartyChannel = 6; 
+}
+
+message InterchainMarketMaker {
+  string poolId = 1; 
+  InterchainLiquidityPool pool = 2;
+  uint32 feeRate = 3; 
+}
+
+
+
+// MarketFeeUpdateProposal details a proposal for updating market fee.
+
+message MarketFeeUpdateProposal {
+  option deprecated                          = true;
+  option (gogoproto.equal)                   = false;
+  option (gogoproto.goproto_getters)         = false;
+
+  string   title                           = 1;
+  string   description                     = 2;
+  string   pool_id                         = 3;
+  uint32   fee_rate                        = 4;
+}
