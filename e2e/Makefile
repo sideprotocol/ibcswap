@@ -13,8 +13,8 @@ e2e-test: cleanup-ibc-test-containers
 e2e-test-interchainswap-basic: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh TestInterchainswapTestSuite TestBasicMsgPacket
 
-e2e-test-atomicswap-basic: cleanup-ibc-test-containers
-	./scripts/run-e2e.sh TestAtomicSwapTestSuite TestAtomicSwap_HappyPath
+e2e-test-atomic-swap: cleanup-ibc-test-containers
+	./scripts/run-e2e-atomic-swap.sh TestAtomicSwapTestSuite TestAtomicSwap_HappyPath
 
 compatibility-tests:
 	./scripts/run-compatibility-tests.sh $(release_branch)
