@@ -2,7 +2,6 @@ package e2e
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -30,12 +29,6 @@ func (s *TakeAtomicSwapTestSuite) TestTakeAtomicSwap() {
 	// setup relayers and connection-0 between two chains.
 	relayer, channelA := s.SetupChainsRelayerAndChannel(ctx, atomicSwapChannelOptions())
 	chainA, chainB := s.GetChains()
-
-	//create wallets for testing of the maker address on chains A and B.
-	//chainAMakerWallet := s.CreateUserOnChainA(ctx, testvalues.StartingTokenAmount)
-	//makerAddressOnChainA := chainAMakerWallet.Bech32Address("cosmos")
-	//chainBMakerWallet := s.CreateUserOnChainB(ctx, testvalues.StartingTokenAmount)
-	//makerReceivingAddressOnChainB := chainBMakerWallet.Bech32Address("cosmos")
 
 	t.Run("start relayer", func(t *testing.T) {
 		s.StartRelayer(relayer)
@@ -65,15 +58,12 @@ func (s *TakeAtomicSwapTestSuite) TestTakeAtomicSwap() {
 		// wait block when packet relay.
 		test.WaitForBlocks(ctx, 10, chainA, chainB)
 
-		fmt.Println("Address; ", makerAddressChainA)
-
 		// broadcast Cancel order
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)
 		order := types.NewAtomicOrder(types.NewMakerFromMsg(msg), msg.SourceChannel)
 
 		msgCancel := types.NewMsgCancelSwap(channelA.PortID, channelA.ChannelID, makerAddressChainA, order.Id, timeoutHeight2, 0)
 		msgCancel.OrderId = order.Id
-		fmt.Println("ORDER ID IN E2E E2E E2E: ", order.Id)
 		resp2, err2 := s.BroadcastMessages(ctx, chainA, makerWallet, msgCancel)
 
 		s.AssertValidTxResponse(resp2)
@@ -89,7 +79,6 @@ func (s *TakeAtomicSwapTestSuite) TestTakeAtomicSwap() {
 		respTake, err := s.BroadcastMessages(ctx, chainB, takerWalletChainB, msgTake)
 		s.Require().NoError(err)
 		s.AssertValidTxResponse(resp2)
-		fmt.Println("TAKE ORDER THAT IS CANCELED:----------------", respTake.RawLog)
 		s.Require().Equal("failed to execute message; message index: 0: order is not in valid state", respTake.RawLog)
 	})
 

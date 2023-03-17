@@ -2,7 +2,6 @@ package e2e
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -78,58 +77,6 @@ func (s *CancelAtomicSwapTestSuite) TestCancelAtomicSwap() {
 		s.Require().Equal(initialMakerBalance.Int64(), b1.Balance.Amount.Int64())
 	})
 
-	//t.Run("try to take order that is canceled", func(t *testing.T) {
-	//	// Broadcast Make Swap transaction.
-	//	makerWallet := s.CreateUserOnChainA(ctx, testvalues.StartingTokenAmount)
-	//	makerAddressChainA := makerWallet.Bech32Address("cosmos")
-	//	makerWalletChainB := s.CreateUserOnChainB(ctx, testvalues.StartingTokenAmount)
-	//	makerAddressOnChainB := makerWalletChainB.Bech32Address("cosmos")
-	//
-	//	// create wallets for testing of the taker address on chains A and B.
-	//	takerWalletChainB := s.CreateUserOnChainB(ctx, testvalues.StartingTokenAmount)
-	//	chainBTakerAddress := takerWalletChainB.Bech32Address("cosmos")
-	//	takerWalletChainA := s.CreateUserOnChainA(ctx, testvalues.StartingTokenAmount)
-	//	chainATakerReceivingAddress := takerWalletChainA.Bech32Address("cosmos")
-	//
-	//	sellToken := sdk.NewCoin(chainA.Config().Denom, sdk.NewInt(100))
-	//	buyToken := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
-	//	timeoutHeight := clienttypes.NewHeight(0, 110)
-	//	msg := types.NewMsgMakeSwap(channelA.PortID, channelA.ChannelID, sellToken, buyToken, makerAddressChainA, makerAddressOnChainB, "", timeoutHeight, 0, time.Now().UTC().Unix())
-	//	response, err := s.BroadcastMessages(ctx, chainA, makerWallet, msg)
-	//	s.AssertValidTxResponse(response)
-	//	s.Require().NoError(err)
-	//
-	//	// wait block when packet relay.
-	//	test.WaitForBlocks(ctx, 10, chainA, chainB)
-	//
-	//	fmt.Println("Address; ", makerAddressChainA)
-	//
-	//	// broadcast Cancel order
-	//	timeoutHeight2 := clienttypes.NewHeight(0, 110)
-	//	order := types.NewAtomicOrder(types.NewMakerFromMsg(msg), msg.SourceChannel)
-	//
-	//	msgCancel := types.NewMsgCancelSwap(channelA.PortID, channelA.ChannelID, makerAddressChainA, order.Id, timeoutHeight2, 0)
-	//	msgCancel.OrderId = order.Id
-	//	fmt.Println("ORDER ID IN E2E E2E E2E: ", order.Id)
-	//	resp2, err2 := s.BroadcastMessages(ctx, chainA, makerWallet, msgCancel)
-	//
-	//	s.AssertValidTxResponse(resp2)
-	//	s.Require().NoError(err2)
-	//
-	//	// wait block when packet relay.
-	//	test.WaitForBlocks(ctx, 10, chainA, chainB)
-	//
-	//	// try to TAKE canceled order
-	//	sellToken2 := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
-	//	msgTake := types.NewMsgTakeSwap(channelA.PortID, channelA.ChannelID, sellToken2, chainBTakerAddress, chainATakerReceivingAddress, timeoutHeight2, 0, time.Now().UTC().Unix())
-	//	msgTake.OrderId = order.Id
-	//	respTake, err := s.BroadcastMessages(ctx, chainB, takerWalletChainB, msgTake)
-	//	s.Require().NoError(err)
-	//	s.AssertValidTxResponse(resp2)
-	//	fmt.Println("TAKE ORDER THAT IS CANCELED:----------------", respTake.RawLog)
-	//	s.Require().Equal("failed to execute message; message index: 0: order is not in valid state", respTake.RawLog)
-	//})
-	//
 	t.Run("cancel atomic swap that doesn't exist", func(t *testing.T) {
 		// Broadcast Make Swap transaction.
 		makerWallet := s.CreateUserOnChainA(ctx, testvalues.StartingTokenAmount)
@@ -181,7 +128,6 @@ func (s *CancelAtomicSwapTestSuite) TestCancelAtomicSwap() {
 		// broadcast Cancel order for the second time
 		//msgCancel2 := types.NewMsgCancelSwap(channelA.PortID, channelA.ChannelID, makerAddressChainA, order.Id, timeoutHeight2, 0)
 		resp, err := s.BroadcastMessages(ctx, chainA, makerWallet, msgCancel)
-		fmt.Println("CANCEL FOR THE SECOND TIME --------------: ", resp.RawLog)
 		s.Require().NoError(err)
 		s.Require().Equal("failed to execute message; message index: 0: order is not in a valid state for cancellation", resp.RawLog)
 

@@ -89,12 +89,6 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.MsgTakeSwapRequest) (
 		return nil, types.ErrOrderDoesNotExists
 	}
 
-	fmt.Println("-----------------------------")
-	fmt.Println("-----------------------------")
-	fmt.Println("Order status: ", order.Status, order.Id)
-	fmt.Println("-----------------------------")
-	fmt.Println("-----------------------------")
-
 	if order.Status != types.Status_SYNC && order.Status != types.Status_INITIAL {
 		return nil, errors.New("order is not in valid state")
 	}
@@ -385,22 +379,10 @@ func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, ms
 	}
 	// check order status
 
-	fmt.Println("--------------------------------")
-	fmt.Println("--------------------------------")
-	fmt.Println("On taker chain to update status to cancel")
-	fmt.Println("--------------------------------")
-	fmt.Println("--------------------------------")
-
 	order, ok := k.GetAtomicOrder(ctx, msg.OrderId)
 	if !ok {
 		return errors.New("order not found")
 	}
-
-	fmt.Println("--------------------------------")
-	fmt.Println("--------------------------------")
-	fmt.Println("Order current status:", order.Status, order.Id)
-	fmt.Println("--------------------------------")
-	fmt.Println("--------------------------------")
 
 	if order.Status != types.Status_SYNC && order.Status != types.Status_INITIAL {
 		return errors.New("invalid order status")
@@ -410,17 +392,11 @@ func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, ms
 		return errors.New("the maker order has already been occupied")
 	}
 
-	fmt.Println("SET STATUS TO CANCEL ON TAKER CHAIN")
-
 	// Update status of order
 	order.Status = types.Status_CANCEL
 	order.CancelTimestamp = msg.CreateTimestamp
 	k.SetAtomicOrder(ctx, order)
-
-	uOrd, _ := k.GetAtomicOrder(ctx, msg.OrderId)
-
-	fmt.Println("UPDATED STATYS IS:", uOrd.Status, uOrd.Id)
-
+	
 	ctx.EventManager().EmitTypedEvents(msg)
 	return nil
 }
