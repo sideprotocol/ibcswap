@@ -141,13 +141,9 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			// check order status
 			o := types.NewAtomicOrder(&msg, msg.SourceChannel)
 			order, ok := k.GetAtomicOrder(ctx, o.Id)
-			if ok {
-				for _, ord := range k.GetAllAtomicOrders(ctx) {
-					ord.Status = types.Status_SYNC
-					k.SetAtomicOrder(ctx, order)
-				}
-				//return types.ErrOrderDoesNotExists
-				return nil
+			if !ok {
+				return types.ErrOrderDoesNotExists
+				//return nil
 			}
 			order.Status = types.Status_SYNC
 			k.SetAtomicOrder(ctx, order)
@@ -186,18 +182,20 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 		case types.CANCEL_SWAP:
 			// This is the step 14 (Cancel & refund) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
 			// It is executed on the Maker chain.
+
 			var msg types.MsgCancelSwapRequest
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				return err
 			}
 
-			order, _ := k.GetAtomicOrder(ctx, types.GenerateOrderId(packet))
+			order, _ := k.GetAtomicOrder(ctx, msg.OrderId)
 			escrowAddr := types.GetEscrowAddress(packet.SourcePort, packet.SourceChannel)
-			makerReceivingAddr, err := sdk.AccAddressFromBech32(order.Maker.MakerReceivingAddress)
+			makerAddr, err := sdk.AccAddressFromBech32(order.Maker.MakerAddress)
 			if err != nil {
 				return err
 			}
-			if err = k.bankKeeper.SendCoins(ctx, escrowAddr, makerReceivingAddr, sdk.NewCoins(order.Maker.SellToken)); err != nil {
+
+			if err = k.bankKeeper.SendCoins(ctx, escrowAddr, makerAddr, sdk.NewCoins(order.Maker.SellToken)); err != nil {
 				return err
 			}
 			order.Status = types.Status_CANCEL

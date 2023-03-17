@@ -89,6 +89,10 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.MsgTakeSwapRequest) (
 		return nil, types.ErrOrderDoesNotExists
 	}
 
+	if order.Status != types.Status_SYNC && order.Status != types.Status_INITIAL {
+		return nil, errors.New("order is not in valid state")
+	}
+
 	// Make sure the maker's buy token matches the taker's sell token
 	if order.Maker.BuyToken.Denom != msg.SellToken.Denom || !order.Maker.BuyToken.Amount.Equal(msg.SellToken.Amount) {
 		return &types.MsgTakeSwapResponse{}, errors.New("invalid sell token")
@@ -350,7 +354,7 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	if err = k.bankKeeper.SendCoins(ctx, escrowAddr, takerReceivingAddr, sdk.NewCoins(order.Maker.SellToken)); err != nil {
 		return errors.New("transfer coins failed")
 	}
-	
+
 	// Update status of order
 	order.Status = types.Status_COMPLETE
 	order.Takers = &types.SwapTaker{
