@@ -17,7 +17,7 @@ func (q Keeper) Orders(ctx context.Context, request *types.QueryOrdersRequest) (
 	var orders []*types.AtomicSwapOrder
 	q.IterateAtomicOrders(clientCtx, func(order types.AtomicSwapOrder) bool {
 		orders = append(orders, &order)
-		return true
+		return false
 	})
 	return &types.QueryOrdersResponse{Orders: orders}, nil
 }
