@@ -21,6 +21,16 @@ service Query {
   rpc EscrowAddress(QueryEscrowAddressRequest) returns (QueryEscrowAddressResponse) {
     option (google.api.http).get = "/ibc/apps/atomicswap/v1/channels/{channel_id}/ports/{port_id}/escrow_address";
   }
+
+  rpc Orders(QueryOrdersRequest) returns (QueryOrdersResponse) {
+    option (google.api.http).get = "/ibc/apps/atomicswap/v1/orders";
+  }
+}
+
+message QueryOrdersRequest {}
+
+message QueryOrdersResponse {
+    repeated AtomicSwapOrder orders = 1;
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.

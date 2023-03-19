@@ -64,3 +64,30 @@ func GetCmdQueryEscrowAddress() *cobra.Command {
 
 	return cmd
 }
+
+// GetCmdQueryEscrowAddress returns the command handler for ibc-swap parameter querying.
+func GetCmdOrderList() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "orders",
+		Short:   "Get orders",
+		Long:    "Get orders",
+		Args:    cobra.NoArgs,
+		Example: fmt.Sprintf("%s query ibc-swap orders", version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			//addr := types.GetEscrowAddress(port, channel)
+
+			queryClient := types.NewQueryClient(clientCtx)
+			resposne, err := queryClient.Orders(cmd.Context(), &types.QueryOrdersRequest{})
+
+			return clientCtx.PrintProto(resposne)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}

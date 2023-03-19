@@ -11,6 +11,17 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
+func (q Keeper) Orders(ctx context.Context, request *types.QueryOrdersRequest) (*types.QueryOrdersResponse, error) {
+	clientCtx := sdk.UnwrapSDKContext(ctx)
+
+	var orders []*types.AtomicSwapOrder
+	q.IterateAtomicOrders(clientCtx, func(order types.AtomicSwapOrder) bool {
+		orders = append(orders, &order)
+		return true
+	})
+	return &types.QueryOrdersResponse{Orders: orders}, nil
+}
+
 // Params implements the Query/Params gRPC method
 func (q Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)

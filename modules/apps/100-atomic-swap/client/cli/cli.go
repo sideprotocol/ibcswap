@@ -18,6 +18,7 @@ func GetQueryCmd() *cobra.Command {
 	queryCmd.AddCommand(
 		GetCmdParams(),
 		GetCmdQueryEscrowAddress(),
+		GetCmdOrderList(),
 	)
 
 	return queryCmd
