@@ -309,10 +309,11 @@ func (k Keeper) executeCancel(ctx sdk.Context, msg *types.MsgCancelSwapRequest, 
 // The step is executed on the Taker chain.
 func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg *types.SwapMaker) error {
 	// Check if buyToken is a valid token on the taker chain, could be either native or ibc token
-	supply := k.bankKeeper.GetSupply(ctx, msg.BuyToken.Denom)
-	if supply.Amount.Int64() <= 0 {
-		return errors.New("buy token does not exist on the taker chain")
-	}
+	// Disable it for demo at 2023-3-18
+	//supply := k.bankKeeper.GetSupply(ctx, msg.BuyToken.Denom)
+	//if supply.Amount.Int64() <= 0 {
+	//	return errors.New("buy token does not exist on the taker chain")
+	//}
 
 	order := types.NewAtomicOrder(msg, packet.DestinationChannel)
 	k.SetAtomicOrder(ctx, order)
