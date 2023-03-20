@@ -132,11 +132,14 @@ func (*MsgTakeSwapRequest) Type() string {
 // NOTE: The recipient addresses format is not validated as the format defined by
 // the chain is not known to IBC.
 func (msg *MsgTakeSwapRequest) ValidateBasic() error {
-	if err := host.PortIdentifierValidator(msg.SourcePort); err != nil {
-		return sdkerrors.Wrap(err, "invalid source port ID")
-	}
-	if err := host.ChannelIdentifierValidator(msg.SourceChannel); err != nil {
-		return sdkerrors.Wrap(err, "invalid source channel ID")
+	//if err := host.PortIdentifierValidator(msg.SourcePort); err != nil {
+	//	return sdkerrors.Wrap(err, "invalid source port ID")
+	//}
+	//if err := host.ChannelIdentifierValidator(msg.SourceChannel); err != nil {
+	//	return sdkerrors.Wrap(err, "invalid source channel ID")
+	//}
+	if len(msg.OrderId) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, msg.OrderId)
 	}
 	if !msg.SellToken.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.SellToken.String())
