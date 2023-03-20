@@ -15,6 +15,14 @@ func (suite *KeeperTestSuite) TestQueryParams() {
 	suite.Require().Equal(&expParams, res.Params)
 }
 
+func (suite *KeeperTestSuite) TestQueryOrders() {
+	ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
+	expParams := types.DefaultParams()
+
+	res, _ := suite.queryClient.Orders(ctx, &types.QueryOrdersRequest{})
+	suite.Require().Equal(&expParams, len(res.Orders))
+}
+
 func (suite *KeeperTestSuite) TestEscrowAddress() {
 	var (
 		req *types.QueryEscrowAddressRequest

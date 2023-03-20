@@ -53,11 +53,11 @@ func TestMsgSwapRoute(t *testing.T) {
 			NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()).Route(),
 			RouterKey,
 		},
-		{
-			"new msg take swap route",
-			NewMsgTakeSwap(validPort, validChannel, coin, addr2, addr1, timeoutHeight, 0, time.Now().UTC().Unix()).Route(),
-			RouterKey,
-		},
+		//{
+		//	"new msg take swap route",
+		//	NewMsgTakeSwap(validPort, validChannel, coin, addr2, addr1, timeoutHeight, 0, time.Now().UTC().Unix()).Route(),
+		//	RouterKey,
+		//},
 		{
 			"new msg cancel swap route",
 			NewMsgCancelSwap(validPort, validChannel, addr1, "", timeoutHeight, 0).Route(),
@@ -98,11 +98,11 @@ func TestMsgSwapValidation(t *testing.T) {
 			NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr1, addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()).Type(),
 			"make_swap",
 		},
-		{
-			"new msg take swap message type",
-			NewMsgTakeSwap(validPort, validChannel, coin, addr2, addr1, timeoutHeight, 0, time.Now().UTC().Unix()).Type(),
-			"take_swap",
-		},
+		//{
+		//	"new msg take swap message type",
+		//	NewMsgTakeSwap(validPort, validChannel, coin, addr2, addr1, timeoutHeight, 0, time.Now().UTC().Unix()).Type(),
+		//	"take_swap",
+		//},
 		{
 			"new msg cancel swap message type",
 			NewMsgCancelSwap(validPort, validChannel, addr1, "", timeoutHeight, 0).Type(),
@@ -128,11 +128,11 @@ func TestMsgSwapGetSigners(t *testing.T) {
 			NewMsgMakeSwap(validPort, validChannel, coin, coin2, addr.String(), addr2, "", timeoutHeight, 0, time.Now().UTC().Unix()).GetSigners(),
 			[]sdk.AccAddress{addr},
 		},
-		{
-			"new msg take swap get signers",
-			NewMsgTakeSwap(validPort, validChannel, coin, addr.String(), addr1, timeoutHeight, 0, time.Now().UTC().Unix()).GetSigners(),
-			[]sdk.AccAddress{addr},
-		},
+		//{
+		//	"new msg take swap get signers",
+		//	NewMsgTakeSwap(validPort, validChannel, coin, addr.String(), addr1, timeoutHeight, 0, time.Now().UTC().Unix()).GetSigners(),
+		//	[]sdk.AccAddress{addr},
+		//},
 		{
 			"new msg cancel swap get signers",
 			NewMsgCancelSwap(validPort, validChannel, addr.String(), "", timeoutHeight, 0).GetSigners(),

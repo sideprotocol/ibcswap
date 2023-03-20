@@ -100,15 +100,14 @@ func (msg *MsgMakeSwapRequest) GetSigners() []sdk.AccAddress {
 
 // NewMsgTakeSwap creates a new MsgTakeSwapRequest instance
 func NewMsgTakeSwap(
-	sourcePort, sourceChannel string,
+	orderId string,
 	sellToken sdk.Coin,
 	senderAddress, senderReceivingAddress string,
 	timeoutHeight clienttypes.Height, timeoutTimestamp uint64,
 	createdTimestamp int64,
 ) *MsgTakeSwapRequest {
 	return &MsgTakeSwapRequest{
-		SourcePort:            sourcePort,
-		SourceChannel:         sourceChannel,
+		OrderId:               orderId,
 		SellToken:             sellToken,
 		TakerAddress:          senderAddress,
 		TakerReceivingAddress: senderReceivingAddress,
