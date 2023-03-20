@@ -37,6 +37,7 @@ func NewTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		NewMakeSwapTxCmd(),
 		NewTakeSwapTxCmd(),
+		NewCancelSwapTxCmd(),
 	)
 
 	return txCmd
