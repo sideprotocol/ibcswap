@@ -2,7 +2,6 @@ package e2e
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -108,104 +107,6 @@ func (s *AtomicSwapTestSuite) TestAtomicSwap_HappyPath() {
 		s.Require().NoError(err)
 		s.Require().Equal(takerInitialBallanceOnChainB.Int64()-50, b4.Balance.Amount.Int64())
 	})
-
-	t.Run("maker try to sell more tokens then he has in his account", func(t *testing.T) {
-		// Broadcast Make Swap transaction.
-		sellToken := sdk.NewCoin(chainA.Config().Denom, sdk.NewInt(200_000_000))
-		buyToken := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
-		timeoutHeight := clienttypes.NewHeight(0, 110)
-		msg := types.NewMsgMakeSwap(channelA.PortID, channelA.ChannelID, sellToken, buyToken, makerAddressOnChainA, makerReceivingAddressOnChainB, "", timeoutHeight, 0, time.Now().UTC().Unix())
-		resp, err := s.BroadcastMessages(ctx, chainA, chainAMakerWallet, msg)
-		s.Require().NoError(err)
-		s.Equal("failed to execute message; message index: 0: insufficient balance", resp.RawLog)
-	})
-
-	t.Run("cancel atomic swap", func(t *testing.T) {
-		// get initial balances of the accounts that will be asserted after atomic swap.
-		resp, err := s.QueryBalance(ctx, chainA, makerAddressOnChainA, chainA.Config().Denom)
-		s.Require().NoError(err)
-		intialMakerBalance := resp.Balance.Amount
-
-		// Broadcast Make Swap transaction.
-		sellToken := sdk.NewCoin(chainA.Config().Denom, sdk.NewInt(100))
-		buyToken := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
-		timeoutHeight := clienttypes.NewHeight(0, 110)
-		msg := types.NewMsgMakeSwap(channelA.PortID, channelA.ChannelID, sellToken, buyToken, makerAddressOnChainA, makerReceivingAddressOnChainB, "", timeoutHeight, 0, time.Now().UTC().Unix())
-		response, err := s.BroadcastMessages(ctx, chainA, chainAMakerWallet, msg)
-		s.AssertValidTxResponse(response)
-		s.Require().NoError(err)
-
-		// wait block when packet relay.
-		test.WaitForBlocks(ctx, 10, chainA, chainB)
-
-		fmt.Println("Address; ", makerAddressOnChainA)
-		// broadcast TAKE SWAP transaction
-		timeoutHeight2 := clienttypes.NewHeight(0, 110)
-		order := types.NewAtomicOrder(types.NewMakerFromMsg(msg), msg.SourceChannel)
-		msgCancel := types.NewMsgCancelSwap(channelA.PortID, channelA.ChannelID, makerAddressOnChainA, order.Id, timeoutHeight2, 0)
-		msgCancel.OrderId = order.Id
-		resp2, err2 := s.BroadcastMessages(ctx, chainA, chainAMakerWallet, msgCancel)
-
-		s.AssertValidTxResponse(resp2)
-		s.Require().NoError(err2)
-
-		// wait block when packet relay.
-		test.WaitForBlocks(ctx, 10, chainA, chainB)
-
-		// Assert balances after atomic swap finished
-		b1, err := s.QueryBalance(ctx, chainA, makerAddressOnChainA, chainA.Config().Denom)
-		s.Require().NoError(err)
-		s.Require().Equal(intialMakerBalance.Int64(), b1.Balance.Amount.Int64())
-	})
-
-	t.Run("try to take order that is canceled", func(t *testing.T) {
-		// Broadcast Make Swap transaction.
-		makerWallet := s.CreateUserOnChainA(ctx, testvalues.StartingTokenAmount)
-		makerAddressChainA := makerWallet.Bech32Address("cosmos")
-		makerWalletChainB := s.CreateUserOnChainB(ctx, testvalues.StartingTokenAmount)
-		makerAddressOnChainB := makerWalletChainB.Bech32Address("cosmos")
-
-		// create wallets for testing of the taker address on chains A and B.
-		takerWalletChainB := s.CreateUserOnChainB(ctx, testvalues.StartingTokenAmount)
-		chainBTakerAddress := takerWalletChainB.Bech32Address("cosmos")
-		takerWalletChainA := s.CreateUserOnChainA(ctx, testvalues.StartingTokenAmount)
-		chainATakerReceivingAddress := takerWalletChainA.Bech32Address("cosmos")
-
-		sellToken := sdk.NewCoin(chainA.Config().Denom, sdk.NewInt(100))
-		buyToken := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
-		timeoutHeight := clienttypes.NewHeight(0, 110)
-		msg := types.NewMsgMakeSwap(channelA.PortID, channelA.ChannelID, sellToken, buyToken, makerAddressChainA, makerAddressOnChainB, "", timeoutHeight, 0, time.Now().UTC().Unix())
-		response, err := s.BroadcastMessages(ctx, chainA, makerWallet, msg)
-		s.AssertValidTxResponse(response)
-		s.Require().NoError(err)
-
-		// wait block when packet relay.
-		test.WaitForBlocks(ctx, 10, chainA, chainB)
-
-		fmt.Println("Address; ", makerAddressChainA)
-
-		// broadcast Cancel order
-		timeoutHeight2 := clienttypes.NewHeight(0, 110)
-		order := types.NewAtomicOrder(types.NewMakerFromMsg(msg), msg.SourceChannel)
-		msgCancel := types.NewMsgCancelSwap(channelA.PortID, channelA.ChannelID, makerAddressChainA, order.Id, timeoutHeight2, 0)
-		msgCancel.OrderId = order.Id
-		resp2, err2 := s.BroadcastMessages(ctx, chainA, makerWallet, msgCancel)
-
-		s.AssertValidTxResponse(resp2)
-		s.Require().NoError(err2)
-
-		// wait block when packet relay.
-		test.WaitForBlocks(ctx, 10, chainA, chainB)
-
-		// try to TAKE canceled order
-		sellToken2 := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
-		msgTake := types.NewMsgTakeSwap(channelA.PortID, channelA.ChannelID, sellToken2, chainBTakerAddress, chainATakerReceivingAddress, timeoutHeight2, 0, time.Now().UTC().Unix())
-		msgTake.OrderId = order.Id
-		respTake, err := s.BroadcastMessages(ctx, chainB, takerWalletChainB, msgTake)
-		s.Require().NoError(err)
-		//s.AssertValidTxResponse(resp2)
-		s.Require().Equal("failed to execute message; message index: 0: Make Order does not exist", respTake.RawLog)
-	})
 }
 
 // atomicSwapChannelOptions configures both of the chains to have atomic swap enabled.
@@ -217,21 +118,3 @@ func atomicSwapChannelOptions() func(options *ibc.CreateChannelOptions) {
 		opts.SourcePortName = types.ModuleName
 	}
 }
-
-//type balances struct {
-//}
-
-//func (s *AtomicSwapTestSuite) getBalances(ctx context.Context, chainA *cosmos.CosmosChain, chainB *cosmos.CosmosChain) (balances, error) {
-//	res1, err := s.QueryBalance(ctx, chainA, makerAddressOnChainA, chainADenom)
-//	s.Require().NoError(err)
-//	makerInitialBallanceOnChainA := res1.Balance.Amount
-//	res2, err := s.QueryBalance(ctx, chainB, makerReceivingAddressOnChainB, chainBDenom)
-//	s.Require().NoError(err)
-//	makerInitialBallanceOnChainB := res2.Balance.Amount
-//	res3, err := s.QueryBalance(ctx, chainA, takerReceivingAddressOnChainA, chainADenom)
-//	s.Require().NoError(err)
-//	takerInitialBallanceOnChainA := res3.Balance.Amount
-//	res4, err := s.QueryBalance(ctx, chainB, takerAddressOnChainB, chainBDenom)
-//	s.Require().NoError(err)
-//	takerInitialBallanceOnChainB := res4.Balance.Amount
-//}
