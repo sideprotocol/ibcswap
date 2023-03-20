@@ -83,11 +83,12 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.MsgTakeSwapRequest) (
 		return nil, err0
 	}
 
-	escrowAddr := types.GetEscrowAddress(msg.SourcePort, msg.SourceChannel)
 	order, ok := k.GetAtomicOrder(ctx, msg.OrderId)
 	if !ok {
 		return nil, types.ErrOrderDoesNotExists
 	}
+
+	escrowAddr := types.GetEscrowAddress(types.PortID, order.ChannelId)
 
 	if order.Status != types.Status_SYNC && order.Status != types.Status_INITIAL {
 		return nil, errors.New("order is not in valid state")
