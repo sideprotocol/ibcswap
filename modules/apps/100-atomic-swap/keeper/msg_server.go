@@ -2,10 +2,15 @@ package keeper
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
@@ -398,7 +403,37 @@ func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, ms
 	order.Status = types.Status_CANCEL
 	order.CancelTimestamp = msg.CreateTimestamp
 	k.SetAtomicOrder(ctx, order)
-	
+
 	ctx.EventManager().EmitTypedEvents(msg)
 	return nil
+}
+
+func createOrder(msg *types.MakeSwapMsg, packet channeltypes.Packet) types.Order {
+	path := orderPath(packet)
+	return types.Order{
+		Id:     generateOrderId(packet),
+		Status: types.Status_INITIAL,
+		Path:   path,
+		Maker:  msg,
+	}
+}
+
+func orderPath(packet channeltypes.Packet) string {
+	return fmt.Sprintf("channel/%s/port/%s/channel/%s/port/%s/sequence/%d", packet.SourceChannel, packet.SourcePort, packet.DestinationChannel, packet.DestinationPort, packet.Sequence)
+}
+
+func generateOrderId(packet channeltypes.Packet) string {
+	bytes, _ := proto.Marshal(&packet)
+	hash := sha256.Sum256(bytes)
+	return hex.EncodeToString(hash[:])
+}
+
+func extractSourceChannelForTakerMsg(path string) string {
+	parts := strings.Split(path, "/")
+	return parts[5]
+}
+
+func extractSourcePortForTakerMsg(path string) string {
+	parts := strings.Split(path, "/")
+	return parts[7]
 }

@@ -7,6 +7,7 @@ option go_package = "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "ibc/core/client/v1/client.proto";
+import "ibc/applications/atomic_swap/v1/swap.proto";
 
 // Msg defines the ibc/swap Msg service.
 service Msg {
@@ -95,3 +96,70 @@ message MsgCancelSwapRequest {
 }
 
 message MsgCancelSwapResponse {}
+
+message MakeSwapMsg {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // the port on which the packet will be sent
+  string source_port = 1 [(gogoproto.moretags) = "yaml:\"source_port\""];
+  // the channel by which the packet will be sent
+  string source_channel = 2 [(gogoproto.moretags) = "yaml:\"source_channel\""];
+  // the tokens to be sell
+  cosmos.base.v1beta1.Coin  sell_token = 3 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin  buy_token = 4 [(gogoproto.nullable) = false];
+  // the sender address
+  string maker_address = 5 [(gogoproto.moretags) = "yaml:\"maker_address\""];
+  // the sender's address on the destination chain
+  string maker_receiving_address = 6 [(gogoproto.moretags) = "yaml:\"maker_receiving_address\""];
+  // if desired_taker is specified,
+  // only the desired_taker is allowed to take this order
+  // this is address on destination chain
+  string desired_taker = 7;
+  uint64 creation_timestamp = 8;
+  uint64  expiration_timestamp = 9;
+  ibc.core.client.v1.Height timeout_height = 10 [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
+  uint64 timeout_timestamp = 11;
+}
+
+message TakeSwapMsg {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string order_id = 1;
+  // the tokens to be sold
+  cosmos.base.v1beta1.Coin  sell_token = 2 [(gogoproto.nullable) = false];
+  // the sender address
+  string taker_address = 3 [(gogoproto.moretags) = "yaml:\"taker_address\""];
+  // the sender's address on the destination chain
+  string taker_receiving_address = 4 [(gogoproto.moretags) = "yaml:\"taker_receiving_address\""];
+  uint64 creation_timestamp = 5;
+  ibc.core.client.v1.Height timeout_height = 6 [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
+  uint64 timeout_timestamp = 7;
+}
+
+message CancelSwapMsg {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string order_id = 1;
+  // the sender address
+  string maker_address = 2 [(gogoproto.moretags) = "yaml:\"maker_address\""];
+  // Timeout height relative to the current block height.
+  // The timeout is disabled when set to 0.
+  ibc.core.client.v1.Height timeout_height = 3 [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
+  // Timeout timestamp in absolute nanoseconds since unix epoch.
+  // The timeout is disabled when set to 0.
+  uint64 timeout_timestamp = 4 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
+}
+
+message Order {
+  string id = 1;
+  MakeSwapMsg maker = 2;
+  ibc.applications.atomic_swap.v1.Status status = 3;
+  // an IBC path, define channel and port on both Maker Chain and Taker Chain
+  string path = 4;
+  TakeSwapMsg taker = 5;
+  uint64 cancel_timestamp = 6;
+  uint64 complete_timestamp = 7;
+}

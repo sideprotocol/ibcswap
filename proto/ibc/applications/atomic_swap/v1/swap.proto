@@ -6,7 +6,6 @@ option go_package = "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "ibc/applications/atomic_swap/v1/tx.proto";
 
 // Params defines the set of IBC swap parameters.
 message Params {
@@ -62,4 +61,20 @@ message AtomicSwapOrder {
   SwapTaker takers = 5;
   int64 cancel_timestamp = 7;
   int64 complete_timestamp = 8;
+}
+
+message AtomicSwapPacketAcknowledgement {
+  oneof acknowledgement {
+    AtomicSwapPacketSuccess success = 1;
+    AtomicSwapPacketError error = 2;
+  }
+}
+
+message AtomicSwapPacketSuccess {
+  // This is binary 0x01 base64 encoded
+  bytes result = 1;
+}
+
+message AtomicSwapPacketError {
+  string error = 1;
 }
