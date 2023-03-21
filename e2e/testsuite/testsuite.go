@@ -131,7 +131,7 @@ func (s *E2ETestSuite) GetRelayerUsers(ctx context.Context, chainOpts ...testcon
 // using the given channel options. The relayer returned by this function has not yet started. It should be started
 // with E2ETestSuite.StartRelayer if needed.
 // This should be called at the start of every test, unless fine grained control is required.
-func (s *E2ETestSuite) SetupChainsRelayerAndChannel(ctx context.Context, channelOpts ...func(*ibc.CreateChannelOptions)) (ibc.Relayer, ibc.ChannelOutput) {
+func (s *E2ETestSuite) SetupChainsRelayerAndChannel(ctx context.Context, channelOpts ...func(*ibc.CreateChannelOptions)) (ibc.Relayer, ibc.ChannelOutput, ibc.ChannelOutput) {
 	chainA, chainB := s.GetChains()
 
 	r := newCosmosRelayer(s.T(), testconfig.FromEnv(), s.logger, s.DockerClient, s.network)
@@ -180,9 +180,10 @@ func (s *E2ETestSuite) SetupChainsRelayerAndChannel(ctx context.Context, channel
 	s.initGRPCClients(chainB)
 
 	chainAChannels, err := r.GetChannels(ctx, eRep, chainA.Config().ChainID)
-
 	s.Require().NoError(err)
-	return r, chainAChannels[len(chainAChannels)-1]
+	chainBChannels, err := r.GetChannels(ctx, eRep, chainB.Config().ChainID)
+	s.Require().NoError(err)
+	return r, chainAChannels[len(chainAChannels)-1], chainBChannels[len(chainBChannels)-1]
 }
 
 // generatePathName generates the path name using the test suites name
@@ -391,18 +392,18 @@ func (s *E2ETestSuite) initGRPCClients(chain *cosmos.CosmosChain) {
 	}
 
 	s.grpcClients[chain.Config().ChainID] = GRPCClients{
-		ClientQueryClient:  clienttypes.NewQueryClient(grpcConn),
-		ChannelQueryClient: channeltypes.NewQueryClient(grpcConn),
-		FeeQueryClient:     feetypes.NewQueryClient(grpcConn),
-		ICAQueryClient:     controllertypes.NewQueryClient(grpcConn),
-		InterTxQueryClient: intertxtypes.NewQueryClient(grpcConn),
-		GovQueryClient:     govtypesv1beta1.NewQueryClient(grpcConn),
-		GovQueryClientV1:   govtypesv1.NewQueryClient(grpcConn),
-		GroupsQueryClient:  grouptypes.NewQueryClient(grpcConn),
-		ParamsQueryClient:  paramsproposaltypes.NewQueryClient(grpcConn),
-		AuthQueryClient:    authtypes.NewQueryClient(grpcConn),
+		ClientQueryClient:     clienttypes.NewQueryClient(grpcConn),
+		ChannelQueryClient:    channeltypes.NewQueryClient(grpcConn),
+		FeeQueryClient:        feetypes.NewQueryClient(grpcConn),
+		ICAQueryClient:        controllertypes.NewQueryClient(grpcConn),
+		InterTxQueryClient:    intertxtypes.NewQueryClient(grpcConn),
+		GovQueryClient:        govtypesv1beta1.NewQueryClient(grpcConn),
+		GovQueryClientV1:      govtypesv1.NewQueryClient(grpcConn),
+		GroupsQueryClient:     grouptypes.NewQueryClient(grpcConn),
+		ParamsQueryClient:     paramsproposaltypes.NewQueryClient(grpcConn),
+		AuthQueryClient:       authtypes.NewQueryClient(grpcConn),
 		InterchainQueryClient: interchainswaptypes.NewQueryClient(grpcConn),
-		BankQueryClient: banktypes.NewQueryClient(grpcConn),
+		BankQueryClient:       banktypes.NewQueryClient(grpcConn),
 	}
 }
 
