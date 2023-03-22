@@ -65,6 +65,20 @@ func (s *E2ETestSuite) QueryPacketCommitment(ctx context.Context, chain ibc.Chai
 	return res.Commitment, nil
 }
 
+// QueryPacketAck queries the packet ack on the given chain for the provided channel and sequence.
+func (s *E2ETestSuite) QueryPacketAcknowledged(ctx context.Context, chain ibc.Chain, portID, channelID string, sequence uint64) ([]byte, error) {
+	queryClient := s.GetChainGRCPClients(chain).ChannelQueryClient
+	res, err := queryClient.PacketAcknowledgement(ctx, &channeltypes.QueryPacketAcknowledgementRequest{
+		PortId:    portID,
+		ChannelId: channelID,
+		Sequence:  sequence,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.Acknowledgement, nil
+}
+
 // QueryInterchainAccount queries the interchain account for the given owner and connectionID.
 func (s *E2ETestSuite) QueryInterchainAccount(ctx context.Context, chain ibc.Chain, owner, connectionID string) (string, error) {
 	queryClient := s.GetChainGRCPClients(chain).ICAQueryClient
@@ -167,7 +181,7 @@ func (s *E2ETestSuite) QueryInterchainswapPool(ctx context.Context, chain ibc.Ch
 // QueryClientStatus queries the status of the client by clientID
 func (s *E2ETestSuite) QueryBalance(ctx context.Context, chain ibc.Chain, addr string, denom string) (*banktypes.QueryBalanceResponse, error) {
 	queryClient := s.GetChainGRCPClients(chain).BankQueryClient
-	
+
 	res, err := queryClient.Balance(
 		ctx,
 		&banktypes.QueryBalanceRequest{

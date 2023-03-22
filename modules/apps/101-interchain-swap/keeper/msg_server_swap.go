@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"encoding/json"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,7 +31,7 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 		return nil, err
 	}
 	//constructs the IBC data packet
-	rawMsgData, err := json.Marshal(msg)
+	swapData, err := types.ModuleCdc.Marshal(msg)
 	if err != nil {
 		return nil, err
 	}
@@ -44,12 +43,12 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 	case types.SwapMsgType_RIGHT:
 		msgType = types.MessageType_RIGHTSWAP
 	default:
-
+		return nil, types.ErrInvalidSwapType
 	}
 
 	packet := types.IBCSwapDataPacket{
 		Type: msgType,
-		Data: rawMsgData,
+		Data: swapData,
 	}
 
 	timeOutHeight, timeoutStamp := types.GetDefaultTimeOut(&ctx)

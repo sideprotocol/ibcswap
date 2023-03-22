@@ -40,6 +40,20 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolReq
 		return nil, types.ErrNumberOfLocalAsset
 	}
 
+	// check user owned initial liquidity or not
+	holdingNativeCoin := k.bankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.Denoms[0])
+	if holdingNativeCoin.Amount.LT(sdk.NewInt(int64(msg.InitalLiquidity))) {
+		return nil, types.ErrEmptyInitialLiquidity
+	}
+	lockedNativeCoin := sdk.NewCoin(msg.Denoms[0], sdk.NewInt(int64(msg.InitalLiquidity)))
+
+	// move initial fund to liquidity pool
+	err = k.LockTokens(ctx, msg.SourcePort, msg.SourceChannel, sdk.MustAccAddressFromBech32(msg.Sender), sdk.NewCoins(lockedNativeCoin))
+
+	if err != nil {
+		return nil, err
+	}
+
 	poolData, err := types.ModuleCdc.Marshal(msg)
 	if err != nil {
 		return nil, err

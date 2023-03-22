@@ -20,6 +20,7 @@ func (suite *KeeperTestSuite) SetupPool() (*string, error) {
 		"1:2",
 		[]string{sdk.DefaultBondDenom, sdk.DefaultBondDenom},
 		[]uint32{10, 100},
+		100,
 	)
 
 	ctx := suite.chainA.GetContext()

@@ -47,8 +47,8 @@ func (msg *MsgDepositRequest) ValidateBasic() error {
 		return errorsmod.Wrapf(ErrInvalidTokenLength, "invalid token length (%d)", len(msg.Tokens))
 	}
 	denoms := map[string]int{}
-	for _, token := range msg.Tokens{
-		if _,ok := denoms[token.Denom]; ok{
+	for _, token := range msg.Tokens {
+		if _, ok := denoms[token.Denom]; ok {
 			return errorsmod.Wrapf(ErrFailedDeposit, "because of %s", ErrInvalidDecimalPair)
 		}
 		denoms[token.Denom] = 1
@@ -56,6 +56,6 @@ func (msg *MsgDepositRequest) ValidateBasic() error {
 			return errorsmod.Wrapf(ErrFailedDeposit, "because of %s", ErrInvalidAmount)
 		}
 	}
-	
+
 	return nil
 }

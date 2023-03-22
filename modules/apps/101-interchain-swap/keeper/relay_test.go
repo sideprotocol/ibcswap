@@ -60,6 +60,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 					"1:2",
 					[]string{sdk.DefaultBondDenom, "venuscoin"},
 					[]uint32{10, 100},
+					100,
 				)
 
 				msgbyte, err = types.ModuleCdc.Marshal(msg)
@@ -169,6 +170,7 @@ func (suite *KeeperTestSuite) TestOnReceived() {
 					"1:2",
 					[]string{sdk.DefaultBondDenom, "venuscoin"},
 					[]uint32{10, 100},
+					100,
 				)
 				destPort := path.EndpointA.Counterparty.ChannelConfig.PortID
 				destChannel := path.EndpointA.ChannelID

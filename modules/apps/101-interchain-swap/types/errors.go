@@ -48,7 +48,12 @@ var (
 	ErrFailedOnWithdrawAck   = errorsmod.Register(ModuleName, 1528, "failed to treat withdraw ack!")
 	ErrFailedOnSwapAck       = errorsmod.Register(ModuleName, 1529, "failed to treat swap ack!")
 
-	ErrMaxTransferChannels = errorsmod.Register(ModuleName, 1530, "max transfer channels")
-	ErrAlreadyExistPool    = errorsmod.Register(ModuleName, 1531, "already exist pool!")
-	ErrSwapEnabled         = errorsmod.Register(ModuleName, 1532, "swap is disabled!")
+	ErrMaxTransferChannels            = errorsmod.Register(ModuleName, 1530, "max transfer channels")
+	ErrAlreadyExistPool               = errorsmod.Register(ModuleName, 1531, "already exist pool!")
+	ErrSwapEnabled                    = errorsmod.Register(ModuleName, 1532, "swap is disabled!")
+	ErrEmptyInitialLiquidity          = errorsmod.Register(ModuleName, 1533, "creator don't have liquidity!")
+	ErrIncorrectInitialLiquidityDenom = errorsmod.Register(ModuleName, 1534, "initial liquidity denom has to match with one of pool denom pair")
+	ErrInvalidSwapType                = errorsmod.Register(ModuleName, 1535, "invalid swap type!")
+
+	ErrInvalidDenom = errorsmod.Register(ModuleName, 1536, "invalid denom")
 )

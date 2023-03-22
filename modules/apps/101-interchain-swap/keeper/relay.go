@@ -84,7 +84,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err != nil {
 			return nil, err
 		}
-		data, err := types.ModuleCdc.Marshal(res) //types.ModuleCdc.Marshal(res)
+		data, err := types.ModuleCdc.Marshal(res)
 		return data, err
 
 	case types.MessageType_WITHDRAW:
@@ -102,7 +102,6 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 
 	case types.MessageType_LEFTSWAP, types.MessageType_RIGHTSWAP:
 		var msg types.MsgSwapRequest
-
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
@@ -186,6 +185,21 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 	var token sdk.Coin
 	var sender string
 	switch data.Type {
+
+	case types.MessageType_CREATE:
+		var msg types.MsgCreatePoolRequest
+		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+			return err
+		}
+
+		// refund initial liquidity.
+		var nativeDenom string
+		for _, denom := range msg.Denoms {
+			if k.bankKeeper.HasSupply(ctx, denom) {
+				nativeDenom = denom
+			}
+		}
+		token = sdk.NewCoin(nativeDenom, sdk.NewInt(int64(msg.InitalLiquidity)))
 	case types.MessageType_DEPOSIT:
 		var msg types.MsgDepositRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {

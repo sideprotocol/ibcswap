@@ -16,9 +16,9 @@ var _ = strconv.Itoa(0)
 
 func CmdCreatePool() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-pool [source-port] [source-channel] [sender] [weight] [denoms] [decimals]",
+		Use:   "create-pool [source-port] [source-channel] [sender] [weight] [denoms] [decimals] [initial liquidity amount]",
 		Short: "Broadcast message CreatePool",
-		Args:  cobra.ExactArgs(6),
+		Args:  cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argSourcePort := args[0]
 			argSourceChannel := args[1]
@@ -26,6 +26,7 @@ func CmdCreatePool() *cobra.Command {
 			argWeight := args[3]
 			denomsStr := args[4]
 			decimalsStr := args[5]
+			initialLiquidity := args[6]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -43,6 +44,12 @@ func CmdCreatePool() *cobra.Command {
 				decimals = append(decimals, uint32(decimal))
 			}
 
+			initialLiquidityAmount, err := strconv.ParseUint(initialLiquidity, 10, 64)
+
+			if err != nil {
+				return err
+			}
+
 			msg := types.NewMsgCreatePool(
 				argSourcePort,
 				argSourceChannel,
@@ -50,6 +57,7 @@ func CmdCreatePool() *cobra.Command {
 				argWeight,
 				denoms,
 				decimals,
+				initialLiquidityAmount,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

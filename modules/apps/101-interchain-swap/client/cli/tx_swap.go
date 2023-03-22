@@ -16,11 +16,23 @@ var _ = strconv.Itoa(0)
 
 func CmdSwap() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "swap [sender] [slippage] [recipient]",
+		Use:   "swap [swap_type] [sender] [slippage] [recipient]",
 		Short: "Broadcast message Swap",
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			argSender := args[0]
+			swapTypeArg := args[0]
+
+			swapType := types.SwapMsgType_LEFT
+			switch swapTypeArg {
+			case "right":
+				swapType = types.SwapMsgType_RIGHT
+			case "left":
+				swapType = types.SwapMsgType_LEFT
+			default:
+				return fmt.Errorf("invalid swap type:: %s, please try 'left' or 'right' only", swapTypeArg)
+			}
+
+			argSender := args[1]
 			argSlippage, err := cast.ToUint64E(args[1])
 			if err != nil {
 				return err
@@ -46,6 +58,7 @@ func CmdSwap() *cobra.Command {
 			}
 
 			msg := types.NewMsgSwap(
+				swapType,
 				clientCtx.GetFromAddress().String(),
 				argSlippage,
 				argRecipient,
