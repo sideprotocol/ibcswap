@@ -19,7 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MsgClient interface {
 	MakeSwap(ctx context.Context, in *MakeSwapMsg, opts ...grpc.CallOption) (*MsgMakeSwapResponse, error)
-	TakeSwap(ctx context.Context, in *MsgTakeSwapRequest, opts ...grpc.CallOption) (*MsgTakeSwapResponse, error)
+	TakeSwap(ctx context.Context, in *TakeSwapMsg, opts ...grpc.CallOption) (*MsgTakeSwapResponse, error)
 	CancelSwap(ctx context.Context, in *MsgCancelSwapRequest, opts ...grpc.CallOption) (*MsgCancelSwapResponse, error)
 }
 
@@ -40,7 +40,7 @@ func (c *msgClient) MakeSwap(ctx context.Context, in *MakeSwapMsg, opts ...grpc.
 	return out, nil
 }
 
-func (c *msgClient) TakeSwap(ctx context.Context, in *MsgTakeSwapRequest, opts ...grpc.CallOption) (*MsgTakeSwapResponse, error) {
+func (c *msgClient) TakeSwap(ctx context.Context, in *TakeSwapMsg, opts ...grpc.CallOption) (*MsgTakeSwapResponse, error) {
 	out := new(MsgTakeSwapResponse)
 	err := c.cc.Invoke(ctx, "/ibc.applications.atomic_swap.v1.Msg/TakeSwap", in, out, opts...)
 	if err != nil {
@@ -63,7 +63,7 @@ func (c *msgClient) CancelSwap(ctx context.Context, in *MsgCancelSwapRequest, op
 // for forward compatibility
 type MsgServer interface {
 	MakeSwap(context.Context, *MakeSwapMsg) (*MsgMakeSwapResponse, error)
-	TakeSwap(context.Context, *MsgTakeSwapRequest) (*MsgTakeSwapResponse, error)
+	TakeSwap(context.Context, *TakeSwapMsg) (*MsgTakeSwapResponse, error)
 	CancelSwap(context.Context, *MsgCancelSwapRequest) (*MsgCancelSwapResponse, error)
 }
 
@@ -74,7 +74,7 @@ type UnimplementedMsgServer struct {
 func (UnimplementedMsgServer) MakeSwap(context.Context, *MakeSwapMsg) (*MsgMakeSwapResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MakeSwap not implemented")
 }
-func (UnimplementedMsgServer) TakeSwap(context.Context, *MsgTakeSwapRequest) (*MsgTakeSwapResponse, error) {
+func (UnimplementedMsgServer) TakeSwap(context.Context, *TakeSwapMsg) (*MsgTakeSwapResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TakeSwap not implemented")
 }
 func (UnimplementedMsgServer) CancelSwap(context.Context, *MsgCancelSwapRequest) (*MsgCancelSwapResponse, error) {
@@ -111,7 +111,7 @@ func _Msg_MakeSwap_Handler(srv interface{}, ctx context.Context, dec func(interf
 }
 
 func _Msg_TakeSwap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgTakeSwapRequest)
+	in := new(TakeSwapMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func _Msg_TakeSwap_Handler(srv interface{}, ctx context.Context, dec func(interf
 		FullMethod: "/ibc.applications.atomic_swap.v1.Msg/TakeSwap",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).TakeSwap(ctx, req.(*MsgTakeSwapRequest))
+		return srv.(MsgServer).TakeSwap(ctx, req.(*TakeSwapMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }

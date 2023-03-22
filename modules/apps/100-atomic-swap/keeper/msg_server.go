@@ -71,7 +71,7 @@ func (k Keeper) MakeSwap(goCtx context.Context, msgReq *types.MakeSwapMsg) (*typ
 
 // TakeSwap is the step 5 (Lock Order & Lock Token) of the atomic swap: https://github.com/liangping/ibc/blob/atomic-swap/spec/app/ics-100-atomic-swap/ibcswap.png
 // This method lock the order (set a value to the field "Taker") and lock Token
-func (k Keeper) TakeSwap(goCtx context.Context, msg *types.MsgTakeSwapRequest) (*types.MsgTakeSwapResponse, error) {
+func (k Keeper) TakeSwap(goCtx context.Context, msg *types.TakeSwapMsg) (*types.MsgTakeSwapResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// pre-check
@@ -194,7 +194,7 @@ func (k Keeper) CancelSwap(goCtx context.Context, msg *types.MsgCancelSwapReques
 }
 
 // See createOutgoingPacket in spec:https://github.com/cosmos/ibc/tree/master/spec/app/ics-020-fungible-token-transfer#packet-relay
-func (k Keeper) fillAtomicOrder(ctx sdk.Context, escrowAddr sdk.AccAddress, order types.AtomicSwapOrder, msg *types.MsgTakeSwapRequest, step int) error {
+func (k Keeper) fillAtomicOrder(ctx sdk.Context, escrowAddr sdk.AccAddress, order types.AtomicSwapOrder, msg *types.TakeSwapMsg, step int) error {
 
 	switch order.Status {
 	case types.Status_CANCEL:

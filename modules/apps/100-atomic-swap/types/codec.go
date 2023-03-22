@@ -10,7 +10,7 @@ import (
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MakeSwapMsg{}, "cosmos-sdk/MsgMakeSwap", nil)
-	cdc.RegisterConcrete(&MsgTakeSwapRequest{}, "cosmos-sdk/MsgTakeSwap", nil)
+	cdc.RegisterConcrete(&TakeSwapMsg{}, "cosmos-sdk/MsgTakeSwap", nil)
 	cdc.RegisterConcrete(&MsgCancelSwapRequest{}, "cosmos-sdk/MsgCancelSwap", nil)
 }
 
@@ -18,7 +18,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 // Any.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MakeSwapMsg{})
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgTakeSwapRequest{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &TakeSwapMsg{})
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgCancelSwapRequest{})
 	//registry.RegisterImplementations((*sdk.Msg)(nil), &MsgMakeSwapResponse{})
 	//registry.RegisterImplementations((*sdk.Msg)(nil), &MsgTakeSwapResponse{})

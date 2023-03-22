@@ -253,7 +253,7 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 	case types.TAKE_SWAP:
 		// This is the step 7.2 (Unlock order and refund) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
 		// This step is executed on the Taker chain when Take Swap request timeout.
-		takeMsg := &types.MsgTakeSwapRequest{}
+		takeMsg := &types.TakeSwapMsg{}
 		if err := takeMsg.Unmarshal(swapPacket.Data); err != nil {
 			return err
 		}

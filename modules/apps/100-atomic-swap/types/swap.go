@@ -36,7 +36,7 @@ func NewMakerFromMsg(msg *MakeSwapMsg) *SwapMaker {
 	}
 }
 
-func NewTakerFromMsg(msg *MsgTakeSwapRequest) *SwapTaker {
+func NewTakerFromMsg(msg *TakeSwapMsg) *SwapTaker {
 	return &SwapTaker{
 		OrderId:               msg.OrderId,
 		SellToken:             msg.SellToken,
