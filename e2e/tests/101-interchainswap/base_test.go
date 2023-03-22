@@ -58,211 +58,187 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 		s.StartRelayer(relayer)
 	})
 
-	t.Run("send creat pool message", func(t *testing.T) {
-		msg := types.NewMsgCreatePool(
-			channelA.PortID,
-			channelA.ChannelID,
-			chainAAddress,
-			"1:2",
-			[]string{chainADenom, chainBDenom},
-			[]uint32{10, 100},
-		)
+	t.Run("execute basic message tests", func(t *testing.T) {
 
-		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-		fmt.Println("tx:", resp)
-		s.AssertValidTxResponse(resp)
-		s.Require().NoError(err)
+		t.Run("send create pool message", func(t *testing.T) {
+			msg := types.NewMsgCreatePool(
+				channelA.PortID,
+				channelA.ChannelID,
+				chainAAddress,
+				"1:2",
+				[]string{chainADenom, chainBDenom},
+				[]uint32{10, 100},
+			)
 
-		// wait block when packet relay.
-		test.WaitForBlocks(ctx, 10, chainA, chainB)
+			resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+			fmt.Println("tx:", resp)
+			s.AssertValidTxResponse(resp)
+			s.Require().NoError(err)
 
-		// check packet relay status.
-		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
+			// wait block when packet relay.
+			test.WaitForBlocks(ctx, 10, chainA, chainB)
 
-		poolId := types.GetPoolId(msg.Denoms)
-		poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
-		s.Require().NoError(err)
-		poolInfo := poolRes.InterchainLiquidityPool
-		s.Require().EqualValues(msg.SourceChannel, poolInfo.EncounterPartyChannel)
-		s.Require().EqualValues(msg.SourcePort, poolInfo.EncounterPartyPort)
+			// check packet relay status.
+			s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
 
-	})
+			poolId := types.GetPoolId(msg.Denoms)
+			poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
+			s.Require().NoError(err)
+			poolInfo := poolRes.InterchainLiquidityPool
+			s.Require().EqualValues(msg.SourceChannel, poolInfo.EncounterPartyChannel)
+			s.Require().EqualValues(msg.SourcePort, poolInfo.EncounterPartyPort)
 
-	t.Run("send deposit message", func(t *testing.T) {
+		})
 
-		beforeDeposit, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
-		s.Require().NoError(err)
+		t.Run("send deposit message", func(t *testing.T) {
 
-		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
-		depositCoin := sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(1000)}
-		msg := types.NewMsgDeposit(
-			poolId,
-			chainAAddress,
-			[]*sdk.Coin{&depositCoin},
-		)
+			beforeDeposit, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
+			s.Require().NoError(err)
 
-		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-		s.AssertValidTxResponse(resp)
-		s.Require().NoError(err)
+			poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
+			depositCoin := sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(1000)}
+			msg := types.NewMsgDeposit(
+				poolId,
+				chainAAddress,
+				[]*sdk.Coin{&depositCoin},
+			)
 
-		balanceRes, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
-		s.Require().NoError(err)
-		expectedBalance := balanceRes.Balance.Add(depositCoin)
-		s.Require().Equal(expectedBalance.Denom, beforeDeposit.Balance.Denom)
-		s.Require().Equal(expectedBalance.Amount, beforeDeposit.Balance.Amount)
+			resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+			s.AssertValidTxResponse(resp)
+			s.Require().NoError(err)
 
-		// check packet relayed or not.
-		test.WaitForBlocks(ctx, 10, chainA, chainB)
-		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 2)
+			balanceRes, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
+			s.Require().NoError(err)
+			expectedBalance := balanceRes.Balance.Add(depositCoin)
+			s.Require().Equal(expectedBalance.Denom, beforeDeposit.Balance.Denom)
+			s.Require().Equal(expectedBalance.Amount, beforeDeposit.Balance.Amount)
 
-		poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
-		s.Require().NoError(err)
-		poolInfo := poolRes.InterchainLiquidityPool
-		s.Require().NotEqual(poolInfo.Supply.Amount, sdk.NewInt(0))
-	})
+			// check packet relayed or not.
+			test.WaitForBlocks(ctx, 10, chainA, chainB)
+			s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 2)
 
-	//withdraw
-	t.Run("send withdraw message", func(t *testing.T) {
+			poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
+			s.Require().NoError(err)
+			poolInfo := poolRes.InterchainLiquidityPool
+			s.Require().NotEqual(poolInfo.Supply.Amount, sdk.NewInt(0))
+		})
 
-		beforeDeposit, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
-		s.Require().NoError(err)
-		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
-		poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
-		s.Require().NoError(err)
-		poolCoin := poolRes.InterchainLiquidityPool.Supply
-		s.Require().NotEqual(poolCoin.Amount, sdk.NewInt(0))
+		//withdraw
+		t.Run("send withdraw message", func(t *testing.T) {
 
-		denomOut := chainADenom
-		sender := chainAAddress
-		msg := types.NewMsgWithdraw(
-			sender,
-			poolCoin,
-			denomOut,
-		)
-		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-		s.AssertValidTxResponse(resp)
-		s.Require().NoError(err)
+			beforeDeposit, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
+			s.Require().NoError(err)
+			poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
+			poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
+			s.Require().NoError(err)
+			poolCoin := poolRes.InterchainLiquidityPool.Supply
+			s.Require().NotEqual(poolCoin.Amount, sdk.NewInt(0))
 
-		balanceRes, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
-		s.Require().NoError(err)
-		s.Require().Equal(balanceRes.Balance.Denom, beforeDeposit.Balance.Denom)
-		s.Require().Equal(balanceRes.Balance.Amount, beforeDeposit.Balance.Amount)
-	})
+			denomOut := chainADenom
+			sender := chainAAddress
+			msg := types.NewMsgWithdraw(
+				sender,
+				poolCoin,
+				denomOut,
+			)
+			resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+			s.AssertValidTxResponse(resp)
+			s.Require().NoError(err)
 
-	// send swap message
-	t.Run("send swap message (don't check ack)", func(t *testing.T) {
-		sender := chainAAddress
-		tokenIn := sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(1000)}
-		tokenOut := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(1000)}
-		msg := types.NewMsgSwap(
-			sender,
-			10,
-			sender,
-			&tokenIn,
-			&tokenOut,
-		)
-		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-		s.AssertValidTxResponse(resp)
-		s.Require().NoError(err)
-	})
+			balanceRes, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
+			s.Require().NoError(err)
+			s.Require().Equal(balanceRes.Balance.Denom, beforeDeposit.Balance.Denom)
+			s.Require().Equal(balanceRes.Balance.Amount, beforeDeposit.Balance.Amount)
+		})
 
-}
-
-func (s *InterchainswapTestSuite) TestBasicMsgPacketErrors() {
-	t := s.T()
-	ctx := context.TODO()
-
-	// setup relayers and connection-0 between two chains.
-	relayer, channelA := s.SetupChainsRelayerAndChannel(ctx, interchainswapChannelOptions())
-
-	chainA, chainB := s.GetChains()
-
-	chainADenom := chainA.Config().Denom
-	chainBDenom := chainB.Config().Denom
-
-	// // create wallets for testing
-	chainAWallet := s.CreateUserOnChainA(ctx, testvalues.StartingTokenAmount)
-	chainAAddress := chainAWallet.Bech32Address("cosmos")
-	chainAInvalidAddress := "(invalidAddress)"
-
-	// allocate tokens to the new account
-	initialBalances := sdk.NewCoins(sdk.NewCoin(chainADenom, sdk.NewInt(10000000000)))
-	err := s.SendCoinsFromModuleToAccount(ctx, chainA, chainAWallet, initialBalances)
-
-	s.Require().NoError(err)
-	res, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
-	s.Require().NotEqual(res.Balance.Amount, sdk.NewInt(0))
-	s.Require().NoError(err)
-
-	t.Run("start relayer", func(t *testing.T) {
-		s.StartRelayer(relayer)
-	})
-
-	t.Run("send create pool message with invalid address", func(t *testing.T) {
-		msg := types.NewMsgCreatePool(
-			channelA.PortID,
-			channelA.ChannelID,
-			chainAInvalidAddress,
-			"1:2",
-			[]string{chainADenom, chainBDenom},
-			[]uint32{10, 100},
-		)
-
-		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-		s.Require().Equal("invalid address", resp.RawLog)
-		s.Require().NoError(err)
-	})
-
-	t.Run("send deposit message with invalid address", func(t *testing.T) {
-
-		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
-		depositCoin := sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(1000)}
-		msg := types.NewMsgDeposit(
-			poolId,
-			chainAInvalidAddress,
-			[]*sdk.Coin{&depositCoin},
-		)
-
-		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-		s.Require().Equal("invalid address", resp.RawLog)
-		s.Require().NoError(err)
+		// send swap message
+		t.Run("send swap message (don't check ack)", func(t *testing.T) {
+			sender := chainAAddress
+			tokenIn := sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(1000)}
+			tokenOut := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(1000)}
+			msg := types.NewMsgSwap(
+				sender,
+				10,
+				sender,
+				&tokenIn,
+				&tokenOut,
+			)
+			resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+			s.AssertValidTxResponse(resp)
+			s.Require().NoError(err)
+		})
 
 	})
 
-	t.Run("send withdraw message with invalid address", func(t *testing.T) {
-		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
-		poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
-		poolCoin := poolRes.InterchainLiquidityPool.Supply
-		s.Require().NotEqual(poolCoin.Amount, sdk.NewInt(0))
+	t.Run("execute basic message tests with errors", func(t *testing.T) {
+		chainAInvalidAddress := "(invalidAddress)"
+		t.Run("send create pool message with invalid address", func(t *testing.T) {
+			msg := types.NewMsgCreatePool(
+				channelA.PortID,
+				channelA.ChannelID,
+				chainAInvalidAddress,
+				"1:2",
+				[]string{chainADenom, chainBDenom},
+				[]uint32{10, 100},
+			)
 
-		denomOut := chainADenom
-		sender := chainAInvalidAddress
-		msg := types.NewMsgWithdraw(
-			sender,
-			poolCoin,
-			denomOut,
-		)
-		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-		s.Require().Equal("invalid address", resp.RawLog)
-		s.Require().NoError(err)
+			resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+			s.Require().Equal("invalid address", resp.RawLog)
+			s.Require().NoError(err)
+		})
 
+		t.Run("send deposit message with invalid address", func(t *testing.T) {
+
+			poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
+			depositCoin := sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(1000)}
+			msg := types.NewMsgDeposit(
+				poolId,
+				chainAInvalidAddress,
+				[]*sdk.Coin{&depositCoin},
+			)
+
+			resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+			s.Require().Equal("invalid sender address (decoding bech32 failed: string not all lowercase or all uppercase): invalid address", resp.RawLog)
+			s.Require().NoError(err)
+
+		})
+
+		t.Run("send withdraw message with invalid address", func(t *testing.T) {
+			poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
+			poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
+			poolCoin := poolRes.InterchainLiquidityPool.Supply
+			s.Require().NotEqual(poolCoin.Amount, sdk.NewInt(0))
+
+			denomOut := chainADenom
+			sender := chainAInvalidAddress
+			msg := types.NewMsgWithdraw(
+				sender,
+				poolCoin,
+				denomOut,
+			)
+			resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+			s.Require().Equal("invalid sender address (decoding bech32 failed: string not all lowercase or all uppercase): invalid address", resp.RawLog)
+			s.Require().NoError(err)
+
+		})
+
+		t.Run("send swap message (don't check ack) with invalid address", func(t *testing.T) {
+			sender := chainAInvalidAddress
+			tokenIn := sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(1000)}
+			tokenOut := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(1000)}
+			msg := types.NewMsgSwap(
+				sender,
+				10,
+				sender,
+				&tokenIn,
+				&tokenOut,
+			)
+			resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+			s.Require().Equal("invalid sender address (decoding bech32 failed: string not all lowercase or all uppercase): invalid address", resp.RawLog)
+			s.Require().NoError(err)
+		})
 	})
 
-	t.Run("send swap message (don't check ack) with invalid address", func(t *testing.T) {
-		sender := chainAInvalidAddress
-		tokenIn := sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(1000)}
-		tokenOut := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(1000)}
-		msg := types.NewMsgSwap(
-			sender,
-			10,
-			sender,
-			&tokenIn,
-			&tokenOut,
-		)
-		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-		s.Require().Equal("invalid address", resp.RawLog)
-		s.Require().NoError(err)
-	})
 }
 
 // interchainswapChannelOptions configures both of the chains to have interchainswap enabled.
