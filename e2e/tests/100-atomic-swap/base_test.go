@@ -81,7 +81,7 @@ func (s *AtomicSwapTestSuite) TestAtomicSwap_HappyPath() {
 		sellToken2 := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)
 		order := types.NewAtomicOrder(types.NewMakerFromMsg(msg), msg.SourceChannel)
-		msgTake := types.NewMsgTakeSwap(channelA.PortID, sellToken2, takerAddressOnChainB, takerReceivingAddressOnChainA, timeoutHeight2, 0, time.Now().UTC().Unix())
+		msgTake := types.NewMsgTakeSwap(order.Id, sellToken2, takerAddressOnChainB, takerReceivingAddressOnChainA, timeoutHeight2, 0, time.Now().UTC().Unix())
 		msgTake.OrderId = order.Id
 		resp2, err2 := s.BroadcastMessages(ctx, chainB, chainBTakerWallet, msgTake)
 		s.AssertValidTxResponse(resp2)

@@ -226,7 +226,7 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		// This logic will be executed when Relayer sends make swap packet to the taker chain, but the request timeout
 		// and locked tokens form the first step (see the picture on the link above) MUST be returned to the account of
 		// the maker on the maker chain.
-		makeMsg := &types.MsgMakeSwapRequest{}
+		makeMsg := &types.MakeSwapMsg{}
 		if err := makeMsg.Unmarshal(swapPacket.Data); err != nil {
 			return err
 		}

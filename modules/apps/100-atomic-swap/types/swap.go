@@ -23,7 +23,7 @@ func NewAtomicOrder(maker *SwapMaker, channelId string) AtomicSwapOrder {
 	}
 }
 
-func NewMakerFromMsg(msg *MsgMakeSwapRequest) *SwapMaker {
+func NewMakerFromMsg(msg *MakeSwapMsg) *SwapMaker {
 	return &SwapMaker{
 		SourcePort:            msg.SourcePort,
 		SourceChannel:         msg.SourceChannel,
@@ -51,7 +51,7 @@ func Hash(content []byte) tmbytes.HexBytes {
 	return hash[:]
 }
 
-func CreateOrder(msg *MsgMakeSwapRequest, packet channeltypes.Packet) AtomicSwapOrder {
+func CreateOrder(msg *MakeSwapMsg, packet channeltypes.Packet) AtomicSwapOrder {
 	//path := orderPath(packet)
 	//return AtomicSwapOrder{
 	//	Id:     GenerateOrderId(packet),

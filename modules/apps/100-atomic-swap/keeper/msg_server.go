@@ -18,13 +18,13 @@ var _ types.MsgServer = Keeper{}
 
 // MakeSwap is called when the maker wants to make atomic swap. The method create new order and lock tokens.
 // This is the step 1 (Create order & Lock Token) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap.
-func (k Keeper) MakeSwap(goCtx context.Context, msgReq *types.MsgMakeSwapRequest) (*types.MsgMakeSwapResponse, error) {
+func (k Keeper) MakeSwap(goCtx context.Context, msgReq *types.MakeSwapMsg) (*types.MsgMakeSwapResponse, error) {
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := msgReq.ValidateBasic(); err != nil {
-		return nil, err
-	}
+	//if err := msgReq.ValidateBasic(); err != nil {
+	//	return nil, err
+	//}
 
 	msg := types.NewMakerFromMsg(msgReq)
 	msgByte, err0 := types.ModuleCdc.Marshal(msg)
@@ -398,7 +398,7 @@ func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, ms
 	order.Status = types.Status_CANCEL
 	order.CancelTimestamp = msg.CreateTimestamp
 	k.SetAtomicOrder(ctx, order)
-	
+
 	ctx.EventManager().EmitTypedEvents(msg)
 	return nil
 }

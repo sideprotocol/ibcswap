@@ -10,12 +10,12 @@ import "ibc/core/client/v1/client.proto";
 
 // Msg defines the ibc/swap Msg service.
 service Msg {
-  rpc MakeSwap(MsgMakeSwapRequest) returns (MsgMakeSwapResponse);
+  rpc MakeSwap(MakeSwapMsg) returns (MsgMakeSwapResponse);
   rpc TakeSwap(MsgTakeSwapRequest) returns (MsgTakeSwapResponse);
   rpc CancelSwap(MsgCancelSwapRequest) returns (MsgCancelSwapResponse);
 }
 
-message MsgMakeSwapRequest {
+message MakeSwapMsg {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
