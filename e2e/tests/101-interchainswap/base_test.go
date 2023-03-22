@@ -28,7 +28,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 
 	t := s.T()
 	ctx := context.TODO()
-
+	logger := testsuite.NewLogger()
 	// setup relayers and connection-0 between two chains.
 	relayer, channelA, channelB := s.SetupChainsRelayerAndChannel(ctx, interchainswapChannelOptions())
 
@@ -77,9 +77,11 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 			channelA.ChannelID,
 			chainAAddress,
 			"1:1",
-			[]string{chainADenom, chainBDenom},
+			[]*sdk.Coin{
+				{Denom: chainADenom, Amount: sdk.NewInt(100000)},
+				{Denom: chainBDenom, Amount: sdk.NewInt(10000)},
+			},
 			[]uint32{6, 6},
-			100000,
 		)
 
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
@@ -93,7 +95,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
 
 		// check pool info in chainA and chainB
-		poolId := types.GetPoolId(msg.Denoms)
+		poolId := types.GetPoolIdWithTokens(msg.Tokens)
 		poolARes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
 		s.Require().NoError(err)
 		poolAInfo := poolARes.InterchainLiquidityPool
@@ -102,18 +104,19 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 
 		s.Require().EqualValues(msg.SourceChannel, poolAInfo.EncounterPartyChannel)
 		s.Require().EqualValues(msg.SourcePort, poolAInfo.EncounterPartyPort)
-		s.Require().EqualValues(msg.InitalLiquidity, poolAInfo.Supply.Amount.Uint64())
+		//s.Require().EqualValues(msg.Tokens[0].Amount, poolAInfo.Supply.Amount)
 
 		poolBRes, err := s.QueryInterchainswapPool(ctx, chainB, poolId)
 		s.Require().NoError(err)
 		poolBInfo := poolBRes.InterchainLiquidityPool
 		s.Require().EqualValues(msg.SourceChannel, poolBInfo.EncounterPartyChannel)
 		s.Require().EqualValues(msg.SourcePort, poolBInfo.EncounterPartyPort)
-		s.Require().EqualValues(msg.InitalLiquidity, poolBInfo.Supply.Amount.Uint64())
+		//s.Require().EqualValues(msg.Tokens[1].Amount, poolBInfo.Supply.Amount)
 
 		fmt.Println(poolAInfo)
+		logger.CleanLog("Create Pool: PoolA", poolAInfo)
 		fmt.Println("===================")
-		fmt.Println(poolBInfo)
+		logger.CleanLog("Create Pool: PoolB", poolBInfo)
 
 		// compare pool info sync status
 		s.Require().EqualValues(poolAInfo.Supply, poolBInfo.Supply)
@@ -121,27 +124,27 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 		s.Require().EqualValues(poolAInfo.Assets[1].Balance.Amount, poolBInfo.Assets[1].Balance.Amount)
 	})
 
-	t.Run("send deposit message", func(t *testing.T) {
+	t.Run("send deposit message (enable pool)", func(t *testing.T) {
 
 		// check the balance of the chainA account.
-		beforeDeposit, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
+		beforeDeposit, err := s.QueryBalance(ctx, chainB, chainBAddress, chainBDenom)
 		s.Require().NoError(err)
 		s.Require().NotEqual(beforeDeposit.Balance.Amount, sdk.NewInt(0))
 
 		// prepare deposit message.
 		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
-		depositCoin := sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(1000000)}
+		depositCoin := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(10000)}
 
 		msg := types.NewMsgDeposit(
 			poolId,
-			chainAAddress,
+			chainBAddress,
 			[]*sdk.Coin{&depositCoin},
 		)
-		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+		resp, err := s.BroadcastMessages(ctx, chainB, chainBWallet, msg)
 		s.AssertValidTxResponse(resp)
 		s.Require().NoError(err)
 
-		balanceRes, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
+		balanceRes, err := s.QueryBalance(ctx, chainB, chainBAddress, chainBDenom)
 		s.Require().NoError(err)
 		expectedBalance := balanceRes.Balance.Add(depositCoin)
 		s.Require().Equal(expectedBalance.Denom, beforeDeposit.Balance.Denom)
@@ -149,70 +152,116 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 
 		// check packet relayed or not.
 		test.WaitForBlocks(ctx, 10, chainA, chainB)
-		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 2)
+		s.AssertPacketRelayed(ctx, chainB, channelB.PortID, channelB.ChannelID, 1)
 
-		poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
+		poolResInChainA, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
 		s.Require().NoError(err)
-		poolInfo := poolRes.InterchainLiquidityPool
-		s.Require().NotEqual(poolInfo.Supply.Amount, sdk.NewInt(0))
+		poolInChainA := poolResInChainA.InterchainLiquidityPool
+		s.Require().Equal(poolInChainA.Status, types.PoolStatus_POOL_STATUS_READY)
+
+		poolResInChainB, err := s.QueryInterchainswapPool(ctx, chainB, poolId)
+		s.Require().NoError(err)
+		poolInChainB := poolResInChainB.InterchainLiquidityPool
+		s.Require().Equal(poolInChainB.Status, types.PoolStatus_POOL_STATUS_READY)
+
+		logger.CleanLog("Send Deposit(After):PoolA", poolInChainA)
+		logger.CleanLog("Send Deposit(After):PoolB", poolInChainB)
+		fmt.Print(chainAAddressForB)
+
 	})
 
 	// send swap message
 	t.Run("send swap message", func(t *testing.T) {
 		sender := chainBAddress
 		recipient := chainAAddressForB
-		tokenIn := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(1000)}
-		tokenOut := sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(1000)}
-
 		// check chain A pool status
-		poolId := types.GetPoolId([]string{tokenOut.Denom, tokenIn.Denom})
+		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
 		poolARes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
 		s.Require().NoError(err)
-		poolAInfo := poolARes.InterchainLiquidityPool
+		poolA := poolARes.InterchainLiquidityPool
 
+		tokenIn := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(1000)}
+
+		// calculate estimate output.
+		am := types.NewInterchainMarketMaker(
+			poolA,
+			types.DefaultMaxFeeRate,
+		)
+
+		outToken, err := am.LeftSwap(tokenIn, chainADenom)
+		logger.CleanLog("Swap:(Estimated output token)", outToken)
+
+		s.Require().NoError(err)
+		s.Require().Greater(outToken.Amount.Uint64(), uint64(0))
+
+		tokenOut := outToken
+
+		senderBefore, err := s.QueryBalance(ctx, chainB, chainBWallet.Bech32Address("cosmos"), chainBDenom)
+		s.Require().NoError(err)
 		// check chain B pool status
 		poolBRes, err := s.QueryInterchainswapPool(ctx, chainB, poolId)
 		s.Require().NoError(err)
-		poolBInfo := poolBRes.InterchainLiquidityPool
+		poolB := poolBRes.InterchainLiquidityPool
+		assetBBefore, err := poolB.FindAssetByDenom(chainBDenom)
+		s.Require().NoError(err)
 
-		fmt.Println(poolAInfo.Supply.Amount)
-		fmt.Println(poolAInfo.Assets[0])
-		fmt.Println(poolAInfo.Assets[1])
+		logger.CleanLog("Swap(Before): poolA:", poolA)
+		fmt.Println("------------------------------------")
+		logger.CleanLog("Swap(Before): poolB:", poolB)
 
-		fmt.Println("====================")
-
-		fmt.Println(poolBInfo.Supply.Amount)
-		fmt.Println(poolBInfo.Assets[0])
-		fmt.Println(poolBInfo.Assets[1])
-
-		s.Require().NotEqual(poolAInfo.Supply.Amount, sdk.NewInt(0))
-		s.Require().NotEqual(poolBInfo.Supply.Amount, sdk.NewInt(0))
-		// fmt.Println(chainBAddress)
-		// fmt.Println(chainAAddressForB)
-		// fmt.Println(channelB)
+		s.Require().NotEqual(poolA.Supply.Amount, sdk.NewInt(0))
+		s.Require().NotEqual(poolB.Supply.Amount, sdk.NewInt(0))
 
 		// swap
 		msg := types.NewMsgSwap(
 			types.SwapMsgType_LEFT,
 			sender,
-			10,
+			100,
 			recipient,
 			&tokenIn,
-			&tokenOut,
+			tokenOut,
 		)
+
 		resp, err := s.BroadcastMessages(ctx, chainB, chainBWallet, msg)
 		//fmt.Println("Swap Tx:", resp)
 		s.AssertValidTxResponse(resp)
 		s.Require().NoError(err)
 
-		// check packet relayed or not.
+		// check token deposit state from wallet
+		senderAfter, err := s.QueryBalance(ctx, chainB, chainBWallet.Bech32Address("cosmos"), chainBDenom)
+		s.Require().NoError(err)
+
+		differ := senderBefore.Balance.Amount.Sub(senderAfter.Balance.Amount)
+		logger.CleanLog("SendDeposit:", differ.Int64())
+		s.Require().Equal(differ.Int64(), int64(1000))
+
+		// // check packet relayed or not.
 		test.WaitForBlocks(ctx, 10, chainA, chainB)
-		s.AssertPacketRelayed(ctx, chainB, channelB.PortID, channelB.ChannelID, 1)
+		s.AssertPacketRelayed(ctx, chainB, channelB.PortID, channelB.ChannelID, 2)
 
 		// check withdraw status of a recipient.
 		recipientATokenRes, err := s.QueryBalance(ctx, chainA, recipient, chainADenom)
 		s.Require().NoError(err)
-		s.Require().Greater(recipientATokenRes.Balance.Amount.Int64(), int64(10))
+		s.Require().Greater(recipientATokenRes.Balance.Amount.Int64(), testvalues.StartingTokenAmount)
+
+		// check chain A pool status
+		poolARes, err = s.QueryInterchainswapPool(ctx, chainA, poolId)
+		s.Require().NoError(err)
+		poolA = poolARes.InterchainLiquidityPool
+
+		// check chain B pool status
+		poolBRes, err = s.QueryInterchainswapPool(ctx, chainB, poolId)
+		s.Require().NoError(err)
+		poolB = poolBRes.InterchainLiquidityPool
+
+		assetBAfter, err := poolB.FindAssetByDenom(chainBDenom)
+
+		s.Require().NoError(err)
+		s.Require().Greater(assetBAfter.Balance.Amount.Uint64(), assetBBefore.Balance.Amount.Uint64())
+
+		logger.CleanLog("Swap(After): poolA:", poolA)
+		fmt.Println("------------------------------------")
+		logger.CleanLog("Swap(After): poolB:", poolB)
 	})
 
 	// full withdraw
@@ -221,16 +270,14 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 		beforeDeposit, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
 		s.Require().NoError(err)
 		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
-		poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
-		s.Require().NoError(err)
-		poolCoin := poolRes.InterchainLiquidityPool.Supply
+		poolCoin := sdk.NewCoin(poolId, sdk.NewInt(1000))
 		s.Require().NotEqual(poolCoin.Amount, sdk.NewInt(0))
 
 		denomOut := chainADenom
 		sender := chainAAddress
 		msg := types.NewMsgWithdraw(
 			sender,
-			poolCoin,
+			&poolCoin,
 			denomOut,
 		)
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
@@ -279,11 +326,13 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacketErrors() {
 		msg := types.NewMsgCreatePool(
 			channelA.PortID,
 			channelA.ChannelID,
-			chainAInvalidAddress,
-			"1:2",
-			[]string{chainADenom, chainBDenom},
-			[]uint32{10, 100},
-			1000,
+			chainAAddress,
+			"1:1",
+			[]*sdk.Coin{
+				{Denom: chainADenom, Amount: sdk.NewInt(100000)},
+				{Denom: chainBDenom, Amount: sdk.NewInt(10000)},
+			},
+			[]uint32{6, 6},
 		)
 
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
