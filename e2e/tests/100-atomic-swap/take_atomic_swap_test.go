@@ -27,7 +27,7 @@ func (s *TakeAtomicSwapTestSuite) TestTakeAtomicSwap() {
 	ctx := context.TODO()
 
 	// setup relayers and connection-0 between two chains.
-	relayer, channelA := s.SetupChainsRelayerAndChannel(ctx, atomicSwapChannelOptions())
+	relayer, channelA, _ := s.SetupChainsRelayerAndChannel(ctx, atomicSwapChannelOptions())
 	chainA, chainB := s.GetChains()
 
 	t.Run("start relayer", func(t *testing.T) {
@@ -74,7 +74,7 @@ func (s *TakeAtomicSwapTestSuite) TestTakeAtomicSwap() {
 
 		// try to TAKE canceled order
 		sellToken2 := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
-		msgTake := types.NewMsgTakeSwap(channelA.PortID, channelA.ChannelID, sellToken2, chainBTakerAddress, chainATakerReceivingAddress, timeoutHeight2, 0, time.Now().UTC().Unix())
+		msgTake := types.NewMsgTakeSwap(order.Id, sellToken2, chainBTakerAddress, chainATakerReceivingAddress, timeoutHeight2, 0, time.Now().UTC().Unix())
 		msgTake.OrderId = order.Id
 		respTake, err := s.BroadcastMessages(ctx, chainB, takerWalletChainB, msgTake)
 		s.Require().NoError(err)
