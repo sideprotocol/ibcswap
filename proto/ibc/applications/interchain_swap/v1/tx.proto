@@ -21,10 +21,9 @@ message MsgCreatePoolRequest {
            string sourcePort    = 1;
            string sourceChannel = 2;
            string sender        = 3;
-  repeated string denoms        = 4;
+  repeated cosmos.base.v1beta1.Coin tokens = 4;
   repeated uint32 decimals      = 5;
            string weight        = 6;
-           uint64 inital_liquidity  = 7;
 }
 
 message MsgCreatePoolResponse {
@@ -67,4 +66,9 @@ message MsgSwapRequest {
 message MsgSwapResponse {
   SwapMsgType swap_type = 1;
   repeated cosmos.base.v1beta1.Coin tokens = 2;
+}
+
+message PoolApprove {
+    string pool_id = 1;
+    string sender = 2;
 }
