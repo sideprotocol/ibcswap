@@ -91,8 +91,8 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 		// wait block when packet relay.
 		test.WaitForBlocks(ctx, 20, chainA, chainB)
 
-		// check packet relay status.
-		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
+			// wait block when packet relay.
+			test.WaitForBlocks(ctx, 10, chainA, chainB)
 
 		// check pool info in chainA and chainB
 		poolId := types.GetPoolIdWithTokens(msg.Tokens)

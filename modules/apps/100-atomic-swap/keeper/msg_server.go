@@ -398,7 +398,7 @@ func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, ms
 	order.Status = types.Status_CANCEL
 	order.CancelTimestamp = msg.CreateTimestamp
 	k.SetAtomicOrder(ctx, order)
-
+	
 	ctx.EventManager().EmitTypedEvents(msg)
 	return nil
 }
