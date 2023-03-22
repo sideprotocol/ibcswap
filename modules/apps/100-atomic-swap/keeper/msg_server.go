@@ -22,9 +22,9 @@ func (k Keeper) MakeSwap(goCtx context.Context, msgReq *types.MakeSwapMsg) (*typ
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	//if err := msgReq.ValidateBasic(); err != nil {
-	//	return nil, err
-	//}
+	if err := msgReq.ValidateBasic(); err != nil {
+		return nil, err
+	}
 
 	msg := types.NewMakerFromMsg(msgReq)
 	msgByte, err0 := types.ModuleCdc.Marshal(msg)

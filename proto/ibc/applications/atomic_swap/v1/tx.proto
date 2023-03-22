@@ -42,6 +42,7 @@ message MakeSwapMsg {
   // Timeout timestamp in absolute nanoseconds since unix epoch.
   // The timeout is disabled when set to 0.
   uint64 timeout_timestamp = 10 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
+  uint64 expiration_timestamp = 11 [(gogoproto.moretags) = "yaml:\"expiration_timestamp\""];
 }
 
 message MsgMakeSwapResponse {}
