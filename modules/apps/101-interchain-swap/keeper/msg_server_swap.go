@@ -25,11 +25,16 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "because of %s", types.ErrNotFoundPool)
 	}
 
+	if pool.Status != types.PoolStatus_POOL_STATUS_READY {
+		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "because of %s", types.ErrNotReadyForSwap)
+	}
+
 	//lock swap-in token to the swap module
 	err = k.LockTokens(ctx, pool.EncounterPartyPort, pool.EncounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Sender), sdk.NewCoins(*msg.TokenIn))
 	if err != nil {
 		return nil, err
 	}
+	
 	//constructs the IBC data packet
 	swapData, err := types.ModuleCdc.Marshal(msg)
 	if err != nil {

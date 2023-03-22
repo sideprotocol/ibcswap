@@ -24,16 +24,14 @@ func TestMsgDeposit_ValidateBasic(t *testing.T) {
 		}, {
 			name: "valid address",
 			msg: MsgDepositRequest{
+				PoolId: "test",
 				Sender: sample.AccAddress(),
 				Tokens: []*types.Coin{
 					{
 						Denom:  "atom",
-						Amount: types.NewInt(0),
+						Amount: types.NewInt(100),
 					},
-					{
-						Denom:  "marscoin",
-						Amount: types.NewInt(0),
-					}},
+				},
 			},
 		},
 

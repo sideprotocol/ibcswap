@@ -18,14 +18,19 @@ func (suite *KeeperTestSuite) SetupPool() (*string, error) {
 		path.EndpointA.ChannelID,
 		suite.chainA.SenderAccount.GetAddress().String(),
 		"1:2",
-		[]string{sdk.DefaultBondDenom, sdk.DefaultBondDenom},
+		[]*sdk.Coin{{
+			Denom:  sdk.DefaultBondDenom,
+			Amount: sdk.NewInt(1000),
+		}, {
+			Denom:  "bside",
+			Amount: sdk.NewInt(1000),
+		}},
 		[]uint32{10, 100},
-		100,
 	)
 
 	ctx := suite.chainA.GetContext()
 	suite.chainA.GetSimApp().InterchainSwapKeeper.OnCreatePoolAcknowledged(ctx, msg)
-	poolId := types.GetPoolId(msg.Denoms)
+	poolId := types.GetPoolIdWithTokens(msg.Tokens)
 	return &poolId, nil
 }
 

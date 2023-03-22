@@ -13,8 +13,9 @@ import (
 // create new liquidity pool
 func NewInterchainLiquidityPool(
 	ctx types.Context,
+	creator string,
 	store BankKeeper,
-	denoms []string,
+	tokens []*types.Coin,
 	decimals []uint32,
 	weight string,
 	portId string,
@@ -22,27 +23,24 @@ func NewInterchainLiquidityPool(
 ) *InterchainLiquidityPool {
 
 	//generate poolId
-	poolId := GetPoolId(denoms)
+	poolId := GetPoolIdWithTokens(tokens)
 
 	weights := strings.Split(weight, ":")
 	weightSize := len(weights)
-	denomSize := len(denoms)
+	denomSize := len(tokens)
 	decimalSize := len(decimals)
 	assets := []*PoolAsset{}
 
 	if denomSize == weightSize && decimalSize == weightSize {
-		for index, denom := range denoms {
+		for index, token := range tokens {
 			side := PoolSide_NATIVE
-			if !store.HasSupply(ctx, denom) {
+			if !store.HasSupply(ctx, token.Denom) {
 				side = PoolSide_REMOTE
 			}
 			weight, _ := strconv.ParseUint(weights[index], 10, 32)
 			asset := PoolAsset{
-				Side: side,
-				Balance: &types.Coin{
-					Amount: types.NewInt(0),
-					Denom:  denom,
-				},
+				Side:    side,
+				Balance: token,
 				Weight:  uint32(weight),
 				Decimal: decimals[index],
 			}
@@ -51,13 +49,14 @@ func NewInterchainLiquidityPool(
 	}
 
 	return &InterchainLiquidityPool{
-		PoolId: poolId,
-		Assets: assets,
+		PoolId:  poolId,
+		Creator: creator,
+		Assets:  assets,
 		Supply: &types.Coin{
 			Amount: types.NewInt(0),
 			Denom:  poolId,
 		},
-		Status:                PoolStatus_POOL_STATUS_READY,
+		Status:                PoolStatus_POOL_STATUS_INITIAL,
 		EncounterPartyPort:    portId,
 		EncounterPartyChannel: channelId,
 	}
@@ -133,7 +132,7 @@ func NewInterchainMarketMaker(
 ) *InterchainMarketMaker {
 	return &InterchainMarketMaker{
 		Pool:    &pool,
-		FeeRate: uint64(feeRate),
+		FeeRate: feeRate,
 	}
 }
 
@@ -167,15 +166,17 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 	amount := float64(token.Amount.Uint64())
 	supply := float64(imm.Pool.Supply.Amount.Uint64())
 	weight := float64(asset.Weight) / 100
-	var issueAmount float64
-	if supply == 0 {
-		issueAmount = float64(token.Amount.Uint64())
+
+	issueAmount := types.NewInt(0)
+
+	if imm.Pool.Status == PoolStatus_POOL_STATUS_INITIAL {
+		issueAmount = token.Amount //float64(token.Amount.Uint64()) * float64(asset.Weight)
 	} else {
-		issueAmount = supply * mathtool.Pow(1+amount/float64(asset.Balance.Amount.Uint64()), float64(weight)-1)
+		issueAmount = types.NewInt(int64(supply * (mathtool.Pow(1+amount/float64(asset.Balance.Amount.Uint64()), float64(weight)) - 1)))
 	}
 
 	return &types.Coin{
-		Amount: types.NewInt(int64(issueAmount)),
+		Amount: issueAmount,
 		Denom:  imm.Pool.Supply.Denom,
 	}, nil
 }
@@ -184,7 +185,6 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 // At = Bt * (1 - (1 - P_redeemed / P_supply) ** 1/Wt)
 func (imm *InterchainMarketMaker) Withdraw(redeem types.Coin, denomOut string) (*types.Coin, error) {
 	asset, err := imm.Pool.FindAssetByDenom(denomOut)
-
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +192,6 @@ func (imm *InterchainMarketMaker) Withdraw(redeem types.Coin, denomOut string) (
 	if err != nil {
 		return nil, err
 	}
-
 	if imm.Pool.Status != PoolStatus_POOL_STATUS_READY {
 		return nil, ErrNotReadyForSwap
 	}
@@ -208,8 +207,9 @@ func (imm *InterchainMarketMaker) Withdraw(redeem types.Coin, denomOut string) (
 	balance := float64(asset.Balance.Amount.Uint64())
 	supply := float64(imm.Pool.Supply.Amount.Uint64())
 	weight := float64(asset.Weight) / 100
-	amountOut := balance * mathtool.Pow((1-(1-float64(redeem.Amount.Uint64())/supply)), 1/weight)
 
+	//At = Bt * (1 - (1 - P_redeemed / P_supply) ** 1/Wt)
+	amountOut := balance * (1 - mathtool.Pow((1-float64(redeem.Amount.Uint64())/supply), 1/weight))
 	return &types.Coin{
 		Amount: types.NewInt(int64(amountOut)),
 		Denom:  denomOut,
@@ -238,10 +238,11 @@ func (imm *InterchainMarketMaker) LeftSwap(amountIn types.Coin, denomOut string)
 	weightOut := float64(assetOut.Weight) / 100
 	amount := imm.MinusFees(amountIn.Amount)
 
-	amountOut := balanceOut * (1 - balanceIn/mathtool.Pow((balanceIn+amount), weightIn/weightOut))
+	// Ao = Bo * ((1 - Bi / (Bi + Ai)) ** Wi/Wo)
+	amountOut := balanceOut * mathtool.Pow(1-balanceIn/(balanceIn+amount), weightIn/weightOut)
 	return &types.Coin{
 		Amount: types.NewInt(int64(amountOut)),
-		Denom:  imm.Pool.Supply.Denom,
+		Denom:  denomOut,
 	}, nil
 }
 
@@ -272,7 +273,7 @@ func (imm *InterchainMarketMaker) RightSwap(amountIn types.Coin, amountOut types
 	}
 	return &types.Coin{
 		Amount: amount,
-		Denom:  imm.Pool.Supply.Denom,
+		Denom:  amountIn.Denom,
 	}, nil
 }
 

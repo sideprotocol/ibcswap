@@ -34,9 +34,14 @@ func (suite *KeeperTestSuite) TestMsgCreatePool() {
 			path.EndpointA.ChannelID,
 			suite.chainA.SenderAccount.GetAddress().String(),
 			"1:2",
-			[]string{sdk.DefaultBondDenom, "venuscoin"},
+			[]*sdk.Coin{{
+				Denom:  sdk.DefaultBondDenom,
+				Amount: sdk.NewInt(1000),
+			}, {
+				Denom:  "bside",
+				Amount: sdk.NewInt(1000),
+			}},
 			[]uint32{10, 100},
-			100,
 		)
 		msgSrv := keeper.NewMsgServerImpl(suite.chainA.GetSimApp().InterchainSwapKeeper)
 		res, err := msgSrv.CreatePool(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)

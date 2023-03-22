@@ -75,6 +75,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		}
 		data, err := types.ModuleCdc.Marshal(&types.MsgCreatePoolResponse{PoolId: *pooId}) //types.ModuleCdc.Marshal(&types.MsgCreatePoolResponse{PoolId: *pooId})
 		return data, err
+
 	case types.MessageType_DEPOSIT:
 		var msg types.MsgDepositRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
@@ -129,7 +130,10 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				logger.Debug(err.Error())
 				return err
 			}
-			k.OnCreatePoolAcknowledged(ctx, &msg)
+			err := k.OnCreatePoolAcknowledged(ctx, &msg)
+			if err != nil {
+				return err
+			}
 		case types.MessageType_DEPOSIT:
 			var msg types.MsgDepositRequest
 			var res types.MsgDepositResponse
@@ -193,13 +197,7 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		}
 
 		// refund initial liquidity.
-		var nativeDenom string
-		for _, denom := range msg.Denoms {
-			if k.bankKeeper.HasSupply(ctx, denom) {
-				nativeDenom = denom
-			}
-		}
-		token = sdk.NewCoin(nativeDenom, sdk.NewInt(int64(msg.InitalLiquidity)))
+		token = *msg.Tokens[0] //sdk.NewCoin(nativeDenom, sdk.NewInt(int64(msg.InitalLiquidity)))
 	case types.MessageType_DEPOSIT:
 		var msg types.MsgDepositRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {

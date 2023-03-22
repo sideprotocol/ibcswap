@@ -55,5 +55,7 @@ var (
 	ErrIncorrectInitialLiquidityDenom = errorsmod.Register(ModuleName, 1534, "initial liquidity denom has to match with one of pool denom pair")
 	ErrInvalidSwapType                = errorsmod.Register(ModuleName, 1535, "invalid swap type!")
 
-	ErrInvalidDenom = errorsmod.Register(ModuleName, 1536, "invalid denom")
+	ErrInvalidDenom          = errorsmod.Register(ModuleName, 1536, "invalid denom")
+	ErrInvalidAddressPair    = errorsmod.Register(ModuleName, 1537, "invalid address pair!")
+	ErrInvalidInitialDeposit = errorsmod.Register(ModuleName, 1538, "Invalid token amount for initial deposit")
 )

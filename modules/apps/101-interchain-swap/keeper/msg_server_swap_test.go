@@ -11,6 +11,8 @@ import (
 
 func (suite *KeeperTestSuite) TestMsgSwap() {
 	var msg *types.MsgSwapRequest
+	var poolId *string
+	var err error
 	testCases := []struct {
 		name     string
 		malleate func()
@@ -19,7 +21,11 @@ func (suite *KeeperTestSuite) TestMsgSwap() {
 		{
 			"success",
 			func() {
-
+				ctx := suite.chainA.GetContext()
+				pool, found := suite.chainA.GetSimApp().InterchainSwapKeeper.GetInterchainLiquidityPool(ctx, *poolId)
+				suite.Require().Equal(found, true)
+				pool.Status = types.PoolStatus_POOL_STATUS_READY
+				suite.chainA.GetSimApp().InterchainSwapKeeper.SetInterchainLiquidityPool(ctx, pool)
 			},
 			true,
 		},
@@ -44,9 +50,9 @@ func (suite *KeeperTestSuite) TestMsgSwap() {
 
 	for _, tc := range testCases {
 		// create pool first of all.
-		pooId, err := suite.SetupPool()
+		poolId, err = suite.SetupPool()
 		suite.Require().NoError(err)
-		fmt.Println(pooId)
+		fmt.Println(poolId)
 
 		sender := suite.chainA.SenderAccount
 		//
@@ -60,7 +66,7 @@ func (suite *KeeperTestSuite) TestMsgSwap() {
 				Amount: sdk.NewInt(100),
 			},
 			TokenOut: &sdk.Coin{
-				Denom:  sdk.DefaultBondDenom,
+				Denom:  "bside",
 				Amount: sdk.NewInt(100),
 			},
 		}

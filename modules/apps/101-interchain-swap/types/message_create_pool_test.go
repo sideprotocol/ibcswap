@@ -5,6 +5,8 @@ import (
 
 	"github.com/ibcswap/ibcswap/v6/testing/testutil/sample"
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestMsgCreatePool_ValidateBasic(t *testing.T) {
@@ -20,8 +22,14 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				SourcePort:    "interchainswap",
 				SourceChannel: "interchainswap-1",
 				Weight:        "100:99",
-				Denoms:        []string{"atom", "marscoin"},
-				Decimals:      []uint32{10, 10},
+				Tokens: []*sdk.Coin{{
+					Denom:  "aside",
+					Amount: sdk.NewInt(1000),
+				}, {
+					Denom:  "bside",
+					Amount: sdk.NewInt(1000),
+				}},
+				Decimals: []uint32{10, 10},
 			},
 			err: ErrInvalidAddress,
 		}, {
@@ -31,8 +39,14 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				SourcePort:    "interchainswap",
 				SourceChannel: "interchainswap-1",
 				Weight:        "100:99",
-				Denoms:        []string{"atom", "marscoin"},
-				Decimals:      []uint32{10, 10},
+				Tokens: []*sdk.Coin{{
+					Denom:  "aside",
+					Amount: sdk.NewInt(1000),
+				}, {
+					Denom:  "bside",
+					Amount: sdk.NewInt(1000),
+				}},
+				Decimals: []uint32{10, 10},
 			},
 		},
 		{
@@ -42,8 +56,11 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				SourcePort:    "interchainswap",
 				SourceChannel: "interchainswap-1",
 				Weight:        "100:99",
-				Denoms:        []string{"atom"},
-				Decimals:      []uint32{10, 10},
+				Tokens: []*sdk.Coin{{
+					Denom:  "aside",
+					Amount: sdk.NewInt(1000),
+				}},
+				Decimals: []uint32{10, 10},
 			},
 			err: ErrInvalidDenomPair,
 		},
@@ -54,8 +71,14 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				SourcePort:    "interchainswap",
 				SourceChannel: "interchainswap-1",
 				Weight:        "100:99",
-				Denoms:        []string{"atom", "marscoin"},
-				Decimals:      []uint32{10},
+				Tokens: []*sdk.Coin{{
+					Denom:  "aside",
+					Amount: sdk.NewInt(1000),
+				}, {
+					Denom:  "bside",
+					Amount: sdk.NewInt(1000),
+				}},
+				Decimals: []uint32{10},
 			},
 			err: ErrInvalidDecimalPair,
 		},
@@ -66,8 +89,14 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				SourcePort:    "interchainswap",
 				SourceChannel: "interchainswap-1",
 				Weight:        "100,323",
-				Denoms:        []string{"atom", "marscoin"},
-				Decimals:      []uint32{10, 10},
+				Tokens: []*sdk.Coin{{
+					Denom:  "aside",
+					Amount: sdk.NewInt(1000),
+				}, {
+					Denom:  "bside",
+					Amount: sdk.NewInt(1000),
+				}},
+				Decimals: []uint32{10, 10},
 			},
 			err: ErrInvalidWeightPair,
 		},
@@ -78,8 +107,14 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				SourcePort:    "interchainswap",
 				SourceChannel: "interchainswap-1",
 				Weight:        "100:323:200",
-				Denoms:        []string{"atom", "marscoin"},
-				Decimals:      []uint32{10, 10},
+				Tokens: []*sdk.Coin{{
+					Denom:  "aside",
+					Amount: sdk.NewInt(1000),
+				}, {
+					Denom:  "bside",
+					Amount: sdk.NewInt(1000),
+				}},
+				Decimals: []uint32{10, 10},
 			},
 			err: ErrInvalidWeightPair,
 		},

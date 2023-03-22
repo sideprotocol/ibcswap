@@ -10,15 +10,14 @@ const TypeMsgCreatePool = "create_pool"
 
 var _ sdk.Msg = &MsgCreatePoolRequest{}
 
-func NewMsgCreatePool(sourcePort string, sourceChannel string, sender string, weight string, denoms []string, decimals []uint32, initialLiquidity uint64) *MsgCreatePoolRequest {
+func NewMsgCreatePool(sourcePort string, sourceChannel string, sender string, weight string, tokens []*sdk.Coin, decimals []uint32) *MsgCreatePoolRequest {
 	return &MsgCreatePoolRequest{
-		SourcePort:      sourcePort,
-		SourceChannel:   sourceChannel,
-		Sender:          sender,
-		Weight:          weight,
-		Denoms:          denoms,
-		Decimals:        decimals,
-		InitalLiquidity: initialLiquidity,
+		SourcePort:    sourcePort,
+		SourceChannel: sourceChannel,
+		Sender:        sender,
+		Weight:        weight,
+		Tokens:        tokens,
+		Decimals:      decimals,
 	}
 }
 
@@ -49,7 +48,7 @@ func (msg *MsgCreatePoolRequest) ValidateBasic() error {
 		return ErrInvalidAddress
 	}
 
-	denomSize := len(msg.Denoms)
+	denomSize := len(msg.Tokens)
 	//validation message
 	if denomSize != 2 {
 		return ErrInvalidDenomPair
@@ -62,8 +61,10 @@ func (msg *MsgCreatePoolRequest) ValidateBasic() error {
 		return ErrInvalidWeightPair
 	}
 
-	if msg.InitalLiquidity <= 0 {
-		return ErrEmptyInitialLiquidity
+	for _, token := range msg.Tokens {
+		if token.Amount.LTE(sdk.NewInt(0)) {
+			return ErrInvalidAmount
+		}
 	}
 	return nil
 }

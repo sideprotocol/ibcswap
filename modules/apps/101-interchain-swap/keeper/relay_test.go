@@ -58,9 +58,14 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 					path.EndpointA.ChannelID,
 					suite.chainA.SenderAccount.GetAddress().String(),
 					"1:2",
-					[]string{sdk.DefaultBondDenom, "venuscoin"},
+					[]*sdk.Coin{{
+						Denom:  sdk.DefaultBondDenom,
+						Amount: sdk.NewInt(1000),
+					}, {
+						Denom:  "bside",
+						Amount: sdk.NewInt(1000),
+					}},
 					[]uint32{10, 100},
-					100,
 				)
 
 				msgbyte, err = types.ModuleCdc.Marshal(msg)
@@ -168,9 +173,14 @@ func (suite *KeeperTestSuite) TestOnReceived() {
 					path.EndpointA.ChannelID,
 					suite.chainA.SenderAccount.GetAddress().String(),
 					"1:2",
-					[]string{sdk.DefaultBondDenom, "venuscoin"},
+					[]*sdk.Coin{{
+						Denom:  sdk.DefaultBondDenom,
+						Amount: sdk.NewInt(1000),
+					}, {
+						Denom:  "bside",
+						Amount: sdk.NewInt(1000),
+					}},
 					[]uint32{10, 100},
-					100,
 				)
 				destPort := path.EndpointA.Counterparty.ChannelConfig.PortID
 				destChannel := path.EndpointA.ChannelID
@@ -181,7 +191,7 @@ func (suite *KeeperTestSuite) TestOnReceived() {
 					destChannel,
 				)
 				suite.Require().NoError(err)
-				suite.Require().Equal(*poolId, types.GetPoolId(msg.Denoms))
+				suite.Require().Equal(*poolId, types.GetPoolIdWithTokens(msg.Tokens))
 			}, true, true,
 		},
 	}

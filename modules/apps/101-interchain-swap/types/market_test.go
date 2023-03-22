@@ -26,7 +26,7 @@ func TestLeftSwap(t *testing.T) {
 		{
 			Side: PoolSide_REMOTE,
 			Balance: &types.Coin{
-				Amount: types.NewInt(10000),
+				Amount: types.NewInt(0),
 				Denom:  demons[1],
 			},
 			Weight:  1,
@@ -38,7 +38,7 @@ func TestLeftSwap(t *testing.T) {
 		PoolId: poolId,
 		Assets: assets,
 		Supply: &types.Coin{
-			Amount: types.NewInt(1000000),
+			Amount: types.NewInt(100000000),
 			Denom:  poolId,
 		},
 
@@ -63,8 +63,8 @@ func TestLeftSwap(t *testing.T) {
 		Recipient: "",
 	}
 	outToken, err := amm.LeftSwap(*msg.TokenIn, msg.TokenOut.Denom)
-	require.NoError(t, err)
 	fmt.Println(outToken.Amount.Uint64())
+	require.NoError(t, err)
 }
 
 func TestUpdatePoolAsset(t *testing.T) {

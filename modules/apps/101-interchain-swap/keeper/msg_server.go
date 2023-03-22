@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
@@ -20,23 +18,32 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-func (k Keeper) OnCreatePoolAcknowledged(ctx sdk.Context, msg *types.MsgCreatePoolRequest) {
+func (k Keeper) OnCreatePoolAcknowledged(ctx sdk.Context, msg *types.MsgCreatePoolRequest) error {
 	//save pool after complete create operation in counter party chain.
+
 	pool := types.NewInterchainLiquidityPool(
 		ctx,
+		msg.Sender,
 		k.bankKeeper,
-		msg.Denoms,
+		msg.Tokens,
 		msg.Decimals,
 		msg.Weight,
 		msg.SourcePort,
 		msg.SourceChannel,
 	)
 
-	initialLiquidity := sdk.NewInt(int64(msg.InitalLiquidity))
 	// when add initial liquidity, we need to update pool token amount.
-	pool.AddPoolSupply(sdk.NewCoin(pool.PoolId, initialLiquidity))
-	pool.AddAsset(sdk.NewCoin(msg.Denoms[0], initialLiquidity))
+	initialLiquidity := sdk.NewCoin(pool.PoolId, msg.Tokens[0].Amount)
+	pool.AddPoolSupply(initialLiquidity)
+
+	// mint lpToken.
+	err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(msg.Sender), initialLiquidity)
+	if err != nil {
+		return err
+	}
+
 	k.SetInterchainLiquidityPool(ctx, *pool)
+	return nil
 }
 
 func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgDepositRequest, res *types.MsgDepositResponse) error {
@@ -45,17 +52,23 @@ func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgDepos
 		return types.ErrNotFoundPool
 	}
 
-	// pool status update.
-	pool.AddPoolSupply(*res.PoolToken)
-	for _, token := range req.Tokens {
-		pool.AddAsset(*token)
-	}
-
 	// mint voucher
 	err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(req.Sender), *res.PoolToken)
 	if err != nil {
 		return err
 	}
+
+	// pool status update.
+	pool.AddPoolSupply(*res.PoolToken)
+
+	if pool.Status != types.PoolStatus_POOL_STATUS_INITIAL {
+		for _, token := range req.Tokens {
+			pool.AddAsset(*token)
+		}
+	} else {
+		pool.Status = types.PoolStatus_POOL_STATUS_READY
+	}
+
 	k.SetInterchainLiquidityPool(ctx, pool)
 	return nil
 }
@@ -70,49 +83,35 @@ func (k Keeper) OnWithdrawAcknowledged(ctx sdk.Context, req *types.MsgWithdrawRe
 	pool.SubPoolSupply(*res.Tokens[0])
 	k.SetInterchainLiquidityPool(ctx, pool)
 
-	// burn voucher token.
-	// err := k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(req.Sender), *req.PoolCoin)
-	// if err != nil {
-	// 	return err
-	// }
-	// // unlock token
-	// err = k.UnlockTokens(ctx,
-	// 	pool.EncounterPartyPort,
-	// 	pool.EncounterPartyChannel,
-	// 	sdk.MustAccAddressFromBech32(req.Sender),
-	// 	sdk.NewCoins(*res.Tokens[0]),
-	// )
-	// if err != nil {
-	// 	return err
-	// }
+	//burn voucher token.
+	err := k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(req.Sender), *req.PoolCoin)
+	if err != nil {
+		return err
+	}
+	// unlock token
+	err = k.UnlockTokens(ctx,
+		pool.EncounterPartyPort,
+		pool.EncounterPartyChannel,
+		sdk.MustAccAddressFromBech32(req.Sender),
+		sdk.NewCoins(*res.Tokens[0]),
+	)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (k Keeper) OnSwapAcknowledged(ctx sdk.Context, req *types.MsgSwapRequest, res *types.MsgSwapResponse) error {
-	pooId := types.GetPoolId([]string{req.TokenOut.Denom, req.TokenIn.Denom})
+	pooId := types.GetPoolId([]string{req.TokenIn.Denom, req.TokenOut.Denom})
 	pool, found := k.GetInterchainLiquidityPool(ctx, pooId)
 	if !found {
 		return types.ErrNotFoundPool
 	}
 
-	assetOut, err := pool.FindAssetByDenom(res.Tokens[0].Denom)
-	if err != nil {
-		return err
-	}
-
-	if assetOut.Balance.Amount.LT(res.Tokens[0].Amount) {
-		return types.ErrInvalidAmount
-	}
-
-	assetIn, err := pool.FindAssetByDenom(req.TokenIn.Denom)
-
-	if err != nil {
-		return err
-	}
-
-	assetIn.Balance.Amount.Add(req.TokenIn.Amount)
+	// pool status update
+	pool.AddAsset(*req.TokenIn)
+	pool.SubAsset(*res.Tokens[0])
 	k.SetInterchainLiquidityPool(ctx, pool)
-
 	return nil
 }
 
@@ -122,7 +121,7 @@ func (k Keeper) OnCreatePoolReceived(ctx sdk.Context, msg *types.MsgCreatePoolRe
 		return nil, err
 	}
 
-	pooId := types.GetPoolId(msg.Denoms)
+	pooId := types.GetPoolIdWithTokens(msg.Tokens)
 	_, found := k.GetInterchainLiquidityPool(ctx, pooId)
 
 	if found {
@@ -132,8 +131,9 @@ func (k Keeper) OnCreatePoolReceived(ctx sdk.Context, msg *types.MsgCreatePoolRe
 	// assume pool is ready when it is created.
 	pool := *types.NewInterchainLiquidityPool(
 		ctx,
+		msg.Sender,
 		k.bankKeeper,
-		msg.Denoms,
+		msg.Tokens,
 		msg.Decimals,
 		msg.Weight,
 		msg.SourcePort,
@@ -141,12 +141,12 @@ func (k Keeper) OnCreatePoolReceived(ctx sdk.Context, msg *types.MsgCreatePoolRe
 	)
 	//count native tokens
 	count := 0
-	for _, denom := range msg.Denoms {
-		if k.bankKeeper.HasSupply(ctx, denom) {
+	for _, token := range msg.Tokens {
+		if k.bankKeeper.HasSupply(ctx, token.Denom) {
 			count += 1
-			pool.UpdateAssetPoolSide(denom, types.PoolSide_NATIVE)
+			pool.UpdateAssetPoolSide(token.Denom, types.PoolSide_NATIVE)
 		} else {
-			pool.UpdateAssetPoolSide(denom, types.PoolSide_REMOTE)
+			pool.UpdateAssetPoolSide(token.Denom, types.PoolSide_REMOTE)
 		}
 	}
 
@@ -160,15 +160,13 @@ func (k Keeper) OnCreatePoolReceived(ctx sdk.Context, msg *types.MsgCreatePoolRe
 		types.DefaultMaxFeeRate,
 	)
 
-	initialLiquidity := sdk.NewCoin(msg.Denoms[0], sdk.NewInt(int64(msg.InitalLiquidity)))
-	lpToken, err := amm.DepositSingleAsset(initialLiquidity)
+	lpToken, err := amm.DepositSingleAsset(*msg.Tokens[0])
 	if err != nil {
 		return nil, errorsmod.Wrapf(types.ErrFailedOnDepositReceived, "because of %s", err)
 	}
 
 	// pool status update
 	pool.AddPoolSupply(*lpToken)
-	pool.AddAsset(sdk.NewCoin(msg.Denoms[0], sdk.NewInt(int64(msg.InitalLiquidity))))
 
 	// save pool status
 	k.SetInterchainLiquidityPool(ctx, pool)
@@ -194,22 +192,24 @@ func (k Keeper) OnDepositReceived(ctx sdk.Context, msg *types.MsgDepositRequest)
 
 	poolToken, err := amm.DepositSingleAsset(*msg.Tokens[0])
 	if err != nil {
-		return nil, errorsmod.Wrapf(types.ErrFailedOnDepositReceived, "because of %s", err)
+		return nil, err
 	}
 
-	// update supply.
-	err = pool.AddPoolSupply(*poolToken)
+	// increase lp token mint amount
+	pool.AddPoolSupply(*poolToken)
 
 	if err != nil {
 		return nil, errorsmod.Wrapf(types.ErrFailedOnDepositReceived, "because of %s", err)
 	}
 
-	// update pool tokens.
-	for _, token := range msg.Tokens {
-		err = pool.AddAsset(*token)
-		// if err != nil {
-		// 	return nil, errorsmod.Wrapf(types.ErrFailedOnDepositReceived, "because of %s", err)
-		// }
+	if pool.Status == types.PoolStatus_POOL_STATUS_READY {
+		// update pool tokens.
+		for _, token := range msg.Tokens {
+			pool.AddAsset(*token)
+		}
+	} else {
+		// switch pool status to 'READY'
+		pool.Status = types.PoolStatus_POOL_STATUS_READY
 	}
 
 	// save pool and market.
@@ -260,12 +260,11 @@ func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest) (*typ
 		return nil, err
 	}
 
-	pooId := types.GetPoolId([]string{msg.TokenOut.Denom, msg.TokenIn.Denom})
+	pooId := types.GetPoolId([]string{msg.TokenIn.Denom, msg.TokenOut.Denom})
 	pool, found := k.GetInterchainLiquidityPool(ctx, pooId)
 	if !found {
 		return nil, types.ErrNotFoundPool
 	}
-
 	//TODO: need to implement amm part.
 	//feeRate := parms.getPoolFeeRate()
 
@@ -290,7 +289,7 @@ func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest) (*typ
 	}
 
 	expected := float64(msg.TokenOut.Amount.Uint64()) * (1 - float64(msg.Slippage)/10000)
-	fmt.Println(outToken)
+
 	if float64(outToken.Amount.Uint64()) < expected {
 		return nil, errorsmod.Wrap(types.ErrFailedOnSwapReceived, "doesn't meet slippage for swap!, %s")
 	}
@@ -300,8 +299,9 @@ func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest) (*typ
 		return nil, errorsmod.Wrap(err, "failed to move assets from escrow address to recipient!")
 	}
 
-	// remove pool token
-	pool.SubPoolSupply(*outToken)
+	// update pool status
+	pool.SubAsset(*outToken)
+	pool.AddAsset(*msg.TokenIn)
 
 	k.SetInterchainLiquidityPool(ctx, pool)
 	k.SetInterchainMarketMaker(ctx, *amm)
