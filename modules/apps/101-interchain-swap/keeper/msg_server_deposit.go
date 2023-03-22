@@ -33,6 +33,14 @@ func (k Keeper) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) (*t
 			return nil, types.ErrInvalidAmount
 		}
 		coins = append(coins, *coin)
+		if pool.Status == types.PoolStatus_POOL_STATUS_INITIAL {
+			poolAsset, err := pool.FindAssetByDenom(coin.Denom)
+			if err == nil {
+				if !poolAsset.Balance.Amount.Equal(coin.Amount) {
+					return nil, types.ErrInvalidInitialDeposit
+				}
+			}
+		}
 	}
 
 	if len(coins) == 0 {

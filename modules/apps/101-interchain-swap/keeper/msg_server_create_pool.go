@@ -10,6 +10,7 @@ import (
 )
 
 func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolRequest) (*types.MsgCreatePoolResponse, error) {
+	
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// validate message
@@ -29,8 +30,8 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolReq
 	}
 
 	localAssetCount := 0
-	for _, denom := range msg.Denoms {
-		if k.bankKeeper.HasSupply(ctx, denom) {
+	for _, token := range msg.Tokens {
+		if k.bankKeeper.HasSupply(ctx, token.Denom) {
 			localAssetCount += 1
 		}
 	}
@@ -38,6 +39,20 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolReq
 	// should have 1 native asset on the chain
 	if localAssetCount < 1 {
 		return nil, types.ErrNumberOfLocalAsset
+	}
+
+	// check user owned initial liquidity or not
+	holdingNativeCoin := k.bankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.Tokens[0].Denom)
+	if holdingNativeCoin.Amount.LT(msg.Tokens[0].Amount) {
+		return nil, types.ErrEmptyInitialLiquidity
+	}
+	//lockedNativeCoin := sdk.NewCoin(msg.Denoms[0], sdk.NewInt(int64(msg.InitalLiquidity)))
+
+	// move initial fund to liquidity pool
+	err = k.LockTokens(ctx, msg.SourcePort, msg.SourceChannel, sdk.MustAccAddressFromBech32(msg.Sender), sdk.NewCoins(*msg.Tokens[0]))
+
+	if err != nil {
+		return nil, err
 	}
 
 	poolData, err := types.ModuleCdc.Marshal(msg)
@@ -56,7 +71,7 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolReq
 	if err != nil {
 		return nil, err
 	}
-	poolId := types.GetPoolId(msg.Denoms)
+	poolId := types.GetPoolIdWithTokens(msg.Tokens)
 	return &types.MsgCreatePoolResponse{
 		PoolId: poolId,
 	}, nil

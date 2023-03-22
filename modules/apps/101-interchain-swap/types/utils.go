@@ -25,6 +25,14 @@ func GetDefaultTimeOut(ctx *sdk.Context) (clienttypes.Height, uint64) {
 	return timeoutHeight, uint64(timeoutStamp.UTC().UnixNano())
 }
 
+func GetPoolIdWithTokens(tokens []*sdk.Coin) string {
+	
+	denoms := []string{}
+	for _, token := range tokens {
+		denoms = append(denoms, token.Denom)
+	}
+	return GetPoolId(denoms)
+}
 func GetPoolId(denoms []string) string {
 	//generate poolId
 	sort.Strings(denoms)

@@ -55,8 +55,6 @@ func (im IBCModule) OnChanOpenInit(
 		return "", err
 	}
 
-	fmt.Println("Here is version", version)
-
 	return version, nil
 }
 
@@ -199,7 +197,6 @@ func (im IBCModule) OnAcknowledgementPacket(
 
 	logger := im.keeper.Logger(ctx)
 	logger.Debug(data.String())
-	
 
 	if err := im.keeper.OnAcknowledgementPacket(ctx, packet, &data, ack); err != nil {
 		return err
@@ -242,7 +239,6 @@ func (im IBCModule) OnTimeoutPacket(
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		return errorsmod.Wrapf(types.ErrUnknownRequest, "cannot unmarshal ICS-101 transfer packet data: %s", err.Error())
 	}
-
 
 	// refund tokens
 	if err := im.keeper.OnTimeoutPacket(ctx, packet, &data); err != nil {

@@ -18,7 +18,7 @@ func HandleMarketFeeUpdateProposal(ctx sdk.Context, k Keeper, p *types.MarketFee
 		return errorsmod.ErrNotFound
 	}
 
-	market.FeeRate = uint64(p.FeeRate)
+	market.FeeRate = p.FeeRate
 	k.SetInterchainMarketMaker(ctx, market)
 
 	logger := k.Logger(ctx)

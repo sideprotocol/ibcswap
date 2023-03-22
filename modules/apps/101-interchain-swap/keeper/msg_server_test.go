@@ -1,8 +1,8 @@
 package keeper_test
 
 func (suite *KeeperTestSuite) TestMsgInterchainSwap() {
-	// var msg *types.MsgMakeSwapRequest
 
+	// var msg *types.MsgMakeSwapRequest
 	// testCases := []struct {
 	// 	name     string
 	// 	malleate func()
@@ -13,13 +13,13 @@ func (suite *KeeperTestSuite) TestMsgInterchainSwap() {
 	// 		func() {},
 	// 		true,
 	// 	},
-	// 	{
-	// 		"invalid sender",
-	// 		func() {
-	// 			msg.MakerAddress = "address"
-	// 		},
-	// 		false,
-	// 	},
+	// 	// {
+	// 	// 	"invalid sender",
+	// 	// 	func() {
+	// 	// 		msg.MakerAddress = "address"
+	// 	// 	},
+	// 	// 	false,
+	// 	// },
 	// 	//{
 	// 	//	"sender is a blocked address",
 	// 	//	func() {
@@ -27,13 +27,13 @@ func (suite *KeeperTestSuite) TestMsgInterchainSwap() {
 	// 	//	},
 	// 	//	false,
 	// 	//},
-	// 	{
-	// 		"channel does not exist",
-	// 		func() {
-	// 			msg.SourceChannel = "channel-100"
-	// 		},
-	// 		false,
-	// 	},
+	// 	// {
+	// 	// 	"channel does not exist",
+	// 	// 	func() {
+	// 	// 		msg.SourceChannel = "channel-100"
+	// 	// 	},
+	// 	// 	false,
+	// 	// },
 	// }
 
 	// for _, tc := range testCases {

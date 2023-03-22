@@ -28,7 +28,7 @@ func (s *AtomicSwapTestSuite) TestAtomicSwap_HappyPath() {
 	ctx := context.TODO()
 
 	// setup relayers and connection-0 between two chains.
-	relayer, channelA := s.SetupChainsRelayerAndChannel(ctx, atomicSwapChannelOptions())
+	relayer, channelA, _ := s.SetupChainsRelayerAndChannel(ctx, atomicSwapChannelOptions())
 	chainA, chainB := s.GetChains()
 
 	//create wallets for testing of the maker address on chains A and B.
@@ -81,7 +81,7 @@ func (s *AtomicSwapTestSuite) TestAtomicSwap_HappyPath() {
 		sellToken2 := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)
 		order := types.NewAtomicOrder(types.NewMakerFromMsg(msg), msg.SourceChannel)
-		msgTake := types.NewMsgTakeSwap(channelA.PortID, channelA.ChannelID, sellToken2, takerAddressOnChainB, takerReceivingAddressOnChainA, timeoutHeight2, 0, time.Now().UTC().Unix())
+		msgTake := types.NewMsgTakeSwap(channelA.PortID, sellToken2, takerAddressOnChainB, takerReceivingAddressOnChainA, timeoutHeight2, 0, time.Now().UTC().Unix())
 		msgTake.OrderId = order.Id
 		resp2, err2 := s.BroadcastMessages(ctx, chainB, chainBTakerWallet, msgTake)
 		s.AssertValidTxResponse(resp2)
@@ -89,6 +89,8 @@ func (s *AtomicSwapTestSuite) TestAtomicSwap_HappyPath() {
 
 		// wait block when packet relay.
 		test.WaitForBlocks(ctx, 10, chainA, chainB)
+		// check packet relay status.
+		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
 
 		// Assert balances after atomic swap finished
 		b1, err := s.QueryBalance(ctx, chainA, makerAddressOnChainA, chainA.Config().Denom)

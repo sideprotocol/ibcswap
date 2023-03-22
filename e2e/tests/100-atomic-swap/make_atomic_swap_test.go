@@ -26,7 +26,7 @@ func (s *MakeAtomicSwapTestSuite) TestMakeAtomicSwap_EdgeCases() {
 	ctx := context.TODO()
 
 	// setup relayers and connection-0 between two chains.
-	relayer, channelA := s.SetupChainsRelayerAndChannel(ctx, atomicSwapChannelOptions())
+	relayer, channelA, _ := s.SetupChainsRelayerAndChannel(ctx, atomicSwapChannelOptions())
 	chainA, chainB := s.GetChains()
 
 	//create wallets for testing of the maker address on chains A and B.

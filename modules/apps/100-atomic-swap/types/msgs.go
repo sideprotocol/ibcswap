@@ -103,7 +103,8 @@ func NewMsgTakeSwap(
 	orderId string,
 	sellToken sdk.Coin,
 	senderAddress, senderReceivingAddress string,
-	timeoutHeight clienttypes.Height, timeoutTimestamp uint64,
+	timeoutHeight clienttypes.Height,
+	timeoutTimestamp uint64,
 	createdTimestamp int64,
 ) *MsgTakeSwapRequest {
 	return &MsgTakeSwapRequest{

@@ -11,7 +11,7 @@ const TypeMsgSwap = "swap"
 
 var _ sdk.Msg = &MsgSwapRequest{}
 
-func NewMsgSwap(sender string, slippage uint64, recipient string, tokenIn, tokenOut *sdk.Coin) *MsgSwapRequest {
+func NewMsgSwap(swapType SwapMsgType, sender string, slippage uint64, recipient string, tokenIn, tokenOut *sdk.Coin) *MsgSwapRequest {
 	return &MsgSwapRequest{
 		Sender:    sender,
 		Slippage:  slippage,
@@ -43,6 +43,9 @@ func (msg *MsgSwapRequest) GetSignBytes() []byte {
 }
 
 func (msg *MsgSwapRequest) ValidateBasic() error {
+	if msg.SwapType != SwapMsgType_LEFT && msg.SwapType != SwapMsgType_RIGHT {
+		return ErrInvalidSwapType
+	}
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)

@@ -9,149 +9,66 @@ import "cosmos/base/v1beta1/coin.proto";
 import "ibc/core/client/v1/client.proto";
 
 // Msg defines the ibc/swap Msg service.
+// Msg defines the Msg service.
+// Msg defines the Msg service.
 service Msg {
-  rpc DelegateCreatePool(MsgCreatePoolRequest) returns (MsgCreatePoolResponse);
-  rpc DelegateSingleDeposit(MsgSingleDepositRequest) returns (MsgSingleDepositResponse);
-  rpc DelegateWithdraw(MsgWithdrawRequest) returns (MsgWithdrawResponse);
-  rpc DelegateLeftSwap(MsgLeftSwapRequest) returns (MsgSwapResponse);
-  rpc DelegateRightSwap(MsgRightSwapRequest) returns (MsgSwapResponse);
+  rpc CreatePool (MsgCreatePoolRequest) returns (MsgCreatePoolResponse);
+  rpc Deposit    (MsgDepositRequest   ) returns (MsgDepositResponse   );
+  rpc Withdraw   (MsgWithdrawRequest  ) returns (MsgWithdrawResponse  );
+  rpc Swap       (MsgSwapRequest             ) returns (MsgSwapResponse      );
 }
-
 message MsgCreatePoolRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
-  // the port on which the packet will be sent
-  string source_port = 1 [(gogoproto.moretags) = "yaml:\"source_port\""];
-  // the channel by which the packet will be sent
-  string source_channel = 2 [(gogoproto.moretags) = "yaml:\"source_channel\""];
-  // the sender address
-  string sender = 3 [(gogoproto.moretags) = "yaml:\"sender\""];
-  // the denominations of trading pairs, should be uatom for $ATOM
-  repeated string denoms = 4 [(gogoproto.moretags) = "yaml:\"denominations\""];
-  // the decimals of coins
-  repeated uint32 decimals = 5;
-  // weights: 50:50
-  string weight = 6;
-  // Timeout height relative to the current block height.
-  // The timeout is disabled when set to 0.
-  ibc.core.client.v1.Height timeout_height = 7
-  [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
-  // Timeout timestamp in absolute nanoseconds since unix epoch.
-  // The timeout is disabled when set to 0.
-  uint64 timeout_timestamp = 8 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
+           string sourcePort    = 1;
+           string sourceChannel = 2;
+           string sender        = 3;
+  repeated cosmos.base.v1beta1.Coin tokens = 4;
+  repeated uint32 decimals      = 5;
+           string weight        = 6;
 }
 
 message MsgCreatePoolResponse {
-  string pool_id = 1;
+  string poolId = 1;
 }
 
-message MsgSingleDepositRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
-  // the port on which the packet will be sent
-  string source_port = 1 [(gogoproto.moretags) = "yaml:\"source_port\""];
-  // the channel by which the packet will be sent
-  string source_channel = 2 [(gogoproto.moretags) = "yaml:\"source_channel\""];
-  string sender = 3 [(gogoproto.moretags) = "yaml:\"sender\""];
-  string pool_id = 4 [(gogoproto.moretags) = "yaml:\"pool_id\""];
-  // the deposited assets from the sender
-  repeated cosmos.base.v1beta1.Coin tokens = 5 [(gogoproto.moretags) = "yaml:\"tokens\""];
-  // Timeout height relative to the current block height.
-  // The timeout is disabled when set to 0.
-  ibc.core.client.v1.Height timeout_height = 6
-  [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
-  // Timeout timestamp in absolute nanoseconds since unix epoch.
-  // The timeout is disabled when set to 0.
-  uint64 timeout_timestamp = 7 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
+message MsgDepositRequest {
+           string                         poolId = 1;
+           string                         sender = 2;
+  repeated cosmos.base.v1beta1.Coin tokens = 3;
 }
 
-message MsgSingleDepositResponse {
-  cosmos.base.v1beta1.Coin pool_token = 1;
+message MsgDepositResponse {
+  cosmos.base.v1beta1.Coin poolToken = 1;
 }
 
 message MsgWithdrawRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
-  // the port on which the packet will be sent
-  string source_port = 1 [(gogoproto.moretags) = "yaml:\"source_port\""];
-  // the channel by which the packet will be sent
-  string source_channel = 2 [(gogoproto.moretags) = "yaml:\"source_channel\""];
-  // the sender address
-  string sender = 3 [(gogoproto.moretags) = "yaml:\"sender\""];
-  // the pool token needs to be withdraw
-  cosmos.base.v1beta1.Coin pool_token = 4  [(gogoproto.moretags) = "yaml:\"pool_token\""];
-  // denomOut
-  string denom_out = 5;
-  // Timeout height relative to the current block height.
-  // The timeout is disabled when set to 0.
-  ibc.core.client.v1.Height timeout_height = 8
-  [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
-  // Timeout timestamp in absolute nanoseconds since unix epoch.
-  // The timeout is disabled when set to 0.
-  uint64 timeout_timestamp = 9 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
+  string                         sender   = 1;
+  cosmos.base.v1beta1.Coin poolCoin = 2;
+  string                         denomOut = 3;
 }
 
 message MsgWithdrawResponse {
-  cosmos.base.v1beta1.Coin token = 1;
+  repeated cosmos.base.v1beta1.Coin tokens = 1;
 }
 
-message MsgLeftSwapRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
-  // the port on which the packet will be sent
-  string source_port = 1 [(gogoproto.moretags) = "yaml:\"source_port\""];
-  // the channel by which the packet will be sent
-  string source_channel = 2 [(gogoproto.moretags) = "yaml:\"source_channel\""];
-  // the sender address
-  string sender = 3 [(gogoproto.moretags) = "yaml:\"sender\""];
-  // the pool token needs to be withdraw
-  cosmos.base.v1beta1.Coin token_in = 4  [(gogoproto.moretags) = "yaml:\"pool_token\""];
-  // the denomination of swap out token
-  string denom_out = 5;
-  // max slippage would accepted by sender
-  uint32 slippage = 6;
-  // the address to receive swapped token on counter party chain
-  string recipient = 7;
-  // Timeout height relative to the current block height.
-  // The timeout is disabled when set to 0.
-  ibc.core.client.v1.Height timeout_height = 8
-  [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
-  // Timeout timestamp in absolute nanoseconds since unix epoch.
-  // The timeout is disabled when set to 0.
-  uint64 timeout_timestamp = 9 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
+enum SwapMsgType {
+  LEFT = 0;
+  RIGHT = 1;
 }
-
-message MsgRightSwapRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
-  // the port on which the packet will be sent
-  string source_port = 1 [(gogoproto.moretags) = "yaml:\"source_port\""];
-  // the channel by which the packet will be sent
-  string source_channel = 2 [(gogoproto.moretags) = "yaml:\"source_channel\""];
-  // the sender address
-  string sender = 3 [(gogoproto.moretags) = "yaml:\"sender\""];
-  // the tokens in
-  cosmos.base.v1beta1.Coin token_in = 4  [(gogoproto.moretags) = "yaml:\"token_in\""];
-  // the tokens out
-  cosmos.base.v1beta1.Coin token_out = 5  [(gogoproto.moretags) = "yaml:\"token_out\""];
-  // max slippage would accepted by sender
-  uint32 slippage = 6;
-  // the address to receive swapped token on counter party chain
-  string recipient = 7;
-  // Timeout height relative to the current block height.
-  // The timeout is disabled when set to 0.
-  ibc.core.client.v1.Height timeout_height = 8
-  [(gogoproto.moretags) = "yaml:\"timeout_height\"", (gogoproto.nullable) = false];
-  // Timeout timestamp in absolute nanoseconds since unix epoch.
-  // The timeout is disabled when set to 0.
-  uint64 timeout_timestamp = 9 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
+message MsgSwapRequest {
+  SwapMsgType swap_type = 1;
+  string sender    = 2;
+  cosmos.base.v1beta1.Coin tokenIn = 3;
+  cosmos.base.v1beta1.Coin tokenOut = 4;
+  uint64 slippage  = 5;
+  string recipient = 6;
 }
 
 message MsgSwapResponse {
-  cosmos.base.v1beta1.Coin tokenOut = 1;
+  SwapMsgType swap_type = 1;
+  repeated cosmos.base.v1beta1.Coin tokens = 2;
+}
+
+message PoolApprove {
+    string pool_id = 1;
+    string sender = 2;
 }
