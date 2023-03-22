@@ -11,7 +11,7 @@ import (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MakeSwapMsg{}, "cosmos-sdk/MsgMakeSwap", nil)
 	cdc.RegisterConcrete(&TakeSwapMsg{}, "cosmos-sdk/MsgTakeSwap", nil)
-	cdc.RegisterConcrete(&MsgCancelSwapRequest{}, "cosmos-sdk/MsgCancelSwap", nil)
+	cdc.RegisterConcrete(&CancelSwapMsg{}, "cosmos-sdk/MsgCancelSwap", nil)
 }
 
 // RegisterInterfaces register the ibc transfer module interfaces to protobuf
@@ -19,7 +19,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MakeSwapMsg{})
 	registry.RegisterImplementations((*sdk.Msg)(nil), &TakeSwapMsg{})
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgCancelSwapRequest{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &CancelSwapMsg{})
 	//registry.RegisterImplementations((*sdk.Msg)(nil), &MsgMakeSwapResponse{})
 	//registry.RegisterImplementations((*sdk.Msg)(nil), &MsgTakeSwapResponse{})
 	//registry.RegisterImplementations((*sdk.Msg)(nil), &MsgCancelSwapResponse{})

@@ -152,7 +152,7 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.TakeSwapMsg) (*types.
 
 // CancelSwap is the step 10 (Cancel Request) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap.
 // It is executed on the Maker chain. Only the maker of the order can cancel the order.
-func (k Keeper) CancelSwap(goCtx context.Context, msg *types.MsgCancelSwapRequest) (*types.MsgCancelSwapResponse, error) {
+func (k Keeper) CancelSwap(goCtx context.Context, msg *types.CancelSwapMsg) (*types.MsgCancelSwapResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if err := msg.ValidateBasic(); err != nil {
@@ -184,7 +184,7 @@ func (k Keeper) CancelSwap(goCtx context.Context, msg *types.MsgCancelSwapReques
 		Memo: "",
 	}
 
-	if err := k.SendSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
+	if err := k.SendSwapPacket(ctx, order.Maker.SourcePort, order.Maker.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
 		return nil, err
 	}
 
@@ -271,7 +271,7 @@ func (k Keeper) fillAtomicOrder(ctx sdk.Context, escrowAddr sdk.AccAddress, orde
 	return nil
 }
 
-func (k Keeper) executeCancel(ctx sdk.Context, msg *types.MsgCancelSwapRequest, step int) error {
+func (k Keeper) executeCancel(ctx sdk.Context, msg *types.CancelSwapMsg, step int) error {
 	// check order status
 	if order, ok2 := k.GetAtomicOrder(ctx, msg.OrderId); ok2 {
 		if order.Maker.MakerAddress != msg.MakerAddress {
@@ -292,7 +292,7 @@ func (k Keeper) executeCancel(ctx sdk.Context, msg *types.MsgCancelSwapRequest, 
 			// refund
 			if step == StepAcknowledgement {
 				receiver := sdk.MustAccAddressFromBech32(msg.MakerAddress)
-				escrowAddr := types.GetEscrowAddress(msg.SourcePort, msg.SourceChannel)
+				escrowAddr := types.GetEscrowAddress(order.Maker.SourcePort, order.Maker.SourceChannel)
 				k.bankKeeper.SendCoins(ctx, escrowAddr, receiver, sdk.NewCoins(order.Maker.SellToken))
 			}
 		}
@@ -375,7 +375,7 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 
 // OnReceivedCancel is the step 12 (Cancel Order) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap.
 // This step is executed on the Taker chain.
-func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, msg *types.MsgCancelSwapRequest) error {
+func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, msg *types.CancelSwapMsg) error {
 	if err := msg.ValidateBasic(); err != nil {
 		return err
 	}

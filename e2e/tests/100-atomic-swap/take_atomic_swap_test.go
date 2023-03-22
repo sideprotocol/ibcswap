@@ -62,7 +62,7 @@ func (s *TakeAtomicSwapTestSuite) TestTakeAtomicSwap() {
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)
 		order := types.NewAtomicOrder(types.NewMakerFromMsg(msg), msg.SourceChannel)
 
-		msgCancel := types.NewMsgCancelSwap(channelA.PortID, channelA.ChannelID, makerAddressChainA, order.Id, timeoutHeight2, 0)
+		msgCancel := types.NewMsgCancelSwap(makerAddressChainA, order.Id, timeoutHeight2, 0)
 		msgCancel.OrderId = order.Id
 		resp2, err2 := s.BroadcastMessages(ctx, chainA, makerWallet, msgCancel)
 

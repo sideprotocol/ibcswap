@@ -106,7 +106,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		}
 
 	case types.CANCEL_SWAP:
-		var msg types.MsgCancelSwapRequest
+		var msg types.CancelSwapMsg
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
@@ -183,7 +183,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			// This is the step 14 (Cancel & refund) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
 			// It is executed on the Maker chain.
 
-			var msg types.MsgCancelSwapRequest
+			var msg types.CancelSwapMsg
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				return err
 			}
