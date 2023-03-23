@@ -31,7 +31,7 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.
 	}
 
 	//msg := types.NewMakerFromMsg(msgReq)
-	msgByte, err0 := types.ModuleCdc.Marshal(msg)
+	msgByte, err0 := proto.Marshal(msg)
 	if err0 != nil {
 		return nil, err0
 	}
@@ -55,12 +55,6 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.
 		return nil, err
 	}
 
-	order := createOrder(ctx, msg, k.channelKeeper)
-	fmt.Println("------------ AFTER CREATE ORDER. PATH: ", order.Path)
-	fmt.Println("------------ Source channel: ", msg.SourceChannel)
-	fmt.Println("------------ Source port: ", msg.SourcePort)
-	k.SetAtomicOrder(ctx, order)
-
 	packet := types.AtomicSwapPacketData{
 		Type: types.MAKE_SWAP,
 		Data: msgByte,
@@ -70,6 +64,9 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.
 	if err := k.SendSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
 		return nil, err
 	}
+
+	order := createOrder(ctx, msg, k.channelKeeper)
+	k.SetAtomicOrder(ctx, order)
 
 	ctx.EventManager().EmitTypedEvents(msg)
 
@@ -85,7 +82,7 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.TakeSwapMsg) (*types.
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
 	}
-	msgByte, err0 := types.ModuleCdc.Marshal(types.NewTakerFromMsg(msg))
+	msgByte, err0 := proto.Marshal(msg)
 	if err0 != nil {
 		return nil, err0
 	}
@@ -162,7 +159,7 @@ func (k Keeper) CancelSwap(goCtx context.Context, msg *types.CancelSwapMsg) (*ty
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
 	}
-	msgbyte, err := types.ModuleCdc.Marshal(msg)
+	msgbyte, err := proto.Marshal(msg)
 	if err != nil {
 		return nil, err
 	}
@@ -320,7 +317,7 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	//	return errors.New("buy token does not exist on the taker chain")
 	//}
 
-	order := types.NewAtomicOrder(msg, packet.DestinationChannel)
+	order := createOrder(ctx, msg, k.channelKeeper)
 	k.SetAtomicOrder(ctx, order)
 
 	ctx.EventManager().EmitTypedEvents(msg)
