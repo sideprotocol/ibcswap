@@ -91,8 +91,8 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 		// wait block when packet relay.
 		test.WaitForBlocks(ctx, 20, chainA, chainB)
 
-			// wait block when packet relay.
-			test.WaitForBlocks(ctx, 10, chainA, chainB)
+		// wait block when packet relay.
+		test.WaitForBlocks(ctx, 10, chainA, chainB)
 
 		// check pool info in chainA and chainB
 		poolId := types.GetPoolIdWithTokens(msg.Tokens)
@@ -391,6 +391,59 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacketErrors() {
 		s.Require().Equal("invalid address", resp.RawLog)
 		s.Require().NoError(err)
 	})
+
+	t.Run("send deposit message with invalid denon", func(t *testing.T) {
+
+		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
+		depositCoin := sdk.Coin{Denom: "astros", Amount: sdk.NewInt(1000)}
+		msg := types.NewMsgDeposit(
+			poolId,
+			chainAAddress,
+			[]*sdk.Coin{&depositCoin},
+		)
+
+		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+		s.Require().Equal("failed to execute message; message index: 0: Invalid token amount", resp.RawLog)
+		s.Require().NoError(err)
+
+	})
+
+	t.Run("send withdraw message with invalid denom", func(t *testing.T) {
+		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
+		poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
+		poolCoin := poolRes.InterchainLiquidityPool.Supply
+		s.Require().NotEqual(poolCoin.Amount, sdk.NewInt(0))
+
+		denomOut := "astros"
+		sender := chainAInvalidAddress
+		msg := types.NewMsgWithdraw(
+			sender,
+			poolCoin,
+			denomOut,
+		)
+		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+		s.Require().Equal("failed to execute message; message index: 0: Invalid token amount", resp.RawLog)
+		s.Require().NoError(err)
+
+	})
+
+	t.Run("send swap message (don't check ack) with invalid amount", func(t *testing.T) {
+		sender := chainAAddress
+		tokenIn := sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(1000000000000)}
+		tokenOut := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(1000)}
+		msg := types.NewMsgSwap(
+			types.SwapMsgType_LEFT,
+			sender,
+			10,
+			sender,
+			&tokenIn,
+			&tokenOut,
+		)
+		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+		s.Require().Equal("failed to execute message; message index: 0: 99998000atoma is smaller than 1000000000000atoma: insufficient funds", resp.RawLog)
+		s.Require().NoError(err)
+	})
+
 }
 
 // interchainswapChannelOptions configures both of the chains to have interchainswap enabled.
