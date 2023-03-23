@@ -2,21 +2,18 @@ package types
 
 import (
 	"crypto/sha256"
-	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	"github.com/gogo/protobuf/proto"
-	"strconv"
-
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 )
 
-func NewAtomicOrder(maker *SwapMaker, channelId string) AtomicSwapOrder {
+func NewAtomicOrder(maker *MakeSwapMsg, channelId string) Order {
 	buf, _ := proto.Marshal(maker)
 	id := Hash(buf).String()
-	return AtomicSwapOrder{
+	return Order{
 		Id:                id,
 		Maker:             maker,
 		Status:            Status_INITIAL,
-		ChannelId:         channelId,
+		Path:              channelId,
 		Takers:            nil,
 		CancelTimestamp:   0,
 		CompleteTimestamp: 0,
@@ -49,30 +46,4 @@ func NewTakerFromMsg(msg *TakeSwapMsg) *SwapTaker {
 func Hash(content []byte) tmbytes.HexBytes {
 	hash := sha256.Sum256(content)
 	return hash[:]
-}
-
-func CreateOrder(msg *MakeSwapMsg, packet channeltypes.Packet) AtomicSwapOrder {
-	//path := orderPath(packet)
-	//return AtomicSwapOrder{
-	//	Id:     GenerateOrderId(packet),
-	//	Status: Status_INITIAL,
-	//	Path:   path,
-	//	Maker:  msg,
-	//}
-	return AtomicSwapOrder{}
-}
-
-func orderPath(packet channeltypes.Packet) string {
-	return "channel/" + packet.SourceChannel +
-		"/port/" + packet.SourcePort +
-		"/channel/" + packet.DestinationChannel +
-		"/port/" + packet.DestinationPort +
-		"/sequence/" + strconv.FormatUint(packet.Sequence, 10)
-}
-
-// GenerateOrderId id is a global unique string, since packet contains sourceChannel, SourcePort, distChannel, distPort, sequence and msg data
-func GenerateOrderId(packet channeltypes.Packet) string {
-	bytes, _ := proto.Marshal(&packet)
-	hash := sha256.Sum256(bytes)
-	return string(hash[:])
 }

@@ -2,11 +2,15 @@ package keeper
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	"strings"
 )
 
 var (
@@ -18,15 +22,15 @@ var _ types.MsgServer = Keeper{}
 
 // MakeSwap is called when the maker wants to make atomic swap. The method create new order and lock tokens.
 // This is the step 1 (Create order & Lock Token) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap.
-func (k Keeper) MakeSwap(goCtx context.Context, msgReq *types.MakeSwapMsg) (*types.MsgMakeSwapResponse, error) {
+func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.MsgMakeSwapResponse, error) {
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := msgReq.ValidateBasic(); err != nil {
+	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
-	msg := types.NewMakerFromMsg(msgReq)
+	//msg := types.NewMakerFromMsg(msgReq)
 	msgByte, err0 := types.ModuleCdc.Marshal(msg)
 	if err0 != nil {
 		return nil, err0
@@ -51,7 +55,10 @@ func (k Keeper) MakeSwap(goCtx context.Context, msgReq *types.MakeSwapMsg) (*typ
 		return nil, err
 	}
 
-	order := types.NewAtomicOrder(msg, msg.SourceChannel)
+	order := createOrder(ctx, msg, k.channelKeeper)
+	fmt.Println("------------ AFTER CREATE ORDER. PATH: ", order.Path)
+	fmt.Println("------------ Source channel: ", msg.SourceChannel)
+	fmt.Println("------------ Source port: ", msg.SourcePort)
 	k.SetAtomicOrder(ctx, order)
 
 	packet := types.AtomicSwapPacketData{
@@ -60,7 +67,7 @@ func (k Keeper) MakeSwap(goCtx context.Context, msgReq *types.MakeSwapMsg) (*typ
 		Memo: "",
 	}
 
-	if err := k.SendSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, msgReq.TimeoutHeight, msgReq.TimeoutTimestamp, packet); err != nil {
+	if err := k.SendSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
 		return nil, err
 	}
 
@@ -88,7 +95,10 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.TakeSwapMsg) (*types.
 		return nil, types.ErrOrderDoesNotExists
 	}
 
-	escrowAddr := types.GetEscrowAddress(types.PortID, order.ChannelId)
+	sourceChannel := extractSourceChannelForTakerMsg(order.Path)
+	sourcePort := extractSourcePortForTakerMsg(order.Path)
+
+	escrowAddr := types.GetEscrowAddress(sourcePort, sourceChannel)
 
 	if order.Status != types.Status_SYNC && order.Status != types.Status_INITIAL {
 		return nil, errors.New("order is not in valid state")
@@ -130,19 +140,13 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.TakeSwapMsg) (*types.
 		Memo: "",
 	}
 
-	if err := k.SendSwapPacket(ctx, types.PortID, order.ChannelId, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
+	if err := k.SendSwapPacket(ctx, sourcePort, sourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
 		return nil, err
 	}
 
 	// Update order state
 	// Mark that the order has been occupied
-	order.Takers = &types.SwapTaker{
-		OrderId:               msg.OrderId,
-		SellToken:             msg.SellToken,
-		TakerAddress:          msg.TakerAddress,
-		TakerReceivingAddress: msg.TakerReceivingAddress,
-		CreateTimestamp:       msg.CreateTimestamp,
-	}
+	order.Takers = msg
 	k.SetAtomicOrder(ctx, order)
 
 	ctx.EventManager().EmitTypedEvents(msg)
@@ -194,7 +198,7 @@ func (k Keeper) CancelSwap(goCtx context.Context, msg *types.CancelSwapMsg) (*ty
 }
 
 // See createOutgoingPacket in spec:https://github.com/cosmos/ibc/tree/master/spec/app/ics-020-fungible-token-transfer#packet-relay
-func (k Keeper) fillAtomicOrder(ctx sdk.Context, escrowAddr sdk.AccAddress, order types.AtomicSwapOrder, msg *types.TakeSwapMsg, step int) error {
+func (k Keeper) fillAtomicOrder(ctx sdk.Context, escrowAddr sdk.AccAddress, order types.Order, msg *types.TakeSwapMsg, step int) error {
 
 	switch order.Status {
 	case types.Status_CANCEL:
@@ -209,7 +213,7 @@ func (k Keeper) fillAtomicOrder(ctx sdk.Context, escrowAddr sdk.AccAddress, orde
 	}
 
 	if msg.SellToken.IsGTE(order.Maker.BuyToken) {
-		order.Takers = types.NewTakerFromMsg(msg)
+		order.Takers = msg // types.NewTakerFromMsg(msg)
 		order.Status = types.Status_COMPLETE
 		order.CompleteTimestamp = msg.CreateTimestamp
 	} else {
@@ -308,7 +312,7 @@ func (k Keeper) executeCancel(ctx sdk.Context, msg *types.CancelSwapMsg, step in
 // OnReceivedMake is the step 3.1 (Save order) from the atomic swap:
 // https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
 // The step is executed on the Taker chain.
-func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg *types.SwapMaker) error {
+func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg *types.MakeSwapMsg) error {
 	// Check if buyToken is a valid token on the taker chain, could be either native or ibc token
 	// Disable it for demo at 2023-3-18
 	//supply := k.bankKeeper.GetSupply(ctx, msg.BuyToken.Denom)
@@ -325,7 +329,7 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg 
 
 // OnReceivedTake is step 7.1 (Transfer Make Token) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
 // The step is executed on the Maker chain.
-func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg *types.SwapTaker) error {
+func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg *types.TakeSwapMsg) error {
 	escrowAddr := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
 
 	// check order status
@@ -359,13 +363,7 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 
 	// Update status of order
 	order.Status = types.Status_COMPLETE
-	order.Takers = &types.SwapTaker{
-		OrderId:               msg.OrderId,
-		SellToken:             msg.SellToken,
-		TakerAddress:          msg.TakerAddress,
-		TakerReceivingAddress: msg.TakerReceivingAddress,
-		CreateTimestamp:       msg.CreateTimestamp,
-	}
+	order.Takers = msg
 	order.CompleteTimestamp = msg.CreateTimestamp
 	k.SetAtomicOrder(ctx, order)
 
@@ -401,4 +399,37 @@ func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, ms
 
 	ctx.EventManager().EmitTypedEvents(msg)
 	return nil
+}
+
+func createOrder(ctx sdk.Context, msg *types.MakeSwapMsg, channelKeeper types.ChannelKeeper) types.Order {
+	channel, _ := channelKeeper.GetChannel(ctx, msg.SourceChannel, msg.SourcePort)
+	sequence, _ := channelKeeper.GetNextSequenceSend(ctx, msg.SourceChannel, msg.SourcePort)
+	path := orderPath(msg.SourcePort, msg.SourceChannel, channel.Counterparty.PortId, channel.Counterparty.ChannelId, sequence)
+	return types.Order{
+		Id:     generateOrderId(path, msg),
+		Status: types.Status_INITIAL,
+		Path:   path,
+		Maker:  msg,
+	}
+}
+
+func orderPath(sourcePort, sourceChannel, destPort, destChannel string, sequence uint64) string {
+	return fmt.Sprintf("channel/%s/port/%s/channel/%s/port/%s/%d", sourceChannel, sourcePort, destChannel, destPort, sequence)
+}
+
+func generateOrderId(orderPath string, msg *types.MakeSwapMsg) string {
+	prefix := []byte(orderPath)
+	bytes, _ := proto.Marshal(msg)
+	hash := sha256.Sum256(append(prefix, bytes...))
+	return hex.EncodeToString(hash[:])
+}
+
+func extractSourceChannelForTakerMsg(path string) string {
+	parts := strings.Split(path, "/")
+	return parts[5]
+}
+
+func extractSourcePortForTakerMsg(path string) string {
+	parts := strings.Split(path, "/")
+	return parts[7]
 }

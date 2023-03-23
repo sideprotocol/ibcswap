@@ -84,7 +84,7 @@ func (k Keeper) SendSwapPacket(
 func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.AtomicSwapPacketData) error {
 	switch data.Type {
 	case types.MAKE_SWAP:
-		var msg types.SwapMaker
+		var msg types.MakeSwapMsg
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
@@ -94,7 +94,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		}
 
 	case types.TAKE_SWAP:
-		var msg types.SwapTaker
+		var msg types.TakeSwapMsg
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
@@ -133,7 +133,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 		case types.MAKE_SWAP:
 			// This is the step 4 (Acknowledge Make Packet) of the atomic swap: https://github.com/liangping/ibc/blob/atomic-swap/spec/app/ics-100-atomic-swap/ibcswap.png
 			// This logic is executed when Taker chain acknowledge the make swap packet.
-			var msg types.SwapMaker
+			var msg types.MakeSwapMsg
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				return err
 			}
@@ -152,7 +152,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 		case types.TAKE_SWAP:
 			// This is the step 9 (Transfer Take Token & Close order): https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
 			// The step is executed on the Taker chain.
-			takeMsg := &types.SwapTaker{}
+			takeMsg := &types.TakeSwapMsg{}
 			if err := types.ModuleCdc.Unmarshal(data.Data, takeMsg); err != nil {
 				return err
 			}
@@ -169,13 +169,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			}
 
 			order.Status = types.Status_COMPLETE
-			order.Takers = &types.SwapTaker{
-				OrderId:               takeMsg.OrderId,
-				SellToken:             takeMsg.SellToken,
-				TakerAddress:          takeMsg.TakerAddress,
-				TakerReceivingAddress: takeMsg.TakerReceivingAddress,
-				CreateTimestamp:       takeMsg.CreateTimestamp,
-			}
+			order.Takers = takeMsg
 			order.CompleteTimestamp = takeMsg.CreateTimestamp
 			k.SetAtomicOrder(ctx, order)
 			return nil
@@ -242,7 +236,10 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 			return err
 		}
 
-		orderID := types.GenerateOrderId(packet)
+		channel, _ := k.channelKeeper.GetChannel(ctx, makeMsg.SourceChannel, makeMsg.SourcePort)
+		sequence, _ := k.channelKeeper.GetNextSequenceSend(ctx, makeMsg.SourceChannel, makeMsg.SourcePort)
+		path := orderPath(makeMsg.SourcePort, makeMsg.SourceChannel, channel.Counterparty.PortId, channel.Counterparty.ChannelId, sequence)
+		orderID := generateOrderId(path, makeMsg)
 		order, found := k.GetAtomicOrder(ctx, orderID)
 		if !found {
 			return fmt.Errorf("order not found for ID %s", orderID)
@@ -269,10 +266,13 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 			return err
 		}
 
-		orderID := types.GenerateOrderId(packet)
-		order, found := k.GetAtomicOrder(ctx, orderID)
+		//channel, _ := k.channelKeeper.GetChannel(ctx, takeMsg.SourceChannel, makeMsg.SourcePort)
+		//sequence, _ := k.channelKeeper.GetNextSequenceSend(ctx, makeMsg.SourceChannel, makeMsg.SourcePort)
+		//path := orderPath(makeMsg.SourcePort, makeMsg.SourceChannel, channel.Counterparty.PortId, channel.Counterparty.ChannelId, sequence)
+		//orderID := generateOrderId(packet)
+		order, found := k.GetAtomicOrder(ctx, takeMsg.OrderId)
 		if !found {
-			return fmt.Errorf("order not found for ID %s", orderID)
+			return fmt.Errorf("order not found for ID %s", takeMsg.OrderId)
 		}
 		order.Takers = nil // release the occupation
 		k.SetAtomicOrder(ctx, order)

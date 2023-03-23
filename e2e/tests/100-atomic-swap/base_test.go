@@ -71,8 +71,10 @@ func (s *AtomicSwapTestSuite) TestAtomicSwap_HappyPath() {
 		timeoutHeight := clienttypes.NewHeight(0, 110)
 		msg := types.NewMsgMakeSwap(channelA.PortID, channelA.ChannelID, sellToken, buyToken, makerAddressOnChainA, makerReceivingAddressOnChainB, "", timeoutHeight, 0, time.Now().UTC().Unix())
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAMakerWallet, msg)
+
 		s.AssertValidTxResponse(resp)
 		s.Require().NoError(err)
+		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
 
 		// wait block when packet relay.
 		test.WaitForBlocks(ctx, 10, chainA, chainB)
@@ -80,10 +82,11 @@ func (s *AtomicSwapTestSuite) TestAtomicSwap_HappyPath() {
 		// broadcast TAKE SWAP transaction
 		sellToken2 := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)
-		order := types.NewAtomicOrder(types.NewMakerFromMsg(msg), msg.SourceChannel)
+		order := types.NewAtomicOrder(msg, msg.SourceChannel)
 		msgTake := types.NewMsgTakeSwap(order.Id, sellToken2, takerAddressOnChainB, takerReceivingAddressOnChainA, timeoutHeight2, 0, time.Now().UTC().Unix())
 		msgTake.OrderId = order.Id
 		resp2, err2 := s.BroadcastMessages(ctx, chainB, chainBTakerWallet, msgTake)
+
 		s.AssertValidTxResponse(resp2)
 		s.Require().NoError(err2)
 

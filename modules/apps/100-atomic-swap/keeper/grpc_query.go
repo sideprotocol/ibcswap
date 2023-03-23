@@ -14,8 +14,8 @@ var _ types.QueryServer = Keeper{}
 func (q Keeper) Orders(ctx context.Context, request *types.QueryOrdersRequest) (*types.QueryOrdersResponse, error) {
 	clientCtx := sdk.UnwrapSDKContext(ctx)
 
-	var orders []*types.AtomicSwapOrder
-	q.IterateAtomicOrders(clientCtx, func(order types.AtomicSwapOrder) bool {
+	var orders []*types.Order
+	q.IterateAtomicOrders(clientCtx, func(order types.Order) bool {
 		orders = append(orders, &order)
 		return false
 	})
