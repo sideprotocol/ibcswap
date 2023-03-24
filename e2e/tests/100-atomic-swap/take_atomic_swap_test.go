@@ -60,10 +60,9 @@ func (s *TakeAtomicSwapTestSuite) TestTakeAtomicSwap() {
 
 		// broadcast Cancel order
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)
-		order := types.NewAtomicOrder(msg, msg.SourceChannel)
+		order := createOrder(msg)
 
 		msgCancel := types.NewMsgCancelSwap(makerAddressChainA, order.Id, timeoutHeight2, 0)
-		msgCancel.OrderId = order.Id
 		resp2, err2 := s.BroadcastMessages(ctx, chainA, makerWallet, msgCancel)
 
 		s.AssertValidTxResponse(resp2)
@@ -75,7 +74,7 @@ func (s *TakeAtomicSwapTestSuite) TestTakeAtomicSwap() {
 		// try to TAKE canceled order
 		sellToken2 := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
 		msgTake := types.NewMsgTakeSwap(order.Id, sellToken2, chainBTakerAddress, chainATakerReceivingAddress, timeoutHeight2, 0, time.Now().UTC().Unix())
-		msgTake.OrderId = order.Id
+		//msgTake.OrderId = order.Id
 		respTake, err := s.BroadcastMessages(ctx, chainB, takerWalletChainB, msgTake)
 		s.Require().NoError(err)
 		s.AssertValidTxResponse(resp2)

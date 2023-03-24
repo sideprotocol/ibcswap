@@ -70,7 +70,7 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.
 
 	ctx.EventManager().EmitTypedEvents(msg)
 
-	return &types.MsgMakeSwapResponse{}, nil
+	return &types.MsgMakeSwapResponse{OrderId: order.Id}, nil
 }
 
 // TakeSwap is the step 5 (Lock Order & Lock Token) of the atomic swap: https://github.com/liangping/ibc/blob/atomic-swap/spec/app/ics-100-atomic-swap/ibcswap.png
@@ -320,6 +320,8 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	order := createOrder(ctx, msg, k.channelKeeper)
 	k.SetAtomicOrder(ctx, order)
 
+	fmt.Printf("--------------- CREATE ORDER IN TAKER CHAIN--------- %#v: ", order)
+
 	ctx.EventManager().EmitTypedEvents(msg)
 	return nil
 }
@@ -400,8 +402,10 @@ func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, ms
 
 func createOrder(ctx sdk.Context, msg *types.MakeSwapMsg, channelKeeper types.ChannelKeeper) types.Order {
 	channel, _ := channelKeeper.GetChannel(ctx, msg.SourceChannel, msg.SourcePort)
+	fmt.Printf("Channel: %#v", channel)
 	sequence, _ := channelKeeper.GetNextSequenceSend(ctx, msg.SourceChannel, msg.SourcePort)
-	path := orderPath(msg.SourcePort, msg.SourceChannel, channel.Counterparty.PortId, channel.Counterparty.ChannelId, sequence)
+	//path := orderPath(msg.SourcePort, msg.SourceChannel, channel.Counterparty.PortId, channel.Counterparty.ChannelId, sequence)
+	path := orderPath(msg.SourcePort, msg.SourceChannel, msg.SourcePort, msg.SourceChannel, sequence)
 	return types.Order{
 		Id:     generateOrderId(path, msg),
 		Status: types.Status_INITIAL,
@@ -415,6 +419,12 @@ func orderPath(sourcePort, sourceChannel, destPort, destChannel string, sequence
 }
 
 func generateOrderId(orderPath string, msg *types.MakeSwapMsg) string {
+	fmt.Println("----------------------------")
+	fmt.Println("-----------------------------")
+	fmt.Println("Path: ", orderPath)
+	fmt.Printf("Msg: %#v\n", msg)
+	fmt.Println("----------------------------")
+	fmt.Println("-----------------------------")
 	prefix := []byte(orderPath)
 	bytes, _ := proto.Marshal(msg)
 	hash := sha256.Sum256(append(prefix, bytes...))

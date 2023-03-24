@@ -45,7 +45,9 @@ message MakeSwapMsg {
   uint64 expiration_timestamp = 11 [(gogoproto.moretags) = "yaml:\"expiration_timestamp\""];
 }
 
-message MsgMakeSwapResponse {}
+message MsgMakeSwapResponse {
+  string order_id = 1;
+}
 
 message TakeSwapMsg {
   option (gogoproto.equal)           = false;

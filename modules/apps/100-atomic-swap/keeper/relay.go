@@ -85,6 +85,7 @@ func (k Keeper) SendSwapPacket(
 func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.AtomicSwapPacketData) error {
 	switch data.Type {
 	case types.MAKE_SWAP:
+		fmt.Println("-------ON RECV PACKET IN TAKER CHAIN IN MAKE SWAP-------")
 		var msg types.MakeSwapMsg
 		if err := proto.Unmarshal(data.Data, &msg); err != nil {
 			return err
