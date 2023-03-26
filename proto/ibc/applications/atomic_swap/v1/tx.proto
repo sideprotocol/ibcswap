@@ -71,7 +71,9 @@ message TakeSwapMsg {
   int64 create_timestamp = 9;
 }
 
-message MsgTakeSwapResponse {}
+message MsgTakeSwapResponse {
+  string order_id = 1;
+}
 
 message CancelSwapMsg {
   option (gogoproto.equal)           = false;
@@ -91,4 +93,6 @@ message CancelSwapMsg {
   int64 create_timestamp = 10;
 }
 
-message MsgCancelSwapResponse {}
+message MsgCancelSwapResponse {
+  string order_id = 1;
+}

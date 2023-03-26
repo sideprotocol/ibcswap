@@ -82,48 +82,48 @@ func (k Keeper) SendSwapPacket(
 	return nil
 }
 
-func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.AtomicSwapPacketData) error {
+func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.AtomicSwapPacketData) ([]byte, error) {
+	var resp []byte
+	var errResp error
 	switch data.Type {
 	case types.MAKE_SWAP:
-		fmt.Println("-------ON RECV PACKET IN TAKER CHAIN IN MAKE SWAP-------")
 		var msg types.MakeSwapMsg
 		if err := proto.Unmarshal(data.Data, &msg); err != nil {
-			return err
+			return nil, err
 		}
 
-		if err := k.OnReceivedMake(ctx, packet, &msg); err != nil {
-			return err
+		orderId, err := k.OnReceivedMake(ctx, packet, &msg)
+		if err != nil {
+			return nil, err
 		}
-
+		resp, errResp = proto.Marshal(&types.MsgMakeSwapResponse{OrderId: orderId})
 	case types.TAKE_SWAP:
 		var msg types.TakeSwapMsg
 		if err := proto.Unmarshal(data.Data, &msg); err != nil {
-			return err
+			return nil, err
 		}
 
-		if err2 := k.OnReceivedTake(ctx, packet, &msg); err2 != nil {
-			return err2
-		} else {
-			return nil
+		orderId, err2 := k.OnReceivedTake(ctx, packet, &msg)
+		if err2 != nil {
+			return nil, err2
 		}
-
+		resp, errResp = proto.Marshal(&types.MsgTakeSwapResponse{OrderId: orderId})
 	case types.CANCEL_SWAP:
 		var msg types.CancelSwapMsg
 		if err := proto.Unmarshal(data.Data, &msg); err != nil {
-			return err
+			return nil, err
 		}
-		if err2 := k.OnReceivedCancel(ctx, packet, &msg); err2 != nil {
-			return err2
-		} else {
-			return nil
+		orderId, err2 := k.OnReceivedCancel(ctx, packet, &msg)
+		if err2 != nil {
+			return nil, err2
 		}
-
+		resp, errResp = proto.Marshal(&types.MsgCancelSwapResponse{OrderId: orderId})
 	default:
-		return types.ErrUnknownDataPacket
+		return nil, types.ErrUnknownDataPacket
 	}
 
 	ctx.EventManager().EmitTypedEvents(&data)
-	return nil
+	return resp, errResp
 }
 
 func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, data *types.AtomicSwapPacketData, ack channeltypes.Acknowledgement) error {

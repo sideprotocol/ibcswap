@@ -309,7 +309,7 @@ func (k Keeper) executeCancel(ctx sdk.Context, msg *types.CancelSwapMsg, step in
 // OnReceivedMake is the step 3.1 (Save order) from the atomic swap:
 // https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
 // The step is executed on the Taker chain.
-func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg *types.MakeSwapMsg) error {
+func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg *types.MakeSwapMsg) (string, error) {
 	// Check if buyToken is a valid token on the taker chain, could be either native or ibc token
 	// Disable it for demo at 2023-3-18
 	//supply := k.bankKeeper.GetSupply(ctx, msg.BuyToken.Denom)
@@ -320,21 +320,19 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	order := createOrder(ctx, msg, k.channelKeeper)
 	k.SetAtomicOrder(ctx, order)
 
-	fmt.Printf("--------------- CREATE ORDER IN TAKER CHAIN--------- %#v: ", order)
-
 	ctx.EventManager().EmitTypedEvents(msg)
-	return nil
+	return order.Id, nil
 }
 
 // OnReceivedTake is step 7.1 (Transfer Make Token) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
 // The step is executed on the Maker chain.
-func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg *types.TakeSwapMsg) error {
+func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg *types.TakeSwapMsg) (string, error) {
 	escrowAddr := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
 
 	// check order status
 	order, ok := k.GetAtomicOrder(ctx, msg.OrderId)
 	if !ok {
-		return types.ErrOrderDoesNotExists
+		return "", types.ErrOrderDoesNotExists
 	}
 
 	//if order.Status != types.Status_SYNC {
@@ -342,22 +340,22 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	//}
 
 	if msg.SellToken.Denom != order.Maker.BuyToken.Denom || !msg.SellToken.Amount.Equal(order.Maker.BuyToken.Amount) {
-		return errors.New("invalid sell token")
+		return "", errors.New("invalid sell token")
 	}
 
 	// If `desiredTaker` is set, only the desiredTaker can accept the order.
 	if order.Maker.DesiredTaker != "" && order.Maker.DesiredTaker != msg.TakerAddress {
-		return errors.New("invalid taker address")
+		return "", errors.New("invalid taker address")
 	}
 
 	takerReceivingAddr, err := sdk.AccAddressFromBech32(msg.TakerReceivingAddress)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// Send maker.sellToken to taker's receiving address
 	if err = k.bankKeeper.SendCoins(ctx, escrowAddr, takerReceivingAddr, sdk.NewCoins(order.Maker.SellToken)); err != nil {
-		return errors.New("transfer coins failed")
+		return "", errors.New("transfer coins failed")
 	}
 
 	// Update status of order
@@ -367,28 +365,28 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	k.SetAtomicOrder(ctx, order)
 
 	ctx.EventManager().EmitTypedEvents(msg)
-	return nil
+	return order.Id, nil
 }
 
 // OnReceivedCancel is the step 12 (Cancel Order) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap.
 // This step is executed on the Taker chain.
-func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, msg *types.CancelSwapMsg) error {
+func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, msg *types.CancelSwapMsg) (string, error) {
 	if err := msg.ValidateBasic(); err != nil {
-		return err
+		return "", err
 	}
 	// check order status
 
 	order, ok := k.GetAtomicOrder(ctx, msg.OrderId)
 	if !ok {
-		return errors.New("order not found")
+		return "", errors.New("order not found")
 	}
 
 	if order.Status != types.Status_SYNC && order.Status != types.Status_INITIAL {
-		return errors.New("invalid order status")
+		return "", errors.New("invalid order status")
 	}
 
 	if order.Takers != nil {
-		return errors.New("the maker order has already been occupied")
+		return "", errors.New("the maker order has already been occupied")
 	}
 
 	// Update status of order
@@ -397,7 +395,7 @@ func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, ms
 	k.SetAtomicOrder(ctx, order)
 
 	ctx.EventManager().EmitTypedEvents(msg)
-	return nil
+	return order.Id, nil
 }
 
 func createOrder(ctx sdk.Context, msg *types.MakeSwapMsg, channelKeeper types.ChannelKeeper) types.Order {

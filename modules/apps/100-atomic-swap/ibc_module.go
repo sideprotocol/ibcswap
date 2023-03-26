@@ -88,7 +88,11 @@ func (im IBCModule) OnChanOpenInit(
 	if err := im.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
 		return "", err
 	}
-
+	fmt.Println("-------------------------------------")
+	fmt.Println("------Here is version: ----", version)
+	fmt.Println("-------------------------------------")
+	fmt.Println("-------------------------------------")
+	fmt.Println("-------------------------------------")
 	return version, nil
 }
 
@@ -173,6 +177,7 @@ func (im IBCModule) OnRecvPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) ibcexported.Acknowledgement {
+	logger := im.keeper.Logger(ctx)
 	ack := channeltypes.NewResultAcknowledgement([]byte{byte(1)})
 
 	var data types.AtomicSwapPacketData
@@ -185,9 +190,13 @@ func (im IBCModule) OnRecvPacket(
 	// only attempt the application logic if the packet data
 	// was successfully decoded
 	if ack.Success() {
-		if err := im.keeper.OnRecvPacket(ctx, packet, data); err != nil {
+		resp, err := im.keeper.OnRecvPacket(ctx, packet, data)
+		if err != nil {
 			ack = channeltypes.NewErrorAcknowledgement(err)
 			ackErr = err
+		} else {
+			ack = channeltypes.NewResultAcknowledgement(resp)
+			logger.Info("successfully handled ICS-100 packet sequence: %d", packet.Sequence)
 		}
 	}
 
