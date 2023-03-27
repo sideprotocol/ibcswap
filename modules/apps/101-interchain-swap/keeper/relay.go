@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
@@ -31,28 +32,11 @@ func (k Keeper) SendIBCSwapPacket(
 		return types.ErrSwapEnabled
 	}
 
-	fmt.Println("-----------------------------")
-	fmt.Println("-----------------------------")
-	fmt.Println("-----------------------------")
-	fmt.Println("BAH TUKKKKKKKKKKKKKKKKKKKKKKKKKKKKK: ", sourcePort, sourceChannel)
-	fmt.Println("-----------------------------")
-	fmt.Println("-----------------------------")
-	fmt.Println("-----------------------------")
-
-	ch, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
+	_, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
 		fmt.Println("------- NOT FOUND ----------------")
 		return errorsmod.Wrapf(channeltypes.ErrChannelNotFound, "port ID (%s) channel ID (%s)", sourcePort, sourceChannel)
 	}
-
-	fmt.Println("-----------------------------")
-	fmt.Println("-----------------------------")
-	fmt.Println("-----------------------------")
-	fmt.Println("ch.Counterparty.ChannelId: ", ch.Counterparty.ChannelId)
-	fmt.Println("ch.Counterparty.ChannelId: ", ch.Counterparty.PortId)
-	fmt.Println("-----------------------------")
-	fmt.Println("-----------------------------")
-	fmt.Println("-----------------------------")
 
 	//destinationPort := sourceChannelEnd.GetCounterparty().GetPortID()
 	//destinationChannel := sourceChannelEnd.GetCounterparty().GetChannelID()

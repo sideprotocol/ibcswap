@@ -6,11 +6,12 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
-	"strings"
 )
 
 var (
@@ -417,12 +418,6 @@ func orderPath(sourcePort, sourceChannel, destPort, destChannel string, sequence
 }
 
 func generateOrderId(orderPath string, msg *types.MakeSwapMsg) string {
-	fmt.Println("----------------------------")
-	fmt.Println("-----------------------------")
-	fmt.Println("Path: ", orderPath)
-	fmt.Printf("Msg: %#v\n", msg)
-	fmt.Println("----------------------------")
-	fmt.Println("-----------------------------")
 	prefix := []byte(orderPath)
 	bytes, _ := proto.Marshal(msg)
 	hash := sha256.Sum256(append(prefix, bytes...))
