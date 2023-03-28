@@ -1,158 +1,172 @@
 package e2e
 
-// import (
-// 	"context"
-// 	"fmt"
-// 	"testing"
+import (
+	"context"
+	"testing"
 
-// 	sdk "github.com/cosmos/cosmos-sdk/types"
-// 	// "github.com/cosmos/ibc-go/e2e/testsuite"
-// 	"github.com/cosmos/ibc-go/e2e/testvalues"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	test "github.com/strangelove-ventures/ibctest/v6/testutil"
 
-// 	//atomicswaptypes "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
-// 	types "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
-// 	// "github.com/strangelove-ventures/ibctest/v6/ibc"
-// 	test "github.com/strangelove-ventures/ibctest/v6/testutil"
-// 	// "github.com/stretchr/testify/suite"
-// )
+	// "github.com/cosmos/ibc-go/e2e/testsuite"
+	"github.com/cosmos/ibc-go/e2e/testvalues"
 
-// func (s *InterchainswapTestSuite) TestRefundMsgOnTimeoutPacket() {
+	//atomicswaptypes "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	types "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	// "github.com/strangelove-ventures/ibctest/v6/ibc"
+	// "github.com/stretchr/testify/suite"
+)
 
-// 	t := s.T()
-// 	ctx := context.TODO()
+func (s *InterchainswapTestSuite) TestRefundMsgOnTimeoutPacket() {
 
-// 	// setup relayers and connection-0 between two chains.
-// 	relayer, channelA := s.SetupChainsRelayerAndChannel(ctx, interchainswapChannelOptions())
+	t := s.T()
+	ctx := context.TODO()
 
-// 	chainA, chainB := s.GetChains()
+	// setup relayers and connection-0 between two chains.
+	_, channelA, _ := s.SetupChainsRelayerAndChannel(
+		ctx,
+		interchainswapChannelOptions(),
+	)
 
-// 	chainADenom := chainA.Config().Denom
-// 	chainBDenom := chainB.Config().Denom
+	chainA, chainB := s.GetChains()
 
-// 	// // create wallets for testing
-// 	chainAWallet := s.CreateUserOnChainA(ctx, testvalues.StartingTokenAmount)
-// 	chainAAddress := chainAWallet.Bech32Address("cosmos")
+	chainADenom := chainA.Config().Denom
+	chainBDenom := chainB.Config().Denom
 
-// 	// allocate tokens to the new account
-// 	initialBalances := sdk.NewCoins(sdk.NewCoin(chainADenom, sdk.NewInt(10000000000)))
-// 	err := s.SendCoinsFromModuleToAccount(ctx, chainA, chainAWallet, initialBalances)
+	// // create wallets for testing
+	chainAWallet := s.CreateUserOnChainA(ctx, testvalues.StartingTokenAmount)
+	chainAAddress := chainAWallet.Bech32Address("cosmos")
 
-// 	s.Require().NoError(err)
-// 	res, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
-// 	s.Require().NotEqual(res.Balance.Amount, sdk.NewInt(0))
-// 	s.Require().NoError(err)
+	// allocate tokens to the new account
+	initialBalances := sdk.NewCoins(sdk.NewCoin(chainADenom, sdk.NewInt(10000000000)))
+	err := s.SendCoinsFromModuleToAccount(ctx, chainA, chainAWallet, initialBalances)
 
-// 	//chainBAddress = s.CreateUserOnChainB(ctx, testvalues.StartingTokenAmount)
+	s.Require().NoError(err)
+	res, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
+	s.Require().NotEqual(res.Balance.Amount, sdk.NewInt(0))
+	s.Require().NoError(err)
 
-// 	// s.Require().NoError(test.WaitForBlocks(ctx, 1, chainA, chainB), "failed to wait for blocks")
+	//chainBAddress = s.CreateUserOnChainB(ctx, testvalues.StartingTokenAmount)
 
-// 	t.Run("start relayer", func(t *testing.T) {
-// 		s.StartRelayer(relayer)
-// 	})
+	// s.Require().NoError(test.WaitForBlocks(ctx, 1, chainA, chainB), "failed to wait for blocks")
 
-// 	t.Run("send create pool message", func(t *testing.T) {
-// 		msg := types.NewMsgCreatePool(
-// 			channelA.PortID,
-// 			channelA.ChannelID,
-// 			chainAAddress,
-// 			"1:2",
-// 			[]string{chainADenom, chainBDenom},
-// 			[]uint32{10, 100},
-// 		)
+	// t.Run("stop relayer", func(t *testing.T) {
+	// 	s.StopRelayer(ctx, relayer)
+	// })
 
-// 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-// 		fmt.Println("tx:", resp)
-// 		s.AssertValidTxResponse(resp)
-// 		s.Require().NoError(err)
+	t.Run("send create pool message", func(t *testing.T) {
 
-// 		// wait block when packet relay. Force timeout to refund
-// 		test.WaitForBlocks(ctx, 10, chainA, chainB)
+		res, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
+		s.Require().NoError(err)
+		balanceBefore := res.Balance.Amount
 
-// 		// check packet relay status.
-// 		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
+		msg := types.NewMsgCreatePool(
+			channelA.PortID,
+			channelA.ChannelID,
+			chainAAddress,
+			"1:1",
+			[]*sdk.Coin{
+				{Denom: chainADenom, Amount: sdk.NewInt(100000)},
+				{Denom: chainBDenom, Amount: sdk.NewInt(10000)},
+			},
+			[]uint32{6, 6},
+		)
 
-// 		poolId := types.GetPoolId(msg.Denoms)
-// 		poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
-// 		s.Require().NoError(err)
-// 		poolInfo := poolRes.InterchainLiquidityPool
-// 		s.Require().EqualValues(msg.SourceChannel, poolInfo.EncounterPartyChannel)
-// 		s.Require().EqualValues(msg.SourcePort, poolInfo.EncounterPartyPort)
+		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+		s.AssertValidTxResponse(resp)
+		s.Require().NoError(err)
 
-// 	})
+		height, err := chainA.Height(ctx)
+		s.Require().NoError(err)
+		expireHeight := height + 100
 
-// 	t.Run("send deposit message, with refund", func(t *testing.T) {
+		// 150 block later than current block
+		// Step 4: Wait for the expected timeout duration to pas
+		// wait block when packet relay. Force timeout to refund
+		test.WaitForBlocks(ctx, int(expireHeight), chainA, chainB)
+		// check packet relay status.
+		//s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
+		//s.Require().NoError(err)
 
-// 		beforeDeposit, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
-// 		s.Require().NoError(err)
+		res, err = s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
+		balanceAfter := res.Balance.Amount
+		s.Require().NoError(err)
+		s.Require().Equal(balanceBefore, balanceAfter)
 
-// 		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
-// 		depositCoin := sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(1000)}
-// 		msg := types.NewMsgDeposit(
-// 			poolId,
-// 			chainAAddress,
-// 			[]*sdk.Coin{&depositCoin},
-// 		)
+	})
 
-// 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-// 		s.AssertValidTxResponse(resp)
-// 		s.Require().NoError(err)
+	// t.Run("send deposit message, with refund", func(t *testing.T) {
 
-// 		s.StopRelayer(ctx, relayer)
+	// 	beforeDeposit, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
+	// 	s.Require().NoError(err)
 
-// 		// check packet relayed or not. - Force to timeout
-// 		test.WaitForBlocks(ctx, 250, chainA, chainB)
-// 		// s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 2)
+	// 	poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
+	// 	depositCoin := sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(1000)}
+	// 	msg := types.NewMsgDeposit(
+	// 		poolId,
+	// 		chainAAddress,
+	// 		[]*sdk.Coin{&depositCoin},
+	// 	)
 
-// 		refundedDeposit, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
-// 		s.Require().NoError(err)
-// 		s.Require().Equal(beforeDeposit, refundedDeposit)
+	// 	resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+	// 	s.AssertValidTxResponse(resp)
+	// 	s.Require().NoError(err)
 
-// 	})
+	// 	s.StopRelayer(ctx, relayer)
 
-// //withdraw
-// t.Run("send withdraw message", func(t *testing.T) {
+	// 	// check packet relayed or not. - Force to timeout
+	// 	test.WaitForBlocks(ctx, 250, chainA, chainB)
+	// 	// s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 2)
 
-// 	beforeDeposit, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
-// 	s.Require().NoError(err)
-// 	poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
-// 	poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
-// 	s.Require().NoError(err)
-// 	poolCoin := poolRes.InterchainLiquidityPool.Supply
-// 	s.Require().NotEqual(poolCoin.Amount, sdk.NewInt(0))
+	// 	refundedDeposit, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
+	// 	s.Require().NoError(err)
+	// 	s.Require().Equal(beforeDeposit, refundedDeposit)
 
-// 	denomOut := chainADenom
-// 	sender := chainAAddress
-// 	msg := types.NewMsgWithdraw(
-// 		sender,
-// 		poolCoin,
-// 		denomOut,
-// 	)
-// 	resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-// 	s.AssertValidTxResponse(resp)
-// 	s.Require().NoError(err)
+	// })
 
-// 	balanceRes, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
-// 	s.Require().NoError(err)
-// 	s.Require().Equal(balanceRes.Balance.Denom, beforeDeposit.Balance.Denom)
-// 	s.Require().Equal(balanceRes.Balance.Amount, beforeDeposit.Balance.Amount)
-// })
+	// // withdraw
+	// t.Run("send withdraw message", func(t *testing.T) {
 
-// // send swap message
-// t.Run("send swap message (don't check ack)", func(t *testing.T) {
-// 	sender := chainAAddress
-// 	tokenIn := sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(1000)}
-// 	tokenOut := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(1000)}
-// 	msg := types.NewMsgSwap(
-// 		sender,
-// 		10,
-// 		sender,
-// 		&tokenIn,
-// 		&tokenOut,
-// 	)
-// 	resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-// 	s.AssertValidTxResponse(resp)
-// 	s.Require().NoError(err)
+	// 	beforeDeposit, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
+	// 	s.Require().NoError(err)
+	// 	poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
+	// 	poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
+	// 	s.Require().NoError(err)
+	// 	poolCoin := poolRes.InterchainLiquidityPool.Supply
+	// 	s.Require().NotEqual(poolCoin.Amount, sdk.NewInt(0))
 
-// })
+	// 	denomOut := chainADenom
+	// 	sender := chainAAddress
+	// 	msg := types.NewMsgWithdraw(
+	// 		sender,
+	// 		poolCoin,
+	// 		denomOut,
+	// 	)
+	// 	resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+	// 	s.AssertValidTxResponse(resp)
+	// 	s.Require().NoError(err)
 
-// }
+	// 	balanceRes, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
+	// 	s.Require().NoError(err)
+	// 	s.Require().Equal(balanceRes.Balance.Denom, beforeDeposit.Balance.Denom)
+	// 	s.Require().Equal(balanceRes.Balance.Amount, beforeDeposit.Balance.Amount)
+	// })
+
+	// // send swap message
+	// t.Run("send swap message (don't check ack)", func(t *testing.T) {
+	// 	sender := chainAAddress
+	// 	tokenIn := sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(1000)}
+	// 	tokenOut := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(1000)}
+	// 	msg := types.NewMsgSwap(
+	// 		sender,
+	// 		10,
+	// 		sender,
+	// 		&tokenIn,
+	// 		&tokenOut,
+	// 	)
+	// 	resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+	// 	s.AssertValidTxResponse(resp)
+	// 	s.Require().NoError(err)
+
+	// })
+
+}

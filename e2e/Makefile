@@ -13,6 +13,13 @@ e2e-test: cleanup-ibc-test-containers
 e2e-test-interchainswap-basic: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh TestInterchainswapTestSuite TestBasicMsgPacket
 
+e2e-test-interchainswap-pool: cleanup-ibc-test-containers
+	./scripts/run-e2e.sh TestInterchainswapTestSuite TestPoolStatus
+
+e2e-test-interchainswap-timeout: cleanup-ibc-test-containers
+	./scripts/run-e2e.sh TestInterchainswapTestSuite TestRefundMsgOnTimeoutPacket
+
+
 e2e-test-atomic-swap: cleanup-ibc-test-containers
 	./scripts/run-e2e-atomic-swap.sh
 
