@@ -86,7 +86,7 @@ func (s *AtomicSwapTestSuite) TestAtomicSwap_HappyPath() {
 		// broadcast TAKE SWAP transaction
 		sellToken2 := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)
-		order := createOrder(msg)
+		order := createOrder(msg, 1)
 		msgTake := types.NewMsgTakeSwap(order.Id, sellToken2, takerAddressOnChainB, takerReceivingAddressOnChainA, timeoutHeight2, 0, time.Now().UTC().Unix())
 		fmt.Println("---------------------------------------")
 		fmt.Println("---------------------------------------")
@@ -133,8 +133,8 @@ func atomicSwapChannelOptions() func(options *ibc.CreateChannelOptions) {
 	}
 }
 
-func createOrder(msg *types.MakeSwapMsg) types.Order {
-	path := orderPath(msg.SourcePort, msg.SourceChannel, msg.SourcePort, msg.SourceChannel, 1)
+func createOrder(msg *types.MakeSwapMsg, sequence uint64) types.Order {
+	path := orderPath(msg.SourcePort, msg.SourceChannel, msg.SourcePort, msg.SourceChannel, sequence)
 	return types.Order{
 		Id:     generateOrderId(path, msg),
 		Status: types.Status_INITIAL,

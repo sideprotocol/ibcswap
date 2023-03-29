@@ -60,7 +60,7 @@ func (s *CancelAtomicSwapTestSuite) TestCancelAtomicSwap() {
 
 		// broadcast TAKE SWAP transaction
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)
-		order := createOrder(msgMake)
+		order := createOrder(msgMake, 1)
 		msgCancel := types.NewMsgCancelSwap(makerAddressOnChainA, order.Id, timeoutHeight2, 0)
 		//msgCancel.OrderId = order.Id
 		resp2, err2 := s.BroadcastMessages(ctx, chainA, chainAMakerWallet, msgCancel)
@@ -113,7 +113,7 @@ func (s *CancelAtomicSwapTestSuite) TestCancelAtomicSwap() {
 
 		// broadcast Cancel order
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)
-		order := createOrder(msg)
+		order := createOrder(msg, 3)
 
 		msgCancel := types.NewMsgCancelSwap(makerAddressChainA, order.Id, timeoutHeight2, 0)
 		resp2, err2 := s.BroadcastMessages(ctx, chainA, makerWallet, msgCancel)
@@ -155,7 +155,7 @@ func (s *CancelAtomicSwapTestSuite) TestCancelAtomicSwap() {
 
 		// broadcast Cancel order
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)
-		order := createOrder(msg)
+		order := createOrder(msg, 4)
 
 		msgCancel := types.NewMsgCancelSwap(makerAddressChainA, order.Id, timeoutHeight2, 0)
 		resp2, err2 := s.BroadcastMessages(ctx, chainA, makerWallet, msgCancel)

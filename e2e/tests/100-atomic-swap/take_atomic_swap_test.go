@@ -60,7 +60,7 @@ func (s *TakeAtomicSwapTestSuite) TestTakeAtomicSwap() {
 
 		// broadcast Cancel order
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)
-		order := createOrder(msg)
+		order := createOrder(msg, 1)
 
 		msgCancel := types.NewMsgCancelSwap(makerAddressChainA, order.Id, timeoutHeight2, 0)
 		resp2, err2 := s.BroadcastMessages(ctx, chainA, makerWallet, msgCancel)
