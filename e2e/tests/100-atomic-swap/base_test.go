@@ -102,7 +102,7 @@ func (s *AtomicSwapTestSuite) TestAtomicSwap_HappyPath() {
 		// wait block when packet relay.
 		test.WaitForBlocks(ctx, 10, chainA, chainB)
 		// check packet relay status.
-		//s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
+		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
 
 		// Assert balances after atomic swap finished
 		b1, err := s.QueryBalance(ctx, chainA, makerAddressOnChainA, chainA.Config().Denom)

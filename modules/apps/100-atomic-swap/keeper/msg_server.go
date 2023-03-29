@@ -327,13 +327,23 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	//	return errors.New("buy token does not exist on the taker chain")
 	//}
 
-	fmt.Println("OnReceviveMake call createOrder")
-	order := createOrder(ctx, msg, k.channelKeeper)
-	fmt.Println("---------------------------------------")
-	fmt.Println("--------------------------------------- IN On REC MAKE")
-	fmt.Println(order.Id)
-	fmt.Println("---------------------------------------: ", order.Path)
-	fmt.Println("---------------------------------------")
+	//order := createOrder(ctx, msg, k.channelKeeper)
+
+	fmt.Println("-----------------------------------")
+	fmt.Println("-----------------------------------")
+	fmt.Println("----------------------------------- Sequence: ", packet.Sequence)
+	fmt.Println("-----------------------------------")
+	fmt.Println("-----------------------------------")
+	path := orderPath(msg.SourcePort, msg.SourceChannel, packet.DestinationPort, packet.DestinationChannel, packet.Sequence)
+	order := types.Order{
+		Id:     generateOrderId(path, msg),
+		Status: types.Status_INITIAL,
+		Path:   path,
+		Maker:  msg,
+	}
+	fmt.Println("OrderID:", order.Id)
+	fmt.Println("Path: ", path)
+
 	k.SetAtomicOrder(ctx, order)
 
 	ctx.EventManager().EmitTypedEvents(msg)
