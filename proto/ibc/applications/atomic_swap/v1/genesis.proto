@@ -11,4 +11,5 @@ import "gogoproto/gogo.proto";
 message GenesisState {
   string              port_id      = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
   ibc.applications.atomic_swap.v1.Params params = 2 [(gogoproto.nullable) = false];
+  repeated ibc.applications.atomic_swap.v1.Order orders = 3;
 }

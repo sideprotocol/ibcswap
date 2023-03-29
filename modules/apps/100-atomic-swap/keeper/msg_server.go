@@ -62,11 +62,20 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.
 		Memo: "",
 	}
 
+	// order is created before sending package because after that channel doesn't exist (channelKeeper.GetChannel return false)
+	fmt.Println("MakeSwap Call createOrder")
+	order := createOrder(ctx, msg, k.channelKeeper)
+
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------------------------------------")
+	fmt.Println(order.Id)
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------------------------------------")
+
 	if err := k.SendSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
 		return nil, err
 	}
 
-	order := createOrder(ctx, msg, k.channelKeeper)
 	k.SetAtomicOrder(ctx, order)
 
 	ctx.EventManager().EmitTypedEvents(msg)
@@ -318,7 +327,13 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	//	return errors.New("buy token does not exist on the taker chain")
 	//}
 
+	fmt.Println("OnReceviveMake call createOrder")
 	order := createOrder(ctx, msg, k.channelKeeper)
+	fmt.Println("---------------------------------------")
+	fmt.Println("--------------------------------------- IN On REC MAKE")
+	fmt.Println(order.Id)
+	fmt.Println("---------------------------------------: ", order.Path)
+	fmt.Println("---------------------------------------")
 	k.SetAtomicOrder(ctx, order)
 
 	ctx.EventManager().EmitTypedEvents(msg)
@@ -400,11 +415,14 @@ func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, ms
 }
 
 func createOrder(ctx sdk.Context, msg *types.MakeSwapMsg, channelKeeper types.ChannelKeeper) types.Order {
-	channel, _ := channelKeeper.GetChannel(ctx, msg.SourceChannel, msg.SourcePort)
-	fmt.Printf("Channel: %#v", channel)
-	sequence, _ := channelKeeper.GetNextSequenceSend(ctx, msg.SourceChannel, msg.SourcePort)
-	//path := orderPath(msg.SourcePort, msg.SourceChannel, channel.Counterparty.PortId, channel.Counterparty.ChannelId, sequence)
-	path := orderPath(msg.SourcePort, msg.SourceChannel, msg.SourcePort, msg.SourceChannel, sequence)
+	channel, _ := channelKeeper.GetChannel(ctx, msg.SourcePort, msg.SourceChannel)
+	sequence, _ := channelKeeper.GetNextSequenceSend(ctx, msg.SourcePort, msg.SourceChannel)
+	fmt.Println("-----------------------------------")
+	fmt.Println("-----------------------------------")
+	fmt.Println("----------------------------------- Sequence: ", sequence)
+	fmt.Println("-----------------------------------")
+	fmt.Println("-----------------------------------")
+	path := orderPath(msg.SourcePort, msg.SourceChannel, channel.Counterparty.PortId, channel.Counterparty.ChannelId, sequence)
 	return types.Order{
 		Id:     generateOrderId(path, msg),
 		Status: types.Status_INITIAL,
