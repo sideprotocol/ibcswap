@@ -9,8 +9,8 @@ import (
 
 const (
 	DefaultSwapEnabled = true
-	// DefaultMaxFeeRate is 0.0010
-	DefaultMaxFeeRate = 10
+	// DefaultMaxFeeRate is 0.003
+	DefaultMaxFeeRate = 300
 )
 
 var (

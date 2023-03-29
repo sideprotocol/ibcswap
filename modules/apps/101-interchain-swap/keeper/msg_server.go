@@ -80,9 +80,12 @@ func (k Keeper) OnWithdrawAcknowledged(ctx sdk.Context, req *types.MsgWithdrawRe
 		return types.ErrNotFoundPool
 	}
 
+	// update pool status
 	pool.SubPoolSupply(*res.Tokens[0])
+	for _, token := range res.Tokens {
+		pool.SubAsset(*token)
+	}
 	k.SetInterchainLiquidityPool(ctx, pool)
-
 	//burn voucher token.
 	err := k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(req.Sender), *req.PoolCoin)
 	if err != nil {
@@ -241,10 +244,18 @@ func (k Keeper) OndWithdrawReceive(ctx sdk.Context, msg *types.MsgWithdrawReques
 	)
 
 	outToken, err := amm.Withdraw(*msg.PoolCoin, msg.DenomOut)
-	ctx.EventManager().EmitTypedEvents(outToken)
+
 	if err != nil {
-		return nil, errorsmod.Wrapf(types.ErrFailedOnDepositReceived, "because of %s!", err)
+		return nil, errorsmod.Wrapf(types.ErrFailedOnWithdrawReceived, "because of %s!", err)
 	}
+
+	if outToken.Amount.LTE(sdk.NewInt(0)) {
+		return nil, errorsmod.Wrapf(types.ErrFailedOnWithdrawReceived, "because of %s!", "zero amount")
+	}
+
+	// update pool status.
+	pool.SubPoolSupply(*msg.PoolCoin)
+	pool.SubAsset(*outToken)
 
 	// save pool and market.
 	k.SetInterchainLiquidityPool(ctx, *amm.Pool)

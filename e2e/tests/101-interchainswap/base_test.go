@@ -89,6 +89,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 
 		// wait block when packet relay.
 		test.WaitForBlocks(ctx, 10, chainA, chainB)
+		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
 
 		// check pool info in chainA and chainB
 		poolId := types.GetPoolIdWithTokens(msg.Tokens)
@@ -279,7 +280,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
 		s.AssertValidTxResponse(resp)
 		s.Require().NoError(err)
-
+		
 		balanceRes, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
 		s.Require().NoError(err)
 		s.Require().Equal(balanceRes.Balance.Denom, beforeDeposit.Balance.Denom)

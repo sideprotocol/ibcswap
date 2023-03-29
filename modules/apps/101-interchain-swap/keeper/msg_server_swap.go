@@ -10,7 +10,6 @@ import (
 
 func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*types.MsgSwapResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
 	// validate msg.
 	err := msg.ValidateBasic()
 	if err != nil {
@@ -34,7 +33,7 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 	if err != nil {
 		return nil, err
 	}
-	
+
 	//constructs the IBC data packet
 	swapData, err := types.ModuleCdc.Marshal(msg)
 	if err != nil {
