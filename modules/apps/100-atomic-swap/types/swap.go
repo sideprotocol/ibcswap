@@ -5,20 +5,6 @@ import (
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 )
 
-//func NewAtomicOrder(maker *MakeSwapMsg, channelId string) Order {
-//	buf, _ := proto.Marshal(maker)
-//	id := Hash(buf).String()
-//	return Order{
-//		Id:                id,
-//		Maker:             maker,
-//		Status:            Status_INITIAL,
-//		Path:              channelId,
-//		Takers:            nil,
-//		CancelTimestamp:   0,
-//		CompleteTimestamp: 0,
-//	}
-//}
-
 func NewMakerFromMsg(msg *MakeSwapMsg) *SwapMaker {
 	return &SwapMaker{
 		SourcePort:            msg.SourcePort,
