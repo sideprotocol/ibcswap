@@ -45,6 +45,8 @@ func NewInterchainLiquidityPool(
 			}
 			assets = append(assets, &asset)
 		}
+	} else {
+		return nil
 	}
 
 	return &InterchainLiquidityPool{
@@ -126,11 +128,11 @@ func (ilp *InterchainLiquidityPool) SubPoolSupply(token types.Coin) error {
 //create new market maker
 
 func NewInterchainMarketMaker(
-	pool InterchainLiquidityPool,
+	pool *InterchainLiquidityPool,
 	feeRate uint32,
 ) *InterchainMarketMaker {
 	return &InterchainMarketMaker{
-		Pool:    &pool,
+		Pool:    pool,
 		FeeRate: feeRate,
 	}
 }
@@ -168,6 +170,7 @@ func (imm *InterchainMarketMaker) MarketPrice(denomIn, denomOut string) (*types.
 
 // P_issued = P_supply * ((1 + At/Bt) ** Wt -1)
 func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.Coin, error) {
+
 	asset, err := imm.Pool.FindAssetByDenom(token.Denom)
 	if err != nil {
 		return nil, err
@@ -180,16 +183,21 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 	var issueAmount types.Int
 
 	if imm.Pool.Status == PoolStatus_POOL_STATUS_INITIAL {
-		issueAmount = token.Amount
+		totalInitialLpAmount := types.NewInt(0)
+		for _, asset := range imm.Pool.Assets {
+			totalInitialLpAmount = totalInitialLpAmount.Add(asset.Balance.Amount)
+		}
+		issueAmount = totalInitialLpAmount.Mul(types.NewInt(int64(asset.Weight))).Quo(types.NewInt(100))
 	} else {
+		//const issueAmount = supply * (math.pow(1+amount/asset.balance, weight) - 1)
+
 		balanceDec := types.NewDecFromBigInt(asset.Balance.Amount.BigInt())
 		ratio := amountDec.Quo(balanceDec)
-		power := weightDec.MulInt64(int64(1)).Quo(weightDec)
 
 		// Calculate 1 + ratio / power
-		factorBase := types.NewDec(1).Add(ratio.Quo(power))
+		factorBase := types.NewDec(1).Add(ratio)
 		factorBaseFloat64, _ := factorBase.Float64()
-		powerFloat64, _ := power.Float64()
+		powerFloat64, _ := weightDec.Float64()
 
 		// Convert Dec to float64, perform math.Pow, and convert back to Dec
 		factorFloat64 := math.Pow(factorBaseFloat64, powerFloat64)
@@ -198,11 +206,11 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 		issueAmountDec := supplyDec.Mul(factorDec.Sub(types.NewDec(1)))
 		issueAmount = types.NewIntFromBigInt(issueAmountDec.TruncateInt().BigInt())
 	}
-
-	return &types.Coin{
+	outputToken := &types.Coin{
 		Amount: issueAmount,
 		Denom:  imm.Pool.Supply.Denom,
-	}, nil
+	}
+	return outputToken, nil
 }
 
 // input the supply token, output the expected token.
@@ -220,7 +228,7 @@ func (imm *InterchainMarketMaker) Withdraw(redeem types.Coin, denomOut string) (
 		return nil, ErrNotReadyForSwap
 	}
 
-	if redeem.Amount.GT(asset.Balance.Amount) {
+	if redeem.Amount.GT(imm.Pool.Supply.Amount) {
 		return nil, errorsmod.Wrapf(err, "bigger redeem amount than asset balance(%d).", asset.Balance.Amount)
 	}
 

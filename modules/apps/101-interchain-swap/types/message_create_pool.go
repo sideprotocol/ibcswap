@@ -1,6 +1,7 @@
 package types
 
 import (
+	"strconv"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -57,7 +58,19 @@ func (msg *MsgCreatePoolRequest) ValidateBasic() error {
 	if len(msg.Decimals) != 2 {
 		return ErrInvalidDecimalPair
 	}
-	if len(strings.Split(msg.Weight, ":")) != 2 {
+
+	weights := strings.Split(msg.Weight, ":")
+	if len(weights) != 2 {
+		return ErrInvalidWeightPair
+	}
+
+	totalWeight := 0
+	for _, weight := range weights {
+		w,_ := strconv.Atoi(weight)
+		totalWeight += w
+	}
+
+	if totalWeight != 100 {
 		return ErrInvalidWeightPair
 	}
 

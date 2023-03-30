@@ -68,7 +68,7 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 			channelA.PortID,
 			channelA.ChannelID,
 			chainAAddress,
-			"1:1",
+			"10:1",
 			[]*sdk.Coin{
 				{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
 				{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
@@ -349,10 +349,6 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 				)
 
 				outToken, err := amm.Withdraw(poolCoin, denomOut)
-				// fmt.Println("OutDenom:", *pool)
-				// fmt.Println("OutDenom:", denomOut)
-				// fmt.Println("PoolCoin:", poolCoin)
-				// fmt.Println("OutToken:", outToken)
 				s.Require().NoError(err)
 				s.Require().NotEqual(outToken.Amount, sdk.NewInt(0))
 				s.Require().NotNil(outToken)

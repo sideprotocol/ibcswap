@@ -49,7 +49,7 @@ func TestLeftSwap(t *testing.T) {
 
 	// create mock liquidity pool.
 	amm := NewInterchainMarketMaker(
-		pool,
+		&pool,
 		DefaultMaxFeeRate,
 	)
 

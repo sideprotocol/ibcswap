@@ -159,7 +159,7 @@ func (k Keeper) OnCreatePoolReceived(ctx sdk.Context, msg *types.MsgCreatePoolRe
 
 	//TODO: Need to implement params module and market maker.
 	amm := types.NewInterchainMarketMaker(
-		pool,
+		&pool,
 		types.DefaultMaxFeeRate,
 	)
 
@@ -189,7 +189,7 @@ func (k Keeper) OnDepositReceived(ctx sdk.Context, msg *types.MsgDepositRequest)
 
 	//TODO: Need to implement params module and market maker.
 	amm := types.NewInterchainMarketMaker(
-		pool,
+		&pool,
 		types.DefaultMaxFeeRate,
 	)
 
@@ -239,7 +239,7 @@ func (k Keeper) OndWithdrawReceive(ctx sdk.Context, msg *types.MsgWithdrawReques
 
 	// calculate output token.
 	amm := types.NewInterchainMarketMaker(
-		pool,
+		&pool,
 		types.DefaultMaxFeeRate,
 	)
 
@@ -280,7 +280,7 @@ func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest) (*typ
 	//feeRate := parms.getPoolFeeRate()
 
 	amm := types.NewInterchainMarketMaker(
-		pool,
+		&pool,
 		types.DefaultMaxFeeRate,
 	)
 
