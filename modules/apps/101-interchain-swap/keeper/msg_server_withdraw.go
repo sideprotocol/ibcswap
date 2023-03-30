@@ -25,9 +25,9 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", types.ErrNotFoundPool)
 	}
 
-	// if pool.Status != types.PoolStatus_POOL_STATUS_READY {
-	// 	return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", types.ErrNotReadyForSwap)
-	// }
+	if pool.Status != types.PoolStatus_POOL_STATUS_READY {
+		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", types.ErrNotReadyForSwap)
+	}
 
 	outToken, err := pool.FindAssetByDenom(msg.DenomOut)
 
@@ -59,12 +59,15 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 	}
 
 	packet := types.IBCSwapDataPacket{
-		Type: types.MessageType_DEPOSIT,
+		Type: types.MessageType_WITHDRAW,
 		Data: rawMsgData,
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&ctx)
 
-	k.SendIBCSwapPacket(ctx, pool.EncounterPartyPort, pool.EncounterPartyChannel, timeoutHeight, uint64(timeoutStamp), packet)
+	err = k.SendIBCSwapPacket(ctx, pool.EncounterPartyPort, pool.EncounterPartyChannel, timeoutHeight, uint64(timeoutStamp), packet)
+	if err != nil {
+		return nil, types.ErrFailedWithdraw
+	}
 	return &types.MsgWithdrawResponse{}, nil
 }

@@ -50,7 +50,7 @@ func (msg *MsgWithdrawRequest) ValidateBasic() error {
 		return errorsmod.Wrapf(ErrEmptyDenom, "none exist denom (%s)", err)
 	}
 	if msg.PoolCoin == nil || msg.PoolCoin.Amount.LTE(sdk.NewInt(0)) {
-		return errorsmod.Wrapf(ErrInvalidAmount, "invalid pool coin amount (%s)", "")
+		return errorsmod.Wrapf(ErrInvalidAmount, "invalid pool coin amount (%s)", msg.PoolCoin.Amount)
 	}
 	return nil
 }

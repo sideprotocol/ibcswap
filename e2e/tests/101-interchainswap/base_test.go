@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/ibc-go/e2e/testsuite"
 	"github.com/cosmos/ibc-go/e2e/testvalues"
 
-	//atomicswaptypes "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 	types "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	"github.com/strangelove-ventures/ibctest/v6/ibc"
 	test "github.com/strangelove-ventures/ibctest/v6/testutil"
@@ -89,10 +88,8 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 		s.Require().NoError(err)
 
 		// wait block when packet relay.
-		test.WaitForBlocks(ctx, 20, chainA, chainB)
-
-		// wait block when packet relay.
 		test.WaitForBlocks(ctx, 10, chainA, chainB)
+		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
 
 		// check pool info in chainA and chainB
 		poolId := types.GetPoolIdWithTokens(msg.Tokens)
@@ -283,7 +280,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
 		s.AssertValidTxResponse(resp)
 		s.Require().NoError(err)
-
+		
 		balanceRes, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
 		s.Require().NoError(err)
 		s.Require().Equal(balanceRes.Balance.Denom, beforeDeposit.Balance.Denom)
@@ -411,6 +408,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacketErrors() {
 	t.Run("send withdraw message with invalid denom", func(t *testing.T) {
 		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
 		poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
+		s.Require().NoError(err)
 		poolCoin := poolRes.InterchainLiquidityPool.Supply
 		s.Require().NotEqual(poolCoin.Amount, sdk.NewInt(0))
 

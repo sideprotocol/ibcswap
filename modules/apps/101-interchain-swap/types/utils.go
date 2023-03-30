@@ -19,14 +19,14 @@ func GetDefaultTimeOut(ctx *sdk.Context) (clienttypes.Height, uint64) {
 	outBlockHeight := ctx.BlockHeight() + 100
 
 	// 10 min later current block time.
-	waitDuration, _ := time.ParseDuration("10m")
+	waitDuration, _ := time.ParseDuration("2m")
 	timeoutStamp := ctx.BlockTime().Add(waitDuration)
 	timeoutHeight := clienttypes.NewHeight(clienttypes.ParseChainID(ctx.ChainID()), uint64(outBlockHeight))
 	return timeoutHeight, uint64(timeoutStamp.UTC().UnixNano())
 }
 
 func GetPoolIdWithTokens(tokens []*sdk.Coin) string {
-	
+
 	denoms := []string{}
 	for _, token := range tokens {
 		denoms = append(denoms, token.Denom)
