@@ -141,16 +141,8 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			}
 
 			// check order status
-			fmt.Println("OnAckPacket call createOrder")
-			fmt.Println("-------------------------------: ", msg.SourcePort, msg.SourceChannel, packet.DestinationChannel, packet.DestinationPort, packet.Sequence)
 			path := orderPath(msg.SourcePort, msg.SourceChannel, packet.DestinationPort, packet.DestinationChannel, packet.Sequence)
 			orderId := generateOrderId(path, &msg)
-			//o := createOrder(ctx, &msg, k.channelKeeper)
-			fmt.Println("-------------------------------")
-			fmt.Println("-------------------------------")
-			fmt.Println("OrderId: ", orderId)
-			fmt.Println("-------------------------------")
-			fmt.Println("-------------------------------")
 			order, ok := k.GetAtomicOrder(ctx, orderId)
 			if !ok {
 				return types.ErrOrderDoesNotExists

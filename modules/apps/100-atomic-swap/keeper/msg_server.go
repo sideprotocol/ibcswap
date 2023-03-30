@@ -62,15 +62,7 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.
 		Memo: "",
 	}
 
-	// order is created before sending package because after that channel doesn't exist (channelKeeper.GetChannel return false)
-	fmt.Println("MakeSwap Call createOrder")
 	order := createOrder(ctx, msg, k.channelKeeper)
-
-	fmt.Println("---------------------------------------")
-	fmt.Println("---------------------------------------")
-	fmt.Println(order.Id)
-	fmt.Println("---------------------------------------")
-	fmt.Println("---------------------------------------")
 
 	if err := k.SendSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
 		return nil, err
@@ -329,11 +321,6 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg 
 
 	//order := createOrder(ctx, msg, k.channelKeeper)
 
-	fmt.Println("-----------------------------------")
-	fmt.Println("-----------------------------------")
-	fmt.Println("----------------------------------- Sequence: ", packet.Sequence)
-	fmt.Println("-----------------------------------")
-	fmt.Println("-----------------------------------")
 	path := orderPath(msg.SourcePort, msg.SourceChannel, packet.DestinationPort, packet.DestinationChannel, packet.Sequence)
 	order := types.Order{
 		Id:     generateOrderId(path, msg),
@@ -341,8 +328,6 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg 
 		Path:   path,
 		Maker:  msg,
 	}
-	fmt.Println("OrderID:", order.Id)
-	fmt.Println("Path: ", path)
 
 	k.SetAtomicOrder(ctx, order)
 
@@ -427,11 +412,6 @@ func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, ms
 func createOrder(ctx sdk.Context, msg *types.MakeSwapMsg, channelKeeper types.ChannelKeeper) types.Order {
 	channel, _ := channelKeeper.GetChannel(ctx, msg.SourcePort, msg.SourceChannel)
 	sequence, _ := channelKeeper.GetNextSequenceSend(ctx, msg.SourcePort, msg.SourceChannel)
-	fmt.Println("-----------------------------------")
-	fmt.Println("-----------------------------------")
-	fmt.Println("----------------------------------- Sequence: ", sequence)
-	fmt.Println("-----------------------------------")
-	fmt.Println("-----------------------------------")
 	path := orderPath(msg.SourcePort, msg.SourceChannel, channel.Counterparty.PortId, channel.Counterparty.ChannelId, sequence)
 	return types.Order{
 		Id:     generateOrderId(path, msg),
