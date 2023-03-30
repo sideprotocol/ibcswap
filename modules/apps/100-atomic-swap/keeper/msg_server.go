@@ -31,7 +31,6 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.
 		return nil, err
 	}
 
-	//msg := types.NewMakerFromMsg(msgReq)
 	msgByte, err0 := proto.Marshal(msg)
 	if err0 != nil {
 		return nil, err0
@@ -318,8 +317,6 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	//if supply.Amount.Int64() <= 0 {
 	//	return errors.New("buy token does not exist on the taker chain")
 	//}
-
-	//order := createOrder(ctx, msg, k.channelKeeper)
 
 	path := orderPath(msg.SourcePort, msg.SourceChannel, packet.DestinationPort, packet.DestinationChannel, packet.Sequence)
 	order := types.Order{

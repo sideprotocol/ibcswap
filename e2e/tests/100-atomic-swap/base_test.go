@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/gogo/protobuf/proto"
 	"testing"
 	"time"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/cosmos/ibc-go/e2e/testsuite"
 	"github.com/cosmos/ibc-go/e2e/testvalues"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 	"github.com/strangelove-ventures/ibctest/v6/ibc"
 	test "github.com/strangelove-ventures/ibctest/v6/testutil"
@@ -78,7 +78,7 @@ func (s *AtomicSwapTestSuite) TestAtomicSwap_HappyPath() {
 
 		s.AssertValidTxResponse(resp)
 		s.Require().NoError(err)
-		//s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
+		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 2)
 
 		// wait block when packet relay.
 		test.WaitForBlocks(ctx, 10, chainA, chainB)
@@ -88,12 +88,6 @@ func (s *AtomicSwapTestSuite) TestAtomicSwap_HappyPath() {
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)
 		order := createOrder(msg, 1)
 		msgTake := types.NewMsgTakeSwap(order.Id, sellToken2, takerAddressOnChainB, takerReceivingAddressOnChainA, timeoutHeight2, 0, time.Now().UTC().Unix())
-		fmt.Println("---------------------------------------")
-		fmt.Println("---------------------------------------")
-		fmt.Println(msgTake.OrderId)
-		fmt.Println("---------------------------------------")
-		fmt.Println("---------------------------------------")
-		//msgTake.OrderId = order.Id
 		resp2, err2 := s.BroadcastMessages(ctx, chainB, chainBTakerWallet, msgTake)
 
 		s.AssertValidTxResponse(resp2)
@@ -148,13 +142,6 @@ func orderPath(sourcePort, sourceChannel, destPort, destChannel string, sequence
 }
 
 func generateOrderId(orderPath string, msg *types.MakeSwapMsg) string {
-	fmt.Println("----------------------------")
-	fmt.Println("-----------------------------")
-	fmt.Println("Path in e2e: ", orderPath)
-	fmt.Printf("Msg in e2e: %#v\n", msg)
-	fmt.Println("----------------------------")
-	fmt.Println("-----------------------------")
-
 	prefix := []byte(orderPath)
 	bytes, _ := proto.Marshal(msg)
 	hash := sha256.Sum256(append(prefix, bytes...))
