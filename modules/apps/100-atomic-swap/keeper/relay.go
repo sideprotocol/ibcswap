@@ -153,7 +153,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			return nil
 
 		case types.TAKE_SWAP:
-			// This is the step 9 (Transfer Take Token & Close order): https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
+			// This is the step 9 (Transfer Take Token & Close order): https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap
 			// The step is executed on the Taker chain.
 			takeMsg := &types.TakeSwapMsg{}
 			if err := proto.Unmarshal(data.Data, takeMsg); err != nil {
@@ -177,7 +177,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			k.SetAtomicOrder(ctx, order)
 			return nil
 		case types.CANCEL_SWAP:
-			// This is the step 14 (Cancel & refund) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
+			// This is the step 14 (Cancel & refund) of the atomic swap: https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap
 			// It is executed on the Maker chain.
 
 			var msg types.CancelSwapMsg
@@ -251,7 +251,7 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		k.SetAtomicOrder(ctx, order)
 
 	case types.TAKE_SWAP:
-		// This is the step 7.2 (Unlock order and refund) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
+		// This is the step 7.2 (Unlock order and refund) of the atomic swap: https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap
 		// This step is executed on the Taker chain when Take Swap request timeout.
 		takeMsg := &types.TakeSwapMsg{}
 		if err := proto.Unmarshal(swapPacket.Data, takeMsg); err != nil {

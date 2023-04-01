@@ -9,7 +9,7 @@ import (
 )
 
 // MakeSwap is called when the maker wants to make atomic swap. The method create new order and lock tokens.
-// This is the step 1 (Create order & Lock Token) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap.
+// This is the step 1 (Create order & Lock Token) of the atomic swap: https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap
 func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.MsgMakeSwapResponse, error) {
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -29,7 +29,7 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.
 	}
 
 	balance := k.bankKeeper.GetBalance(ctx, sender, msg.SellToken.Denom)
-	if balance.Amount.BigInt().Cmp(msg.SellToken.Amount.BigInt()) < 0 {
+	if balance.Amount.LT(msg.SellToken.Amount) {
 		return &types.MsgMakeSwapResponse{}, errors.New("insufficient balance")
 	}
 

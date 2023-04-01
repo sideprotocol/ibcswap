@@ -166,7 +166,7 @@ func (im IBCModule) OnChanCloseConfirm(
 //
 // The method is executed in steps 2 (Relay Make Packet), step 6 (Relay Take Packet),
 // step 8 (Relay Acknowledge Packet), step 11 (Relay Cancel Packet) and step 13 (Acknowledge Cancel Packet)
-// of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap.
+// of the atomic swap: https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap.
 func (im IBCModule) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,

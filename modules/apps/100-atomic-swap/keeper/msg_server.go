@@ -133,7 +133,7 @@ func (k Keeper) executeCancel(ctx sdk.Context, msg *types.CancelSwapMsg, step in
 // the following methods are executed On Destination chain.
 
 // OnReceivedMake is the step 3.1 (Save order) from the atomic swap:
-// https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
+// https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap
 // The step is executed on the Taker chain.
 func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg *types.MakeSwapMsg) (string, error) {
 	// Check if buyToken is a valid token on the taker chain, could be either native or ibc token
@@ -157,7 +157,7 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	return order.Id, nil
 }
 
-// OnReceivedTake is step 7.1 (Transfer Make Token) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
+// OnReceivedTake is step 7.1 (Transfer Make Token) of the atomic swap: https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap
 // The step is executed on the Maker chain.
 func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg *types.TakeSwapMsg) (string, error) {
 	escrowAddr := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
@@ -201,7 +201,7 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	return order.Id, nil
 }
 
-// OnReceivedCancel is the step 12 (Cancel Order) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap.
+// OnReceivedCancel is the step 12 (Cancel Order) of the atomic swap: https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap.
 // This step is executed on the Taker chain.
 func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, msg *types.CancelSwapMsg) (string, error) {
 	if err := msg.ValidateBasic(); err != nil {

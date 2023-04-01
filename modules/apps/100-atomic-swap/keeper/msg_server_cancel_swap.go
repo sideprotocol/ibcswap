@@ -9,7 +9,7 @@ import (
 	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
-// CancelSwap is the step 10 (Cancel Request) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap.
+// CancelSwap is the step 10 (Cancel Request) of the atomic swap: https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap.
 // It is executed on the Maker chain. Only the maker of the order can cancel the order.
 func (k Keeper) CancelSwap(goCtx context.Context, msg *types.CancelSwapMsg) (*types.MsgCancelSwapResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

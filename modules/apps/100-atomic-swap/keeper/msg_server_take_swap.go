@@ -58,7 +58,7 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.TakeSwapMsg) (*types.
 	}
 
 	balance := k.bankKeeper.GetBalance(ctx, takerAddr, msg.SellToken.Denom)
-	if balance.Amount.BigInt().Cmp(msg.SellToken.Amount.BigInt()) < 0 {
+	if balance.Amount.LT(msg.SellToken.Amount) {
 		return &types.MsgTakeSwapResponse{}, errors.New("insufficient balance")
 	}
 
