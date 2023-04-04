@@ -1,12 +1,12 @@
 package types
 
 import (
+	"fmt"
 	math "math"
 	"strconv"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types"
-	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // create new liquidity pool
@@ -49,7 +49,7 @@ func NewInterchainLiquidityPool(
 		return nil
 	}
 
-	return &InterchainLiquidityPool{
+	pool := InterchainLiquidityPool{
 		PoolId:  poolId,
 		Creator: creator,
 		Assets:  assets,
@@ -61,6 +61,10 @@ func NewInterchainLiquidityPool(
 		EncounterPartyPort:    portId,
 		EncounterPartyChannel: channelId,
 	}
+	amm := NewInterchainMarketMaker(&pool, DefaultMaxFeeRate)
+	pool.PoolPrice = float32(amm.LpPrice())
+
+	return &pool
 }
 
 // find pool asset by denom
@@ -176,10 +180,6 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 		return nil, err
 	}
 
-	amountDec := types.NewDecFromBigInt(token.Amount.BigInt())
-	supplyDec := types.NewDecFromBigInt(imm.Pool.Supply.Amount.BigInt())
-	weightDec := types.NewDecFromInt(types.NewInt(int64(asset.Weight))).Quo(types.NewDec(100))
-
 	var issueAmount types.Int
 
 	if imm.Pool.Status == PoolStatus_POOL_STATUS_INITIAL {
@@ -187,25 +187,21 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 		for _, asset := range imm.Pool.Assets {
 			totalInitialLpAmount = totalInitialLpAmount.Add(asset.Balance.Amount)
 		}
-		issueAmount = totalInitialLpAmount.Mul(types.NewInt(int64(asset.Weight))).Quo(types.NewInt(100))
+		issueAmount = totalInitialLpAmount
 	} else {
-		//const issueAmount = supply * (math.pow(1+amount/asset.balance, weight) - 1)
 
-		balanceDec := types.NewDecFromBigInt(asset.Balance.Amount.BigInt())
-		ratio := amountDec.Quo(balanceDec)
+		weight := float64(asset.Weight) / 100
+		ratio := 1 + float64(token.Amount.Quo(asset.Balance.Amount).Int64())
+		factor := (math.Pow(ratio, float64(weight)) - 1) * Multiplier
+		issueAmount = imm.Pool.Supply.Amount.Mul(types.NewInt(int64(factor))).Quo(types.NewInt(Multiplier))
 
-		// Calculate 1 + ratio / power
-		factorBase := types.NewDec(1).Add(ratio)
-		factorBaseFloat64, _ := factorBase.Float64()
-		powerFloat64, _ := weightDec.Float64()
-
-		// Convert Dec to float64, perform math.Pow, and convert back to Dec
-		factorFloat64 := math.Pow(factorBaseFloat64, powerFloat64)
-		factorDec := types.NewDecFromInt(types.NewInt(int64(factorFloat64 * 1e18))).Quo(types.NewDecFromInt(types.NewInt(1e18)))
-
-		issueAmountDec := supplyDec.Mul(factorDec.Sub(types.NewDec(1)))
-		issueAmount = types.NewIntFromBigInt(issueAmountDec.TruncateInt().BigInt())
+		estimatedAmount := imm.Pool.Supply.Amount.Add(issueAmount)
+		estimatedLpPrice := imm.InvariantWithInput(token) / float64(estimatedAmount.Int64())
+		if math.Abs(estimatedLpPrice-float64(imm.Pool.PoolPrice))/float64(imm.Pool.PoolPrice) > 0.1 {
+			return nil, ErrNotAllowedAmount
+		}
 	}
+
 	outputToken := &types.Coin{
 		Amount: issueAmount,
 		Denom:  imm.Pool.Supply.Denom,
@@ -225,30 +221,24 @@ func (imm *InterchainMarketMaker) Withdraw(redeem types.Coin, denomOut string) (
 		return nil, err
 	}
 	if imm.Pool.Status != PoolStatus_POOL_STATUS_READY {
-		return nil, ErrNotReadyForSwap
+		return nil, fmt.Errorf("not ready for swap")
 	}
 
 	if redeem.Amount.GT(imm.Pool.Supply.Amount) {
-		return nil, errorsmod.Wrapf(err, "bigger redeem amount than asset balance(%d).", asset.Balance.Amount)
+		return nil, fmt.Errorf("bigger than balance")
 	}
 
 	if redeem.Denom != imm.Pool.Supply.Denom {
-		return nil, ErrInvalidDenomPair
+		return nil, fmt.Errorf("invalid denom pair")
 	}
 
-	balance := types.NewDecFromInt(asset.Balance.Amount)
-	supply := types.NewDecFromInt(imm.Pool.Supply.Amount)
-	weight := types.NewDec(int64(asset.Weight)).Quo(types.NewDec(100))
+	ratio := 1 - float64(redeem.Amount.Quo(imm.Pool.Supply.Amount).Int64())
 
-	// At = Bt * (1 - (1 - P_redeemed / P_supply) ** 1/Wt)
-	redeemDec := types.NewDecFromInt(redeem.Amount)
-	oneMinusRatio := types.NewDec(1).Sub(redeemDec.Quo(supply))
-	power := oneMinusRatio.Power(types.NewDecFromInt(types.NewInt(1)).Quo(weight).TruncateInt().Uint64())
-	oneMinusPower := types.NewDec(1).Sub(power)
-	amountOut := balance.Mul(oneMinusPower)
-
+	exponent := 1 / float64(asset.Weight)
+	factor := (1 - math.Pow(ratio, exponent)) * Multiplier
+	amountOut := asset.Balance.Amount.Mul(types.NewInt(int64(factor))).Quo(types.NewInt(Multiplier))
 	return &types.Coin{
-		Amount: amountOut.RoundInt(),
+		Amount: amountOut,
 		Denom:  denomOut,
 	}, nil
 }
@@ -267,8 +257,8 @@ func (imm *InterchainMarketMaker) LeftSwap(amountIn types.Coin, denomOut string)
 		return nil, err
 	}
 
-	balanceOut := types.NewDecFromInt(assetOut.Balance.Amount)
-	balanceIn := types.NewDecFromInt(assetIn.Balance.Amount)
+	balanceOut := types.NewDecFromBigInt(assetOut.Balance.Amount.BigInt())
+	balanceIn := types.NewDecFromBigInt(assetIn.Balance.Amount.BigInt())
 	weightIn := types.NewDec(int64(assetIn.Weight)).Quo(types.NewDec(100))
 	weightOut := types.NewDec(int64(assetOut.Weight)).Quo(types.NewDec(100))
 	amount := imm.MinusFees(amountIn.Amount)
@@ -278,9 +268,8 @@ func (imm *InterchainMarketMaker) LeftSwap(amountIn types.Coin, denomOut string)
 	ratio := balanceIn.Quo(balanceInPlusAmount)
 	oneMinusRatio := types.NewDec(1).Sub(ratio)
 	power := weightIn.Quo(weightOut)
-	factor := oneMinusRatio.Power(power.TruncateInt().Uint64())
-	amountOut := balanceOut.Mul(factor)
-
+	factor := math.Pow(oneMinusRatio.MustFloat64(), power.MustFloat64()) * 1e18
+	amountOut := balanceOut.Mul(types.NewDec(int64(factor))).Quo(types.NewDec(1e18))
 	return &types.Coin{
 		Amount: amountOut.RoundInt(),
 		Denom:  denomOut,
@@ -293,31 +282,29 @@ func (imm *InterchainMarketMaker) LeftSwap(amountIn types.Coin, denomOut string)
 func (imm *InterchainMarketMaker) RightSwap(amountIn types.Coin, amountOut types.Coin) (*types.Coin, error) {
 	assetIn, err := imm.Pool.FindAssetByDenom(amountIn.Denom)
 	if err != nil {
-		return nil, errorsmod.Wrapf(err, "right swap failed! %s", imm.PoolId)
+		return nil, fmt.Errorf("right swap failed")
 	}
 
 	assetOut, err := imm.Pool.FindAssetByDenom(amountOut.Denom)
 	if err != nil {
-		return nil, errorsmod.Wrapf(err, "right swap failed because of %s")
+		return nil, fmt.Errorf("right swap failed")
 	}
 
-	balanceOut := types.NewDecFromInt(assetOut.Balance.Amount)
-	balanceIn := types.NewDecFromInt(assetIn.Balance.Amount)
+	//Ai = Bi * ((Bo/(Bo - Ao)) ** Wo/Wi -1)
+	balanceIn := types.NewDecFromBigInt(assetIn.Balance.Amount.BigInt())
 	weightIn := types.NewDec(int64(assetIn.Weight)).Quo(types.NewDec(100))
 	weightOut := types.NewDec(int64(assetOut.Weight)).Quo(types.NewDec(100))
 
-	one := types.NewDec(1)
-	amountOutDec := types.NewDecFromInt(amountOut.Amount)
-
-	numerator := balanceOut.Sub(amountOutDec)
+	//one := types.NewDec(1)
+	numerator := types.NewDecFromBigInt(assetOut.Balance.Amount.BigInt())
 	power := weightOut.Quo(weightIn)
-	denominator, _ := one.Sub(numerator.Quo(balanceOut)).ApproxSqrt()
-	factor := one.Sub(denominator.Power(power.TruncateInt().Uint64()))
-
-	amountRequired := balanceIn.Mul(factor).TruncateInt()
+	denominator := types.NewDecFromBigInt(assetOut.Balance.Amount.Sub(assetIn.Balance.Amount).BigInt())
+	base := numerator.Quo(denominator)
+	factor := math.Pow(base.MustFloat64(), power.MustFloat64()) * Multiplier
+	amountRequired := balanceIn.Mul(types.NewDec(int64(factor))).Quo(types.NewDec(Multiplier)).RoundInt()
 
 	if amountIn.Amount.LT(amountRequired) {
-		return nil, errorsmod.Wrapf(ErrInvalidAmount, "right swap failed because of %s")
+		return nil, fmt.Errorf("right swap failed")
 	}
 	return &types.Coin{
 		Amount: amountRequired,
@@ -331,4 +318,46 @@ func (imm *InterchainMarketMaker) MinusFees(amount types.Int) types.Dec {
 	fees := amountDec.Mul(feeRate)
 	amountMinusFees := amountDec.Sub(fees)
 	return amountMinusFees
+}
+
+// Worth Function V=M)
+func (imm *InterchainMarketMaker) Invariant() float64 {
+	v := 1.0
+	totalBalance := types.NewDec(0)
+	for _, pool := range imm.Pool.Assets {
+		totalBalance = totalBalance.Add(types.NewDecFromBigInt(pool.Balance.Amount.BigInt()))
+	}
+	for _, pool := range imm.Pool.Assets {
+		w := float64(pool.Weight) / 100.0
+		balance := types.NewDecFromBigInt(pool.Balance.Amount.BigInt()).Quo(totalBalance) /// totalBalance
+		v *= math.Pow(balance.MustFloat64(), w)
+	}
+	return v
+}
+
+func (imm *InterchainMarketMaker) InvariantWithInput(tokenIn types.Coin) float64 {
+	v := 1.0
+	totalBalance := types.NewDec(0)
+	for _, pool := range imm.Pool.Assets {
+		totalBalance = totalBalance.Add(types.NewDecFromBigInt(pool.Balance.Amount.BigInt()))
+		if pool.Balance.Denom == tokenIn.Denom {
+			totalBalance.Add(types.NewDecFromBigInt(tokenIn.Amount.BigInt()))
+		}
+	}
+	for _, pool := range imm.Pool.Assets {
+		w := float64(pool.Weight) / 100.0
+		var balance types.Dec
+		if tokenIn.Denom != pool.Balance.Denom {
+			balance = types.NewDecFromBigInt(pool.Balance.Amount.BigInt()).Quo(totalBalance) /// totalBalance
+		} else {
+			balance = types.NewDecFromBigInt(pool.Balance.Amount.Add(tokenIn.Amount).BigInt()).Quo(totalBalance) /// totalBalance
+		}
+		v *= math.Pow(balance.MustFloat64(), w)
+	}
+	return v
+}
+
+func (imm *InterchainMarketMaker) LpPrice() float64 {
+	lpPrice := imm.Invariant() / float64(imm.Pool.Supply.Amount.Int64())
+	return lpPrice
 }

@@ -68,7 +68,7 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 			channelA.PortID,
 			channelA.ChannelID,
 			chainAAddress,
-			"10:1",
+			"20:80",
 			[]*sdk.Coin{
 				{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
 				{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
@@ -255,7 +255,6 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 			{
 				"withdraw Asset A (50%)",
 				func() {
-
 					// initial liquidity token remove:
 					lpAmount, err := s.QueryBalance(ctx, chainA, chainAAddress, poolId)
 					s.Require().NoError(err)
@@ -274,7 +273,7 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 				true,
 			},
 			{
-				"withdraw Asset B (10%)",
+				"withdraw Asset B (20%)",
 				func() {
 
 					lpAmount, err := s.QueryBalance(ctx, chainB, chainBAddress, poolId)
@@ -318,7 +317,7 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 				pool := poolRes.InterchainLiquidityPool
 
 				am := types.NewInterchainMarketMaker(
-					pool,
+					&pool,
 					fee,
 				)
 
@@ -344,7 +343,7 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 				s.Require().NoError(err)
 
 				amm := types.NewInterchainMarketMaker(
-					*pool,
+					pool,
 					fee,
 				)
 
@@ -376,7 +375,7 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 
 			s.Require().NoError(err)
 			amm := types.NewInterchainMarketMaker(
-				*pool,
+				pool,
 				fee,
 			)
 

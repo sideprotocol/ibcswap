@@ -33,7 +33,7 @@ func (k Keeper) OnCreatePoolAcknowledged(ctx sdk.Context, msg *types.MsgCreatePo
 	)
 
 	// when add initial liquidity, we need to update pool token amount.
-	initialLiquidity := sdk.NewCoin(pool.PoolId, msg.Tokens[0].Amount)
+	initialLiquidity := sdk.NewCoin(pool.PoolId, msg.Tokens[0].Amount.Add(msg.Tokens[1].Amount))
 	pool.AddPoolSupply(initialLiquidity)
 
 	// mint lpToken.
@@ -47,6 +47,7 @@ func (k Keeper) OnCreatePoolAcknowledged(ctx sdk.Context, msg *types.MsgCreatePo
 }
 
 func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgDepositRequest, res *types.MsgDepositResponse) error {
+	
 	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolId)
 	if !found {
 		return types.ErrNotFoundPool
@@ -276,6 +277,7 @@ func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest) (*typ
 	if !found {
 		return nil, types.ErrNotFoundPool
 	}
+
 	//TODO: need to implement amm part.
 	//feeRate := parms.getPoolFeeRate()
 
