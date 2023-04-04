@@ -58,8 +58,8 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 		return nil, err
 	}
 
-	packet := types.IBCSwapDataPacket{
-		Type: types.MessageType_WITHDRAW,
+	packet := types.IBCSwapPacketData{
+		Type: types.WITHDRAW,
 		Data: rawMsgData,
 	}
 

@@ -138,7 +138,7 @@ func (im IBCModule) OnRecvPacket(
 	logger := im.keeper.Logger(ctx)
 	ack := channeltypes.NewResultAcknowledgement([]byte{byte(1)})
 
-	var data types.IBCSwapDataPacket
+	var data types.IBCSwapPacketData
 	var ackErr error
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		ackErr = errorsmod.Wrapf(types.ErrInvalidType, "cannot unmarshal ICS-101 packet data")
@@ -190,7 +190,7 @@ func (im IBCModule) OnAcknowledgementPacket(
 	if err := types.ModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
 		return errorsmod.Wrapf(errorsmod.ErrUnknownRequest, "cannot unmarshal ICS-101 transfer packet acknowledgement: %v", err)
 	}
-	var data types.IBCSwapDataPacket
+	var data types.IBCSwapPacketData
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		return errorsmod.Wrapf(errorsmod.ErrUnknownRequest, "cannot unmarshal ICS-101 transfer packet data: %s", err.Error())
 	}
@@ -235,7 +235,7 @@ func (im IBCModule) OnTimeoutPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) error {
-	var data types.IBCSwapDataPacket
+	var data types.IBCSwapPacketData
 	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		return errorsmod.Wrapf(types.ErrUnknownRequest, "cannot unmarshal ICS-101 transfer packet data: %s", err.Error())
 	}

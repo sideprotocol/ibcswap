@@ -40,17 +40,17 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 		return nil, err
 	}
 
-	var msgType types.MessageType
+	var msgType types.SwapMessageType
 	switch msg.SwapType {
 	case types.SwapMsgType_LEFT:
-		msgType = types.MessageType_LEFTSWAP
+		msgType = types.LEFT_SWAP
 	case types.SwapMsgType_RIGHT:
-		msgType = types.MessageType_RIGHTSWAP
+		msgType = types.RIGHT_SWAP
 	default:
 		return nil, types.ErrInvalidSwapType
 	}
 
-	packet := types.IBCSwapDataPacket{
+	packet := types.IBCSwapPacketData{
 		Type: msgType,
 		Data: swapData,
 	}

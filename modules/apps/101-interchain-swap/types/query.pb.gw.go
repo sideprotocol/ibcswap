@@ -620,13 +620,13 @@ var (
 
 	pattern_Query_EscrowAddress_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"ibc", "apps", "interchainswap", "v1", "channels", "channel_id", "ports", "port_id", "escrow_address"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_InterchainLiquidityPool_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"ibcswap", "v4", "interchainswap", "interchain_liquidity_pool", "poolId"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_InterchainLiquidityPool_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"ibc", "apps", "interchainswap", "v1", "interchain_liquidity_pool", "poolId"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_InterchainLiquidityPoolAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"ibcswap", "v4", "interchainswap", "interchain_liquidity_pool"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_InterchainLiquidityPoolAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"ibc", "apps", "interchainswap", "v1", "interchain_liquidity_pool"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_InterchainMarketMaker_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"ibcswap", "v4", "interchainswap", "interchain_market_maker", "poolId"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_InterchainMarketMaker_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"ibc", "apps", "interchainswap", "v1", "interchain_market_maker", "poolId"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_InterchainMarketMakerAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"ibcswap", "v4", "interchainswap", "interchain_market_maker"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_InterchainMarketMakerAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"ibc", "apps", "interchainswap", "v1", "interchain_market_maker"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

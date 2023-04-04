@@ -59,8 +59,8 @@ func (k Keeper) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) (*t
 		return nil, err
 	}
 
-	packet := types.IBCSwapDataPacket{
-		Type: types.MessageType_DEPOSIT,
+	packet := types.IBCSwapPacketData{
+		Type: types.SINGLE_DEPOSIT,
 		Data: rawMsgData,
 	}
 
