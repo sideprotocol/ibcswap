@@ -12,7 +12,7 @@ func NewLogger() Logger {
 }
 
 func (l *logger) CleanLog(title string, data ...interface{}) {
-	fmt.Printf("=======[%s]========\n", title)
+	fmt.Printf("-----[%s]----------\n", title)
 	fmt.Println(data...)
 	fmt.Printf("=======END=========\n\n")
 }
