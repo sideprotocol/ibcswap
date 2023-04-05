@@ -242,9 +242,9 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 				true,
 			},
 			{
-				"swap Asset A(1_000) to Asset B",
+				"swap Asset A(100_000) to Asset B",
 				func() {
-					tokenIn = sdk.NewCoin(chainADenom, sdk.NewInt(1_000))
+					tokenIn = sdk.NewCoin(chainADenom, sdk.NewInt(100_000))
 					wallet = *chainAWallet
 					chain = chainA
 					denomOut = chainBDenom
@@ -252,7 +252,6 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 					recipient = chainAAddressForB
 					channel = channelA
 					packetSequence = 3
-
 				},
 				"swap",
 				true,
@@ -278,7 +277,7 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 					// initial liquidity token remove:
 					lpAmount, err := s.QueryBalance(ctx, chainA, chainAAddress, poolId)
 					s.Require().NoError(err)
-					halfAmount := lpAmount.Balance.Amount.Sub(sdk.NewInt(initialX)).Quo(sdk.NewInt(2))
+					halfAmount := lpAmount.Balance.Amount.Quo(sdk.NewInt(2))
 					poolCoin = sdk.NewCoin(poolId, halfAmount)
 					s.Require().NotEqual(poolCoin.Amount, sdk.NewInt(0))
 
@@ -300,7 +299,7 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 
 					lpAmount, err := s.QueryBalance(ctx, chainB, chainBAddress, poolId)
 					s.Require().NoError(err)
-					halfAmount := lpAmount.Balance.Amount.Sub(sdk.NewInt(initialY)).Quo(sdk.NewInt(10))
+					halfAmount := lpAmount.Balance.Amount.Quo(sdk.NewInt(5))
 					poolCoin = sdk.NewCoin(poolId, halfAmount)
 					pool, err := getPool(
 						s, ctx, chain, poolId,
