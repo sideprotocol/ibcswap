@@ -7,6 +7,7 @@ option go_package = "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-s
 import "gogoproto/gogo.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "ibc/applications/interchain_swap/v1/param.proto";
+import "ibc/applications/interchain_swap/v1/market.proto";
 import "google/api/annotations.proto";
 
 // Query provides defines the gRPC querier service.
@@ -20,6 +21,24 @@ service Query {
   // EscrowAddress returns the escrow address for a particular port and channel id.
   rpc EscrowAddress(QueryEscrowAddressRequest) returns (QueryEscrowAddressResponse) {
     option (google.api.http).get = "/ibc/apps/interchainswap/v1/channels/{channel_id}/ports/{port_id}/escrow_address";
+  }
+
+  // Queries a list of InterchainLiquidityPool items.
+  rpc InterchainLiquidityPool    (QueryGetInterchainLiquidityPoolRequest) returns (QueryGetInterchainLiquidityPoolResponse) {
+    option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_liquidity_pool/{poolId}";
+  
+  }
+  rpc InterchainLiquidityPoolAll (QueryAllInterchainLiquidityPoolRequest) returns (QueryAllInterchainLiquidityPoolResponse) {
+    option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_liquidity_pool";
+  }
+  
+  // Queries a list of InterchainMarketMaker items.
+  rpc InterchainMarketMaker    (QueryGetInterchainMarketMakerRequest) returns (QueryGetInterchainMarketMakerResponse) {
+    option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_market_maker/{poolId}";
+  
+  }
+  rpc InterchainMarketMakerAll (QueryAllInterchainMarketMakerRequest) returns (QueryAllInterchainMarketMakerResponse) {
+    option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_market_maker";
   }
 }
 
@@ -44,4 +63,39 @@ message QueryEscrowAddressRequest {
 message QueryEscrowAddressResponse {
   // the escrow account address
   string escrow_address = 1;
+}
+
+
+message QueryGetInterchainLiquidityPoolRequest {
+  string poolId = 1;
+}
+
+message QueryGetInterchainLiquidityPoolResponse {
+  ibc.applications.interchain_swap.v1.InterchainLiquidityPool interchainLiquidityPool = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllInterchainLiquidityPoolRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllInterchainLiquidityPoolResponse {
+  repeated ibc.applications.interchain_swap.v1.InterchainLiquidityPool                interchainLiquidityPool = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination              = 2;
+}
+
+message QueryGetInterchainMarketMakerRequest {
+  string poolId = 1;
+}
+
+message QueryGetInterchainMarketMakerResponse {
+  ibc.applications.interchain_swap.v1.InterchainMarketMaker interchainMarketMaker = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllInterchainMarketMakerRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllInterchainMarketMakerResponse {
+  repeated ibc.applications.interchain_swap.v1.InterchainMarketMaker                  interchainMarketMaker = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination            = 2;
 }

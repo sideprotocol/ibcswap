@@ -58,4 +58,6 @@ var (
 	ErrInvalidDenom          = errorsmod.Register(ModuleName, 1536, "invalid denom")
 	ErrInvalidAddressPair    = errorsmod.Register(ModuleName, 1537, "invalid address pair!")
 	ErrInvalidInitialDeposit = errorsmod.Register(ModuleName, 1538, "Invalid token amount for initial deposit")
+
+	ErrNotAllowedAmount = errorsmod.Register(ModuleName, 1539, "not allowed single deposit amount")
 )

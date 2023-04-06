@@ -15,7 +15,7 @@ func (k Keeper) SendIBCSwapPacket(
 	sourceChannel string,
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64,
-	swapPacket types.IBCSwapDataPacket,
+	swapPacket types.IBCSwapPacketData,
 ) error {
 
 	if err := swapPacket.ValidateBasic(); err != nil {
@@ -62,9 +62,9 @@ func (k Keeper) SendIBCSwapPacket(
 	return nil
 }
 
-func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.IBCSwapDataPacket) ([]byte, error) {
+func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.IBCSwapPacketData) ([]byte, error) {
 	switch data.Type {
-	case types.MessageType_CREATE:
+	case types.CREATE_POOL:
 		var msg types.MsgCreatePoolRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
@@ -76,7 +76,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		data, err := types.ModuleCdc.Marshal(&types.MsgCreatePoolResponse{PoolId: *pooId}) //types.ModuleCdc.Marshal(&types.MsgCreatePoolResponse{PoolId: *pooId})
 		return data, err
 
-	case types.MessageType_DEPOSIT:
+	case types.SINGLE_DEPOSIT:
 		var msg types.MsgDepositRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
@@ -88,7 +88,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		data, err := types.ModuleCdc.Marshal(res)
 		return data, err
 
-	case types.MessageType_WITHDRAW:
+	case types.WITHDRAW:
 		var msg types.MsgWithdrawRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
@@ -101,7 +101,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		data, err := types.ModuleCdc.Marshal(res)
 		return data, err
 
-	case types.MessageType_LEFTSWAP, types.MessageType_RIGHTSWAP:
+	case types.LEFT_SWAP, types.RIGHT_SWAP:
 		var msg types.MsgSwapRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
@@ -117,14 +117,14 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	}
 }
 
-func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, data *types.IBCSwapDataPacket, ack channeltypes.Acknowledgement) error {
+func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, data *types.IBCSwapPacketData, ack channeltypes.Acknowledgement) error {
 	logger := k.Logger(ctx)
 	switch ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Error:
 		return k.refundPacketToken(ctx, packet, data)
 	default:
 		switch data.Type {
-		case types.MessageType_CREATE:
+		case types.CREATE_POOL:
 			var msg types.MsgCreatePoolRequest
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				logger.Debug(err.Error())
@@ -134,7 +134,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			if err != nil {
 				return err
 			}
-		case types.MessageType_DEPOSIT:
+		case types.SINGLE_DEPOSIT:
 			var msg types.MsgDepositRequest
 			var res types.MsgDepositResponse
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
@@ -150,7 +150,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				logger.Debug("Deposit:Single", err.Error())
 				return err
 			}
-		case types.MessageType_WITHDRAW:
+		case types.WITHDRAW:
 			var msg types.MsgWithdrawRequest
 			var res types.MsgWithdrawResponse
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
@@ -162,7 +162,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			if err := k.OnWithdrawAcknowledged(ctx, &msg, &res); err != nil {
 				return err
 			}
-		case types.MessageType_LEFTSWAP, types.MessageType_RIGHTSWAP:
+		case types.LEFT_SWAP, types.RIGHT_SWAP:
 			var msg types.MsgSwapRequest
 			var res types.MsgSwapResponse
 
@@ -180,17 +180,17 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 	return nil
 }
 
-func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, data *types.IBCSwapDataPacket) error {
+func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, data *types.IBCSwapPacketData) error {
 	return k.refundPacketToken(ctx, packet, data)
 }
 
-func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, data *types.IBCSwapDataPacket) error {
+func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, data *types.IBCSwapPacketData) error {
 
 	var token sdk.Coin
 	var sender string
 	switch data.Type {
 
-	case types.MessageType_CREATE:
+	case types.CREATE_POOL:
 		var msg types.MsgCreatePoolRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
@@ -198,21 +198,21 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 
 		// refund initial liquidity.
 		token = *msg.Tokens[0] //sdk.NewCoin(nativeDenom, sdk.NewInt(int64(msg.InitalLiquidity)))
-	case types.MessageType_DEPOSIT:
+	case types.SINGLE_DEPOSIT:
 		var msg types.MsgDepositRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
 		token = *msg.Tokens[0]
 		sender = msg.Sender
-	case types.MessageType_WITHDRAW:
+	case types.WITHDRAW:
 		var msg types.MsgWithdrawRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
 		token = *msg.PoolCoin
 		sender = msg.Sender
-	case types.MessageType_RIGHTSWAP:
+	case types.RIGHT_SWAP:
 		var msg types.MsgSwapRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err

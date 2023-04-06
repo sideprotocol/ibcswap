@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -124,3 +125,10 @@ func (k Keeper) SingleDepositTest(ctx sdk.Context, sender sdk.AccAddress) sdk.Co
 	return k.bankKeeper.GetBalance(ctx, sender, sdk.DefaultBondDenom)
 }
 
+// You may need to adjust the function signature, return types, and parameter types based on your module's implementation
+func (k Keeper) EscrowAddress(ctx context.Context, req *types.QueryEscrowAddressRequest) (*types.QueryEscrowAddressResponse, error) {
+	escrowAddress := types.GetEscrowAddress(req.PortId, req.ChannelId)
+	return &types.QueryEscrowAddressResponse{
+		EscrowAddress: escrowAddress.String(),
+	}, nil
+}

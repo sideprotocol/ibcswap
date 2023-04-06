@@ -61,8 +61,8 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolReq
 	}
 
 	// construct IBC data packet
-	packet := types.IBCSwapDataPacket{
-		Type: types.MessageType_CREATE,
+	packet := types.IBCSwapPacketData{
+		Type: types.CREATE_POOL,
 		Data: poolData,
 	}
 

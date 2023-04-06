@@ -114,8 +114,8 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 			suite.coordinator.SetupConnections(path)
 
 			tc.malleate()
-			packet := types.IBCSwapDataPacket{
-				Type: types.MessageType_LEFTSWAP,
+			packet := types.IBCSwapPacketData{
+				Type: types.LEFT_SWAP,
 				Data: msgbyte,
 			}
 

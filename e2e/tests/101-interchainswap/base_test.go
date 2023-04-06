@@ -75,7 +75,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 			channelA.PortID,
 			channelA.ChannelID,
 			chainAAddress,
-			"1:1",
+			"50:50",
 			[]*sdk.Coin{
 				{Denom: chainADenom, Amount: sdk.NewInt(100000)},
 				{Denom: chainBDenom, Amount: sdk.NewInt(10000)},
@@ -84,6 +84,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 		)
 
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+
 		s.AssertValidTxResponse(resp)
 		s.Require().NoError(err)
 
@@ -181,7 +182,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 
 		// calculate estimate output.
 		am := types.NewInterchainMarketMaker(
-			poolA,
+			&poolA,
 			types.DefaultMaxFeeRate,
 		)
 
@@ -280,7 +281,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
 		s.AssertValidTxResponse(resp)
 		s.Require().NoError(err)
-		
+
 		balanceRes, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
 		s.Require().NoError(err)
 		s.Require().Equal(balanceRes.Balance.Denom, beforeDeposit.Balance.Denom)
@@ -324,7 +325,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacketErrors() {
 			channelA.PortID,
 			channelA.ChannelID,
 			chainAAddress,
-			"1:1",
+			"50:50",
 			[]*sdk.Coin{
 				{Denom: chainADenom, Amount: sdk.NewInt(100000)},
 				{Denom: chainBDenom, Amount: sdk.NewInt(10000)},

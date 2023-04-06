@@ -5,10 +5,14 @@ package ibc.applications.interchain_swap.v1;
 option go_package = "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types";
 
 import "ibc/applications/interchain_swap/v1/param.proto";
+import "ibc/applications/interchain_swap/v1/market.proto";
 import "gogoproto/gogo.proto";
 
 // GenesisState defines the ibc-transfer genesis state
 message GenesisState {
   string              port_id      = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
   ibc.applications.interchain_swap.v1.Params params = 2 [(gogoproto.nullable) = false];
+  repeated ibc.applications.interchain_swap.v1.InterchainLiquidityPool interchainLiquidityPoolList = 3 [(gogoproto.nullable) = false];
+  repeated ibc.applications.interchain_swap.v1.InterchainMarketMaker    interchainMarketMakerList   = 4 [(gogoproto.nullable) = false];
 }
+

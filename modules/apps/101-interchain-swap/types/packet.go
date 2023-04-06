@@ -4,18 +4,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func NewAtomicSwapPacketData(
-	mType MessageType,
+func NewInterchainSwapPacketData(
+	mType SwapMessageType,
 	data []byte,
-) IBCSwapDataPacket {
-	return IBCSwapDataPacket{
+) IBCSwapPacketData {
+	return IBCSwapPacketData{
 		Type: mType,
 		Data: data,
 	}
 }
 
 // ValidateBasic is used for validating the token swap.
-func (pd IBCSwapDataPacket) ValidateBasic() error {
+func (pd IBCSwapPacketData) ValidateBasic() error {
 	if pd.Data == nil || len(pd.Data) == 0 {
 		return ErrInvalidLengthPacket
 	}
@@ -23,7 +23,7 @@ func (pd IBCSwapDataPacket) ValidateBasic() error {
 }
 
 // GetBytes is a helper for serialising
-func (pd IBCSwapDataPacket) GetBytes() []byte {
+func (pd IBCSwapPacketData) GetBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&pd))
 }
 
