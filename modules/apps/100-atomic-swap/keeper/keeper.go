@@ -103,11 +103,11 @@ func (k Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability
 /// Atomic orders
 
 // GetAtomicOrder returns the OTCOrder for the swap module.
-func (k Keeper) GetAtomicOrder(ctx sdk.Context, orderId string) (types.AtomicSwapOrder, bool) {
+func (k Keeper) GetAtomicOrder(ctx sdk.Context, orderId string) (types.Order, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKey)
 	bz := store.Get([]byte(orderId))
 	if bz == nil {
-		return types.AtomicSwapOrder{}, false
+		return types.Order{}, false
 	}
 
 	order := k.MustUnmarshalOrder(bz)
@@ -125,7 +125,7 @@ func (k Keeper) HasAtomicOrder(ctx sdk.Context, orderId string) bool {
 }
 
 // SetAtomicOrder sets a new OTCOrder to the store.
-func (k Keeper) SetAtomicOrder(ctx sdk.Context, order types.AtomicSwapOrder) {
+func (k Keeper) SetAtomicOrder(ctx sdk.Context, order types.Order) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKey)
 	bz := k.MustMarshalOrder(order)
 	store.Set([]byte(order.Id), bz)
@@ -133,7 +133,7 @@ func (k Keeper) SetAtomicOrder(ctx sdk.Context, order types.AtomicSwapOrder) {
 
 // IterateAtomicOrders iterates over the limit orders in the store
 // and performs a callback function.
-func (k Keeper) IterateAtomicOrders(ctx sdk.Context, cb func(order types.AtomicSwapOrder) bool) {
+func (k Keeper) IterateAtomicOrders(ctx sdk.Context, cb func(order types.Order) bool) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.OTCOrderBookKey)
 
@@ -148,9 +148,9 @@ func (k Keeper) IterateAtomicOrders(ctx sdk.Context, cb func(order types.AtomicS
 }
 
 // GetAllAtomicOrders returns the information for all the limit orders.
-func (k Keeper) GetAllAtomicOrders(ctx sdk.Context) []types.AtomicSwapOrder {
-	var orders []types.AtomicSwapOrder
-	k.IterateAtomicOrders(ctx, func(order types.AtomicSwapOrder) bool {
+func (k Keeper) GetAllAtomicOrders(ctx sdk.Context) []types.Order {
+	var orders []types.Order
+	k.IterateAtomicOrders(ctx, func(order types.Order) bool {
 		orders = append(orders, order)
 		return false
 	})

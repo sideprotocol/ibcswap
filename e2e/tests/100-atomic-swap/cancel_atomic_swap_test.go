@@ -60,9 +60,8 @@ func (s *CancelAtomicSwapTestSuite) TestCancelAtomicSwap() {
 
 		// broadcast TAKE SWAP transaction
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)
-		order := types.NewAtomicOrder(types.NewMakerFromMsg(msgMake), msgMake.SourceChannel)
-		msgCancel := types.NewMsgCancelSwap(channelA.PortID, channelA.ChannelID, makerAddressOnChainA, order.Id, timeoutHeight2, 0)
-		msgCancel.OrderId = order.Id
+		order := createOrder(msgMake, 1)
+		msgCancel := types.NewMsgCancelSwap(makerAddressOnChainA, order.Id, timeoutHeight2, 0)
 		resp2, err2 := s.BroadcastMessages(ctx, chainA, chainAMakerWallet, msgCancel)
 
 		s.AssertValidTxResponse(resp2)
@@ -83,7 +82,7 @@ func (s *CancelAtomicSwapTestSuite) TestCancelAtomicSwap() {
 		makerAddressChainA := makerWallet.Bech32Address("cosmos")
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)
 		orderId := "C8EA430579423B692745DA0820948B9C40936E4010BFD2CF21A4768312A513ED"
-		msgCancel := types.NewMsgCancelSwap(channelA.PortID, channelA.ChannelID, makerAddressChainA, orderId, timeoutHeight2, 0)
+		msgCancel := types.NewMsgCancelSwap(makerAddressChainA, orderId, timeoutHeight2, 0)
 
 		resp2, err2 := s.BroadcastMessages(ctx, chainA, makerWallet, msgCancel)
 		s.Require().NoError(err2)
@@ -113,10 +112,9 @@ func (s *CancelAtomicSwapTestSuite) TestCancelAtomicSwap() {
 
 		// broadcast Cancel order
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)
-		order := types.NewAtomicOrder(types.NewMakerFromMsg(msg), msg.SourceChannel)
+		order := createOrder(msg, 3)
 
-		msgCancel := types.NewMsgCancelSwap(channelA.PortID, channelA.ChannelID, makerAddressChainA, order.Id, timeoutHeight2, 0)
-		msgCancel.OrderId = order.Id
+		msgCancel := types.NewMsgCancelSwap(makerAddressChainA, order.Id, timeoutHeight2, 0)
 		resp2, err2 := s.BroadcastMessages(ctx, chainA, makerWallet, msgCancel)
 
 		s.AssertValidTxResponse(resp2)
@@ -156,10 +154,9 @@ func (s *CancelAtomicSwapTestSuite) TestCancelAtomicSwap() {
 
 		// broadcast Cancel order
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)
-		order := types.NewAtomicOrder(types.NewMakerFromMsg(msg), msg.SourceChannel)
+		order := createOrder(msg, 5)
 
-		msgCancel := types.NewMsgCancelSwap(channelA.PortID, channelA.ChannelID, makerAddressChainA, order.Id, timeoutHeight2, 0)
-		msgCancel.OrderId = order.Id
+		msgCancel := types.NewMsgCancelSwap(makerAddressChainA, order.Id, timeoutHeight2, 0)
 		resp2, err2 := s.BroadcastMessages(ctx, chainA, makerWallet, msgCancel)
 		s.AssertValidTxResponse(resp2)
 		s.Require().NoError(err2)

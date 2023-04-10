@@ -2,6 +2,9 @@ package e2e
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
 	"testing"
 	"time"
 
@@ -9,6 +12,7 @@ import (
 	"github.com/cosmos/ibc-go/e2e/testsuite"
 	"github.com/cosmos/ibc-go/e2e/testvalues"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 	"github.com/strangelove-ventures/ibctest/v6/ibc"
 	test "github.com/strangelove-ventures/ibctest/v6/testutil"
@@ -71,8 +75,10 @@ func (s *AtomicSwapTestSuite) TestAtomicSwap_HappyPath() {
 		timeoutHeight := clienttypes.NewHeight(0, 110)
 		msg := types.NewMsgMakeSwap(channelA.PortID, channelA.ChannelID, sellToken, buyToken, makerAddressOnChainA, makerReceivingAddressOnChainB, "", timeoutHeight, 0, time.Now().UTC().Unix())
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAMakerWallet, msg)
+
 		s.AssertValidTxResponse(resp)
 		s.Require().NoError(err)
+		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 2)
 
 		// wait block when packet relay.
 		test.WaitForBlocks(ctx, 10, chainA, chainB)
@@ -80,10 +86,10 @@ func (s *AtomicSwapTestSuite) TestAtomicSwap_HappyPath() {
 		// broadcast TAKE SWAP transaction
 		sellToken2 := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)
-		order := types.NewAtomicOrder(types.NewMakerFromMsg(msg), msg.SourceChannel)
-		msgTake := types.NewMsgTakeSwap(channelA.PortID, sellToken2, takerAddressOnChainB, takerReceivingAddressOnChainA, timeoutHeight2, 0, time.Now().UTC().Unix())
-		msgTake.OrderId = order.Id
+		order := createOrder(msg, 1)
+		msgTake := types.NewMsgTakeSwap(order.Id, sellToken2, takerAddressOnChainB, takerReceivingAddressOnChainA, timeoutHeight2, 0, time.Now().UTC().Unix())
 		resp2, err2 := s.BroadcastMessages(ctx, chainB, chainBTakerWallet, msgTake)
+
 		s.AssertValidTxResponse(resp2)
 		s.Require().NoError(err2)
 
@@ -119,4 +125,25 @@ func atomicSwapChannelOptions() func(options *ibc.CreateChannelOptions) {
 		opts.DestPortName = types.ModuleName
 		opts.SourcePortName = types.ModuleName
 	}
+}
+
+func createOrder(msg *types.MakeSwapMsg, sequence uint64) types.Order {
+	path := orderPath(msg.SourcePort, msg.SourceChannel, msg.SourcePort, msg.SourceChannel, sequence)
+	return types.Order{
+		Id:     generateOrderId(path, msg),
+		Status: types.Status_INITIAL,
+		Path:   path,
+		Maker:  msg,
+	}
+}
+
+func orderPath(sourcePort, sourceChannel, destPort, destChannel string, sequence uint64) string {
+	return fmt.Sprintf("channel/%s/port/%s/channel/%s/port/%s/%d", sourceChannel, sourcePort, destChannel, destPort, sequence)
+}
+
+func generateOrderId(orderPath string, msg *types.MakeSwapMsg) string {
+	prefix := []byte(orderPath)
+	bytes, _ := proto.Marshal(msg)
+	hash := sha256.Sum256(append(prefix, bytes...))
+	return hex.EncodeToString(hash[:])
 }

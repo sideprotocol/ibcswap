@@ -24,8 +24,8 @@ func NewMsgMakeSwap(
 	senderAddress, senderReceivingAddress, desiredTaker string,
 	timeoutHeight clienttypes.Height, timeoutTimestamp uint64,
 	createdTimestamp int64,
-) *MsgMakeSwapRequest {
-	return &MsgMakeSwapRequest{
+) *MakeSwapMsg {
+	return &MakeSwapMsg{
 		SourcePort:            sourcePort,
 		SourceChannel:         sourceChannel,
 		SellToken:             sellToken,
@@ -40,12 +40,12 @@ func NewMsgMakeSwap(
 }
 
 // Route implements sdk.Msg
-func (*MsgMakeSwapRequest) Route() string {
+func (*MakeSwapMsg) Route() string {
 	return RouterKey
 }
 
 // Type implements sdk.Msg
-func (*MsgMakeSwapRequest) Type() string {
+func (*MakeSwapMsg) Type() string {
 	return TypeMsgMakeSwap
 }
 
@@ -53,7 +53,7 @@ func (*MsgMakeSwapRequest) Type() string {
 // NOTE: timeout height or timestamp values can be 0 to disable the timeout.
 // NOTE: The recipient addresses format is not validated as the format defined by
 // the chain is not known to IBC.
-func (msg *MsgMakeSwapRequest) ValidateBasic() error {
+func (msg *MakeSwapMsg) ValidateBasic() error {
 	if err := host.PortIdentifierValidator(msg.SourcePort); err != nil {
 		return sdkerrors.Wrap(err, "invalid source port ID")
 	}
@@ -85,12 +85,12 @@ func (msg *MsgMakeSwapRequest) ValidateBasic() error {
 }
 
 // GetSignBytes implements sdk.Msg.
-func (msg *MsgMakeSwapRequest) GetSignBytes() []byte {
+func (msg *MakeSwapMsg) GetSignBytes() []byte {
 	return sdk.MustSortJSON(AminoCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners implements sdk.Msg
-func (msg *MsgMakeSwapRequest) GetSigners() []sdk.AccAddress {
+func (msg *MakeSwapMsg) GetSigners() []sdk.AccAddress {
 	signer, err := sdk.AccAddressFromBech32(msg.MakerAddress)
 	if err != nil {
 		panic(err)
@@ -106,8 +106,8 @@ func NewMsgTakeSwap(
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64,
 	createdTimestamp int64,
-) *MsgTakeSwapRequest {
-	return &MsgTakeSwapRequest{
+) *TakeSwapMsg {
+	return &TakeSwapMsg{
 		OrderId:               orderId,
 		SellToken:             sellToken,
 		TakerAddress:          senderAddress,
@@ -119,12 +119,12 @@ func NewMsgTakeSwap(
 }
 
 // Route implements sdk.Msg
-func (*MsgTakeSwapRequest) Route() string {
+func (*TakeSwapMsg) Route() string {
 	return RouterKey
 }
 
 // Type implements sdk.Msg
-func (*MsgTakeSwapRequest) Type() string {
+func (*TakeSwapMsg) Type() string {
 	return TypeMsgTakeSwap
 }
 
@@ -132,7 +132,7 @@ func (*MsgTakeSwapRequest) Type() string {
 // NOTE: timeout height or timestamp values can be 0 to disable the timeout.
 // NOTE: The recipient addresses format is not validated as the format defined by
 // the chain is not known to IBC.
-func (msg *MsgTakeSwapRequest) ValidateBasic() error {
+func (msg *TakeSwapMsg) ValidateBasic() error {
 	//if err := host.PortIdentifierValidator(msg.SourcePort); err != nil {
 	//	return sdkerrors.Wrap(err, "invalid source port ID")
 	//}
@@ -160,12 +160,12 @@ func (msg *MsgTakeSwapRequest) ValidateBasic() error {
 }
 
 // GetSignBytes implements sdk.Msg.
-func (msg *MsgTakeSwapRequest) GetSignBytes() []byte {
+func (msg *TakeSwapMsg) GetSignBytes() []byte {
 	return sdk.MustSortJSON(AminoCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners implements sdk.Msg
-func (msg *MsgTakeSwapRequest) GetSigners() []sdk.AccAddress {
+func (msg *TakeSwapMsg) GetSigners() []sdk.AccAddress {
 	signer, err := sdk.AccAddressFromBech32(msg.TakerAddress)
 	if err != nil {
 		panic(err)
@@ -175,13 +175,10 @@ func (msg *MsgTakeSwapRequest) GetSigners() []sdk.AccAddress {
 
 // NewMsgCancelSwap creates a new MsgCancelSwapRequest instance
 func NewMsgCancelSwap(
-	sourcePort, sourceChannel string,
 	senderAddress, orderId string,
 	timeoutHeight clienttypes.Height, timeoutTimestamp uint64,
-) *MsgCancelSwapRequest {
-	return &MsgCancelSwapRequest{
-		SourcePort:       sourcePort,
-		SourceChannel:    sourceChannel,
+) *CancelSwapMsg {
+	return &CancelSwapMsg{
 		MakerAddress:     senderAddress,
 		OrderId:          orderId,
 		TimeoutHeight:    timeoutHeight,
@@ -190,12 +187,12 @@ func NewMsgCancelSwap(
 }
 
 // Route implements sdk.Msg
-func (*MsgCancelSwapRequest) Route() string {
+func (*CancelSwapMsg) Route() string {
 	return RouterKey
 }
 
 // Type implements sdk.Msg
-func (*MsgCancelSwapRequest) Type() string {
+func (*CancelSwapMsg) Type() string {
 	return TypeMsgCancelSwap
 }
 
@@ -203,13 +200,7 @@ func (*MsgCancelSwapRequest) Type() string {
 // NOTE: timeout height or timestamp values can be 0 to disable the timeout.
 // NOTE: The recipient addresses format is not validated as the format defined by
 // the chain is not known to IBC.
-func (msg *MsgCancelSwapRequest) ValidateBasic() error {
-	if err := host.PortIdentifierValidator(msg.SourcePort); err != nil {
-		return sdkerrors.Wrap(err, "invalid source port ID")
-	}
-	if err := host.ChannelIdentifierValidator(msg.SourceChannel); err != nil {
-		return sdkerrors.Wrap(err, "invalid source channel ID")
-	}
+func (msg *CancelSwapMsg) ValidateBasic() error {
 	// NOTE: sender format must be validated as it is required by the GetSigners function.
 	_, err := sdk.AccAddressFromBech32(msg.MakerAddress)
 	if err != nil {
@@ -222,12 +213,12 @@ func (msg *MsgCancelSwapRequest) ValidateBasic() error {
 }
 
 // GetSignBytes implements sdk.Msg.
-func (msg *MsgCancelSwapRequest) GetSignBytes() []byte {
+func (msg *CancelSwapMsg) GetSignBytes() []byte {
 	return sdk.MustSortJSON(AminoCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners implements sdk.Msg
-func (msg *MsgCancelSwapRequest) GetSigners() []sdk.AccAddress {
+func (msg *CancelSwapMsg) GetSigners() []sdk.AccAddress {
 	signer, err := sdk.AccAddressFromBech32(msg.MakerAddress)
 	if err != nil {
 		panic(err)

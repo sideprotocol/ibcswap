@@ -30,7 +30,7 @@ service Query {
 message QueryOrdersRequest {}
 
 message QueryOrdersResponse {
-    repeated AtomicSwapOrder orders = 1;
+    repeated Order orders = 1;
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.

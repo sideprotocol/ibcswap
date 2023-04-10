@@ -88,7 +88,6 @@ func (im IBCModule) OnChanOpenInit(
 	if err := im.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)); err != nil {
 		return "", err
 	}
-
 	return version, nil
 }
 
@@ -167,12 +166,13 @@ func (im IBCModule) OnChanCloseConfirm(
 //
 // The method is executed in steps 2 (Relay Make Packet), step 6 (Relay Take Packet),
 // step 8 (Relay Acknowledge Packet), step 11 (Relay Cancel Packet) and step 13 (Acknowledge Cancel Packet)
-// of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap.
+// of the atomic swap: https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap.
 func (im IBCModule) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) ibcexported.Acknowledgement {
+	logger := im.keeper.Logger(ctx)
 	ack := channeltypes.NewResultAcknowledgement([]byte{byte(1)})
 
 	var data types.AtomicSwapPacketData
@@ -185,9 +185,13 @@ func (im IBCModule) OnRecvPacket(
 	// only attempt the application logic if the packet data
 	// was successfully decoded
 	if ack.Success() {
-		if err := im.keeper.OnRecvPacket(ctx, packet, data); err != nil {
+		resp, err := im.keeper.OnRecvPacket(ctx, packet, data)
+		if err != nil {
 			ack = channeltypes.NewErrorAcknowledgement(err)
 			ackErr = err
+		} else {
+			ack = channeltypes.NewResultAcknowledgement(resp)
+			logger.Info("successfully handled ICS-100 packet sequence: %d", packet.Sequence)
 		}
 	}
 

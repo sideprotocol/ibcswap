@@ -10,12 +10,12 @@ import "ibc/core/client/v1/client.proto";
 
 // Msg defines the ibc/swap Msg service.
 service Msg {
-  rpc MakeSwap(MsgMakeSwapRequest) returns (MsgMakeSwapResponse);
-  rpc TakeSwap(MsgTakeSwapRequest) returns (MsgTakeSwapResponse);
-  rpc CancelSwap(MsgCancelSwapRequest) returns (MsgCancelSwapResponse);
+  rpc MakeSwap(MakeSwapMsg) returns (MsgMakeSwapResponse);
+  rpc TakeSwap(TakeSwapMsg) returns (MsgTakeSwapResponse);
+  rpc CancelSwap(CancelSwapMsg) returns (MsgCancelSwapResponse);
 }
 
-message MsgMakeSwapRequest {
+message MakeSwapMsg {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -42,18 +42,18 @@ message MsgMakeSwapRequest {
   // Timeout timestamp in absolute nanoseconds since unix epoch.
   // The timeout is disabled when set to 0.
   uint64 timeout_timestamp = 10 [(gogoproto.moretags) = "yaml:\"timeout_timestamp\""];
+  uint64 expiration_timestamp = 11 [(gogoproto.moretags) = "yaml:\"expiration_timestamp\""];
 }
 
-message MsgMakeSwapResponse {}
+message MsgMakeSwapResponse {
+  string order_id = 1;
+}
 
-message MsgTakeSwapRequest {
+message TakeSwapMsg {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  // the port on which the packet will be sent
-  string source_port = 1 [(gogoproto.moretags) = "yaml:\"source_port\""];
-  // the channel by which the packet will be sent
-  string source_channel = 2 [(gogoproto.moretags) = "yaml:\"source_channel\""];
+  reserved 1, 2;
   string order_id = 3;
   // the tokens to be sell
   cosmos.base.v1beta1.Coin  sell_token = 4 [(gogoproto.nullable) = false];
@@ -71,16 +71,15 @@ message MsgTakeSwapRequest {
   int64 create_timestamp = 9;
 }
 
-message MsgTakeSwapResponse {}
+message MsgTakeSwapResponse {
+  string order_id = 1;
+}
 
-message MsgCancelSwapRequest {
+message CancelSwapMsg {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  // the port on which the packet will be sent
-  string source_port = 1 [(gogoproto.moretags) = "yaml:\"source_port\""];
-  // the channel by which the packet will be sent
-  string source_channel = 2 [(gogoproto.moretags) = "yaml:\"source_channel\""];
+  reserved 1, 2, 4, 6, 7;
   string order_id = 3;
   // the sender address
   string maker_address = 5 [(gogoproto.moretags) = "yaml:\"maker_address\""];
@@ -94,4 +93,6 @@ message MsgCancelSwapRequest {
   int64 create_timestamp = 10;
 }
 
-message MsgCancelSwapResponse {}
+message MsgCancelSwapResponse {
+  string order_id = 1;
+}

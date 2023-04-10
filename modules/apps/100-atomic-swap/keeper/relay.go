@@ -8,6 +8,7 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
+	"github.com/gogo/protobuf/proto"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
@@ -81,47 +82,48 @@ func (k Keeper) SendSwapPacket(
 	return nil
 }
 
-func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.AtomicSwapPacketData) error {
+func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.AtomicSwapPacketData) ([]byte, error) {
+	var resp []byte
+	var errResp error
 	switch data.Type {
 	case types.MAKE_SWAP:
-		var msg types.SwapMaker
-		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
-			return err
+		var msg types.MakeSwapMsg
+		if err := proto.Unmarshal(data.Data, &msg); err != nil {
+			return nil, err
 		}
 
-		if err := k.OnReceivedMake(ctx, packet, &msg); err != nil {
-			return err
+		orderId, err := k.OnReceivedMake(ctx, packet, &msg)
+		if err != nil {
+			return nil, err
 		}
-
+		resp, errResp = proto.Marshal(&types.MsgMakeSwapResponse{OrderId: orderId})
 	case types.TAKE_SWAP:
-		var msg types.SwapTaker
-		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
-			return err
+		var msg types.TakeSwapMsg
+		if err := proto.Unmarshal(data.Data, &msg); err != nil {
+			return nil, err
 		}
 
-		if err2 := k.OnReceivedTake(ctx, packet, &msg); err2 != nil {
-			return err2
-		} else {
-			return nil
+		orderId, err2 := k.OnReceivedTake(ctx, packet, &msg)
+		if err2 != nil {
+			return nil, err2
 		}
-
+		resp, errResp = proto.Marshal(&types.MsgTakeSwapResponse{OrderId: orderId})
 	case types.CANCEL_SWAP:
-		var msg types.MsgCancelSwapRequest
-		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
-			return err
+		var msg types.CancelSwapMsg
+		if err := proto.Unmarshal(data.Data, &msg); err != nil {
+			return nil, err
 		}
-		if err2 := k.OnReceivedCancel(ctx, packet, &msg); err2 != nil {
-			return err2
-		} else {
-			return nil
+		orderId, err2 := k.OnReceivedCancel(ctx, packet, &msg)
+		if err2 != nil {
+			return nil, err2
 		}
-
+		resp, errResp = proto.Marshal(&types.MsgCancelSwapResponse{OrderId: orderId})
 	default:
-		return types.ErrUnknownDataPacket
+		return nil, types.ErrUnknownDataPacket
 	}
 
 	ctx.EventManager().EmitTypedEvents(&data)
-	return nil
+	return resp, errResp
 }
 
 func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, data *types.AtomicSwapPacketData, ack channeltypes.Acknowledgement) error {
@@ -133,14 +135,15 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 		case types.MAKE_SWAP:
 			// This is the step 4 (Acknowledge Make Packet) of the atomic swap: https://github.com/liangping/ibc/blob/atomic-swap/spec/app/ics-100-atomic-swap/ibcswap.png
 			// This logic is executed when Taker chain acknowledge the make swap packet.
-			var msg types.SwapMaker
-			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+			var msg types.MakeSwapMsg
+			if err := proto.Unmarshal(data.Data, &msg); err != nil {
 				return err
 			}
 
 			// check order status
-			o := types.NewAtomicOrder(&msg, msg.SourceChannel)
-			order, ok := k.GetAtomicOrder(ctx, o.Id)
+			path := orderPath(msg.SourcePort, msg.SourceChannel, packet.DestinationPort, packet.DestinationChannel, packet.Sequence)
+			orderId := generateOrderId(path, &msg)
+			order, ok := k.GetAtomicOrder(ctx, orderId)
 			if !ok {
 				return types.ErrOrderDoesNotExists
 				//return nil
@@ -150,10 +153,10 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			return nil
 
 		case types.TAKE_SWAP:
-			// This is the step 9 (Transfer Take Token & Close order): https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
+			// This is the step 9 (Transfer Take Token & Close order): https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap
 			// The step is executed on the Taker chain.
-			takeMsg := &types.SwapTaker{}
-			if err := types.ModuleCdc.Unmarshal(data.Data, takeMsg); err != nil {
+			takeMsg := &types.TakeSwapMsg{}
+			if err := proto.Unmarshal(data.Data, takeMsg); err != nil {
 				return err
 			}
 
@@ -169,22 +172,16 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			}
 
 			order.Status = types.Status_COMPLETE
-			order.Takers = &types.SwapTaker{
-				OrderId:               takeMsg.OrderId,
-				SellToken:             takeMsg.SellToken,
-				TakerAddress:          takeMsg.TakerAddress,
-				TakerReceivingAddress: takeMsg.TakerReceivingAddress,
-				CreateTimestamp:       takeMsg.CreateTimestamp,
-			}
+			order.Takers = takeMsg
 			order.CompleteTimestamp = takeMsg.CreateTimestamp
 			k.SetAtomicOrder(ctx, order)
 			return nil
 		case types.CANCEL_SWAP:
-			// This is the step 14 (Cancel & refund) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
+			// This is the step 14 (Cancel & refund) of the atomic swap: https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap
 			// It is executed on the Maker chain.
 
-			var msg types.MsgCancelSwapRequest
-			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+			var msg types.CancelSwapMsg
+			if err := proto.Unmarshal(data.Data, &msg); err != nil {
 				return err
 			}
 
@@ -226,8 +223,8 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		// This logic will be executed when Relayer sends make swap packet to the taker chain, but the request timeout
 		// and locked tokens form the first step (see the picture on the link above) MUST be returned to the account of
 		// the maker on the maker chain.
-		makeMsg := &types.MsgMakeSwapRequest{}
-		if err := makeMsg.Unmarshal(swapPacket.Data); err != nil {
+		makeMsg := &types.MakeSwapMsg{}
+		if err := proto.Unmarshal(swapPacket.Data, makeMsg); err != nil {
 			return err
 		}
 
@@ -242,7 +239,10 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 			return err
 		}
 
-		orderID := types.GenerateOrderId(packet)
+		channel, _ := k.channelKeeper.GetChannel(ctx, makeMsg.SourceChannel, makeMsg.SourcePort)
+		sequence, _ := k.channelKeeper.GetNextSequenceSend(ctx, makeMsg.SourceChannel, makeMsg.SourcePort)
+		path := orderPath(makeMsg.SourcePort, makeMsg.SourceChannel, channel.Counterparty.PortId, channel.Counterparty.ChannelId, sequence)
+		orderID := generateOrderId(path, makeMsg)
 		order, found := k.GetAtomicOrder(ctx, orderID)
 		if !found {
 			return fmt.Errorf("order not found for ID %s", orderID)
@@ -251,10 +251,10 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		k.SetAtomicOrder(ctx, order)
 
 	case types.TAKE_SWAP:
-		// This is the step 7.2 (Unlock order and refund) of the atomic swap: https://github.com/liangping/ibc/tree/atomic-swap/spec/app/ics-100-atomic-swap
+		// This is the step 7.2 (Unlock order and refund) of the atomic swap: https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap
 		// This step is executed on the Taker chain when Take Swap request timeout.
-		takeMsg := &types.MsgTakeSwapRequest{}
-		if err := takeMsg.Unmarshal(swapPacket.Data); err != nil {
+		takeMsg := &types.TakeSwapMsg{}
+		if err := proto.Unmarshal(swapPacket.Data, takeMsg); err != nil {
 			return err
 		}
 
@@ -269,10 +269,13 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 			return err
 		}
 
-		orderID := types.GenerateOrderId(packet)
-		order, found := k.GetAtomicOrder(ctx, orderID)
+		//channel, _ := k.channelKeeper.GetChannel(ctx, takeMsg.SourceChannel, makeMsg.SourcePort)
+		//sequence, _ := k.channelKeeper.GetNextSequenceSend(ctx, makeMsg.SourceChannel, makeMsg.SourcePort)
+		//path := orderPath(makeMsg.SourcePort, makeMsg.SourceChannel, channel.Counterparty.PortId, channel.Counterparty.ChannelId, sequence)
+		//orderID := generateOrderId(packet)
+		order, found := k.GetAtomicOrder(ctx, takeMsg.OrderId)
 		if !found {
-			return fmt.Errorf("order not found for ID %s", orderID)
+			return fmt.Errorf("order not found for ID %s", takeMsg.OrderId)
 		}
 		order.Takers = nil // release the occupation
 		k.SetAtomicOrder(ctx, order)

@@ -9,7 +9,7 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestMsgSwap() {
-	var msg *types.MsgMakeSwapRequest
+	var msg *types.MakeSwapMsg
 
 	testCases := []struct {
 		name     string

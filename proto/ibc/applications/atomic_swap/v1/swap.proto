@@ -54,12 +54,12 @@ message SwapTaker {
   int64 create_timestamp = 5;
 }
 
-message AtomicSwapOrder {
+message Order {
   string id = 1;
-  SwapMaker maker = 2;
+  MakeSwapMsg maker = 2;
   Status status = 3;
-  string channel_id = 4;
-  SwapTaker takers = 5;
+  string path = 4;
+  TakeSwapMsg takers = 5;
   int64 cancel_timestamp = 7;
   int64 complete_timestamp = 8;
 }
