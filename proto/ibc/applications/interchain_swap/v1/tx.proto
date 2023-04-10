@@ -6,7 +6,9 @@ option go_package = "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-s
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/tx/v1beta1/tx.proto";
 import "ibc/core/client/v1/client.proto";
+
 
 // Msg defines the ibc/swap Msg service.
 // Msg defines the Msg service.
@@ -38,6 +40,19 @@ message MsgDepositRequest {
 
 message MsgDepositResponse {
   cosmos.base.v1beta1.Coin poolToken = 1;
+}
+
+// demo two side deposit
+message MsgDoubleDeposit {
+  string                      poolId = 1;
+  string                      sender = 2;
+  repeated cosmos.base.v1beta1.Coin tokens = 3;
+  CPDepositTx                 cpDepositTx = 4;
+}
+
+message CPDepositTx {
+  cosmos.tx.v1beta1.Tx tx = 1;
+  string signature = 2;
 }
 
 message MsgWithdrawRequest {
