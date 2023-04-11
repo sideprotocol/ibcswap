@@ -16,6 +16,7 @@ import "ibc/core/client/v1/client.proto";
 service Msg {
   rpc CreatePool (MsgCreatePoolRequest) returns (MsgCreatePoolResponse);
   rpc Deposit    (MsgDepositRequest   ) returns (MsgDepositResponse   );
+  rpc DoubleDeposit    (MsgDoubleDepositRequest   ) returns (MsgDoubleDepositResponse   );
   rpc Withdraw   (MsgWithdrawRequest  ) returns (MsgWithdrawResponse  );
   rpc Swap       (MsgSwapRequest             ) returns (MsgSwapResponse      );
 }
@@ -43,7 +44,7 @@ message MsgDepositResponse {
 }
 
 // demo two side deposit
-message MsgDoubleDeposit {
+message MsgDoubleDepositRequest {
   string                      poolId = 1;
   string                      sender = 2;
   repeated cosmos.base.v1beta1.Coin tokens = 3;
@@ -54,6 +55,11 @@ message CPDepositTx {
   cosmos.tx.v1beta1.Tx tx = 1;
   string signature = 2;
 }
+
+message MsgDoubleDepositResponse {
+  repeated cosmos.base.v1beta1.Coin poolTokens = 1;
+}
+
 
 message MsgWithdrawRequest {
   string                         sender   = 1;

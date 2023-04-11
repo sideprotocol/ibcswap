@@ -463,18 +463,6 @@ func NewSimApp(
 		scopedAtomicSwapKeeper,
 	)
 
-	app.InterchainSwapKeeper = *interchainswapkeeper.NewKeeper(
-		appCodec,
-		keys[interchainswaptypes.StoreKey],
-		app.GetSubspace(interchainswaptypes.ModuleName),
-		app.IBCFeeKeeper,
-		app.IBCKeeper.ChannelKeeper,
-		&app.IBCKeeper.PortKeeper,
-		app.BankKeeper,
-		app.AccountKeeper,
-		scopedInterchainSwapKeeper,
-	)
-
 	// Mock Module Stack
 
 	// Mock Module setup for testing IBC and also acts as the interchain accounts authentication module
@@ -705,6 +693,19 @@ func NewSimApp(
 	if err != nil {
 		panic(err)
 	}
+
+	app.InterchainSwapKeeper = *interchainswapkeeper.NewKeeper(
+		appCodec,
+		keys[interchainswaptypes.StoreKey],
+		app.GetSubspace(interchainswaptypes.ModuleName),
+		app.IBCFeeKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		app.BankKeeper,
+		app.AccountKeeper,
+		scopedInterchainSwapKeeper,
+		anteHandler,
+	)
 
 	app.SetAnteHandler(anteHandler)
 

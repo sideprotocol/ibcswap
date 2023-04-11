@@ -1,9 +1,15 @@
 package keeper
 
 import (
+	"crypto/sha256"
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
+	tx "github.com/cosmos/cosmos-sdk/types/tx"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	"github.com/tendermint/tendermint/crypto"
 )
 
 type msgServer struct {
@@ -47,7 +53,7 @@ func (k Keeper) OnCreatePoolAcknowledged(ctx sdk.Context, msg *types.MsgCreatePo
 }
 
 func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgDepositRequest, res *types.MsgDepositResponse) error {
-	
+
 	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolId)
 	if !found {
 		return types.ErrNotFoundPool
@@ -61,6 +67,36 @@ func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgDepos
 
 	// pool status update.
 	pool.AddPoolSupply(*res.PoolToken)
+
+	if pool.Status != types.PoolStatus_POOL_STATUS_INITIAL {
+		for _, token := range req.Tokens {
+			pool.AddAsset(*token)
+		}
+	} else {
+		pool.Status = types.PoolStatus_POOL_STATUS_READY
+	}
+
+	k.SetInterchainLiquidityPool(ctx, pool)
+	return nil
+}
+
+func (k Keeper) OnDoubleDepositAcknowledged(ctx sdk.Context, req *types.MsgDoubleDepositRequest, res *types.MsgDoubleDepositResponse) error {
+
+	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolId)
+	if !found {
+		return types.ErrNotFoundPool
+	}
+
+	// mint voucher
+	err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(req.Sender), *res.PoolTokens[0])
+	if err != nil {
+		return err
+	}
+
+	// pool status update.
+	for _, pooToken := range res.PoolTokens {
+		pool.AddPoolSupply(*pooToken)
+	}
 
 	if pool.Status != types.PoolStatus_POOL_STATUS_INITIAL {
 		for _, token := range req.Tokens {
@@ -224,6 +260,77 @@ func (k Keeper) OnDepositReceived(ctx sdk.Context, msg *types.MsgDepositRequest)
 	}, nil
 }
 
+func (k Keeper) OnDoubleDepositReceived(ctx sdk.Context, msg *types.MsgDoubleDepositRequest) (*types.MsgDoubleDepositResponse, error) {
+
+	if err := msg.ValidateBasic(); err != nil {
+		return nil, err
+	}
+
+	// Deserialize the transaction from the packet data
+	tx := msg.CpDepositTx.Tx
+
+	// Verify the signature of the transaction (you'll need to implement the `verifySignature` function)
+	
+	validSignature, signerAddress := verifySignature(*tx, []byte(msg.CpDepositTx.Signature))
+	fmt.Println(signerAddress)
+	if !validSignature {
+		return nil, errorsmod.Wrapf(types.ErrInvalidSignature, "signature verification failed")
+	}
+
+	// Check if the transaction only contains the desired token transfer message type
+	if !containsOnlyTokenTransferMsg(tx) {
+		return nil, errorsmod.Wrap(types.ErrInvalidMessageType, "transaction contains non-transfer messages")
+	}
+
+	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
+	if !found {
+		return nil, types.ErrNotFoundPool
+	}
+
+	//TODO: Need to implement params module and market maker.
+	amm := types.NewInterchainMarketMaker(
+		&pool,
+		types.DefaultMaxFeeRate,
+	)
+
+	poolTokens, err := amm.DepositDoubleAsset(msg.Tokens)
+	if err != nil {
+		return nil, err
+	}
+	// Execute the transaction in the signer's context
+	_, err = k.anteHandler(ctx, tx, false)
+
+	if err != nil {
+		return nil, errorsmod.Wrapf(types.ErrSubDepositTxExecutionFailed, "because of %s", err)
+	}
+
+	// increase lp token mint amount
+	for _, token := range poolTokens {
+		pool.AddPoolSupply(*token)
+	}
+
+	if err != nil {
+		return nil, errorsmod.Wrapf(types.ErrFailedOnDepositReceived, "because of %s", err)
+	}
+
+	if pool.Status == types.PoolStatus_POOL_STATUS_READY {
+		// update pool tokens.
+		for _, token := range msg.Tokens {
+			pool.AddAsset(*token)
+		}
+	} else {
+		// switch pool status to 'READY'
+		pool.Status = types.PoolStatus_POOL_STATUS_READY
+	}
+
+	// save pool and market.
+	k.SetInterchainLiquidityPool(ctx, pool)
+	k.SetInterchainMarketMaker(ctx, *amm)
+	return &types.MsgDoubleDepositResponse{
+		PoolTokens: poolTokens,
+	}, nil
+}
+
 func (k Keeper) OndWithdrawReceive(ctx sdk.Context, msg *types.MsgWithdrawRequest) (*types.MsgWithdrawResponse, error) {
 
 	if err := msg.ValidateBasic(); err != nil {
@@ -321,4 +428,47 @@ func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest) (*typ
 	return &types.MsgSwapResponse{
 		Tokens: []*sdk.Coin{outToken},
 	}, nil
+}
+
+func verifySignature(tx tx.Tx, signature []byte) (bool, string) {
+	// Extract the serialized data to be signed
+	serializedData, err := tx.Body.Marshal()
+	if err != nil {
+		return false, ""
+	}
+
+	// Use a hashing function to hash the serialized data
+	dataHash := sha256.Sum256(serializedData)
+
+	// Deserialize the public key from the AuthInfo field
+	if len(tx.AuthInfo.SignerInfos) == 0 {
+		return false, ""
+	}
+	signerInfo := tx.AuthInfo.SignerInfos[0]
+	pubKeyAny := signerInfo.PublicKey
+
+	var pubKey crypto.PubKey
+	if err := types.ModuleCdc.UnpackAny(pubKeyAny, &pubKey); err != nil {
+		return false, ""
+	}
+
+	// Verify the signature using the data hash and public key
+	validSignature := pubKey.VerifySignature(dataHash[:], signature)
+
+	if !validSignature {
+		return false, ""
+	}
+
+	// Get the signer's address
+	signerAddress := pubKey.Address().String()
+	return validSignature, signerAddress
+}
+
+func containsOnlyTokenTransferMsg(tx sdk.Tx) bool {
+	for _, msg := range tx.GetMsgs() {
+		if _, ok := msg.(*banktypes.MsgSend); !ok {
+			return false
+		}
+	}
+	return true
 }

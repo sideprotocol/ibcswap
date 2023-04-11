@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 type MsgClient interface {
 	CreatePool(ctx context.Context, in *MsgCreatePoolRequest, opts ...grpc.CallOption) (*MsgCreatePoolResponse, error)
 	Deposit(ctx context.Context, in *MsgDepositRequest, opts ...grpc.CallOption) (*MsgDepositResponse, error)
+	DoubleDeposit(ctx context.Context, in *MsgDoubleDepositRequest, opts ...grpc.CallOption) (*MsgDoubleDepositResponse, error)
 	Withdraw(ctx context.Context, in *MsgWithdrawRequest, opts ...grpc.CallOption) (*MsgWithdrawResponse, error)
 	Swap(ctx context.Context, in *MsgSwapRequest, opts ...grpc.CallOption) (*MsgSwapResponse, error)
 }
@@ -50,6 +51,15 @@ func (c *msgClient) Deposit(ctx context.Context, in *MsgDepositRequest, opts ...
 	return out, nil
 }
 
+func (c *msgClient) DoubleDeposit(ctx context.Context, in *MsgDoubleDepositRequest, opts ...grpc.CallOption) (*MsgDoubleDepositResponse, error) {
+	out := new(MsgDoubleDepositResponse)
+	err := c.cc.Invoke(ctx, "/ibc.applications.interchain_swap.v1.Msg/DoubleDeposit", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) Withdraw(ctx context.Context, in *MsgWithdrawRequest, opts ...grpc.CallOption) (*MsgWithdrawResponse, error) {
 	out := new(MsgWithdrawResponse)
 	err := c.cc.Invoke(ctx, "/ibc.applications.interchain_swap.v1.Msg/Withdraw", in, out, opts...)
@@ -74,6 +84,7 @@ func (c *msgClient) Swap(ctx context.Context, in *MsgSwapRequest, opts ...grpc.C
 type MsgServer interface {
 	CreatePool(context.Context, *MsgCreatePoolRequest) (*MsgCreatePoolResponse, error)
 	Deposit(context.Context, *MsgDepositRequest) (*MsgDepositResponse, error)
+	DoubleDeposit(context.Context, *MsgDoubleDepositRequest) (*MsgDoubleDepositResponse, error)
 	Withdraw(context.Context, *MsgWithdrawRequest) (*MsgWithdrawResponse, error)
 	Swap(context.Context, *MsgSwapRequest) (*MsgSwapResponse, error)
 }
@@ -87,6 +98,9 @@ func (UnimplementedMsgServer) CreatePool(context.Context, *MsgCreatePoolRequest)
 }
 func (UnimplementedMsgServer) Deposit(context.Context, *MsgDepositRequest) (*MsgDepositResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Deposit not implemented")
+}
+func (UnimplementedMsgServer) DoubleDeposit(context.Context, *MsgDoubleDepositRequest) (*MsgDoubleDepositResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DoubleDeposit not implemented")
 }
 func (UnimplementedMsgServer) Withdraw(context.Context, *MsgWithdrawRequest) (*MsgWithdrawResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Withdraw not implemented")
@@ -142,6 +156,24 @@ func _Msg_Deposit_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_DoubleDeposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDoubleDepositRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).DoubleDeposit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ibc.applications.interchain_swap.v1.Msg/DoubleDeposit",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).DoubleDeposit(ctx, req.(*MsgDoubleDepositRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_Withdraw_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgWithdrawRequest)
 	if err := dec(in); err != nil {
@@ -192,6 +224,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Deposit",
 			Handler:    _Msg_Deposit_Handler,
+		},
+		{
+			MethodName: "DoubleDeposit",
+			Handler:    _Msg_DoubleDeposit_Handler,
 		},
 		{
 			MethodName: "Withdraw",

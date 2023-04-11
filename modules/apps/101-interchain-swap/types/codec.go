@@ -22,6 +22,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgDepositRequest{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgDoubleDepositRequest{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgWithdrawRequest{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),

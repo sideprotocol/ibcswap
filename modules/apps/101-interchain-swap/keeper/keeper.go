@@ -30,6 +30,7 @@ type (
 		scopedKeeper  capabilitykeeper.ScopedKeeper
 		bankKeeper    types.BankKeeper
 		authKeeper    types.AccountKeeper
+		anteHandler   sdk.AnteHandler
 	}
 )
 
@@ -43,6 +44,7 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	authKeeper types.AccountKeeper,
 	scopedKeeper capabilitykeeper.ScopedKeeper,
+	andHandler sdk.AnteHandler,
 
 ) *Keeper {
 	// set KeyTable if it has not already been set
@@ -60,6 +62,7 @@ func NewKeeper(
 		scopedKeeper:  scopedKeeper,
 		bankKeeper:    bankKeeper,
 		authKeeper:    authKeeper,
+		anteHandler:   andHandler,
 	}
 }
 

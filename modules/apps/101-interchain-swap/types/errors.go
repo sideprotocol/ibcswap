@@ -59,5 +59,8 @@ var (
 	ErrInvalidAddressPair    = errorsmod.Register(ModuleName, 1537, "invalid address pair!")
 	ErrInvalidInitialDeposit = errorsmod.Register(ModuleName, 1538, "Invalid token amount for initial deposit")
 
-	ErrNotAllowedAmount = errorsmod.Register(ModuleName, 1539, "not allowed single deposit amount")
+	ErrNotAllowedAmount            = errorsmod.Register(ModuleName, 1539, "not allowed single deposit amount")
+	ErrInvalidSignature            = errorsmod.Register(ModuleName, 1540, "invalid signature")
+	ErrInvalidMessageType          = errorsmod.Register(ModuleName, 1541, "invalid message type!")
+	ErrSubDepositTxExecutionFailed = errorsmod.Register(ModuleName, 1542, "sub deposit tx excution failed!")
 )
