@@ -21,7 +21,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				Sender:        "invalid_address",
 				SourcePort:    "interchainswap",
 				SourceChannel: "interchainswap-1",
-				Weight:        "100:99",
+				Weight:        "50:50",
 				Tokens: []*sdk.Coin{{
 					Denom:  "aside",
 					Amount: sdk.NewInt(1000),
@@ -32,13 +32,14 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				Decimals: []uint32{10, 10},
 			},
 			err: ErrInvalidAddress,
-		}, {
+		},
+		{
 			name: "valid address",
 			msg: MsgCreatePoolRequest{
 				Sender:        sample.AccAddress(),
 				SourcePort:    "interchainswap",
 				SourceChannel: "interchainswap-1",
-				Weight:        "100:99",
+				Weight:        "50:50",
 				Tokens: []*sdk.Coin{{
 					Denom:  "aside",
 					Amount: sdk.NewInt(1000),
@@ -55,7 +56,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				Sender:        sample.AccAddress(),
 				SourcePort:    "interchainswap",
 				SourceChannel: "interchainswap-1",
-				Weight:        "100:99",
+				Weight:        "50:50",
 				Tokens: []*sdk.Coin{{
 					Denom:  "aside",
 					Amount: sdk.NewInt(1000),
@@ -70,7 +71,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				Sender:        sample.AccAddress(),
 				SourcePort:    "interchainswap",
 				SourceChannel: "interchainswap-1",
-				Weight:        "100:99",
+				Weight:        "50:50",
 				Tokens: []*sdk.Coin{{
 					Denom:  "aside",
 					Amount: sdk.NewInt(1000),
@@ -88,7 +89,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				Sender:        sample.AccAddress(),
 				SourcePort:    "interchainswap",
 				SourceChannel: "interchainswap-1",
-				Weight:        "100,323",
+				Weight:        "3df:50",
 				Tokens: []*sdk.Coin{{
 					Denom:  "aside",
 					Amount: sdk.NewInt(1000),
@@ -106,7 +107,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 				Sender:        sample.AccAddress(),
 				SourcePort:    "interchainswap",
 				SourceChannel: "interchainswap-1",
-				Weight:        "100:323:200",
+				Weight:        "50:50:30",
 				Tokens: []*sdk.Coin{{
 					Denom:  "aside",
 					Amount: sdk.NewInt(1000),

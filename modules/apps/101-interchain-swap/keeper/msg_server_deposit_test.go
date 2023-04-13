@@ -17,7 +17,7 @@ func (suite *KeeperTestSuite) SetupPool() (*string, error) {
 		path.EndpointA.ChannelConfig.PortID,
 		path.EndpointA.ChannelID,
 		suite.chainA.SenderAccount.GetAddress().String(),
-		"1:2",
+		"50:50",
 		[]*sdk.Coin{{
 			Denom:  sdk.DefaultBondDenom,
 			Amount: sdk.NewInt(1000),
@@ -30,6 +30,36 @@ func (suite *KeeperTestSuite) SetupPool() (*string, error) {
 
 	ctx := suite.chainA.GetContext()
 	suite.chainA.GetSimApp().InterchainSwapKeeper.OnCreatePoolAcknowledged(ctx, msg)
+	poolId := types.GetPoolIdWithTokens(msg.Tokens)
+	return &poolId, nil
+}
+
+func (suite *KeeperTestSuite) SetupPoolWithDenomPair(denomPair []string) (*string, error) {
+	if len(denomPair) != 2 {
+		return nil, fmt.Errorf("invalid denom length")
+	}
+	suite.SetupTest()
+	path := NewInterchainSwapPath(suite.chainA, suite.chainB)
+	suite.coordinator.Setup(path)
+	msg := types.NewMsgCreatePool(
+		path.EndpointA.ChannelConfig.PortID,
+		path.EndpointA.ChannelID,
+		suite.chainA.SenderAccount.GetAddress().String(),
+		"50:50",
+		[]*sdk.Coin{{
+			Denom:  denomPair[0],
+			Amount: sdk.NewInt(1000),
+		}, {
+			Denom:  denomPair[1],
+			Amount: sdk.NewInt(1000),
+		}},
+		[]uint32{10, 100},
+	)
+
+	ctxA := suite.chainA.GetContext()
+	suite.chainA.GetSimApp().InterchainSwapKeeper.OnCreatePoolAcknowledged(ctxA, msg)
+	ctxB := suite.chainB.GetContext()
+	suite.chainB.GetSimApp().InterchainSwapKeeper.OnCreatePoolAcknowledged(ctxB, msg)
 	poolId := types.GetPoolIdWithTokens(msg.Tokens)
 	return &poolId, nil
 }

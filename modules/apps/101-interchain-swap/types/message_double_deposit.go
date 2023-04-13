@@ -9,12 +9,12 @@ const TypeMsgDoubleDeposit = "deposit"
 
 var _ sdk.Msg = &MsgDepositRequest{}
 
-func NewMsgDoubleDeposit(poolId string, sender string, tokens []*sdk.Coin, subTx *CPDepositTx) *MsgDoubleDepositRequest {
+func NewMsgDoubleDeposit(poolId string, senders []string, tokens []*sdk.Coin, nonce uint64, sig []byte) *MsgDoubleDepositRequest {
 	return &MsgDoubleDepositRequest{
-		PoolId:      poolId,
-		Sender:      sender,
-		Tokens:      tokens,
-		CpDepositTx: subTx,
+		PoolId:                  poolId,
+		Senders:                 senders,
+		Tokens:                  tokens,
+		EncounterPartySignature: sig,
 	}
 }
 
@@ -27,11 +27,16 @@ func (msg *MsgDoubleDepositRequest) Type() string {
 }
 
 func (msg *MsgDoubleDepositRequest) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
+	signers := []sdk.AccAddress{}
+	for _, sender := range msg.Senders {
+		creator, err := sdk.AccAddressFromBech32(sender)
+		if err != nil {
+			panic(err)
+		}
+		signers = append(signers, creator)
 	}
-	return []sdk.AccAddress{creator}
+
+	return signers
 }
 
 func (msg *MsgDoubleDepositRequest) GetSignBytes() []byte {
@@ -40,13 +45,26 @@ func (msg *MsgDoubleDepositRequest) GetSignBytes() []byte {
 }
 
 func (msg *MsgDoubleDepositRequest) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)
+
+	for _, sender := range msg.Senders {
+		_, err := sdk.AccAddressFromBech32(sender)
+		// senderPrefix, _, err := bech32.Decode(sender)
+		// if sdk.GetConfig().GetBech32AccountAddrPrefix() != senderPrefix && index == 0 {
+		// 	return errorsmod.Wrapf(ErrInvalidAddress, "first address has to be this chain address (%s)", err)
+		// }
+		if err != nil {
+			return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)
+		}
 	}
-	if len(msg.Tokens) == 0 {
+
+	if len(msg.Senders) != 2 {
 		return errorsmod.Wrapf(ErrInvalidTokenLength, "invalid token length (%d)", len(msg.Tokens))
 	}
+
+	if len(msg.Tokens) < 2 {
+		return errorsmod.Wrapf(ErrInvalidTokenLength, "invalid token length (%d)", len(msg.Tokens))
+	}
+
 	denoms := map[string]int{}
 	for _, token := range msg.Tokens {
 		if _, ok := denoms[token.Denom]; ok {
@@ -57,6 +75,5 @@ func (msg *MsgDoubleDepositRequest) ValidateBasic() error {
 			return errorsmod.Wrapf(ErrFailedDeposit, "because of %s", ErrInvalidAmount)
 		}
 	}
-
 	return nil
 }

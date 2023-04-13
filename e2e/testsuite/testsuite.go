@@ -599,6 +599,25 @@ func (s *E2ETestSuite) SendCoinsFromModuleToAccount(
 	}
 	return nil
 }
+
+// Token allocation
+func (s *E2ETestSuite) SendCoins(
+	ctx context.Context, chain *cosmos.CosmosChain, from *ibc.Wallet, to string, coins sdk.Coins,
+) error {
+	// Construct the message to send coins from the module to the account.
+	msg := banktypes.NewMsgSend(
+		sdk.MustAccAddressFromBech32(from.Bech32Address("cosmos")), // sender address (the module's address)
+		sdk.MustAccAddressFromBech32(to),                           // recipient address (the account's address)
+		coins,                                                      // coins to send
+	)
+	// Broadcast the message and check for errors.
+	_, err := s.BroadcastMessages(ctx, chain, from, msg)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func getAddressHash(address []byte, addressLength int) []byte {
 	// Compute the SHA256 hash of the module address
 	hash := sha256.Sum256(address)

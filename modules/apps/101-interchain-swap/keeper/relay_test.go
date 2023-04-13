@@ -157,6 +157,10 @@ func (suite *KeeperTestSuite) TestOnReceived() {
 		path *ibctesting.Path
 		err  error
 	)
+	// create pool first of all.
+	pooId, err := suite.SetupPool()
+	suite.Require().NoError(err)
+	fmt.Println(pooId)
 
 	testCases := []struct {
 		msg            string
@@ -164,6 +168,7 @@ func (suite *KeeperTestSuite) TestOnReceived() {
 		sendFromSource bool
 		expPass        bool
 	}{
+
 		{
 			"successful on create received.",
 			func() {
@@ -172,7 +177,7 @@ func (suite *KeeperTestSuite) TestOnReceived() {
 					path.EndpointA.ChannelConfig.PortID,
 					path.EndpointA.ChannelID,
 					suite.chainA.SenderAccount.GetAddress().String(),
-					"1:2",
+					"50:50",
 					[]*sdk.Coin{{
 						Denom:  sdk.DefaultBondDenom,
 						Amount: sdk.NewInt(1000),
@@ -214,3 +219,42 @@ func (suite *KeeperTestSuite) TestOnReceived() {
 		})
 	}
 }
+
+// import (
+// 	"fmt"
+
+// 	sdk "github.com/cosmos/cosmos-sdk/types"
+// 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+// 	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
+// 	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+// )
+
+// func (suite *KeeperTestSuite) TestMsgDoubleDeposit() {
+// 	var msg *types.MsgDoubleDepositRequest
+// 	testCases := []struct {
+// 		name     string
+// 		malleate func()
+// 		expPass  bool
+// 	}{
+// 		{
+// 			"success",
+// 			func() {},
+// 			true,
+// 		},
+// 	}
+
+// 	for _, tc := range testCases {
+// 		// create pool first of all.
+// 		pooId, err := suite.SetupPool()
+// 		suite.Require().NoError(err)
+// 		fmt.Println(pooId)
+
+// 		if tc.expPass {
+// 			suite.Require().NoError(err)
+// 			suite.Require().NotNil(res)
+// 		} else {
+// 			suite.Require().Error(err)
+// 			suite.Require().Nil(res)
+// 		}
+// 	}
+// }

@@ -87,7 +87,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		}
 		data, err := types.ModuleCdc.Marshal(res)
 		return data, err
-	
+
 	case types.DOUBLE_DEPOSIT:
 		var msg types.MsgDoubleDepositRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
@@ -99,13 +99,12 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		}
 		data, err := types.ModuleCdc.Marshal(res)
 		return data, err
-
 	case types.WITHDRAW:
 		var msg types.MsgWithdrawRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		res, err2 := k.OndWithdrawReceive(ctx, &msg)
+		res, err2 := k.OnWithdrawReceived(ctx, &msg)
 		if err2 != nil {
 			return nil, err2
 		}
@@ -223,7 +222,7 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 			return err
 		}
 		token = *msg.Tokens[0]
-		sender = msg.Sender
+		sender = msg.Senders[0]
 	case types.WITHDRAW:
 		var msg types.MsgWithdrawRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
