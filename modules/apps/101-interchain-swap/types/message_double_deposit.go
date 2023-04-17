@@ -9,7 +9,7 @@ const TypeMsgDoubleDeposit = "deposit"
 
 var _ sdk.Msg = &MsgDepositRequest{}
 
-func NewMsgDoubleDeposit(poolId string, senders []string, tokens []*sdk.Coin, nonce uint64, sig []byte) *MsgDoubleDepositRequest {
+func NewMsgDoubleDeposit(poolId string, senders []string, tokens []*sdk.Coin, sig []byte) *MsgDoubleDepositRequest {
 	return &MsgDoubleDepositRequest{
 		PoolId:                  poolId,
 		Senders:                 senders,
@@ -28,14 +28,11 @@ func (msg *MsgDoubleDepositRequest) Type() string {
 
 func (msg *MsgDoubleDepositRequest) GetSigners() []sdk.AccAddress {
 	signers := []sdk.AccAddress{}
-	for _, sender := range msg.Senders {
-		creator, err := sdk.AccAddressFromBech32(sender)
-		if err != nil {
-			panic(err)
-		}
-		signers = append(signers, creator)
+	creator, err := sdk.AccAddressFromBech32(msg.Senders[0])
+	if err != nil {
+		panic(err)
 	}
-
+	signers = append(signers, creator)
 	return signers
 }
 

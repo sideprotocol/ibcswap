@@ -161,6 +161,23 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				logger.Debug("Deposit:Single", err.Error())
 				return err
 			}
+
+		case types.DOUBLE_DEPOSIT:
+			var msg types.MsgDoubleDepositRequest
+			var res types.MsgDoubleDepositResponse
+			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+				logger.Debug("DoubleDeposit:packet:", err.Error())
+				return err
+			}
+
+			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
+				logger.Debug("DoubleDeposit:ack:", err.Error())
+				return err
+			}
+			if err := k.OnDoubleDepositAcknowledged(ctx, &msg, &res); err != nil {
+				logger.Debug("DoubleDeposit:Single", err.Error())
+				return err
+			}
 		case types.WITHDRAW:
 			var msg types.MsgWithdrawRequest
 			var res types.MsgWithdrawResponse
@@ -206,7 +223,6 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
-
 		// refund initial liquidity.
 		token = *msg.Tokens[0] //sdk.NewCoin(nativeDenom, sdk.NewInt(int64(msg.InitalLiquidity)))
 	case types.SINGLE_DEPOSIT:
@@ -241,6 +257,6 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		return types.ErrUnknownDataPacket
 	}
 	escrowAccount := types.GetEscrowAddress(packet.SourcePort, packet.SourceChannel)
-	k.bankKeeper.SendCoinsFromModuleToAccount(ctx, escrowAccount.String(), sdk.AccAddress(sender), sdk.NewCoins(token))
-	return nil
+	err := k.bankKeeper.SendCoins(ctx, escrowAccount, sdk.AccAddress(sender), sdk.NewCoins(token))
+	return err
 }

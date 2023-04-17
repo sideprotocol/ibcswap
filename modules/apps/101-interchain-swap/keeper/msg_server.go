@@ -3,7 +3,6 @@ package keeper
 import (
 	"github.com/btcsuite/btcutil/bech32"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -271,7 +270,7 @@ func (k Keeper) OnDoubleDepositReceived(ctx sdk.Context, msg *types.MsgDoubleDep
 		return nil, err
 	}
 
-	// Verify the sender's address
+	// // Verify the sender's address
 	secondSenderAcc := k.authKeeper.GetAccount(ctx, sdk.MustAccAddressFromBech32(msg.Senders[1]))
 	senderPrefix, _, err := bech32.Decode(secondSenderAcc.GetAddress().String())
 	if err != nil {
@@ -296,24 +295,25 @@ func (k Keeper) OnDoubleDepositReceived(ctx sdk.Context, msg *types.MsgDoubleDep
 		Amount:      sdk.NewCoins(*msg.Tokens[1]),
 	}
 
-	encounterPartyDeposit := types.EncounterPartyDepositTx{
+	deposit := types.EncounterPartyDepositTx{
 		AccountSequence: secondSenderAcc.GetSequence(),
 		Sender:          secondSenderAcc.GetAddress().String(),
-		Tokens:          msg.Tokens,
+		Token:           msg.Tokens[1],
 	}
 
-	rawDepositTx, err := types.ModuleCdc.Marshal(&encounterPartyDeposit)
+	rawDepositTx, err := types.ModuleCdc.Marshal(&deposit)
 	if err != nil {
 		return nil, err
 	}
+
 	pubKey := secondSenderAcc.GetPubKey()
 
-	if !verifySignature(rawDepositTx, msg.EncounterPartySignature, pubKey) {
+	isValid := pubKey.VerifySignature(rawDepositTx, msg.EncounterPartySignature)
+	if !isValid {
 		return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, ":%s", types.ErrInvalidSignature)
 	}
 
 	_, err = k.executeDepositTx(ctx, &sendMsg)
-
 	if err != nil {
 		return nil, err
 	}
@@ -345,7 +345,7 @@ func (k Keeper) OnDoubleDepositReceived(ctx sdk.Context, msg *types.MsgDoubleDep
 	}
 
 	// Mint voucher tokens for the sender
-	err = k.MintTokens(ctx, sdk.MustAccAddressFromBech32(msg.Senders[1]), *poolTokens[1])
+	err = k.MintTokens(ctx, secondSenderAcc.GetAddress(), *poolTokens[1])
 	if err != nil {
 		return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, ":%s", err)
 	}
@@ -510,8 +510,4 @@ func (k Keeper) executeMsg(ctx sdk.Context, msg sdk.Msg) (*codectypes.Any, error
 	}
 
 	return msgResponse, nil
-}
-
-func verifySignature(rawTx []byte, signedMessage []byte, publicKey crypto.PubKey) bool {
-	return publicKey.VerifySignature(rawTx, signedMessage)
 }

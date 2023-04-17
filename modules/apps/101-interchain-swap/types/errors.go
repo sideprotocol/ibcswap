@@ -66,4 +66,5 @@ var (
 	ErrSubDepositTxExecutionFailed = errorsmod.Register(ModuleName, 1542, "sub deposit tx excution failed!")
 	ErrInvalidMsgRouter            = errorsmod.Register(ModuleName, 1543, "invalid msg router")
 	ErrInvalidMsg                  = errorsmod.Register(ModuleName, 1544, "invalid transaction message")
+	ErrInvalidPubKey               = errorsmod.Register(ModuleName, 1546, "invalid pub key")
 )

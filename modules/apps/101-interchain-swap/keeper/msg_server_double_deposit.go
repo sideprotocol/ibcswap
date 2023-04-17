@@ -30,20 +30,21 @@ func (k Keeper) DoubleDeposit(goCtx context.Context, msg *types.MsgDoubleDeposit
 	if !found {
 		return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrNotFoundPool)
 	}
+	_ = pool
 
 	// Deposit token to Escrow account
-	coins, err := k.validateCoins(ctx, &pool, msg.Senders[0], msg.Tokens)
+	coins, err := k.validateDoubleDepositCoins(ctx, &pool, msg.Senders[0], msg.Tokens)
 	if err != nil {
 		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "%s", err)
 	}
 	if len(coins) == 0 {
-		return nil, types.ErrInvalidSignature
+		return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, "it include invalid coins (%s)")
 	}
 
 	// create escrow module account  here
 	err = k.LockTokens(ctx, pool.EncounterPartyPort, pool.EncounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Senders[0]), coins)
 	if err != nil {
-		return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, "%s", err)
+		return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, "because of %s", err) 
 	}
 
 	// construct ibc packet
@@ -58,7 +59,7 @@ func (k Keeper) DoubleDeposit(goCtx context.Context, msg *types.MsgDoubleDeposit
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&ctx)
-	err = k.SendIBCSwapPacket(ctx, types.PortID, "channel-0", timeoutHeight, timeoutStamp, packet)
+	err = k.SendIBCSwapPacket(ctx, pool.EncounterPartyPort, pool.EncounterPartyChannel, timeoutHeight, timeoutStamp, packet)
 	if err != nil {
 		return nil, err
 	}

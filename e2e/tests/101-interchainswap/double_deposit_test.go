@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	types "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 
 	test "github.com/strangelove-ventures/ibctest/v6/testutil"
@@ -15,10 +14,7 @@ import (
 	"github.com/cosmos/ibc-go/e2e/testsuite"
 	"github.com/cosmos/ibc-go/e2e/testvalues"
 
-	//"github.com/strangelove-ventures/ibctest/v6/ibc"
-
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	bip39 "github.com/tyler-smith/go-bip39"
 )
@@ -37,30 +33,26 @@ func (s *InterchainswapTestSuite) TestDoubleDepositStatus() {
 	chainADenom := chainA.Config().Denom
 	chainBDenom := chainB.Config().Denom
 
+	logger.CleanLog("get Prefix", chainB.Config().Bech32Prefix)
+
 	// // create wallets for testing
 	chainAWallet := s.CreateUserOnChainA(ctx, testvalues.StartingTokenAmount)
-	chainAAddress := chainAWallet.Bech32Address("cosmos")
+	chainAAddress := chainAWallet.Bech32Address(chainB.Config().Bech32Prefix)
 
-	chainBWallet := s.CreateUserOnChainB(ctx, testvalues.StartingTokenAmount)
-	chainBAddress := chainBWallet.Bech32Address("cosmos")
+	chainBUserMnemonic, err := createNewMnemonic()
+	s.Require().NoError(err)
 
-	// // create wallets for testing
-	chainBUserWallet := s.CreateUserOnChainA(ctx, 10)
-	chainBUserAddress := chainBUserWallet.Bech32Address("cosmos")
-	_ = chainBUserAddress
+	chainBWallet := s.CreateUserOnChainBWithMnemonic(ctx, chainBUserMnemonic, testvalues.StartingTokenAmount)
+	chainBAddress := chainBWallet.Bech32Address(chainB.Config().Bech32Prefix)
+	priv, _ := getPrivFromNewMnemonic(chainBUserMnemonic)
+
+	addr := sdk.AccAddress(priv.PubKey().Address().Bytes())
+	logger.CleanLog("address:", addr.String())
+	s.Require().Equal(chainBAddress, addr.String())
 
 	chainAWalletForB := s.CreateUserOnChainA(ctx, testvalues.StartingTokenAmount)
-	chainAAddressForB := chainAWalletForB.Bech32Address("cosmos")
+	chainAAddressForB := chainAWalletForB.Bech32Address(chainB.Config().Bech32Prefix)
 	fmt.Println(chainAAddressForB)
-
-	// allocate tokens to the new account
-	initialATokenBalances := sdk.NewCoins(sdk.NewCoin(chainADenom, sdk.NewInt(1000000000000)))
-	err := s.SendCoinsFromModuleToAccount(ctx, chainA, chainAWallet, initialATokenBalances)
-	s.Require().NoError(err)
-	// allocate tokens to the new account
-	initialBTokenBalances := sdk.NewCoins(sdk.NewCoin(chainBDenom, sdk.NewInt(1000000000000)))
-	err = s.SendCoinsFromModuleToAccount(ctx, chainB, chainBWallet, initialBTokenBalances)
-	s.Require().NoError(err)
 
 	resA, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
 	s.Require().NotEqual(resA.Balance.Amount, sdk.NewInt(0))
@@ -69,22 +61,6 @@ func (s *InterchainswapTestSuite) TestDoubleDepositStatus() {
 	resB, err := s.QueryBalance(ctx, chainB, chainBAddress, chainBDenom)
 	s.Require().NotEqual(resB.Balance.Amount, sdk.NewInt(0))
 	s.Require().NoError(err)
-
-	// wallet create
-	add, mnemonic, priv, err := createNewWallet()
-	logger.CleanLog("wallet", add.String(), mnemonic, priv, err)
-	funds := sdk.NewCoins(sdk.NewCoin(chainBDenom, sdk.NewInt(1000)))
-	err = s.SendCoins(ctx, chainB, chainBWallet, add.String(), funds)
-	s.Require().NoError(err)
-
-	res, err := s.QueryBalance(ctx, chainB, add.String(), chainBDenom)
-	s.Require().NoError(err)
-	logger.CleanLog("Account status", res.Balance.Amount)
-
-	//sig, err := priv.Sign(rawTx)
-
-	//logger.CleanLog("signed", sig, err)
-	//verifySignedMessage(sig,&add)
 
 	const initialX = 2_000_000 // USDT
 	const initialY = 1000      // ETH
@@ -192,26 +168,11 @@ func (s *InterchainswapTestSuite) TestDoubleDepositStatus() {
 
 	// // send swap message
 	t.Run("pool status", func(t *testing.T) {
-
-		//var depositCoins []*sdk.Coin
-		// var chain *cosmos.CosmosChain
-		// var wallet ibc.Wallet
-
-		// poolId := types.GetPoolId([]string{
-		// 	chainADenom, chainBDenom,
-		// })
-
-		// var channel ibc.ChannelOutput
-		// var txRes sdk.TxResponse
-
-		// var packetSequence int
-
 		poolId := types.GetPoolId([]string{
 			chainADenom, chainBDenom,
 		})
-		pool, err := getPool(s, ctx, chainA, poolId)
-		s.Require().NoError(err)
-		escrowAccount := types.GetEscrowAddress(pool.EncounterPartyPort, pool.EncounterPartyChannel)
+
+		amountOfChainBUserBeforeTx, err := s.GetBalance(ctx, chainB, chainBAddress, chainBDenom)
 
 		testCases := []struct {
 			name     string
@@ -224,13 +185,13 @@ func (s *InterchainswapTestSuite) TestDoubleDepositStatus() {
 				"double deposit Assets (initialX,initialY)",
 				func() {
 					// depositCoins = []*sdk.Coin{
-					// 	&sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
-					// 	&sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
+					// 	{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
+					// 	{Denom: chainBDenom, Amount: sdk.NewInt(1000)},
 					// }
 					// wallet = *chainAWallet
 					// chain = chainA
 					// channel = channelA
-					// packetSequence = 5
+					// packetSequence = 2
 				},
 				"double deposit",
 				true,
@@ -238,109 +199,100 @@ func (s *InterchainswapTestSuite) TestDoubleDepositStatus() {
 		}
 
 		for _, tc := range testCases {
-
 			switch tc.msgType {
 			case "double deposit":
 
-				logger.CleanLog("escrow Account:", escrowAccount.String())
+				acc := s.GetAccount(ctx, chainB, chainBAddress)
+				logger.CleanLog("Account", acc)
 
-				sendTxMsg := banktypes.NewMsgSend(
-					sdk.MustAccAddressFromBech32(chainBAddress),
-					escrowAccount,
-					sdk.NewCoins(sdk.NewCoin(chainBDenom, sdk.NewInt(1000))),
-				)
+				depositTokens := []*sdk.Coin{
+					{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
+					{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
+				}
 
-				// depositTx := types.EncounterPartyDepositTx{
-				// 	AccountSequence: nonce,
-				// 	Sender:          suite.chainB.SenderAccount.GetAddress().String(),
-				// 	Tokens:          []*sdk.Coin{{Denom: denomPair[0], Amount: sdk.NewInt(1000)}, {Denom: denomPair[1], Amount: sdk.NewInt(1000)}},
-				// }
-
-				rawTx, err := types.ModuleCdc.Marshal(sendTxMsg)
+				depositTx := &types.EncounterPartyDepositTx{
+					AccountSequence: 1,
+					Sender:          chainBAddress,
+					Token:           &sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
+				}
+				rawTx := types.ModuleCdc.MustMarshal(depositTx)
 				if err != nil {
 					fmt.Println(err)
 					return
 				}
 
+				s.Require().NoError(err)
 				signedTx, err := priv.Sign(rawTx)
+				s.Require().NoError(err)
 				pubKey := priv.PubKey()
 				s.Require().Equal(verifySignedMessage(rawTx, signedTx, pubKey), true)
 
-				// msg := types.NewMsgDoubleDeposit(
-				// 	poolId,
-				// 	chainAWallet.Bech32Address("cosmos"),
-				// 	chainBWallet.Bech32Address("cosmos"),
-				// 	[]*sdk.Coin{
-				// 		{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
-				// 		{Denom: chainBDenom, Amount: sdk.NewInt(1000)},
-				// 	},
-				// 	rawTx,
-				// )
+				msg := types.NewMsgDoubleDeposit(
+					poolId,
+					[]string{
+						chainAAddress, chainBAddress,
+					},
+					depositTokens,
+					signedTx,
+				)
 
-				// // fmt.Println("Deposit Message", msg)
-
-				// txRes, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-				// fmt.Println("Res:", txRes)
-				// logger.CleanLog("DoubleDeposit:", txRes)
-				// s.Require().NoError(err)
-				// s.AssertValidTxResponse(txRes)
+				txRes, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+				//logger.CleanLog("DoubleDeposit:", txRes)
+				s.Require().NoError(err)
+				s.AssertValidTxResponse(txRes)
 
 			}
 
-			// test.WaitForBlocks(ctx, 15, chainA, chainB)
-			// s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, uint64(2))
+			test.WaitForBlocks(ctx, 15, chainA, chainB)
+			s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 2)
 
-			// res, err := s.QueryBalance(ctx, chainB, escrowAccount.String(), chainBDenom)
-			// s.Require().NoError(err)
+			// pool status log.
+			pool, err := getPool(s, ctx, chainA, poolId)
+			s.Require().NoError(err)
+			amm := types.NewInterchainMarketMaker(
+				pool,
+				fee,
+			)
 
-			// logger.CleanLog("My Balance", res)
-			// // pool status log.
-			// pool, err := getPool(s, ctx, chain, poolId)
+			priceA_B, _ := amm.MarketPrice(chainADenom, chainBDenom)
+			priceB_A, _ := amm.MarketPrice(chainADenom, chainBDenom)
 
-			// s.Require().NoError(err)
-			// amm := types.NewInterchainMarketMaker(
-			// 	pool,
-			// 	fee,
-			// )
+			logger.CleanLog("Price: A->B, B->A", *priceA_B, *priceB_A)
+			logger.CleanLog("Pool Info", pool)
 
-			// priceA_B, _ := amm.MarketPrice(chainADenom, chainBDenom)
-			// priceB_A, _ := amm.MarketPrice(chainADenom, chainBDenom)
-
-			// logger.CleanLog("Price: A->B, B->A", *priceA_B, *priceB_A)
-			// logger.CleanLog("Pool Info", pool)
+			amountOfChainBUserAfterTx, err := s.GetBalance(ctx, chainB, chainBAddress, chainBDenom)
+			s.Require().NoError(err)
+			depositedAmount := amountOfChainBUserBeforeTx.Sub(*amountOfChainBUserAfterTx)
+			logger.CleanLog("balance(Before)", amountOfChainBUserBeforeTx)
+			logger.CleanLog("balance(After)", amountOfChainBUserAfterTx)
+			logger.CleanLog("depositedAmount", depositedAmount)
+			s.Require().Equal(depositedAmount.Int64(), int64(initialY))
 		}
 
 	})
 }
 
-func createNewWallet() (sdk.AccAddress, string, crypto.PrivKey, error) {
-	// Generate a new random mnemonic
-	entropy, err := bip39.NewEntropy(256)
-	if err != nil {
-		return nil, "", nil, fmt.Errorf("failed to generate new entropy: %w", err)
-	}
-	mnemonic, err := bip39.NewMnemonic(entropy)
-	if err != nil {
-		return nil, "", nil, fmt.Errorf("failed to generate new mnemonic: %w", err)
-	}
-
-	// Create a BIP39 seed from the mnemonic
-	seed := bip39.NewSeed(mnemonic, "")
-
-	// Create a BIP32 master key from the seed
-	masterKey, _ := hd.ComputeMastersFromSeed(seed)
-
-	// Create a secp256k1 private key from the master key
-
-	privKey := secp256k1.GenPrivKeyFromSecret(masterKey[:])
-
-	// Get the address associated with the private key
-	addr := sdk.AccAddress(privKey.PubKey().Address().Bytes())
-
-	return addr, mnemonic, privKey, nil
-}
-
 func verifySignedMessage(rawTx []byte, signedMessage []byte, publicKey crypto.PubKey) bool {
 	// Replace this with the actual rawTx bytes you want to verify
 	return publicKey.VerifySignature(rawTx, signedMessage)
+}
+
+func createNewMnemonic() (string, error) {
+	// Generate a new random mnemonic
+	entropy, err := bip39.NewEntropy(256)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate new entropy: %w", err)
+	}
+	mnemonic, err := bip39.NewMnemonic(entropy)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate new mnemonic: %w", err)
+	}
+	return mnemonic, nil
+}
+
+func getPrivFromNewMnemonic(mnemonic string) (crypto.PrivKey, error) {
+	hdPath := hd.CreateHDPath(118, 0, 0).String()
+	derivedPriv, _ := hd.Secp256k1.Derive()(mnemonic, "", hdPath)
+	priv := hd.Secp256k1.Generate()(derivedPriv)
+	return priv, nil
 }

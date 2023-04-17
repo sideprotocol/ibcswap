@@ -103,7 +103,7 @@ func (suite *KeeperTestSuite) TestMsgDoubleDeposit() {
 	depositTx := types.EncounterPartyDepositTx{
 		AccountSequence: nonce,
 		Sender:          suite.chainB.SenderAccount.GetAddress().String(),
-		Tokens:          []*sdk.Coin{{Denom: denomPair[0], Amount: sdk.NewInt(1000)}, {Denom: denomPair[1], Amount: sdk.NewInt(1000)}},
+		//Tokens:          []*sdk.Coin{{Denom: denomPair[0], Amount: sdk.NewInt(1000)}, {Denom: denomPair[1], Amount: sdk.NewInt(1000)}},
 	}
 
 	rawDepositTx := types.ModuleCdc.MustMarshal(&depositTx)
@@ -120,7 +120,6 @@ func (suite *KeeperTestSuite) TestMsgDoubleDeposit() {
 		*pooId,
 		[]string{suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String()},
 		[]*sdk.Coin{{Denom: denomPair[0], Amount: sdk.NewInt(1000)}, {Denom: denomPair[1], Amount: sdk.NewInt(1000)}},
-		0,
 		signedDepositTx,
 	)
 

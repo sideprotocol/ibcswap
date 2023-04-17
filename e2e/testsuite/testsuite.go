@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -77,6 +78,7 @@ type GRPCClients struct {
 	FeeQueryClient     feetypes.QueryClient
 	ICAQueryClient     controllertypes.QueryClient
 	InterTxQueryClient intertxtypes.QueryClient
+	AccountQueryClient authtypes.QueryClient
 
 	// SDK query clients
 	GovQueryClient    govtypesv1beta1.QueryClient
@@ -347,10 +349,26 @@ func (s *E2ETestSuite) CreateUserOnChainA(ctx context.Context, amount int64) *ib
 	return ibctest.GetAndFundTestUsers(s.T(), ctx, strings.ReplaceAll(s.T().Name(), " ", "-"), amount, chainA)[0]
 }
 
+// CreateUserOnChainA creates a user with the given amount of funds on chain A.
+func (s *E2ETestSuite) CreateUserOnChainAWithMnemonic(ctx context.Context, mnemonic string, amount int64) *ibc.Wallet {
+	chainA, _ := s.GetChains()
+	wallet, err := ibctest.GetAndFundTestUserWithMnemonic(ctx, strings.ReplaceAll(s.T().Name(), " ", "-"), mnemonic, amount, chainA)
+	s.Require().NoError(err)
+	return wallet
+}
+
 // CreateUserOnChainB creates a user with the given amount of funds on chain B.
 func (s *E2ETestSuite) CreateUserOnChainB(ctx context.Context, amount int64) *ibc.Wallet {
 	_, chainB := s.GetChains()
 	return ibctest.GetAndFundTestUsers(s.T(), ctx, strings.ReplaceAll(s.T().Name(), " ", "-"), amount, chainB)[0]
+}
+
+// CreateUserOnChainB creates a user with the given amount of funds on chain B.
+func (s *E2ETestSuite) CreateUserOnChainBWithMnemonic(ctx context.Context, mnemonic string, amount int64) *ibc.Wallet {
+	_, chainB := s.GetChains()
+	wallet, err := ibctest.GetAndFundTestUserWithMnemonic(ctx, strings.ReplaceAll(s.T().Name(), " ", "-"), mnemonic, amount, chainB)
+	s.Require().NoError(err)
+	return wallet
 }
 
 // GetChainANativeBalance gets the balance of a given user on chain A.
@@ -404,6 +422,7 @@ func (s *E2ETestSuite) initGRPCClients(chain *cosmos.CosmosChain) {
 		AuthQueryClient:       authtypes.NewQueryClient(grpcConn),
 		InterchainQueryClient: interchainswaptypes.NewQueryClient(grpcConn),
 		BankQueryClient:       banktypes.NewQueryClient(grpcConn),
+		AccountQueryClient:    authtypes.NewQueryClient(grpcConn),
 	}
 }
 
@@ -611,7 +630,8 @@ func (s *E2ETestSuite) SendCoins(
 		coins,                                                      // coins to send
 	)
 	// Broadcast the message and check for errors.
-	_, err := s.BroadcastMessages(ctx, chain, from, msg)
+	res, err := s.BroadcastMessages(ctx, chain, from, msg)
+	fmt.Println(res.TxHash)
 	if err != nil {
 		return err
 	}
@@ -626,4 +646,34 @@ func getAddressHash(address []byte, addressLength int) []byte {
 	addressHash := hash[:addressLength]
 
 	return addressHash
+}
+
+func (s *E2ETestSuite) GetAccount(ctx context.Context, chain *cosmos.CosmosChain, address string) authtypes.AccountI {
+	res, err := s.QueryAccount(ctx, chain, address)
+	fmt.Printf("here is error1: %v\n", err)
+	fmt.Printf("here is error1: %#v\n", res)
+	s.Require().NoError(err)
+
+	fmt.Printf("res.Account: %#v\n", res.Account)
+
+	var baseAccount authtypes.BaseAccount
+	err = types.NewInterfaceRegistry().UnpackAny(res.Account, &baseAccount)
+	fmt.Printf("Unmarshal error: %v\n", err)
+
+	return &baseAccount
+}
+
+func (s *E2ETestSuite) GetModuleAccount(ctx context.Context, chain *cosmos.CosmosChain, name string) authtypes.AccountI {
+	res, err := s.QueryModuleAccount(ctx, chain, name)
+	fmt.Printf("here is error1: %v\n", err)
+	fmt.Printf("here is error1: %#v\n", res)
+	s.Require().NoError(err)
+
+	fmt.Printf("res.Account: %#v\n", res.Account)
+
+	var baseAccount authtypes.BaseAccount
+	err = types.NewInterfaceRegistry().UnpackAny(res.Account, &baseAccount)
+	fmt.Printf("Unmarshal error: %v\n", err)
+
+	return &baseAccount
 }
