@@ -16,6 +16,10 @@ e2e-test-interchainswap-basic: cleanup-ibc-test-containers
 e2e-test-interchainswap-pool: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh TestInterchainswapTestSuite TestPoolStatus
 
+e2e-test-interchainswap-double: cleanup-ibc-test-containers
+	./scripts/run-e2e.sh TestInterchainswapTestSuite TestDoubleDepositStatus
+
+
 e2e-test-interchainswap-timeout: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh TestInterchainswapTestSuite TestRefundMsgOnTimeoutPacket
 

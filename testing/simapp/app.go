@@ -473,6 +473,7 @@ func NewSimApp(
 		app.BankKeeper,
 		app.AccountKeeper,
 		scopedInterchainSwapKeeper,
+		app.MsgServiceRouter(),
 	)
 
 	// Mock Module Stack

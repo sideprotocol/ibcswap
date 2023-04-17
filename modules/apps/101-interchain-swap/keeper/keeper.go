@@ -30,6 +30,7 @@ type (
 		scopedKeeper  capabilitykeeper.ScopedKeeper
 		bankKeeper    types.BankKeeper
 		authKeeper    types.AccountKeeper
+		msgRouter     types.MessageRouter
 	}
 )
 
@@ -43,6 +44,7 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	authKeeper types.AccountKeeper,
 	scopedKeeper capabilitykeeper.ScopedKeeper,
+	msgRouter types.MessageRouter,
 
 ) *Keeper {
 	// set KeyTable if it has not already been set
@@ -60,6 +62,7 @@ func NewKeeper(
 		scopedKeeper:  scopedKeeper,
 		bankKeeper:    bankKeeper,
 		authKeeper:    authKeeper,
+		msgRouter:     msgRouter,
 	}
 }
 
@@ -132,3 +135,48 @@ func (k Keeper) EscrowAddress(ctx context.Context, req *types.QueryEscrowAddress
 		EscrowAddress: escrowAddress.String(),
 	}, nil
 }
+
+func (k Keeper) validateCoins(ctx sdk.Context, pool *types.InterchainLiquidityPool, sender string, tokensIn []*sdk.Coin) ([]sdk.Coin, error) {
+	// Deposit token to Escrow account
+	coins := []sdk.Coin{}
+	for _, coin := range tokensIn {
+		accAddress := sdk.MustAccAddressFromBech32(sender)
+		balance := k.bankKeeper.GetBalance(ctx, accAddress, coin.Denom)
+		if balance.Amount.Equal(sdk.NewInt(0)) {
+			return nil, types.ErrInvalidAmount
+		}
+		coins = append(coins, *coin)
+		if pool.Status == types.PoolStatus_POOL_STATUS_INITIAL {
+			poolAsset, err := pool.FindAssetByDenom(coin.Denom)
+			if err == nil {
+				if !poolAsset.Balance.Amount.Equal(coin.Amount) {
+					return nil, types.ErrInvalidInitialDeposit
+				}
+			}
+		}
+	}
+	return coins, nil
+}
+
+func (k Keeper) validateDoubleDepositCoins(ctx sdk.Context, pool *types.InterchainLiquidityPool, sender string, tokensIn []*sdk.Coin) ([]sdk.Coin, error) {
+	// Deposit token to Escrow account
+	coins := []sdk.Coin{}
+	for _, coin := range tokensIn {
+		accAddress := sdk.MustAccAddressFromBech32(sender)
+		balance := k.bankKeeper.GetBalance(ctx, accAddress, coin.Denom)
+		if balance.Amount.Equal(sdk.NewInt(0)) {
+			continue
+		}
+		coins = append(coins, *coin)
+		if pool.Status == types.PoolStatus_POOL_STATUS_INITIAL {
+			poolAsset, err := pool.FindAssetByDenom(coin.Denom)
+			if err == nil {
+				if !poolAsset.Balance.Amount.Equal(coin.Amount) {
+					return nil, types.ErrInvalidInitialDeposit
+				}
+			}
+		}
+	}
+	return coins, nil
+}
+

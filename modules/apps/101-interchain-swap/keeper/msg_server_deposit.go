@@ -32,6 +32,7 @@ func (k Keeper) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) (*t
 		if balance.Amount.Equal(sdk.NewInt(0)) {
 			return nil, types.ErrInvalidAmount
 		}
+		
 		coins = append(coins, *coin)
 		if pool.Status == types.PoolStatus_POOL_STATUS_INITIAL {
 			poolAsset, err := pool.FindAssetByDenom(coin.Denom)

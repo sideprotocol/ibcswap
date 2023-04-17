@@ -33,10 +33,11 @@ var (
 	ErrNotNativeDenom      = errorsmod.Register(ModuleName, 1517, "invalid native denom")
 
 	//msg srv errors
-	ErrFailedCreatePool = errorsmod.Register(ModuleName, 1518, "failed to create pool")
-	ErrFailedDeposit    = errorsmod.Register(ModuleName, 1519, "failed to deposit")
-	ErrFailedWithdraw   = errorsmod.Register(ModuleName, 1520, "failed to withdraw")
-	ErrFailedSwap       = errorsmod.Register(ModuleName, 1521, "failed to interchain swap")
+	ErrFailedCreatePool    = errorsmod.Register(ModuleName, 1518, "failed to create pool")
+	ErrFailedDeposit       = errorsmod.Register(ModuleName, 1519, "failed to deposit")
+	ErrFailedDoubleDeposit = errorsmod.Register(ModuleName, 1545, "failed to double deposit")
+	ErrFailedWithdraw      = errorsmod.Register(ModuleName, 1520, "failed to withdraw")
+	ErrFailedSwap          = errorsmod.Register(ModuleName, 1521, "failed to interchain swap")
 
 	ErrFailedOnCreatePoolReceived = errorsmod.Register(ModuleName, 1522, "failed to treat create pool msg!")
 	ErrFailedOnDepositReceived    = errorsmod.Register(ModuleName, 1523, "failed to treat deposit msg!")
@@ -59,5 +60,11 @@ var (
 	ErrInvalidAddressPair    = errorsmod.Register(ModuleName, 1537, "invalid address pair!")
 	ErrInvalidInitialDeposit = errorsmod.Register(ModuleName, 1538, "Invalid token amount for initial deposit")
 
-	ErrNotAllowedAmount = errorsmod.Register(ModuleName, 1539, "not allowed single deposit amount")
+	ErrNotAllowedAmount            = errorsmod.Register(ModuleName, 1539, "not allowed single deposit amount")
+	ErrInvalidSignature            = errorsmod.Register(ModuleName, 1540, "invalid signature")
+	ErrInvalidMessageType          = errorsmod.Register(ModuleName, 1541, "invalid message type!")
+	ErrSubDepositTxExecutionFailed = errorsmod.Register(ModuleName, 1542, "sub deposit tx excution failed!")
+	ErrInvalidMsgRouter            = errorsmod.Register(ModuleName, 1543, "invalid msg router")
+	ErrInvalidMsg                  = errorsmod.Register(ModuleName, 1544, "invalid transaction message")
+	ErrInvalidPubKey               = errorsmod.Register(ModuleName, 1546, "invalid pub key")
 )

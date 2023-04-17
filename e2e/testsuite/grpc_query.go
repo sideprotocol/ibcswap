@@ -16,6 +16,8 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -187,6 +189,48 @@ func (s *E2ETestSuite) QueryBalance(ctx context.Context, chain ibc.Chain, addr s
 		&banktypes.QueryBalanceRequest{
 			Address: addr,
 			Denom:   denom,
+		},
+	)
+	if err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
+// QueryClientStatus queries the status of the client by clientID
+func (s *E2ETestSuite) GetBalance(ctx context.Context, chain ibc.Chain, addr string, denom string) (*sdk.Int, error) {
+	res, err := s.QueryBalance(ctx, chain, addr, denom)
+	if err != nil {
+		return nil, err
+	}
+	return &res.Balance.Amount, nil
+}
+
+// QueryClientStatus queries the status of the client by clientID
+func (s *E2ETestSuite) QueryAccount(ctx context.Context, chain ibc.Chain, addr string) (*authtypes.QueryAccountResponse, error) {
+	queryClient := s.GetChainGRCPClients(chain).AccountQueryClient
+	
+	res, err := queryClient.Account(
+		ctx,
+		&authtypes.QueryAccountRequest{
+			Address: addr,
+		},
+	)
+	if err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
+
+// QueryClientStatus queries the status of the client by clientID
+func (s *E2ETestSuite) QueryModuleAccount(ctx context.Context, chain ibc.Chain, name string) (*authtypes.QueryModuleAccountByNameResponse, error) {
+	queryClient := s.GetChainGRCPClients(chain).AccountQueryClient
+	
+	res, err := queryClient.ModuleAccountByName(
+		ctx,
+		&authtypes.QueryModuleAccountByNameRequest{
+			Name: name,
 		},
 	)
 	if err != nil {

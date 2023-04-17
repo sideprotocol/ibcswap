@@ -7,14 +7,18 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/ibc-go/e2e/testsuite"
 	"github.com/cosmos/ibc-go/e2e/testvalues"
 
+	//"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	types "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	"github.com/strangelove-ventures/ibctest/v6/chain/cosmos"
 	"github.com/strangelove-ventures/ibctest/v6/ibc"
 
 	//"github.com/strangelove-ventures/ibctest/v6/ibc"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	test "github.com/strangelove-ventures/ibctest/v6/testutil"
 )
 
@@ -187,6 +191,7 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 	t.Run("pool status", func(t *testing.T) {
 
 		var depositCoin sdk.Coin
+		var depositCoins []*sdk.Coin
 		var chain *cosmos.CosmosChain
 		var wallet ibc.Wallet
 
@@ -241,6 +246,7 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 				"deposit",
 				true,
 			},
+
 			{
 				"swap Asset A(100_000) to Asset B",
 				func() {
@@ -251,7 +257,7 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 					sender = wallet.Bech32Address("cosmos")
 					recipient = chainAAddressForB
 					channel = channelA
-					packetSequence = 3
+					packetSequence = 4
 				},
 				"swap",
 				true,
@@ -272,6 +278,21 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 				true,
 			},
 			{
+				"double deposit Assets (initialX,initialY)",
+				func() {
+					depositCoins = []*sdk.Coin{
+						&sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
+						&sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
+					}
+					wallet = *chainAWallet
+					chain = chainA
+					channel = channelA
+					packetSequence = 5
+				},
+				"double deposit",
+				true,
+			},
+			{
 				"withdraw Asset A(50%)",
 				func() {
 					// initial liquidity token remove:
@@ -286,7 +307,7 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 					wallet = *chainAWallet
 					chain = chainA
 					channel = channelA
-					packetSequence = 5
+					packetSequence = 6
 				},
 
 				"withdraw",
@@ -321,7 +342,7 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 					chain = chainB
 					channel = channelB
 					sender = wallet.Bech32Address("cosmos")
-					packetSequence = 3
+					packetSequence = 5
 				},
 				"withdraw",
 				true,
@@ -344,6 +365,63 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 				s.Require().NoError(err)
 				s.AssertValidTxResponse(txRes)
 
+			case "double deposit":
+
+				pool, err := getPool(s, ctx, chain, poolId)
+				escrowAcc := types.GetEscrowAddress(pool.EncounterPartyPort, pool.EncounterPartyChannel)
+
+				encodingConfig := chain.Config().EncodingConfig.TxConfig
+				//signMode := tx.DefaultSignModes
+				txBuilder := encodingConfig.NewTxBuilder()
+				//txBuilder := tx.NewTxConfig(encodingConfig, signMode).NewTxBuilder()
+
+				sendTxMsg := banktypes.NewMsgSend(
+					sdk.MustAccAddressFromBech32(chainBAddress),
+					escrowAcc,
+					sdk.NewCoins(*depositCoins[1]),
+				)
+
+				txBuilder.SetMsgs(sendTxMsg)
+				txBuilder.SetMemo("ITF signed transaction")
+				txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin("stake", 10)))
+				txBuilder.SetGasLimit(200000)
+
+				txBuilder.SetSignatures()
+
+				hdPath := hd.CreateHDPath(118, 0, 0).String()
+				derivedPriv, err := hd.Secp256k1.Derive()(wallet.Mnemonic, "", hdPath)
+				if err != nil {
+					println("err", err)
+					continue
+				}
+				priv := hd.Secp256k1.Generate()(derivedPriv)
+
+				sigV2 := signing.SignatureV2{
+					PubKey: priv.PubKey(),
+					Data: &signing.SingleSignatureData{
+						SignMode:  chain.Config().EncodingConfig.TxConfig.SignModeHandler().DefaultMode(),
+						Signature: nil,
+					},
+					Sequence: 0,
+				}
+
+				txBuilder.SetSignatures(sigV2)
+
+				//s.Require().Equal(ok, true)
+
+				// msg := types.NewMsgDoubleDeposit(
+				// 	poolId,
+				// 	wallet.Bech32Address("cosmos"),
+				// 	depositCoins,
+				// 	&types.CPDepositTx{
+				// 		Tx:        tx,
+				// 		Signature: "",
+				// 	},
+				// )
+
+				// txRes, err = s.BroadcastMessages(ctx, chain, &wallet, msg)
+				// s.Require().NoError(err)
+				// s.AssertValidTxResponse(txRes)
 			case "swap":
 				// pool status log.
 				poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)

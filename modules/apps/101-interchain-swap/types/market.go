@@ -191,7 +191,7 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 	} else {
 
 		weight := float64(asset.Weight) / 100
-		ratio := 1 + float64(token.Amount.Quo(asset.Balance.Amount).Int64())
+		ratio := 1 + float64(token.Amount.Int64())/float64(asset.Balance.Amount.Int64())
 		factor := (math.Pow(ratio, float64(weight)) - 1) * Multiplier
 		issueAmount = imm.Pool.Supply.Amount.Mul(types.NewInt(int64(factor))).Quo(types.NewInt(Multiplier))
 
@@ -207,6 +207,38 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 		Denom:  imm.Pool.Supply.Denom,
 	}
 	return outputToken, nil
+}
+
+// P_issued = P_supply * ((1 + At/Bt) ** Wt -1)
+func (imm *InterchainMarketMaker) DepositDoubleAsset(tokens []*types.Coin) ([]*types.Coin, error) {
+	outTokens := []*types.Coin{}
+	for _, token := range tokens {
+		asset, err := imm.Pool.FindAssetByDenom(token.Denom)
+		if err != nil {
+			return nil, err
+		}
+
+		var issueAmount types.Int
+		if imm.Pool.Status == PoolStatus_POOL_STATUS_INITIAL {
+			totalInitialLpAmount := types.NewInt(0)
+			for _, asset := range imm.Pool.Assets {
+				totalInitialLpAmount = totalInitialLpAmount.Add(asset.Balance.Amount)
+			}
+			issueAmount = totalInitialLpAmount
+		} else {
+
+			ratio := (1 + float64(token.Amount.Int64())/float64(asset.Balance.Amount.Int64())) * Multiplier
+			issueAmount = imm.Pool.Supply.Amount.Mul(types.NewInt(int64(ratio))).Quo(types.NewInt(Multiplier))
+		}
+
+		outputToken := &types.Coin{
+			Amount: issueAmount,
+			Denom:  imm.Pool.Supply.Denom,
+		}
+		outTokens = append(outTokens, outputToken)
+	}
+
+	return outTokens, nil
 }
 
 // input the supply token, output the expected token.

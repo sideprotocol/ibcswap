@@ -11,10 +11,12 @@ require (
 	github.com/cosmos/ibc-go/v6 v6.1.0
 	github.com/cosmos/interchain-accounts v0.4.0
 	github.com/docker/docker v20.10.19+incompatible
+	github.com/gogo/protobuf v1.3.3
 	github.com/ibcswap/ibcswap/v6 v6.0.0-00010101000000-000000000000
 	github.com/strangelove-ventures/ibctest/v6 v6.0.0-20221209152048-e8388a0b91fd
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/tendermint v0.34.24
+	github.com/tyler-smith/go-bip39 v1.0.1-0.20181017060643-dbb3b84ba2ef
 	go.uber.org/zap v1.23.0
 	golang.org/x/mod v0.6.0
 	google.golang.org/grpc v1.51.0
@@ -79,7 +81,6 @@ require (
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gogo/gateway v1.1.0 // indirect
-	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
