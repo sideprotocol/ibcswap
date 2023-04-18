@@ -240,7 +240,6 @@ func (s *InterchainswapTestSuite) TestDoubleDepositStatus() {
 				//logger.CleanLog("DoubleDeposit:", txRes)
 				s.Require().NoError(err)
 				s.AssertValidTxResponse(txRes)
-
 			}
 
 			test.WaitForBlocks(ctx, 15, chainA, chainB)

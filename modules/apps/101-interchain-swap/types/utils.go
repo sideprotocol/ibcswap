@@ -1,7 +1,9 @@
 package types
 
 import (
+	"bytes"
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"sort"
@@ -78,4 +80,23 @@ func CreateEscrowAccount(portID, channelID string) {
 	acc := authtypes.NewEmptyModuleAccount(name)
 	pubAddr := GetEscrowAddress(portID, channelID)
 	acc.SetAddress(pubAddr)
+}
+
+func BytesToUint(b []byte) (uint, error) {
+	buf := bytes.NewReader(b)
+	var num uint
+	err := binary.Read(buf, binary.LittleEndian, &num)
+	if err != nil {
+		return 0, err
+	}
+	return num, nil
+}
+
+func UintToBytes(num uint) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	err := binary.Write(buf, binary.LittleEndian, num)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }

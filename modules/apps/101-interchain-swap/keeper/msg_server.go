@@ -196,11 +196,16 @@ func (k Keeper) OnCreatePoolReceived(ctx sdk.Context, msg *types.MsgCreatePoolRe
 		return nil, types.ErrInvalidDenomPair
 	}
 
-	//TODO: Need to implement params module and market maker.
-	amm := types.NewInterchainMarketMaker(
-		&pool,
-		types.DefaultMaxFeeRate,
-	)
+	// Instantiate an interchain market maker with the default fee rate
+	amm, found := k.GetInterchainMarketMaker(ctx, pooId)
+	if !found {
+		amm = *types.NewInterchainMarketMaker(
+			&pool,
+			types.DefaultMaxFeeRate,
+		)
+		// save market maker
+		k.SetInterchainMarketMaker(ctx, amm)
+	}
 
 	lpToken, err := amm.DepositSingleAsset(*msg.Tokens[0])
 	if err != nil {
@@ -226,11 +231,16 @@ func (k Keeper) OnDepositReceived(ctx sdk.Context, msg *types.MsgDepositRequest)
 		return nil, types.ErrNotFoundPool
 	}
 
-	//TODO: Need to implement params module and market maker.
-	amm := types.NewInterchainMarketMaker(
-		&pool,
-		types.DefaultMaxFeeRate,
-	)
+	// Instantiate an interchain market maker with the default fee rate
+	amm, found := k.GetInterchainMarketMaker(ctx, pool.PoolId)
+	if !found {
+		amm = *types.NewInterchainMarketMaker(
+			&pool,
+			types.DefaultMaxFeeRate,
+		)
+		// save market maker
+		k.SetInterchainMarketMaker(ctx, amm)
+	}
 
 	poolToken, err := amm.DepositSingleAsset(*msg.Tokens[0])
 	if err != nil {
@@ -254,9 +264,8 @@ func (k Keeper) OnDepositReceived(ctx sdk.Context, msg *types.MsgDepositRequest)
 		pool.Status = types.PoolStatus_POOL_STATUS_READY
 	}
 
-	// save pool and market.
+	// save pool.
 	k.SetInterchainLiquidityPool(ctx, pool)
-	k.SetInterchainMarketMaker(ctx, *amm)
 	return &types.MsgDepositResponse{
 		PoolToken: poolToken,
 	}, nil
@@ -318,11 +327,16 @@ func (k Keeper) OnDoubleDepositReceived(ctx sdk.Context, msg *types.MsgDoubleDep
 		return nil, err
 	}
 
-	// Instantiate an interchain market maker
-	amm := types.NewInterchainMarketMaker(
-		&pool,
-		types.DefaultMaxFeeRate,
-	)
+	// Instantiate an interchain market maker with the default fee rate
+	amm, found := k.GetInterchainMarketMaker(ctx, pool.PoolId)
+	if !found {
+		amm = *types.NewInterchainMarketMaker(
+			&pool,
+			types.DefaultMaxFeeRate,
+		)
+		// save market maker
+		k.SetInterchainMarketMaker(ctx, amm)
+	}
 
 	// Process double asset deposit
 	poolTokens, err := amm.DepositDoubleAsset(msg.Tokens)
@@ -350,9 +364,8 @@ func (k Keeper) OnDoubleDepositReceived(ctx sdk.Context, msg *types.MsgDoubleDep
 		return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, ":%s", err)
 	}
 
-	// Save pool and market
+	// Save pool
 	k.SetInterchainLiquidityPool(ctx, pool)
-	k.SetInterchainMarketMaker(ctx, *amm)
 	return &types.MsgDoubleDepositResponse{
 		PoolTokens: poolTokens,
 	}, nil
@@ -373,10 +386,15 @@ func (k Keeper) OnWithdrawReceived(ctx sdk.Context, msg *types.MsgWithdrawReques
 	}
 
 	// Instantiate an interchain market maker with the default fee rate
-	amm := types.NewInterchainMarketMaker(
-		&pool,
-		types.DefaultMaxFeeRate,
-	)
+	amm, found := k.GetInterchainMarketMaker(ctx, pool.PoolId)
+	if !found {
+		amm = *types.NewInterchainMarketMaker(
+			&pool,
+			types.DefaultMaxFeeRate,
+		)
+		// save market maker
+		k.SetInterchainMarketMaker(ctx, amm)
+	}
 
 	// Calculate output token
 	outToken, err := amm.Withdraw(*msg.PoolCoin, msg.DenomOut)
@@ -395,9 +413,8 @@ func (k Keeper) OnWithdrawReceived(ctx sdk.Context, msg *types.MsgWithdrawReques
 	pool.SubPoolSupply(*msg.PoolCoin)
 	pool.SubAsset(*outToken)
 
-	// Save pool and market
+	// Save pool
 	k.SetInterchainLiquidityPool(ctx, *amm.Pool)
-	k.SetInterchainMarketMaker(ctx, *amm)
 	return &types.MsgWithdrawResponse{
 		Tokens: []*sdk.Coin{outToken},
 	}, nil
@@ -418,10 +435,15 @@ func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest) (*typ
 	}
 
 	// Instantiate an interchain market maker with the default fee rate
-	amm := types.NewInterchainMarketMaker(
-		&pool,
-		types.DefaultMaxFeeRate,
-	)
+	amm, found := k.GetInterchainMarketMaker(ctx, poolID)
+	if !found {
+		amm = *types.NewInterchainMarketMaker(
+			&pool,
+			types.DefaultMaxFeeRate,
+		)
+		// save market maker
+		k.SetInterchainMarketMaker(ctx, amm)
+	}
 
 	var outToken *sdk.Coin
 	var err error
@@ -451,9 +473,8 @@ func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest) (*typ
 	pool.SubAsset(*outToken)
 	pool.AddAsset(*msg.TokenIn)
 
-	// Save pool and market
+	// Save pool
 	k.SetInterchainLiquidityPool(ctx, pool)
-	k.SetInterchainMarketMaker(ctx, *amm)
 	return &types.MsgSwapResponse{
 		Tokens: []*sdk.Coin{outToken},
 	}, nil
