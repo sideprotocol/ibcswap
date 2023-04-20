@@ -100,13 +100,13 @@ func (suite *KeeperTestSuite) TestMsgDoubleDeposit() {
 
 	nonce := suite.chainB.SenderAccount.GetSequence()
 
-	depositTx := types.EncounterPartyDepositTx{
-		AccountSequence: nonce,
-		Sender:          suite.chainB.SenderAccount.GetAddress().String(),
-		//Tokens:          []*sdk.Coin{{Denom: denomPair[0], Amount: sdk.NewInt(1000)}, {Denom: denomPair[1], Amount: sdk.NewInt(1000)}},
+	remoteDepositTx := types.RemoteDeposit{
+		Sequence: nonce,
+		Sender:   suite.chainB.SenderAccount.GetAddress().String(),
+		Token:    &sdk.Coin{Denom: denomPair[1], Amount: sdk.NewInt(1000)},
 	}
 
-	rawDepositTx := types.ModuleCdc.MustMarshal(&depositTx)
+	rawDepositTx := types.ModuleCdc.MustMarshal(&remoteDepositTx)
 
 	if err != nil {
 		fmt.Println("Marshal Error:", err)

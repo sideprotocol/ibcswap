@@ -47,16 +47,20 @@ message MsgDepositResponse {
 
 // demo two side deposit
 message MsgDoubleDepositRequest {
-  string                      poolId = 1;
-  repeated string             senders = 2;
-  repeated cosmos.base.v1beta1.Coin tokens = 3;
-  bytes encounterPartySignature = 4;
+  string        poolId = 1;
+  LocalDeposit  localDeposit = 2;
+  RemoteDeposit remoteDeposit = 3;
+}
+message LocalDeposit {
+  string sender = 1;
+  cosmos.base.v1beta1.Coin token = 2;
 }
 
-message EncounterPartyDepositTx {
-  uint64 accountSequence = 1;
-  string sender = 2;
-  cosmos.base.v1beta1.Coin token = 3;
+message RemoteDeposit {
+  string sender = 1;
+  cosmos.base.v1beta1.Coin token = 2;
+  uint64 sequence = 3;
+  bytes signature = 4;
 }
 
 

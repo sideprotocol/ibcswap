@@ -18,7 +18,7 @@ func (k Keeper) DoubleDeposit(goCtx context.Context, msg *types.MsgDoubleDeposit
 	}
 
 	// check address
-	senderPrefix, _, err := bech32.Decode(msg.Senders[0])
+	senderPrefix, _, err := bech32.Decode(msg.LocalDeposit.Sender)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func (k Keeper) DoubleDeposit(goCtx context.Context, msg *types.MsgDoubleDeposit
 	_ = pool
 
 	// Deposit token to Escrow account
-	coins, err := k.validateDoubleDepositCoins(ctx, &pool, msg.Senders[0], msg.Tokens)
+	coins, err := k.validateDoubleDepositCoins(ctx, &pool, msg.LocalDeposit.Sender, msg.LocalDeposit.Token)
 	if err != nil {
 		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "%s", err)
 	}
@@ -42,9 +42,9 @@ func (k Keeper) DoubleDeposit(goCtx context.Context, msg *types.MsgDoubleDeposit
 	}
 
 	// create escrow module account  here
-	err = k.LockTokens(ctx, pool.EncounterPartyPort, pool.EncounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Senders[0]), coins)
+	err = k.LockTokens(ctx, pool.EncounterPartyPort, pool.EncounterPartyChannel, sdk.MustAccAddressFromBech32(msg.LocalDeposit.Sender), coins)
 	if err != nil {
-		return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, "because of %s", err) 
+		return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, "because of %s", err)
 	}
 
 	// construct ibc packet

@@ -158,25 +158,22 @@ func (k Keeper) validateCoins(ctx sdk.Context, pool *types.InterchainLiquidityPo
 	return coins, nil
 }
 
-func (k Keeper) validateDoubleDepositCoins(ctx sdk.Context, pool *types.InterchainLiquidityPool, sender string, tokensIn []*sdk.Coin) ([]sdk.Coin, error) {
+func (k Keeper) validateDoubleDepositCoins(ctx sdk.Context, pool *types.InterchainLiquidityPool, sender string, tokensIn *sdk.Coin) ([]sdk.Coin, error) {
 	// Deposit token to Escrow account
 	coins := []sdk.Coin{}
-	for _, coin := range tokensIn {
-		accAddress := sdk.MustAccAddressFromBech32(sender)
-		balance := k.bankKeeper.GetBalance(ctx, accAddress, coin.Denom)
-		if balance.Amount.Equal(sdk.NewInt(0)) {
-			continue
-		}
-		coins = append(coins, *coin)
-		if pool.Status == types.PoolStatus_POOL_STATUS_INITIAL {
-			poolAsset, err := pool.FindAssetByDenom(coin.Denom)
-			if err == nil {
-				if !poolAsset.Balance.Amount.Equal(coin.Amount) {
-					return nil, types.ErrInvalidInitialDeposit
-				}
+	accAddress := sdk.MustAccAddressFromBech32(sender)
+	balance := k.bankKeeper.GetBalance(ctx, accAddress, tokensIn.Denom)
+	if balance.Amount.Equal(sdk.NewInt(0)) {
+		return nil, types.ErrInvalidAmount
+	}
+	coins = append(coins, *tokensIn)
+	if pool.Status == types.PoolStatus_POOL_STATUS_INITIAL {
+		poolAsset, err := pool.FindAssetByDenom(tokensIn.Denom)
+		if err == nil {
+			if !poolAsset.Balance.Amount.Equal(tokensIn.Amount) {
+				return nil, types.ErrInvalidInitialDeposit
 			}
 		}
 	}
 	return coins, nil
 }
-

@@ -264,7 +264,7 @@ func (imm *InterchainMarketMaker) Withdraw(redeem types.Coin, denomOut string) (
 		return nil, fmt.Errorf("invalid denom pair")
 	}
 
-	ratio := 1 - float64(redeem.Amount.Quo(imm.Pool.Supply.Amount).Int64())
+	ratio := 1 - float64(redeem.Amount.Mul(types.NewInt(Multiplier)).Quo(imm.Pool.Supply.Amount).Int64())/Multiplier
 
 	exponent := 1 / float64(asset.Weight)
 	factor := (1 - math.Pow(ratio, exponent)) * Multiplier

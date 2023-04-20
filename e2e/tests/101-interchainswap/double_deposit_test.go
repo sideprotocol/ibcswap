@@ -202,20 +202,17 @@ func (s *InterchainswapTestSuite) TestDoubleDepositStatus() {
 			switch tc.msgType {
 			case "double deposit":
 
-				acc := s.GetAccount(ctx, chainB, chainBAddress)
-				logger.CleanLog("Account", acc)
-
 				depositTokens := []*sdk.Coin{
 					{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
 					{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
 				}
 
-				depositTx := &types.EncounterPartyDepositTx{
-					AccountSequence: 1,
-					Sender:          chainBAddress,
-					Token:           &sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
+				remoteDepositTx := &types.RemoteDeposit{
+					Sequence: 1,
+					Sender:   chainBAddress,
+					Token:    &sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
 				}
-				rawTx := types.ModuleCdc.MustMarshal(depositTx)
+				rawTx := types.ModuleCdc.MustMarshal(remoteDepositTx)
 				if err != nil {
 					fmt.Println(err)
 					return
@@ -237,10 +234,8 @@ func (s *InterchainswapTestSuite) TestDoubleDepositStatus() {
 				)
 
 				txRes, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-				//logger.CleanLog("DoubleDeposit:", txRes)
 				s.Require().NoError(err)
 				s.AssertValidTxResponse(txRes)
-
 			}
 
 			test.WaitForBlocks(ctx, 15, chainA, chainB)

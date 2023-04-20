@@ -15,12 +15,12 @@ steps:
 1. construct a tx on chain A
    - build the Counter party chain sender's signature.
    ```go
-   depositTx := &types.EncounterPartyDepositTx{
-   			AccountSequence: 1,
-   			Sender:          chainBAddress,
-   			Token:           &sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
-   	}
-    rawDepositTx := types.CDC.MustMarshal(depositTx)
+   remoteDepositTx := &types.RemoteDeposit{
+   				Sequence: 1,
+   				Sender:   chainBAddress,
+   				Token:    &sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
+   			}
+    rawDepositTx := types.CDC.MustMarshal(remoteDepositTx)
     signedTx := priv.Sign(rawDepositTx)
    ```
    - build double deposit message.
@@ -43,7 +43,12 @@ steps:
 	    Sender:          msg.senders[1],
 	    Token:           msg.Tokens[1],
 	}
-    rawTx = types.ModuleCdc.MustMarshal(depositTx)
+     remoteDepositTx := &types.RemoteDeposit{
+   				Sequence: acc.Sequence,
+   				Sender:   acc.GetAddress(),
+   				Token:    msg.RemoteDeposit.Token,
+   	}
+    rawTx = types.ModuleCdc.MustMarshal(remoteDepositTx)
     pubKey = acc.GetPubKey()
     isValid := pubKey.VerifySignature(rawTx, msg.signedTx)
 

@@ -11,7 +11,8 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCreatePoolRequest{}, "interchainswap/CreatePool", nil)
 	cdc.RegisterConcrete(&MsgDepositRequest{}, "interchainswap/Deposit", nil)
 	cdc.RegisterConcrete(&MsgDoubleDepositRequest{}, "interchainswap/DoubleDeposit", nil)
-	cdc.RegisterConcrete(&EncounterPartyDepositTx{}, "interchainswap/EncounterPartyDepositTx", nil)
+	cdc.RegisterConcrete(&RemoteDeposit{}, "interchainswap/RemoteDeposit", nil)
+	cdc.RegisterConcrete(&LocalDeposit{}, "interchainswap/LocalDeposit", nil)
 	cdc.RegisterConcrete(&MsgWithdrawRequest{}, "interchainswap/Withdraw", nil)
 	cdc.RegisterConcrete(&MsgSwapRequest{}, "interchainswap/Swap", nil)
 	// this line is used by starport scaffolding # 2

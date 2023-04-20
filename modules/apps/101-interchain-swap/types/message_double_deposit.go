@@ -11,10 +11,16 @@ var _ sdk.Msg = &MsgDepositRequest{}
 
 func NewMsgDoubleDeposit(poolId string, senders []string, tokens []*sdk.Coin, sig []byte) *MsgDoubleDepositRequest {
 	return &MsgDoubleDepositRequest{
-		PoolId:                  poolId,
-		Senders:                 senders,
-		Tokens:                  tokens,
-		EncounterPartySignature: sig,
+		PoolId: poolId,
+		LocalDeposit: &LocalDeposit{
+			Sender: senders[0],
+			Token:  tokens[0],
+		},
+		RemoteDeposit: &RemoteDeposit{
+			Sender:    senders[1],
+			Token:     tokens[1],
+			Signature: sig,
+		},
 	}
 }
 
@@ -28,7 +34,7 @@ func (msg *MsgDoubleDepositRequest) Type() string {
 
 func (msg *MsgDoubleDepositRequest) GetSigners() []sdk.AccAddress {
 	signers := []sdk.AccAddress{}
-	creator, err := sdk.AccAddressFromBech32(msg.Senders[0])
+	creator, err := sdk.AccAddressFromBech32(msg.LocalDeposit.Sender)
 	if err != nil {
 		panic(err)
 	}
@@ -43,34 +49,13 @@ func (msg *MsgDoubleDepositRequest) GetSignBytes() []byte {
 
 func (msg *MsgDoubleDepositRequest) ValidateBasic() error {
 
-	for _, sender := range msg.Senders {
-		_, err := sdk.AccAddressFromBech32(sender)
-		// senderPrefix, _, err := bech32.Decode(sender)
-		// if sdk.GetConfig().GetBech32AccountAddrPrefix() != senderPrefix && index == 0 {
-		// 	return errorsmod.Wrapf(ErrInvalidAddress, "first address has to be this chain address (%s)", err)
-		// }
-		if err != nil {
-			return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)
-		}
+	_, err := sdk.AccAddressFromBech32(msg.LocalDeposit.Sender)
+	if err != nil {
+		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)
 	}
-
-	if len(msg.Senders) != 2 {
-		return errorsmod.Wrapf(ErrInvalidTokenLength, "invalid token length (%d)", len(msg.Tokens))
-	}
-
-	if len(msg.Tokens) < 2 {
-		return errorsmod.Wrapf(ErrInvalidTokenLength, "invalid token length (%d)", len(msg.Tokens))
-	}
-
-	denoms := map[string]int{}
-	for _, token := range msg.Tokens {
-		if _, ok := denoms[token.Denom]; ok {
-			return errorsmod.Wrapf(ErrFailedDeposit, "because of %s", ErrInvalidDecimalPair)
-		}
-		denoms[token.Denom] = 1
-		if token.Amount.Equal(sdk.NewInt(0)) {
-			return errorsmod.Wrapf(ErrFailedDeposit, "because of %s", ErrInvalidAmount)
-		}
+	_, err = sdk.AccAddressFromBech32(msg.RemoteDeposit.Sender)
+	if err != nil {
+		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)
 	}
 	return nil
 }

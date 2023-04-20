@@ -237,8 +237,8 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
-		token = *msg.Tokens[0]
-		sender = msg.Senders[0]
+		token = *msg.LocalDeposit.Token
+		sender = msg.LocalDeposit.Sender
 	case types.WITHDRAW:
 		var msg types.MsgWithdrawRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
