@@ -196,15 +196,11 @@ func (k Keeper) OnCreatePoolReceived(ctx sdk.Context, msg *types.MsgCreatePoolRe
 	}
 
 	// Instantiate an interchain market maker with the default fee rate
-	amm, found := k.GetInterchainMarketMaker(ctx, pooId)
-	if !found {
-		amm = *types.NewInterchainMarketMaker(
-			&pool,
-			types.DefaultMaxFeeRate,
-		)
-		// save market maker
-		k.SetInterchainMarketMaker(ctx, amm)
-	}
+	fee := k.GetSwapFeeRate(ctx)
+	amm := *types.NewInterchainMarketMaker(
+		&pool,
+		fee,
+	)
 
 	lpToken, err := amm.DepositSingleAsset(*msg.Tokens[0])
 	if err != nil {
@@ -231,15 +227,11 @@ func (k Keeper) OnDepositReceived(ctx sdk.Context, msg *types.MsgDepositRequest)
 	}
 
 	// Instantiate an interchain market maker with the default fee rate
-	amm, found := k.GetInterchainMarketMaker(ctx, pool.PoolId)
-	if !found {
-		amm = *types.NewInterchainMarketMaker(
-			&pool,
-			types.DefaultMaxFeeRate,
-		)
-		// save market maker
-		k.SetInterchainMarketMaker(ctx, amm)
-	}
+	fee := k.GetSwapFeeRate(ctx)
+	amm := *types.NewInterchainMarketMaker(
+		&pool,
+		fee,
+	)
 
 	poolToken, err := amm.DepositSingleAsset(*msg.Tokens[0])
 	if err != nil {
@@ -330,12 +322,12 @@ func (k Keeper) OnDoubleDepositReceived(ctx sdk.Context, msg *types.MsgDoubleDep
 	}
 
 	// Instantiate an interchain market maker with the default fee rate
-	amm, found := k.GetInterchainMarketMaker(ctx, pool.PoolId)
+	fee := k.GetSwapFeeRate(ctx)
+	amm := *types.NewInterchainMarketMaker(
+		&pool,
+		fee,
+	)
 	if !found {
-		amm = *types.NewInterchainMarketMaker(
-			&pool,
-			types.DefaultMaxFeeRate,
-		)
 		// save market maker
 		k.SetInterchainMarketMaker(ctx, amm)
 	}
@@ -386,15 +378,11 @@ func (k Keeper) OnWithdrawReceived(ctx sdk.Context, msg *types.MsgWithdrawReques
 	}
 
 	// Instantiate an interchain market maker with the default fee rate
-	amm, found := k.GetInterchainMarketMaker(ctx, pool.PoolId)
-	if !found {
-		amm = *types.NewInterchainMarketMaker(
-			&pool,
-			types.DefaultMaxFeeRate,
-		)
-		// save market maker
-		k.SetInterchainMarketMaker(ctx, amm)
-	}
+	fee := k.GetSwapFeeRate(ctx)
+	amm := *types.NewInterchainMarketMaker(
+		&pool,
+		fee,
+	)
 
 	// Calculate output token
 	outToken, err := amm.Withdraw(*msg.PoolCoin, msg.DenomOut)
@@ -435,15 +423,11 @@ func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest) (*typ
 	}
 
 	// Instantiate an interchain market maker with the default fee rate
-	amm, found := k.GetInterchainMarketMaker(ctx, poolID)
-	if !found {
-		amm = *types.NewInterchainMarketMaker(
-			&pool,
-			types.DefaultMaxFeeRate,
-		)
-		// save market maker
-		k.SetInterchainMarketMaker(ctx, amm)
-	}
+	fee := k.GetSwapFeeRate(ctx)
+	amm := *types.NewInterchainMarketMaker(
+		&pool,
+		fee,
+	)
 
 	var outToken *sdk.Coin
 	var err error
