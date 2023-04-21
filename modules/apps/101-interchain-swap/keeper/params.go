@@ -12,15 +12,19 @@ func (k Keeper) GetSwapEnabled(ctx sdk.Context) bool {
 	return res
 }
 
-func (k Keeper) GetSwapMaxFeeRate(ctx sdk.Context) uint32 {
+func (k Keeper) GetSwapFeeRate(ctx sdk.Context) uint32 {
 	var res uint32
 	k.paramstore.Get(ctx, types.KeySwapMaxFeeRate, &res)
 	return res
 }
 
+func (k Keeper) SetSwapFeeRate(ctx sdk.Context, fee uint32) {
+	k.paramstore.Set(ctx, types.KeySwapMaxFeeRate, fee)
+}
+
 // GetParams get all parameters as types.Params
 func (k Keeper) GetParams(ctx sdk.Context) types.Params {
-	return types.NewParams(k.GetSwapEnabled(ctx), k.GetSwapMaxFeeRate(ctx))
+	return types.NewParams(k.GetSwapEnabled(ctx), k.GetSwapFeeRate(ctx))
 }
 
 // SetParams set the params
