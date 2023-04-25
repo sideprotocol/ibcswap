@@ -5,9 +5,13 @@ Compare single side and two side deposit:
 const initialX = 2_000_000 // USDT
 const initialY = 1000 // ETH
 const fee = 0.003
+// two side deposit. 
 const pool1 = new WeightedPool(initialX, initialY, fee)
+// single deposit X 
 const pool2 = new WeightedPool(initialX, initialY, fee)
+// two sides deposit
 const pool3 = new WeightedPool(initialX, initialY, fee)
+// single deposit Y
 const pool4 = new WeightedPool(initialX, initialY, fee)
 
 const depositX = initialX * 30 / 100
