@@ -71,6 +71,8 @@ Market price after add: 2000000 1020 1960.7843137254902
 ```
 
 conclusion:
-when the amount of single deposit increase, the difference increases as well. we need set a upper limit. say single deposit amount / pools.amount <= 1%
+when the amount of single deposit increase, the difference increases as well. we need set a upper limit. 
+
+Is `single deposit amount / pools.amount <= 1%` Ok?
 
 
