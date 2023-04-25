@@ -51,6 +51,25 @@ Market price after add: 2000000 1600 1250
 314991.3116739507 229272.17663466535 85719.13503928535 37.39%
 ```
 
+while we deposit a small number:
+```js
+const depositX = initialX * 1 / 100
+const depositY = initialY * 1 / 100
+```
+the result is:
+```sh
+% node singleDeposit.js
+deposit:  20000 10
+Market price after add: 2020000 1010 2000
+Market price after add: 2040000 1000 2040
+9.87254527093931 9.67989358913368 0.1926516818056303 1.99%
+20134.890653155315 20531.645438032905 -396.7547848775903 -1.93%
+Market price after add: 2020000 1010 2000
+Market price after add: 2000000 1020 1960.7843137254902
+9.87254527093931 9.681409328357661 0.19113594258164923 1.97%
+19359.78717826736 18988.579073631787 371.2081046355743 1.95%
+```
+
 conclusion:
 when the amount of single deposit increase, the difference increases as well. we need set a upper limit. say single deposit amount / pools.amount <= 1%
 
