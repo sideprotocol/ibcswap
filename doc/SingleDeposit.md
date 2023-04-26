@@ -41,6 +41,10 @@ const d1 = pool4.swapY4X(depositY), d2 = pool4.swapY4X(depositY)
 console.log(c1, c2, c1-c2,  `${((c1/c2 - 1)*100).toFixed(2)}%`)
 console.log(d1, d2, d1-d2, `${((d1/d2 - 1)*100).toFixed(2)}%`)
 ```
+```js
+const depositX = initialX * 30 / 100
+const depositY = initialY * 30 / 100
+```
 
 ```sh
 % node singleDeposit.js
