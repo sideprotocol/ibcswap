@@ -66,7 +66,7 @@ func (msg *MsgCreatePoolRequest) ValidateBasic() error {
 
 	totalWeight := 0
 	for _, weight := range weights {
-		w,_ := strconv.Atoi(weight)
+		w, _ := strconv.Atoi(weight)
 		totalWeight += w
 	}
 

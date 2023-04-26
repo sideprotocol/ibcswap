@@ -20,6 +20,7 @@ func CmdCreatePool() *cobra.Command {
 		Short: "Broadcast message CreatePool",
 		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
+
 			argSourcePort := args[0]
 			argSourceChannel := args[1]
 			argSender := args[2]
@@ -35,6 +36,7 @@ func CmdCreatePool() *cobra.Command {
 			if err != nil {
 				return err
 			}
+
 			decimalList := strings.Split(decimalsStr, ",")
 			decimals := []uint32{}
 			for _, decimalStrEle := range decimalList {
