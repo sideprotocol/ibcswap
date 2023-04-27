@@ -133,10 +133,10 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
 		depositCoin := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(10000)}
 
-		msg := types.NewMsgDeposit(
+		msg := types.NewMsgSingleDeposit(
 			poolId,
 			chainBAddress,
-			[]*sdk.Coin{&depositCoin},
+			&depositCoin,
 		)
 		resp, err := s.BroadcastMessages(ctx, chainB, chainBWallet, msg)
 		s.AssertValidTxResponse(resp)
@@ -214,7 +214,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 		msg := types.NewMsgSwap(
 			types.SwapMsgType_LEFT,
 			sender,
-			100,
+			1,
 			recipient,
 			&tokenIn,
 			tokenOut,
@@ -342,10 +342,10 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacketErrors() {
 
 		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
 		depositCoin := sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(1000)}
-		msg := types.NewMsgDeposit(
+		msg := types.NewMsgSingleDeposit(
 			poolId,
 			chainAInvalidAddress,
-			[]*sdk.Coin{&depositCoin},
+			&depositCoin,
 		)
 
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
@@ -394,10 +394,10 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacketErrors() {
 
 		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
 		depositCoin := sdk.Coin{Denom: "astros", Amount: sdk.NewInt(1000)}
-		msg := types.NewMsgDeposit(
+		msg := types.NewMsgSingleDeposit(
 			poolId,
 			chainAAddress,
-			[]*sdk.Coin{&depositCoin},
+			&depositCoin,
 		)
 
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
@@ -430,6 +430,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacketErrors() {
 		sender := chainAAddress
 		tokenIn := sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(1000000000000)}
 		tokenOut := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(1000)}
+
 		msg := types.NewMsgSwap(
 			types.SwapMsgType_LEFT,
 			sender,

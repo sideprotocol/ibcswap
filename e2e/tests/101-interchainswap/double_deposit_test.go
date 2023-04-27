@@ -132,10 +132,10 @@ func (s *InterchainswapTestSuite) TestDoubleDepositStatus() {
 		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
 		depositCoin := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(initialY)}
 
-		msg := types.NewMsgDeposit(
+		msg := types.NewMsgSingleDeposit(
 			poolId,
 			chainBAddress,
-			[]*sdk.Coin{&depositCoin},
+			&depositCoin,
 		)
 		resp, err := s.BroadcastMessages(ctx, chainB, chainBWallet, msg)
 		s.AssertValidTxResponse(resp)
