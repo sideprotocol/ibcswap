@@ -107,23 +107,15 @@ func TestUpdatePoolAsset(t *testing.T) {
 	}
 
 	// mock swap message
-	msg := MsgDepositRequest{
+	msg := MsgSingleDepositRequest{
 		PoolId: poolId,
 		Sender: "",
-		Tokens: []*types.Coin{
-			{
-				Amount: types.NewInt(100000000),
-				Denom:  demons[0],
-			},
-			{
-				Amount: types.NewInt(100000000),
-				Denom:  demons[1],
-			},
+		Token: &types.Coin{
+			Amount: types.NewInt(100000000),
+			Denom:  demons[0],
 		},
 	}
-	for _, token := range msg.Tokens {
-		pool.AddAsset(*token)
-	}
+	pool.AddAsset(*msg.Token)
 	fmt.Println("Pool:", pool)
 	// require.NoError(t, pool.Assets[])
 	require.NotEqual(t, pool.Assets[0].Balance.Amount.Uint64(), uint(0))

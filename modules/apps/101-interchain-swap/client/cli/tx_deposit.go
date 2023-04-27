@@ -32,10 +32,10 @@ func CmdDeposit() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgDeposit(
+			msg := types.NewMsgSingleDeposit(
 				argPoolId,
 				argSender,
-				tokens,
+				tokens[0],
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

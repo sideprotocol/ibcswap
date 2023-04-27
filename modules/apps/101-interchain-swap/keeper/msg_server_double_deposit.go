@@ -47,6 +47,21 @@ func (k Keeper) DoubleDeposit(goCtx context.Context, msg *types.MsgDoubleDeposit
 		return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, "because of %s", err)
 	}
 
+	fee := k.GetSwapFeeRate(ctx)
+	amm := *types.NewInterchainMarketMaker(
+		&pool,
+		fee,
+	)
+
+	poolTokens, err := amm.DepositDoubleAsset([]*sdk.Coin{
+		msg.LocalDeposit.Token,
+		msg.RemoteDeposit.Token,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
 	// construct ibc packet
 	rawMsgData, err := types.ModuleCdc.Marshal(msg)
 	if err != nil {
@@ -54,8 +69,9 @@ func (k Keeper) DoubleDeposit(goCtx context.Context, msg *types.MsgDoubleDeposit
 	}
 
 	packet := types.IBCSwapPacketData{
-		Type: types.DOUBLE_DEPOSIT,
-		Data: rawMsgData,
+		Type:        types.DOUBLE_DEPOSIT,
+		Data:        rawMsgData,
+		StateChange: &types.StateChange{PoolTokens: poolTokens},
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&ctx)
@@ -65,6 +81,6 @@ func (k Keeper) DoubleDeposit(goCtx context.Context, msg *types.MsgDoubleDeposit
 	}
 
 	return &types.MsgDoubleDepositResponse{
-		PoolTokens: nil,
+		PoolTokens: poolTokens,
 	}, nil
 }

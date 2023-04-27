@@ -7,7 +7,7 @@ import (
 
 const TypeMsgDoubleDeposit = "deposit"
 
-var _ sdk.Msg = &MsgDepositRequest{}
+var _ sdk.Msg = &MsgSingleDepositRequest{}
 
 func NewMsgDoubleDeposit(poolId string, senders []string, tokens []*sdk.Coin, sig []byte) *MsgDoubleDepositRequest {
 	return &MsgDoubleDepositRequest{

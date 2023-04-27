@@ -67,4 +67,5 @@ var (
 	ErrInvalidMsgRouter            = errorsmod.Register(ModuleName, 1543, "invalid msg router")
 	ErrInvalidMsg                  = errorsmod.Register(ModuleName, 1544, "invalid transaction message")
 	ErrInvalidPubKey               = errorsmod.Register(ModuleName, 1546, "invalid pub key")
+	ErrInvalidMessage              = errorsmod.Register(ModuleName, 1547, "invalid message")
 )

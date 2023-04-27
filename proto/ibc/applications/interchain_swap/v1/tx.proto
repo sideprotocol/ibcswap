@@ -17,7 +17,7 @@ import "ibc/core/client/v1/client.proto";
 // Msg defines the Msg service.
 service Msg {
   rpc CreatePool (MsgCreatePoolRequest) returns (MsgCreatePoolResponse);
-  rpc Deposit    (MsgDepositRequest   ) returns (MsgDepositResponse   );
+  rpc SingleDeposit    (MsgSingleDepositRequest   ) returns (MsgSingleDepositResponse   );
   rpc DoubleDeposit    (MsgDoubleDepositRequest   ) returns (MsgDoubleDepositResponse   );
   rpc Withdraw   (MsgWithdrawRequest  ) returns (MsgWithdrawResponse  );
   rpc Swap       (MsgSwapRequest             ) returns (MsgSwapResponse      );
@@ -35,13 +35,13 @@ message MsgCreatePoolResponse {
   string poolId = 1;
 }
 
-message MsgDepositRequest {
-           string                         poolId = 1;
-           string                         sender = 2;
-  repeated cosmos.base.v1beta1.Coin tokens = 3;
+message MsgSingleDepositRequest {
+   string                         poolId = 1;
+   string                         sender = 2;
+   cosmos.base.v1beta1.Coin token = 3;
 }
 
-message MsgDepositResponse {
+message MsgSingleDepositResponse {
   cosmos.base.v1beta1.Coin poolToken = 1;
 }
 
@@ -101,3 +101,4 @@ message PoolApprove {
     string pool_id = 1;
     string sender = 2;
 }
+

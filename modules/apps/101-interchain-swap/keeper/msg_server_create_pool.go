@@ -10,7 +10,7 @@ import (
 )
 
 func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolRequest) (*types.MsgCreatePoolResponse, error) {
-	
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// validate message
@@ -46,7 +46,6 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolReq
 	if holdingNativeCoin.Amount.LT(msg.Tokens[0].Amount) {
 		return nil, types.ErrEmptyInitialLiquidity
 	}
-	//lockedNativeCoin := sdk.NewCoin(msg.Denoms[0], sdk.NewInt(int64(msg.InitalLiquidity)))
 
 	// move initial fund to liquidity pool
 	err = k.LockTokens(ctx, msg.SourcePort, msg.SourceChannel, sdk.MustAccAddressFromBech32(msg.Sender), sdk.NewCoins(*msg.Tokens[0]))

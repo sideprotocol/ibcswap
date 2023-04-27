@@ -6,6 +6,7 @@ option go_package = "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-s
 
 import "google/protobuf/any.proto";
 import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 // Type defines a classification of swap messages
 enum SwapMessageType {
@@ -22,11 +23,20 @@ enum SwapMessageType {
   TYPE_RIGHT_SWAP = 6 [(gogoproto.enumvalue_customname) = "RIGHT_SWAP"];
 }
 
+message StateChange {
+  repeated cosmos.base.v1beta1.Coin in = 1;
+  repeated cosmos.base.v1beta1.Coin out = 2;
+  repeated cosmos.base.v1beta1.Coin poolTokens = 3;
+}
+
+
 // IBCSwapPacketData is comprised of a raw transaction, type of transaction and optional memo field.
 message IBCSwapPacketData {
   SwapMessageType   type = 1;
   // marshall data of transactions
   bytes  data = 2;
   // current pool states on source chain, could be empty.
-  bytes  states = 3;
+  StateChange  stateChange = 3;
 }
+
+
