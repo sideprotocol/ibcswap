@@ -109,34 +109,40 @@ func (k Keeper) OnDoubleDepositAcknowledged(ctx sdk.Context, req *types.MsgMulti
 	return nil
 }
 
-func (k Keeper) OnWithdrawAcknowledged(ctx sdk.Context, req *types.MsgWithdrawRequest, res *types.MsgWithdrawResponse) error {
+func (k Keeper) OnWithdrawAcknowledged(ctx sdk.Context, req *types.MsgMultiAssetWithdrawRequest, res *types.MsgMultiAssetWithdrawResponse) error {
 
-	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolCoin.Denom)
+	pool, found := k.GetInterchainLiquidityPool(ctx, req.LocalWithdraw.PoolCoin.Denom)
 	if !found {
 		return types.ErrNotFoundPool
 	}
 
 	// update pool status
-	pool.SubPoolSupply(*res.Tokens[0])
-	for _, token := range res.Tokens {
-		pool.SubAsset(*token)
+	for _, poolAsset := range res.Tokens {
+		pool.SubAsset(*poolAsset)
 	}
-	k.SetInterchainLiquidityPool(ctx, pool)
+	pool.SubPoolSupply(*req.LocalWithdraw.PoolCoin)
+	pool.SubPoolSupply(*req.RemoteWithdraw.PoolCoin)
+
 	//burn voucher token.
-	err := k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(req.LocalSender), *req.PoolCoin)
+	err := k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(req.LocalWithdraw.Sender), *req.LocalWithdraw.PoolCoin)
 	if err != nil {
 		return err
 	}
+
 	// unlock token
 	err = k.UnlockTokens(ctx,
 		pool.EncounterPartyPort,
 		pool.EncounterPartyChannel,
-		sdk.MustAccAddressFromBech32(req.LocalSender),
+		sdk.MustAccAddressFromBech32(req.LocalWithdraw.Sender),
 		sdk.NewCoins(*res.Tokens[0]),
 	)
+
 	if err != nil {
 		return err
 	}
+
+	// save pool
+	k.SetInterchainLiquidityPool(ctx, pool)
 	return nil
 }
 
@@ -245,8 +251,8 @@ func (k Keeper) OnSingleAssetDepositReceived(ctx sdk.Context, msg *types.MsgSing
 	}, nil
 }
 
-// OnDoubleDepositReceived processes a double deposit request and returns a response or an error.
-func (k Keeper) OnDoubleDepositReceived(ctx sdk.Context, msg *types.MsgMultiAssetDepositRequest, stateChange *types.StateChange) (*types.MsgMultiAssetDepositResponse, error) {
+// OnMultiAssetDepositReceived processes a double deposit request and returns a response or an error.
+func (k Keeper) OnMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgMultiAssetDepositRequest, stateChange *types.StateChange) (*types.MsgMultiAssetDepositResponse, error) {
 
 	// Validate the message
 	if err := msg.ValidateBasic(); err != nil {
@@ -329,26 +335,36 @@ func (k Keeper) OnDoubleDepositReceived(ctx sdk.Context, msg *types.MsgMultiAsse
 }
 
 // OnWithdrawReceive processes a withdrawal request and returns a response or an error.
-func (k Keeper) OnWithdrawReceived(ctx sdk.Context, msg *types.MsgWithdrawRequest, stateChange *types.StateChange) (*types.MsgWithdrawResponse, error) {
+func (k Keeper) OnWithdrawReceived(ctx sdk.Context, msg *types.MsgMultiAssetWithdrawRequest, stateChange *types.StateChange) (*types.MsgMultiAssetWithdrawResponse, error) {
 
 	// Validate the message
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
+	// validate remote denom
+	// check out denom
+	if !k.bankKeeper.HasSupply(ctx, msg.LocalWithdraw.DenomOut) {
+		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "invalid denom in local withdraw message:%s", msg.LocalWithdraw.DenomOut)
+	}
+
 	// Retrieve the liquidity pool
-	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolCoin.Denom)
+	pool, found := k.GetInterchainLiquidityPool(ctx, msg.RemoteWithdraw.PoolCoin.Denom)
 	if !found {
 		return nil, types.ErrNotFoundPool
 	}
 
 	// Update pool status by subtracting the supplied pool coin and output token
-	pool.SubPoolSupply(*msg.PoolCoin)
-	pool.SubAsset(*stateChange.Out[0])
+	for _, poolAsset := range stateChange.Out {
+		pool.SubAsset(*poolAsset)
+	}
+	for _, poolToken := range stateChange.PoolTokens {
+		pool.SubPoolSupply(*poolToken)
+	}
 
 	// Save pool
 	k.SetInterchainLiquidityPool(ctx, pool)
-	return &types.MsgWithdrawResponse{
+	return &types.MsgMultiAssetWithdrawResponse{
 		Tokens: stateChange.Out,
 	}, nil
 }

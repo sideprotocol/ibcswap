@@ -132,7 +132,7 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
 		depositCoin := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(initialY * 0.1)}
 
-		msg := types.NewMsgSingleDeposit(
+		msg := types.NewMsgSingleAssetDeposit(
 			poolId,
 			chainBAddress,
 			&depositCoin,
@@ -153,7 +153,7 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
 		depositCoin := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(initialY)}
 
-		msg := types.NewMsgSingleDeposit(
+		msg := types.NewMsgSingleAssetDeposit(
 			poolId,
 			chainBAddress,
 			&depositCoin,
@@ -356,7 +356,7 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 
 			switch tc.msgType {
 			case "deposit":
-				msg := types.NewMsgSingleDeposit(
+				msg := types.NewMsgSingleAssetDeposit(
 					poolId,
 					wallet.Bech32Address("cosmos"),
 					&depositCoin,

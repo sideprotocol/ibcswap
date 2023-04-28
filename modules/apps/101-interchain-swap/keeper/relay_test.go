@@ -97,6 +97,10 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 						Denom:  sdk.DefaultBondDenom,
 						Amount: sdk.NewInt(10),
 					},
+					&sdk.Coin{
+						Denom:  sdk.DefaultBondDenom,
+						Amount: sdk.NewInt(10),
+					},
 				)
 
 				msgbyte, err = types.ModuleCdc.Marshal(msg)

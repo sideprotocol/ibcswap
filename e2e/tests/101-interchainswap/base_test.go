@@ -133,7 +133,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
 		depositCoin := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(10000)}
 
-		msg := types.NewMsgSingleDeposit(
+		msg := types.NewMsgSingleAssetDeposit(
 			poolId,
 			chainBAddress,
 			&depositCoin,
@@ -273,7 +273,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 
 		denomOut := chainADenom
 		sender := chainAAddress
-		msg := types.NewMsgWithdraw(
+		msg := types.NewMsgMultiAssetWithdraw(
 			sender,
 			&poolCoin,
 			denomOut,
@@ -342,7 +342,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacketErrors() {
 
 		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
 		depositCoin := sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(1000)}
-		msg := types.NewMsgSingleDeposit(
+		msg := types.NewMsgSingleAssetDeposit(
 			poolId,
 			chainAInvalidAddress,
 			&depositCoin,
@@ -394,7 +394,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacketErrors() {
 
 		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
 		depositCoin := sdk.Coin{Denom: "astros", Amount: sdk.NewInt(1000)}
-		msg := types.NewMsgSingleDeposit(
+		msg := types.NewMsgSingleAssetDeposit(
 			poolId,
 			chainAAddress,
 			&depositCoin,

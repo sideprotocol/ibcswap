@@ -287,20 +287,17 @@ func (imm *InterchainMarketMaker) SingleWithdraw(redeem types.Coin, denomOut str
 
 // input the supply token, output the expected token.
 // At = Bt * (P_redeemed / P_supply)
-func (imm *InterchainMarketMaker) Withdraw(redeem types.Coin) ([]*types.Coin, error) {
+func (imm *InterchainMarketMaker) Withdraw(redeem types.Coin, denomOut string) (*types.Coin, error) {
 
-	totalAssetAmount := imm.Pool.SumOfPoolAssets()
-	outCoins := []*types.Coin{}
-	for _, asset := range imm.Pool.Assets {
-		out := asset.Balance.Amount.Mul(asset.Balance.Amount).Mul(redeem.Amount).Quo(totalAssetAmount).Quo(imm.Pool.Supply.Amount) //redeem.Amount.Mul(asset.Balance.Amount).Quo(totalAssetAmount)
-		outCoin := types.NewCoin(
-			asset.Balance.Denom,
-			out,
-		)
-		outCoins = append(outCoins, &outCoin)
-
+	asset, err := imm.Pool.FindAssetByDenom(denomOut)
+	if err != nil {
+		return nil, err
 	}
-	return outCoins, nil
+	out := asset.Balance.Amount.Mul(redeem.Amount).Quo(imm.Pool.Supply.Amount)
+	return &types.Coin{
+		Denom:  denomOut,
+		Amount: out,
+	}, nil
 }
 
 // LeftSwap implements OutGivenIn

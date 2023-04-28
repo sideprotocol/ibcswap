@@ -1,8 +1,10 @@
 package types
 
 import (
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/btcsuite/btcutil/bech32"
 )
 
 const TypeMsgDoubleDeposit = "deposit"
@@ -48,10 +50,19 @@ func (msg *MsgMultiAssetDepositRequest) GetSignBytes() []byte {
 }
 
 func (msg *MsgMultiAssetDepositRequest) ValidateBasic() error {
-
+	
+	// check address
 	_, err := sdk.AccAddressFromBech32(msg.LocalDeposit.Sender)
 	if err != nil {
 		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)
+	}
+	
+	senderPrefix, _, err := bech32.Decode(msg.LocalDeposit.Sender)
+	if err != nil {
+		return err
+	}
+	if sdk.GetConfig().GetBech32AccountAddrPrefix() != senderPrefix {
+		return errorsmod.ErrInvalidAddress
 	}
 	_, err = sdk.AccAddressFromBech32(msg.RemoteDeposit.Sender)
 	if err != nil {

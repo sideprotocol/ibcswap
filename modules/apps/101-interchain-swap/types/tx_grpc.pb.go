@@ -21,7 +21,7 @@ type MsgClient interface {
 	CreatePool(ctx context.Context, in *MsgCreatePoolRequest, opts ...grpc.CallOption) (*MsgCreatePoolResponse, error)
 	SingleAssetDeposit(ctx context.Context, in *MsgSingleAssetDepositRequest, opts ...grpc.CallOption) (*MsgSingleAssetDepositResponse, error)
 	MultiAssetDeposit(ctx context.Context, in *MsgMultiAssetDepositRequest, opts ...grpc.CallOption) (*MsgMultiAssetDepositResponse, error)
-	Withdraw(ctx context.Context, in *MsgWithdrawRequest, opts ...grpc.CallOption) (*MsgWithdrawResponse, error)
+	MultiAssetWithdraw(ctx context.Context, in *MsgMultiAssetWithdrawRequest, opts ...grpc.CallOption) (*MsgMultiAssetWithdrawResponse, error)
 	Swap(ctx context.Context, in *MsgSwapRequest, opts ...grpc.CallOption) (*MsgSwapResponse, error)
 }
 
@@ -60,9 +60,9 @@ func (c *msgClient) MultiAssetDeposit(ctx context.Context, in *MsgMultiAssetDepo
 	return out, nil
 }
 
-func (c *msgClient) Withdraw(ctx context.Context, in *MsgWithdrawRequest, opts ...grpc.CallOption) (*MsgWithdrawResponse, error) {
-	out := new(MsgWithdrawResponse)
-	err := c.cc.Invoke(ctx, "/ibc.applications.interchain_swap.v1.Msg/Withdraw", in, out, opts...)
+func (c *msgClient) MultiAssetWithdraw(ctx context.Context, in *MsgMultiAssetWithdrawRequest, opts ...grpc.CallOption) (*MsgMultiAssetWithdrawResponse, error) {
+	out := new(MsgMultiAssetWithdrawResponse)
+	err := c.cc.Invoke(ctx, "/ibc.applications.interchain_swap.v1.Msg/MultiAssetWithdraw", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ type MsgServer interface {
 	CreatePool(context.Context, *MsgCreatePoolRequest) (*MsgCreatePoolResponse, error)
 	SingleAssetDeposit(context.Context, *MsgSingleAssetDepositRequest) (*MsgSingleAssetDepositResponse, error)
 	MultiAssetDeposit(context.Context, *MsgMultiAssetDepositRequest) (*MsgMultiAssetDepositResponse, error)
-	Withdraw(context.Context, *MsgWithdrawRequest) (*MsgWithdrawResponse, error)
+	MultiAssetWithdraw(context.Context, *MsgMultiAssetWithdrawRequest) (*MsgMultiAssetWithdrawResponse, error)
 	Swap(context.Context, *MsgSwapRequest) (*MsgSwapResponse, error)
 }
 
@@ -102,8 +102,8 @@ func (UnimplementedMsgServer) SingleAssetDeposit(context.Context, *MsgSingleAsse
 func (UnimplementedMsgServer) MultiAssetDeposit(context.Context, *MsgMultiAssetDepositRequest) (*MsgMultiAssetDepositResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MultiAssetDeposit not implemented")
 }
-func (UnimplementedMsgServer) Withdraw(context.Context, *MsgWithdrawRequest) (*MsgWithdrawResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Withdraw not implemented")
+func (UnimplementedMsgServer) MultiAssetWithdraw(context.Context, *MsgMultiAssetWithdrawRequest) (*MsgMultiAssetWithdrawResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MultiAssetWithdraw not implemented")
 }
 func (UnimplementedMsgServer) Swap(context.Context, *MsgSwapRequest) (*MsgSwapResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Swap not implemented")
@@ -174,20 +174,20 @@ func _Msg_MultiAssetDeposit_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_Withdraw_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgWithdrawRequest)
+func _Msg_MultiAssetWithdraw_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgMultiAssetWithdrawRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).Withdraw(ctx, in)
+		return srv.(MsgServer).MultiAssetWithdraw(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ibc.applications.interchain_swap.v1.Msg/Withdraw",
+		FullMethod: "/ibc.applications.interchain_swap.v1.Msg/MultiAssetWithdraw",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Withdraw(ctx, req.(*MsgWithdrawRequest))
+		return srv.(MsgServer).MultiAssetWithdraw(ctx, req.(*MsgMultiAssetWithdrawRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -230,8 +230,8 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_MultiAssetDeposit_Handler,
 		},
 		{
-			MethodName: "Withdraw",
-			Handler:    _Msg_Withdraw_Handler,
+			MethodName: "MultiAssetWithdraw",
+			Handler:    _Msg_MultiAssetWithdraw_Handler,
 		},
 		{
 			MethodName: "Swap",

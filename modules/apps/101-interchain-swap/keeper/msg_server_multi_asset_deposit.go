@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	"github.com/btcsuite/btcutil/bech32"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
@@ -18,14 +18,6 @@ func (k Keeper) MultiAssetDeposit(goCtx context.Context, msg *types.MsgMultiAsse
 		return nil, err
 	}
 
-	// check address
-	senderPrefix, _, err := bech32.Decode(msg.LocalDeposit.Sender)
-	if err != nil {
-		return nil, err
-	}
-	if sdk.GetConfig().GetBech32AccountAddrPrefix() != senderPrefix {
-		return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, "first address has to be this chain address (%s)", err)
-	}
 
 	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
 	if !found {

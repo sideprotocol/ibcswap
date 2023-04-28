@@ -123,8 +123,7 @@ func (suite *KeeperTestSuite) TestMsgDoubleDeposit() {
 		signedDepositTx,
 	)
 
-
-	res, err := suite.chainB.GetSimApp().InterchainSwapKeeper.OnDoubleDepositReceived(
+	res, err := suite.chainB.GetSimApp().InterchainSwapKeeper.OnMultiAssetDepositReceived(
 		ctx, msg,
 		&types.StateChange{
 			PoolTokens: nil,

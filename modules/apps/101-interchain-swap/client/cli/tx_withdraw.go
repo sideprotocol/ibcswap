@@ -15,11 +15,11 @@ var _ = strconv.Itoa(0)
 
 func CmdWithdraw() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "withdraw [remote sender][coin]",
+		Use:   "MultiAsset [remote sender][pool coins]",
 		Short: "Broadcast message Withdraw",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-		
+
 			argRemoteSender := args[0]
 			argCoin := args[1]
 
@@ -32,7 +32,7 @@ func CmdWithdraw() *cobra.Command {
 			if err != nil {
 				return nil
 			}
-			if len(coins) != 1 {
+			if len(coins) != 2 {
 				return fmt.Errorf("invalid token length! : %d", len(coins))
 			}
 
@@ -40,6 +40,7 @@ func CmdWithdraw() *cobra.Command {
 				clientCtx.GetFromAddress().String(),
 				argRemoteSender,
 				coins[0],
+				coins[1],
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

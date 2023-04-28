@@ -12,7 +12,7 @@ import (
 
 func (suite *KeeperTestSuite) TestMsgWithdraw() {
 	var (
-		msg    *types.MsgWithdrawRequest
+		msg    *types.MsgMultiAssetWithdrawRequest
 		poolId *string
 		err    error
 	)
@@ -49,14 +49,14 @@ func (suite *KeeperTestSuite) TestMsgWithdraw() {
 		{
 			"invalid address",
 			func() {
-				msg.LocalSender = "invalid address"
+				msg.LocalWithdraw.Sender = "invalid address"
 			},
 			false,
 		},
 		{
 			"invalid amount",
 			func() {
-				msg.LocalSender = sample.AccAddress()
+				msg.LocalWithdraw.Sender = sample.AccAddress()
 			},
 			false,
 		},
@@ -74,12 +74,13 @@ func (suite *KeeperTestSuite) TestMsgWithdraw() {
 			suite.chainA.SenderAccount.GetAddress().String(),
 			suite.chainB.SenderAccount.GetAddress().String(),
 			&coin,
+			&coin,
 		)
 
 		tc.malleate()
 
 		msgSrv := keeper.NewMsgServerImpl(suite.chainA.GetSimApp().InterchainSwapKeeper)
-		res, err := msgSrv.Withdraw(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+		res, err := msgSrv.MultiAssetWithdraw(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 
 		if tc.expPass {
 			suite.Require().NoError(err)
