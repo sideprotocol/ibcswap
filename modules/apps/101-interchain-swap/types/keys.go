@@ -20,7 +20,8 @@ const (
 	// QuerierRoute is the querier route for IBC swap
 	QuerierRoute = ModuleName
 
-	Multiplier = 1e18
+	Multiplier      = 1e18
+	MaximumSlippage = 10000
 )
 
 var (

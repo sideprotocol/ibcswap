@@ -26,16 +26,16 @@ func (suite *KeeperTestSuite) TestMsgWithdraw() {
 			"success",
 			func() {
 				// deposit first of all.
-				depositMsg := types.NewMsgDeposit(
+				depositMsg := types.NewMsgSingleDeposit(
 					*poolId,
 					suite.chainA.SenderAccount.GetAddress().String(),
-					[]*sdk.Coin{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(1000)}},
+					&sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(1000)},
 				)
 
 				err := suite.chainA.GetSimApp().InterchainSwapKeeper.OnSingleDepositAcknowledged(
 					suite.chainA.GetContext(),
 					depositMsg,
-					&types.MsgDepositResponse{
+					&types.MsgSingleDepositResponse{
 						PoolToken: &sdk.Coin{
 							Denom:  *poolId,
 							Amount: math.NewInt(1000),

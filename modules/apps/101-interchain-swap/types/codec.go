@@ -9,7 +9,7 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCreatePoolRequest{}, "interchainswap/CreatePool", nil)
-	cdc.RegisterConcrete(&MsgDepositRequest{}, "interchainswap/Deposit", nil)
+	cdc.RegisterConcrete(&MsgSingleDepositRequest{}, "interchainswap/Deposit", nil)
 	cdc.RegisterConcrete(&MsgDoubleDepositRequest{}, "interchainswap/DoubleDeposit", nil)
 	cdc.RegisterConcrete(&RemoteDeposit{}, "interchainswap/RemoteDeposit", nil)
 	cdc.RegisterConcrete(&LocalDeposit{}, "interchainswap/LocalDeposit", nil)
@@ -23,7 +23,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgCreatePoolRequest{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgDepositRequest{},
+		&MsgSingleDepositRequest{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgDoubleDepositRequest{},

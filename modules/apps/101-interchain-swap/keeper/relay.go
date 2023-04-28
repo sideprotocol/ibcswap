@@ -77,11 +77,11 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		return data, err
 
 	case types.SINGLE_DEPOSIT:
-		var msg types.MsgDepositRequest
+		var msg types.MsgSingleDepositRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		res, err := k.OnDepositReceived(ctx, &msg)
+		res, err := k.OnSingleDepositReceived(ctx, &msg, data.StateChange)
 		if err != nil {
 			return nil, err
 		}
@@ -93,7 +93,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		res, err := k.OnDoubleDepositReceived(ctx, &msg)
+		res, err := k.OnDoubleDepositReceived(ctx, &msg, data.StateChange)
 		if err != nil {
 			return nil, err
 		}
@@ -104,7 +104,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		res, err2 := k.OnWithdrawReceived(ctx, &msg)
+		res, err2 := k.OnWithdrawReceived(ctx, &msg, data.StateChange)
 		if err2 != nil {
 			return nil, err2
 		}
@@ -117,7 +117,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		res, err := k.OnSwapReceived(ctx, &msg)
+		res, err := k.OnSwapReceived(ctx, &msg, data.StateChange)
 		if err != nil {
 			return nil, err
 		}
@@ -146,8 +146,8 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				return err
 			}
 		case types.SINGLE_DEPOSIT:
-			var msg types.MsgDepositRequest
-			var res types.MsgDepositResponse
+			var msg types.MsgSingleDepositRequest
+			var res types.MsgSingleDepositResponse
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				logger.Debug("Deposit:packet:", err.Error())
 				return err
@@ -226,11 +226,11 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		// refund initial liquidity.
 		token = *msg.Tokens[0] //sdk.NewCoin(nativeDenom, sdk.NewInt(int64(msg.InitalLiquidity)))
 	case types.SINGLE_DEPOSIT:
-		var msg types.MsgDepositRequest
+		var msg types.MsgSingleDepositRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
-		token = *msg.Tokens[0]
+		token = *msg.Token
 		sender = msg.Sender
 	case types.DOUBLE_DEPOSIT:
 		var msg types.MsgDoubleDepositRequest

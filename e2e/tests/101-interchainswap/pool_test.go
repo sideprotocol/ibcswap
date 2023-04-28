@@ -132,10 +132,10 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
 		depositCoin := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(initialY * 0.1)}
 
-		msg := types.NewMsgDeposit(
+		msg := types.NewMsgSingleDeposit(
 			poolId,
 			chainBAddress,
-			[]*sdk.Coin{&depositCoin},
+			&depositCoin,
 		)
 		resp, err := s.BroadcastMessages(ctx, chainB, chainBWallet, msg)
 		s.Require().NoError(err)
@@ -153,10 +153,10 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
 		depositCoin := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(initialY)}
 
-		msg := types.NewMsgDeposit(
+		msg := types.NewMsgSingleDeposit(
 			poolId,
 			chainBAddress,
-			[]*sdk.Coin{&depositCoin},
+			&depositCoin,
 		)
 		resp, err := s.BroadcastMessages(ctx, chainB, chainBWallet, msg)
 		s.AssertValidTxResponse(resp)
@@ -356,10 +356,10 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 
 			switch tc.msgType {
 			case "deposit":
-				msg := types.NewMsgDeposit(
+				msg := types.NewMsgSingleDeposit(
 					poolId,
 					wallet.Bech32Address("cosmos"),
-					[]*sdk.Coin{&depositCoin},
+					&depositCoin,
 				)
 				txRes, err = s.BroadcastMessages(ctx, chain, &wallet, msg)
 				s.Require().NoError(err)

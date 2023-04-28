@@ -41,15 +41,26 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 	}
 
 	// lock pool token to the swap module
-	err = k.LockTokens(
+	err = k.BurnTokens(
 		ctx,
-		pool.EncounterPartyPort,
-		pool.EncounterPartyChannel,
+		//pool.EncounterPartyPort,
+		//pool.EncounterPartyChannel,
 		sdk.MustAccAddressFromBech32(msg.Sender),
-		sdk.NewCoins(*msg.PoolCoin),
+		*msg.PoolCoin,
 	)
 	if err != nil {
 		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", err)
+	}
+
+	fee := k.GetSwapFeeRate(ctx)
+	amm := *types.NewInterchainMarketMaker(
+		&pool,
+		fee,
+	)
+
+	out, err := amm.Withdraw(*msg.PoolCoin, msg.DenomOut)
+	if err != nil {
+		return nil, err
 	}
 
 	// construct the IBC data packet
@@ -61,6 +72,10 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 	packet := types.IBCSwapPacketData{
 		Type: types.WITHDRAW,
 		Data: rawMsgData,
+		StateChange: &types.StateChange{
+			Out:        []*sdk.Coin{out},
+			PoolTokens: []*sdk.Coin{msg.PoolCoin},
+		},
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&ctx)

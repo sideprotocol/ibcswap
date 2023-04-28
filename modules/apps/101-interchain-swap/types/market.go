@@ -58,6 +58,7 @@ func NewInterchainLiquidityPool(
 			Denom:  poolId,
 		},
 		Status:                PoolStatus_POOL_STATUS_INITIAL,
+		PoolPrice:             0,
 		EncounterPartyPort:    portId,
 		EncounterPartyChannel: channelId,
 	}
@@ -279,6 +280,7 @@ func (imm *InterchainMarketMaker) Withdraw(redeem types.Coin, denomOut string) (
 // Input how many coins you want to sell, output an amount you will receive
 // Ao = Bo * ((1 - Bi / (Bi + Ai)) ** Wi/Wo)
 func (imm *InterchainMarketMaker) LeftSwap(amountIn types.Coin, denomOut string) (*types.Coin, error) {
+
 	assetIn, err := imm.Pool.FindAssetByDenom(amountIn.Denom)
 	if err != nil {
 		return nil, err
@@ -300,10 +302,10 @@ func (imm *InterchainMarketMaker) LeftSwap(amountIn types.Coin, denomOut string)
 	ratio := balanceIn.Quo(balanceInPlusAmount)
 	oneMinusRatio := types.NewDec(1).Sub(ratio)
 	power := weightIn.Quo(weightOut)
-	factor := math.Pow(oneMinusRatio.MustFloat64(), power.MustFloat64()) * 1e18
-	amountOut := balanceOut.Mul(types.NewDec(int64(factor))).Quo(types.NewDec(1e18))
+	factor := math.Pow(oneMinusRatio.MustFloat64(), power.MustFloat64()) * Multiplier
+	amountOut := balanceOut.Mul(types.NewDec(int64(factor))).Quo(types.NewDec(Multiplier))
 	return &types.Coin{
-		Amount: amountOut.RoundInt(),
+		Amount: amountOut.TruncateInt(),
 		Denom:  denomOut,
 	}, nil
 }
