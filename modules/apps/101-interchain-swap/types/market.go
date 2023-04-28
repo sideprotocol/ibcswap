@@ -130,6 +130,15 @@ func (ilp *InterchainLiquidityPool) SubPoolSupply(token types.Coin) error {
 	return nil
 }
 
+// update pool suppy
+func (ilp *InterchainLiquidityPool) SumOfPoolAssets() types.Int {
+	totalAssets := types.NewInt(0)
+	for _, asset := range ilp.Assets {
+		totalAssets = totalAssets.Add(asset.Balance.Amount)
+	}
+	return totalAssets
+}
+
 //create new market maker
 
 func NewInterchainMarketMaker(
@@ -244,7 +253,7 @@ func (imm *InterchainMarketMaker) DepositDoubleAsset(tokens []*types.Coin) ([]*t
 
 // input the supply token, output the expected token.
 // At = Bt * (1 - (1 - P_redeemed / P_supply) ** 1/Wt)
-func (imm *InterchainMarketMaker) Withdraw(redeem types.Coin, denomOut string) (*types.Coin, error) {
+func (imm *InterchainMarketMaker) SingleWithdraw(redeem types.Coin, denomOut string) (*types.Coin, error) {
 	asset, err := imm.Pool.FindAssetByDenom(denomOut)
 	if err != nil {
 		return nil, err
@@ -274,6 +283,24 @@ func (imm *InterchainMarketMaker) Withdraw(redeem types.Coin, denomOut string) (
 		Amount: amountOut,
 		Denom:  denomOut,
 	}, nil
+}
+
+// input the supply token, output the expected token.
+// At = Bt * (P_redeemed / P_supply)
+func (imm *InterchainMarketMaker) Withdraw(redeem types.Coin) ([]*types.Coin, error) {
+
+	totalAssetAmount := imm.Pool.SumOfPoolAssets()
+	outCoins := []*types.Coin{}
+	for _, asset := range imm.Pool.Assets {
+		out := asset.Balance.Amount.Mul(asset.Balance.Amount).Mul(redeem.Amount).Quo(totalAssetAmount).Quo(imm.Pool.Supply.Amount) //redeem.Amount.Mul(asset.Balance.Amount).Quo(totalAssetAmount)
+		outCoin := types.NewCoin(
+			asset.Balance.Denom,
+			out,
+		)
+		outCoins = append(outCoins, &outCoin)
+
+	}
+	return outCoins, nil
 }
 
 // LeftSwap implements OutGivenIn

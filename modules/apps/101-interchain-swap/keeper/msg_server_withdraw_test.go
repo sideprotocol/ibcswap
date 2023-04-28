@@ -26,7 +26,7 @@ func (suite *KeeperTestSuite) TestMsgWithdraw() {
 			"success",
 			func() {
 				// deposit first of all.
-				depositMsg := types.NewMsgSingleDeposit(
+				depositMsg := types.NewMsgSingleAssetDeposit(
 					*poolId,
 					suite.chainA.SenderAccount.GetAddress().String(),
 					&sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(1000)},
@@ -35,7 +35,7 @@ func (suite *KeeperTestSuite) TestMsgWithdraw() {
 				err := suite.chainA.GetSimApp().InterchainSwapKeeper.OnSingleDepositAcknowledged(
 					suite.chainA.GetContext(),
 					depositMsg,
-					&types.MsgSingleDepositResponse{
+					&types.MsgSingleAssetDepositResponse{
 						PoolToken: &sdk.Coin{
 							Denom:  *poolId,
 							Amount: math.NewInt(1000),
@@ -49,14 +49,14 @@ func (suite *KeeperTestSuite) TestMsgWithdraw() {
 		{
 			"invalid address",
 			func() {
-				msg.Sender = "invalid address"
+				msg.LocalSender = "invalid address"
 			},
 			false,
 		},
 		{
 			"invalid amount",
 			func() {
-				msg.Sender = sample.AccAddress()
+				msg.LocalSender = sample.AccAddress()
 			},
 			false,
 		},
@@ -72,8 +72,8 @@ func (suite *KeeperTestSuite) TestMsgWithdraw() {
 		coin := sdk.NewCoin(*poolId, sdk.NewInt(10))
 		msg = types.NewMsgWithdraw(
 			suite.chainA.SenderAccount.GetAddress().String(),
+			suite.chainB.SenderAccount.GetAddress().String(),
 			&coin,
-			sdk.DefaultBondDenom,
 		)
 
 		tc.malleate()

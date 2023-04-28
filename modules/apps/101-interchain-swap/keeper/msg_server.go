@@ -50,7 +50,7 @@ func (k Keeper) OnCreatePoolAcknowledged(ctx sdk.Context, msg *types.MsgCreatePo
 	return nil
 }
 
-func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgSingleDepositRequest, res *types.MsgSingleDepositResponse) error {
+func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgSingleAssetDepositRequest, res *types.MsgSingleAssetDepositResponse) error {
 
 	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolId)
 	if !found {
@@ -77,7 +77,7 @@ func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgSingl
 }
 
 // OnDoubleDepositAcknowledged processes a double deposit acknowledgement, mints voucher tokens, and updates the liquidity pool.
-func (k Keeper) OnDoubleDepositAcknowledged(ctx sdk.Context, req *types.MsgDoubleDepositRequest, res *types.MsgDoubleDepositResponse) error {
+func (k Keeper) OnDoubleDepositAcknowledged(ctx sdk.Context, req *types.MsgMultiAssetDepositRequest, res *types.MsgMultiAssetDepositResponse) error {
 
 	// Retrieve the liquidity pool
 	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolId)
@@ -123,7 +123,7 @@ func (k Keeper) OnWithdrawAcknowledged(ctx sdk.Context, req *types.MsgWithdrawRe
 	}
 	k.SetInterchainLiquidityPool(ctx, pool)
 	//burn voucher token.
-	err := k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(req.Sender), *req.PoolCoin)
+	err := k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(req.LocalSender), *req.PoolCoin)
 	if err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func (k Keeper) OnWithdrawAcknowledged(ctx sdk.Context, req *types.MsgWithdrawRe
 	err = k.UnlockTokens(ctx,
 		pool.EncounterPartyPort,
 		pool.EncounterPartyChannel,
-		sdk.MustAccAddressFromBech32(req.Sender),
+		sdk.MustAccAddressFromBech32(req.LocalSender),
 		sdk.NewCoins(*res.Tokens[0]),
 	)
 	if err != nil {
@@ -216,7 +216,7 @@ func (k Keeper) OnCreatePoolReceived(ctx sdk.Context, msg *types.MsgCreatePoolRe
 	return &pooId, nil
 }
 
-func (k Keeper) OnSingleDepositReceived(ctx sdk.Context, msg *types.MsgSingleDepositRequest, stateChange *types.StateChange) (*types.MsgSingleDepositResponse, error) {
+func (k Keeper) OnSingleAssetDepositReceived(ctx sdk.Context, msg *types.MsgSingleAssetDepositRequest, stateChange *types.StateChange) (*types.MsgSingleAssetDepositResponse, error) {
 
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
@@ -240,13 +240,13 @@ func (k Keeper) OnSingleDepositReceived(ctx sdk.Context, msg *types.MsgSingleDep
 
 	// save pool.
 	k.SetInterchainLiquidityPool(ctx, pool)
-	return &types.MsgSingleDepositResponse{
+	return &types.MsgSingleAssetDepositResponse{
 		PoolToken: stateChange.PoolTokens[0],
 	}, nil
 }
 
 // OnDoubleDepositReceived processes a double deposit request and returns a response or an error.
-func (k Keeper) OnDoubleDepositReceived(ctx sdk.Context, msg *types.MsgDoubleDepositRequest, stateChange *types.StateChange) (*types.MsgDoubleDepositResponse, error) {
+func (k Keeper) OnDoubleDepositReceived(ctx sdk.Context, msg *types.MsgMultiAssetDepositRequest, stateChange *types.StateChange) (*types.MsgMultiAssetDepositResponse, error) {
 
 	// Validate the message
 	if err := msg.ValidateBasic(); err != nil {
@@ -323,7 +323,7 @@ func (k Keeper) OnDoubleDepositReceived(ctx sdk.Context, msg *types.MsgDoubleDep
 	}
 	// Save pool
 	k.SetInterchainLiquidityPool(ctx, pool)
-	return &types.MsgDoubleDepositResponse{
+	return &types.MsgMultiAssetDepositResponse{
 		PoolTokens: stateChange.PoolTokens,
 	}, nil
 }

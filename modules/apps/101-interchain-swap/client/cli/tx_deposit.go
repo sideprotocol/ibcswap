@@ -14,7 +14,7 @@ var _ = strconv.Itoa(0)
 
 func CmdDeposit() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "deposit [pool-id] [sender] [pool-token]",
+		Use:   "deposit [pool-id] [remote sender] [pool-token]",
 		Short: "Broadcast message Deposit",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
@@ -32,7 +32,7 @@ func CmdDeposit() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgSingleDeposit(
+			msg := types.NewMsgSingleAssetDeposit(
 				argPoolId,
 				argSender,
 				tokens[0],

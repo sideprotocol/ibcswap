@@ -76,7 +76,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 			"successful transfer deposit request",
 			func() {
 				suite.coordinator.CreateChannels(path)
-				msg := types.NewMsgSingleDeposit(
+				msg := types.NewMsgSingleAssetDeposit(
 					"test pool id",
 					suite.chainA.SenderAccount.GetAddress().String(),
 					&sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(1000)},
@@ -92,11 +92,11 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 				suite.coordinator.CreateChannels(path)
 				msg := types.NewMsgWithdraw(
 					suite.chainA.SenderAccount.GetAddress().String(),
+					suite.chainB.SenderAccount.GetAddress().String(),
 					&sdk.Coin{
 						Denom:  sdk.DefaultBondDenom,
 						Amount: sdk.NewInt(10),
 					},
-					sdk.DefaultBondDenom,
 				)
 
 				msgbyte, err = types.ModuleCdc.Marshal(msg)

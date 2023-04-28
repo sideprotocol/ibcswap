@@ -19,22 +19,21 @@ func TestMsgWithdraw_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid sender address",
 			msg: MsgWithdrawRequest{
-				Sender: "invalid_address",
+				LocalSender: "invalid_address",
 			},
 			err: errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", ""),
 		},
 		{
 			name: "invalid denomout",
 			msg: MsgWithdrawRequest{
-				Sender: sample.AccAddress(),
+				LocalSender: sample.AccAddress(),
 			},
 			err: errorsmod.Wrapf(ErrEmptyDenom, "none exist denom (%s)", ""),
 		},
 		{
 			name: "invalid pool-coin amount",
 			msg: MsgWithdrawRequest{
-				Sender:   sample.AccAddress(),
-				DenomOut: "atom",
+				LocalSender: sample.AccAddress(),
 				PoolCoin: &types.Coin{
 					Denom:  "atm",
 					Amount: types.NewInt(0),
@@ -45,12 +44,11 @@ func TestMsgWithdraw_ValidateBasic(t *testing.T) {
 		{
 			name: "valid message",
 			msg: MsgWithdrawRequest{
-				Sender: sample.AccAddress(),
+				LocalSender: sample.AccAddress(),
 				PoolCoin: &types.Coin{
 					Denom:  "atm",
 					Amount: types.NewInt(100),
 				},
-				DenomOut: "marscoin",
 			},
 		},
 	}

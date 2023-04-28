@@ -38,7 +38,7 @@ message MsgCreatePoolResponse {
 message MsgSingleAssetDepositRequest {
            string                         poolId = 1;
            string                         sender = 2;
-  repeated cosmos.base.v1beta1.Coin tokens = 3;
+           cosmos.base.v1beta1.Coin        token = 3;
 }
 
 message MsgSingleAssetDepositResponse {

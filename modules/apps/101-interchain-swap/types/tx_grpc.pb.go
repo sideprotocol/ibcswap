@@ -19,8 +19,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MsgClient interface {
 	CreatePool(ctx context.Context, in *MsgCreatePoolRequest, opts ...grpc.CallOption) (*MsgCreatePoolResponse, error)
-	SingleDeposit(ctx context.Context, in *MsgSingleDepositRequest, opts ...grpc.CallOption) (*MsgSingleDepositResponse, error)
-	DoubleDeposit(ctx context.Context, in *MsgDoubleDepositRequest, opts ...grpc.CallOption) (*MsgDoubleDepositResponse, error)
+	SingleAssetDeposit(ctx context.Context, in *MsgSingleAssetDepositRequest, opts ...grpc.CallOption) (*MsgSingleAssetDepositResponse, error)
+	MultiAssetDeposit(ctx context.Context, in *MsgMultiAssetDepositRequest, opts ...grpc.CallOption) (*MsgMultiAssetDepositResponse, error)
 	Withdraw(ctx context.Context, in *MsgWithdrawRequest, opts ...grpc.CallOption) (*MsgWithdrawResponse, error)
 	Swap(ctx context.Context, in *MsgSwapRequest, opts ...grpc.CallOption) (*MsgSwapResponse, error)
 }
@@ -42,18 +42,18 @@ func (c *msgClient) CreatePool(ctx context.Context, in *MsgCreatePoolRequest, op
 	return out, nil
 }
 
-func (c *msgClient) SingleDeposit(ctx context.Context, in *MsgSingleDepositRequest, opts ...grpc.CallOption) (*MsgSingleDepositResponse, error) {
-	out := new(MsgSingleDepositResponse)
-	err := c.cc.Invoke(ctx, "/ibc.applications.interchain_swap.v1.Msg/SingleDeposit", in, out, opts...)
+func (c *msgClient) SingleAssetDeposit(ctx context.Context, in *MsgSingleAssetDepositRequest, opts ...grpc.CallOption) (*MsgSingleAssetDepositResponse, error) {
+	out := new(MsgSingleAssetDepositResponse)
+	err := c.cc.Invoke(ctx, "/ibc.applications.interchain_swap.v1.Msg/SingleAssetDeposit", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) DoubleDeposit(ctx context.Context, in *MsgDoubleDepositRequest, opts ...grpc.CallOption) (*MsgDoubleDepositResponse, error) {
-	out := new(MsgDoubleDepositResponse)
-	err := c.cc.Invoke(ctx, "/ibc.applications.interchain_swap.v1.Msg/DoubleDeposit", in, out, opts...)
+func (c *msgClient) MultiAssetDeposit(ctx context.Context, in *MsgMultiAssetDepositRequest, opts ...grpc.CallOption) (*MsgMultiAssetDepositResponse, error) {
+	out := new(MsgMultiAssetDepositResponse)
+	err := c.cc.Invoke(ctx, "/ibc.applications.interchain_swap.v1.Msg/MultiAssetDeposit", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -83,8 +83,8 @@ func (c *msgClient) Swap(ctx context.Context, in *MsgSwapRequest, opts ...grpc.C
 // for forward compatibility
 type MsgServer interface {
 	CreatePool(context.Context, *MsgCreatePoolRequest) (*MsgCreatePoolResponse, error)
-	SingleDeposit(context.Context, *MsgSingleDepositRequest) (*MsgSingleDepositResponse, error)
-	DoubleDeposit(context.Context, *MsgDoubleDepositRequest) (*MsgDoubleDepositResponse, error)
+	SingleAssetDeposit(context.Context, *MsgSingleAssetDepositRequest) (*MsgSingleAssetDepositResponse, error)
+	MultiAssetDeposit(context.Context, *MsgMultiAssetDepositRequest) (*MsgMultiAssetDepositResponse, error)
 	Withdraw(context.Context, *MsgWithdrawRequest) (*MsgWithdrawResponse, error)
 	Swap(context.Context, *MsgSwapRequest) (*MsgSwapResponse, error)
 }
@@ -96,11 +96,11 @@ type UnimplementedMsgServer struct {
 func (UnimplementedMsgServer) CreatePool(context.Context, *MsgCreatePoolRequest) (*MsgCreatePoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreatePool not implemented")
 }
-func (UnimplementedMsgServer) SingleDeposit(context.Context, *MsgSingleDepositRequest) (*MsgSingleDepositResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SingleDeposit not implemented")
+func (UnimplementedMsgServer) SingleAssetDeposit(context.Context, *MsgSingleAssetDepositRequest) (*MsgSingleAssetDepositResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SingleAssetDeposit not implemented")
 }
-func (UnimplementedMsgServer) DoubleDeposit(context.Context, *MsgDoubleDepositRequest) (*MsgDoubleDepositResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DoubleDeposit not implemented")
+func (UnimplementedMsgServer) MultiAssetDeposit(context.Context, *MsgMultiAssetDepositRequest) (*MsgMultiAssetDepositResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MultiAssetDeposit not implemented")
 }
 func (UnimplementedMsgServer) Withdraw(context.Context, *MsgWithdrawRequest) (*MsgWithdrawResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Withdraw not implemented")
@@ -138,38 +138,38 @@ func _Msg_CreatePool_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_SingleDeposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgSingleDepositRequest)
+func _Msg_SingleAssetDeposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSingleAssetDepositRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).SingleDeposit(ctx, in)
+		return srv.(MsgServer).SingleAssetDeposit(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ibc.applications.interchain_swap.v1.Msg/SingleDeposit",
+		FullMethod: "/ibc.applications.interchain_swap.v1.Msg/SingleAssetDeposit",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).SingleDeposit(ctx, req.(*MsgSingleDepositRequest))
+		return srv.(MsgServer).SingleAssetDeposit(ctx, req.(*MsgSingleAssetDepositRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_DoubleDeposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgDoubleDepositRequest)
+func _Msg_MultiAssetDeposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgMultiAssetDepositRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).DoubleDeposit(ctx, in)
+		return srv.(MsgServer).MultiAssetDeposit(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ibc.applications.interchain_swap.v1.Msg/DoubleDeposit",
+		FullMethod: "/ibc.applications.interchain_swap.v1.Msg/MultiAssetDeposit",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).DoubleDeposit(ctx, req.(*MsgDoubleDepositRequest))
+		return srv.(MsgServer).MultiAssetDeposit(ctx, req.(*MsgMultiAssetDepositRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -222,12 +222,12 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_CreatePool_Handler,
 		},
 		{
-			MethodName: "SingleDeposit",
-			Handler:    _Msg_SingleDeposit_Handler,
+			MethodName: "SingleAssetDeposit",
+			Handler:    _Msg_SingleAssetDeposit_Handler,
 		},
 		{
-			MethodName: "DoubleDeposit",
-			Handler:    _Msg_DoubleDeposit_Handler,
+			MethodName: "MultiAssetDeposit",
+			Handler:    _Msg_MultiAssetDeposit_Handler,
 		},
 		{
 			MethodName: "Withdraw",

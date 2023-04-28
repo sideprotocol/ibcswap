@@ -29,25 +29,7 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", types.ErrNotReadyForSwap)
 	}
 
-	outToken, err := pool.FindAssetByDenom(msg.DenomOut)
 
-	if err != nil {
-		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s in pool", types.ErrEmptyDenom)
-	}
-
-	// validate asset
-	if outToken.Side != types.PoolSide_NATIVE {
-		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", types.ErrNotNativeDenom)
-	}
-
-	// lock pool token to the swap module
-	err = k.BurnTokens(
-		ctx,
-		//pool.EncounterPartyPort,
-		//pool.EncounterPartyChannel,
-		sdk.MustAccAddressFromBech32(msg.Sender),
-		*msg.PoolCoin,
-	)
 	if err != nil {
 		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", err)
 	}
@@ -58,7 +40,7 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 		fee,
 	)
 
-	out, err := amm.Withdraw(*msg.PoolCoin, msg.DenomOut)
+	out, err := amm.Withdraw(*msg.PoolCoin)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +55,7 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 		Type: types.WITHDRAW,
 		Data: rawMsgData,
 		StateChange: &types.StateChange{
-			Out:        []*sdk.Coin{out},
+			Out:        out,
 			PoolTokens: []*sdk.Coin{msg.PoolCoin},
 		},
 	}

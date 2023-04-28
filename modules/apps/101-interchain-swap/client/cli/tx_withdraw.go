@@ -15,12 +15,13 @@ var _ = strconv.Itoa(0)
 
 func CmdWithdraw() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "withdraw [sender] [denom-out]",
+		Use:   "withdraw [remote sender][coin]",
 		Short: "Broadcast message Withdraw",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			argCoin := args[0]
-			argDenomOut := args[1]
+		
+			argRemoteSender := args[0]
+			argCoin := args[1]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -37,8 +38,8 @@ func CmdWithdraw() *cobra.Command {
 
 			msg := types.NewMsgWithdraw(
 				clientCtx.GetFromAddress().String(),
+				argRemoteSender,
 				coins[0],
-				argDenomOut,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

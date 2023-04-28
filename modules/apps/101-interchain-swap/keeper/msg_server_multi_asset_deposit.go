@@ -10,8 +10,9 @@ import (
 )
 
 func (k Keeper) MultiAssetDeposit(goCtx context.Context, msg *types.MsgMultiAssetDepositRequest) (*types.MsgMultiAssetDepositResponse, error) {
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	// // validate message
+	// validate message
 	err := msg.ValidateBasic()
 	if err != nil {
 		return nil, err
@@ -30,19 +31,38 @@ func (k Keeper) MultiAssetDeposit(goCtx context.Context, msg *types.MsgMultiAsse
 	if !found {
 		return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrNotFoundPool)
 	}
-	_ = pool
 
-	// Deposit token to Escrow account
-	coins, err := k.validateDoubleDepositCoins(ctx, &pool, msg.LocalDeposit.Sender, msg.LocalDeposit.Token)
-	if err != nil {
-		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "%s", err)
+	balance := k.bankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(msg.LocalDeposit.Sender), msg.LocalDeposit.Token.Denom)
+
+	if balance.Amount.LT(msg.LocalDeposit.Token.Amount) {
+		return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrInEnoughAmount)
 	}
-	if len(coins) == 0 {
-		return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, "it include invalid coins (%s)")
+
+	// check initial deposit condition
+	if pool.Status == types.PoolStatus_POOL_STATUS_INITIAL {
+		for _, asset := range sdk.NewCoins(*msg.LocalDeposit.Token, *msg.RemoteDeposit.Token) {
+			orderedAmount, err := pool.FindAssetByDenom(asset.Denom)
+			if err != nil {
+				return nil, err
+			}
+			if !orderedAmount.Balance.Amount.Equal(asset.Amount) {
+				return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrNotAllowedAmount)
+			}
+		}
+	} else {
+		//check the ratio of local amount and remote amount
+		ratioOfTokensIn := msg.LocalDeposit.Token.Amount.Mul(sdk.NewInt(types.Multiplier)).Quo(msg.RemoteDeposit.Token.Amount)
+		localAssetInPool, _ := pool.FindAssetByDenom(msg.LocalDeposit.Token.Denom)
+		remoteAssetAmountInPool, _ := pool.FindAssetByDenom(msg.LocalDeposit.Token.Denom)
+		ratioOfAssetsInPool := localAssetInPool.Balance.Amount.Mul(sdk.NewInt(types.Multiplier)).Quo(remoteAssetAmountInPool.Balance.Amount)
+		if !ratioOfTokensIn.Equal(ratioOfAssetsInPool) {
+			return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrInvalidPairRatio)
+		}
 	}
 
 	// create escrow module account  here
-	err = k.LockTokens(ctx, pool.EncounterPartyPort, pool.EncounterPartyChannel, sdk.MustAccAddressFromBech32(msg.LocalDeposit.Sender), coins)
+	err = k.LockTokens(ctx, pool.EncounterPartyPort, pool.EncounterPartyChannel, sdk.MustAccAddressFromBech32(msg.LocalDeposit.Sender), sdk.NewCoins(*msg.LocalDeposit.Token))
+
 	if err != nil {
 		return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, "because of %s", err)
 	}

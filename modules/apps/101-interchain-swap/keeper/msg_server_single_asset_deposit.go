@@ -8,7 +8,7 @@ import (
 	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
-func (k Keeper) SingleDeposit(goCtx context.Context, msg *types.MsgSingleDepositRequest) (*types.MsgSingleDepositResponse, error) {
+func (k Keeper) SingleAssetDeposit(goCtx context.Context, msg *types.MsgSingleAssetDepositRequest) (*types.MsgSingleAssetDepositResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// validate message
 	err := msg.ValidateBasic()
@@ -26,7 +26,7 @@ func (k Keeper) SingleDeposit(goCtx context.Context, msg *types.MsgSingleDeposit
 	if err != nil {
 		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "%s", types.ErrInvalidAddress)
 	}
-	balance := k.bankKeeper.GetBalance(ctx, accAddress, msg.Token.Denom)
+	balance := k.bankKeeper.GetBalance(ctx, accAddress, msg.Sender)
 	if balance.Amount.Equal(sdk.NewInt(0)) {
 		return nil, types.ErrInvalidAmount
 	}
@@ -76,7 +76,7 @@ func (k Keeper) SingleDeposit(goCtx context.Context, msg *types.MsgSingleDeposit
 		return nil, err
 	}
 
-	return &types.MsgSingleDepositResponse{
+	return &types.MsgSingleAssetDepositResponse{
 		PoolToken: pool.Supply,
 	}, nil
 }

@@ -107,7 +107,7 @@ func TestUpdatePoolAsset(t *testing.T) {
 	}
 
 	// mock swap message
-	msg := MsgSingleDepositRequest{
+	msg := MsgSingleAssetDepositRequest{
 		PoolId: poolId,
 		Sender: "",
 		Token: &types.Coin{
