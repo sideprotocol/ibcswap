@@ -17,8 +17,8 @@ import "ibc/core/client/v1/client.proto";
 // Msg defines the Msg service.
 service Msg {
   rpc CreatePool (MsgCreatePoolRequest) returns (MsgCreatePoolResponse);
-  rpc SingleDeposit    (MsgSingleDepositRequest   ) returns (MsgSingleDepositResponse   );
-  rpc DoubleDeposit    (MsgDoubleDepositRequest   ) returns (MsgDoubleDepositResponse   );
+  rpc SingleAssetDeposit    (MsgSingleAssetDepositRequest   ) returns (MsgSingleAssetDepositResponse   );
+  rpc MultiAssetDeposit    (MsgMultiAssetDepositRequest   ) returns (MsgMultiAssetDepositResponse   );
   rpc Withdraw   (MsgWithdrawRequest  ) returns (MsgWithdrawResponse  );
   rpc Swap       (MsgSwapRequest             ) returns (MsgSwapResponse      );
 }
@@ -35,18 +35,18 @@ message MsgCreatePoolResponse {
   string poolId = 1;
 }
 
-message MsgSingleDepositRequest {
-   string                         poolId = 1;
-   string                         sender = 2;
-   cosmos.base.v1beta1.Coin token = 3;
+message MsgSingleAssetDepositRequest {
+           string                         poolId = 1;
+           string                         sender = 2;
+  repeated cosmos.base.v1beta1.Coin tokens = 3;
 }
 
-message MsgSingleDepositResponse {
+message MsgSingleAssetDepositResponse {
   cosmos.base.v1beta1.Coin poolToken = 1;
 }
 
 // demo two side deposit
-message MsgDoubleDepositRequest {
+message MsgMultiAssetDepositRequest {
   string        poolId = 1;
   LocalDeposit  localDeposit = 2;
   RemoteDeposit remoteDeposit = 3;
@@ -64,15 +64,15 @@ message RemoteDeposit {
 }
 
 
-message MsgDoubleDepositResponse {
+message MsgMultiAssetDepositResponse {
   repeated cosmos.base.v1beta1.Coin poolTokens = 1;
 }
 
 
 message MsgWithdrawRequest {
-  string                         sender   = 1;
-  cosmos.base.v1beta1.Coin poolCoin = 2;
-  string                         denomOut = 3;
+  string                         localSender   = 1;
+  string                         remoteSender   = 2;
+  cosmos.base.v1beta1.Coin poolCoin = 3;
 }
 
 message MsgWithdrawResponse {
@@ -101,4 +101,3 @@ message PoolApprove {
     string pool_id = 1;
     string sender = 2;
 }
-
