@@ -467,10 +467,13 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 				s.Require().NotEqual(outToken.Amount, sdk.NewInt(0))
 				s.Require().NotNil(outToken)
 
-				msg := types.NewMsgWithdraw(
-					sender,
+				msg := types.NewMsgMultiAssetWithdraw(
+					chainAAddress,
+					chainBAddress,
+					chainBDenom,
+					chainADenom,
 					&poolCoin,
-					denomOut,
+					&poolCoin,
 				)
 
 				err = msg.ValidateBasic()
