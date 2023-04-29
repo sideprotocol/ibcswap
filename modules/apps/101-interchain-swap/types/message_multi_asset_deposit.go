@@ -1,16 +1,18 @@
 package types
 
 import (
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/btcsuite/btcutil/bech32"
 )
 
 const TypeMsgDoubleDeposit = "deposit"
 
-var _ sdk.Msg = &MsgSingleDepositRequest{}
+var _ sdk.Msg = &MsgSingleAssetDepositRequest{}
 
-func NewMsgDoubleDeposit(poolId string, senders []string, tokens []*sdk.Coin, sig []byte) *MsgDoubleDepositRequest {
-	return &MsgDoubleDepositRequest{
+func NewMsgMultiAssetDeposit(poolId string, senders []string, tokens []*sdk.Coin, sig []byte) *MsgMultiAssetDepositRequest {
+	return &MsgMultiAssetDepositRequest{
 		PoolId: poolId,
 		LocalDeposit: &LocalDeposit{
 			Sender: senders[0],
@@ -24,15 +26,15 @@ func NewMsgDoubleDeposit(poolId string, senders []string, tokens []*sdk.Coin, si
 	}
 }
 
-func (msg *MsgDoubleDepositRequest) Route() string {
+func (msg *MsgMultiAssetDepositRequest) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgDoubleDepositRequest) Type() string {
+func (msg *MsgMultiAssetDepositRequest) Type() string {
 	return TypeMsgDeposit
 }
 
-func (msg *MsgDoubleDepositRequest) GetSigners() []sdk.AccAddress {
+func (msg *MsgMultiAssetDepositRequest) GetSigners() []sdk.AccAddress {
 	signers := []sdk.AccAddress{}
 	creator, err := sdk.AccAddressFromBech32(msg.LocalDeposit.Sender)
 	if err != nil {
@@ -42,16 +44,25 @@ func (msg *MsgDoubleDepositRequest) GetSigners() []sdk.AccAddress {
 	return signers
 }
 
-func (msg *MsgDoubleDepositRequest) GetSignBytes() []byte {
+func (msg *MsgMultiAssetDepositRequest) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgDoubleDepositRequest) ValidateBasic() error {
-
+func (msg *MsgMultiAssetDepositRequest) ValidateBasic() error {
+	
+	// check address
 	_, err := sdk.AccAddressFromBech32(msg.LocalDeposit.Sender)
 	if err != nil {
 		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)
+	}
+	
+	senderPrefix, _, err := bech32.Decode(msg.LocalDeposit.Sender)
+	if err != nil {
+		return err
+	}
+	if sdk.GetConfig().GetBech32AccountAddrPrefix() != senderPrefix {
+		return errorsmod.ErrInvalidAddress
 	}
 	_, err = sdk.AccAddressFromBech32(msg.RemoteDeposit.Sender)
 	if err != nil {

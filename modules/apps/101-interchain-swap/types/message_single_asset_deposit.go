@@ -7,25 +7,25 @@ import (
 
 const TypeMsgDeposit = "deposit"
 
-var _ sdk.Msg = &MsgSingleDepositRequest{}
+var _ sdk.Msg = &MsgSingleAssetDepositRequest{}
 
-func NewMsgSingleDeposit(poolId string, sender string, token *sdk.Coin) *MsgSingleDepositRequest {
-	return &MsgSingleDepositRequest{
+func NewMsgSingleAssetDeposit(poolId string, sender string, token *sdk.Coin) *MsgSingleAssetDepositRequest {
+	return &MsgSingleAssetDepositRequest{
 		PoolId: poolId,
 		Sender: sender,
 		Token:  token,
 	}
 }
 
-func (msg *MsgSingleDepositRequest) Route() string {
+func (msg *MsgSingleAssetDepositRequest) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgSingleDepositRequest) Type() string {
+func (msg *MsgSingleAssetDepositRequest) Type() string {
 	return TypeMsgDeposit
 }
 
-func (msg *MsgSingleDepositRequest) GetSigners() []sdk.AccAddress {
+func (msg *MsgSingleAssetDepositRequest) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)
@@ -33,12 +33,12 @@ func (msg *MsgSingleDepositRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgSingleDepositRequest) GetSignBytes() []byte {
+func (msg *MsgSingleAssetDepositRequest) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgSingleDepositRequest) ValidateBasic() error {
+func (msg *MsgSingleAssetDepositRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)

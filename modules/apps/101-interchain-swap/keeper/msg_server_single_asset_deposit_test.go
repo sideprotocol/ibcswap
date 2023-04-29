@@ -65,7 +65,7 @@ func (suite *KeeperTestSuite) SetupPoolWithDenomPair(denomPair []string) (*strin
 }
 
 func (suite *KeeperTestSuite) TestMsgDeposit() {
-	var msg *types.MsgSingleDepositRequest
+	var msg *types.MsgSingleAssetDepositRequest
 	testCases := []struct {
 		name     string
 		malleate func()
@@ -99,7 +99,7 @@ func (suite *KeeperTestSuite) TestMsgDeposit() {
 		fmt.Println(pooId)
 
 		//
-		msg = types.NewMsgSingleDeposit(
+		msg = types.NewMsgSingleAssetDeposit(
 			*pooId,
 			suite.chainA.SenderAccount.GetAddress().String(),
 			&sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(1000)},
@@ -108,7 +108,7 @@ func (suite *KeeperTestSuite) TestMsgDeposit() {
 		tc.malleate()
 		msgSrv := keeper.NewMsgServerImpl(suite.chainA.GetSimApp().InterchainSwapKeeper)
 
-		res, err := msgSrv.SingleDeposit(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+		res, err := msgSrv.SingleAssetDeposit(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 
 		if tc.expPass {
 			suite.Require().NoError(err)

@@ -116,15 +116,14 @@ func (suite *KeeperTestSuite) TestMsgDoubleDeposit() {
 	isValid := verifySignedMessage(rawDepositTx, signedDepositTx, suite.chainB.SenderAccount.GetPubKey())
 	suite.Require().Equal(isValid, true)
 
-	msg := types.NewMsgDoubleDeposit(
+	msg := types.NewMsgMultiAssetDeposit(
 		*pooId,
 		[]string{suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String()},
 		[]*sdk.Coin{{Denom: denomPair[0], Amount: sdk.NewInt(1000)}, {Denom: denomPair[1], Amount: sdk.NewInt(1000)}},
 		signedDepositTx,
 	)
 
-
-	res, err := suite.chainB.GetSimApp().InterchainSwapKeeper.OnDoubleDepositReceived(
+	res, err := suite.chainB.GetSimApp().InterchainSwapKeeper.OnMultiAssetDepositReceived(
 		ctx, msg,
 		&types.StateChange{
 			PoolTokens: nil,

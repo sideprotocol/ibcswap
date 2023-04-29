@@ -132,7 +132,7 @@ func (s *InterchainswapTestSuite) TestDoubleDepositStatus() {
 		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
 		depositCoin := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(initialY)}
 
-		msg := types.NewMsgSingleDeposit(
+		msg := types.NewMsgSingleAssetDeposit(
 			poolId,
 			chainBAddress,
 			&depositCoin,
@@ -224,7 +224,7 @@ func (s *InterchainswapTestSuite) TestDoubleDepositStatus() {
 				pubKey := priv.PubKey()
 				s.Require().Equal(verifySignedMessage(rawTx, signedTx, pubKey), true)
 
-				msg := types.NewMsgDoubleDeposit(
+				msg := types.NewMsgMultiAssetDeposit(
 					poolId,
 					[]string{
 						chainAAddress, chainBAddress,

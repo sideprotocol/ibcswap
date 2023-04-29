@@ -12,18 +12,18 @@ import (
 func TestMsgDeposit_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  MsgSingleDepositRequest
+		msg  MsgSingleAssetDepositRequest
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: MsgSingleDepositRequest{
+			msg: MsgSingleAssetDepositRequest{
 				Sender: "invalid_address",
 			},
 			err: errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", ""),
 		}, {
 			name: "valid address",
-			msg: MsgSingleDepositRequest{
+			msg: MsgSingleAssetDepositRequest{
 				PoolId: "test",
 				Sender: sample.AccAddress(),
 				Token: &types.Coin{
@@ -35,7 +35,7 @@ func TestMsgDeposit_ValidateBasic(t *testing.T) {
 
 		{
 			name: "invalid denom length",
-			msg: MsgSingleDepositRequest{
+			msg: MsgSingleAssetDepositRequest{
 				Sender: sample.AccAddress(),
 			},
 			err: errorsmod.Wrapf(ErrInvalidTokenLength, "invalid token length (%d)", 1),
