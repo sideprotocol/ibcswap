@@ -9,6 +9,7 @@ import (
 )
 
 func (k Keeper) SingleAssetDeposit(goCtx context.Context, msg *types.MsgSingleAssetDepositRequest) (*types.MsgSingleAssetDepositResponse, error) {
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// validate message
 	err := msg.ValidateBasic()
@@ -26,7 +27,7 @@ func (k Keeper) SingleAssetDeposit(goCtx context.Context, msg *types.MsgSingleAs
 	if err != nil {
 		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "%s", types.ErrInvalidAddress)
 	}
-	balance := k.bankKeeper.GetBalance(ctx, accAddress, msg.Sender)
+	balance := k.bankKeeper.GetBalance(ctx, accAddress, msg.Token.Denom)
 	if balance.Amount.Equal(sdk.NewInt(0)) {
 		return nil, types.ErrInvalidAmount
 	}
@@ -46,7 +47,6 @@ func (k Keeper) SingleAssetDeposit(goCtx context.Context, msg *types.MsgSingleAs
 		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "%s", err)
 	}
 
-	
 	fee := k.GetSwapFeeRate(ctx)
 	amm := *types.NewInterchainMarketMaker(
 		&pool,

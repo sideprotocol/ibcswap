@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -15,17 +16,23 @@ var _ = strconv.Itoa(0)
 
 func CmdWithdraw() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "MultiAsset [remote sender][pool coins]",
+		Use:   "MultiAsset [remote sender][demons(aside,bside)][pool coins]",
 		Short: "Broadcast message Withdraw",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 
 			argRemoteSender := args[0]
-			argCoin := args[1]
+			argOutDenoms := args[1]
+			argCoin := args[2]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
+			}
+
+			denoms := strings.Split(argOutDenoms, ",")
+			if len(denoms) != 2 {
+				return fmt.Errorf("invalid token length! : %d", len(denoms))
 			}
 
 			coins, err := GetTokens(argCoin)
@@ -36,9 +43,11 @@ func CmdWithdraw() *cobra.Command {
 				return fmt.Errorf("invalid token length! : %d", len(coins))
 			}
 
-			msg := types.NewMsgWithdraw(
+			msg := types.NewMsgMultiAssetWithdraw(
 				clientCtx.GetFromAddress().String(),
 				argRemoteSender,
+				denoms[0],
+				denoms[1],
 				coins[0],
 				coins[1],
 			)

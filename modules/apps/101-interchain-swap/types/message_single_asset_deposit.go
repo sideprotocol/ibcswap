@@ -39,6 +39,7 @@ func (msg *MsgSingleAssetDepositRequest) GetSignBytes() []byte {
 }
 
 func (msg *MsgSingleAssetDepositRequest) ValidateBasic() error {
+	
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)

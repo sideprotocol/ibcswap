@@ -90,9 +90,11 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 			"successful transfer withdraw request",
 			func() {
 				suite.coordinator.CreateChannels(path)
-				msg := types.NewMsgWithdraw(
+				msg := types.NewMsgMultiAssetWithdraw(
 					suite.chainA.SenderAccount.GetAddress().String(),
 					suite.chainB.SenderAccount.GetAddress().String(),
+					sdk.DefaultBondDenom,
+					sdk.DefaultBondDenom,
 					&sdk.Coin{
 						Denom:  sdk.DefaultBondDenom,
 						Amount: sdk.NewInt(10),

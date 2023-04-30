@@ -18,7 +18,6 @@ func (k Keeper) MultiAssetDeposit(goCtx context.Context, msg *types.MsgMultiAsse
 		return nil, err
 	}
 
-
 	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
 	if !found {
 		return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrNotFoundPool)

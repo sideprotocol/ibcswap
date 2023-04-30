@@ -69,5 +69,5 @@ var (
 	ErrInvalidPubKey               = errorsmod.Register(ModuleName, 1546, "invalid pub key")
 	ErrInvalidMessage              = errorsmod.Register(ModuleName, 1547, "invalid message")
 	ErrInEnoughAmount              = errorsmod.Register(ModuleName, 1548, "invalid enough amount")
-	ErrInvalidPairRatio            = errorsmod.Register(ModuleName, 1548, "invalid ratio of inputted tokens")
+	ErrInvalidPairRatio            = errorsmod.Register(ModuleName, 1549, "invalid ratio of inputted tokens")
 )
