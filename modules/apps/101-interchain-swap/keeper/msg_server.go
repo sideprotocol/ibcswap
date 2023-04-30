@@ -77,7 +77,7 @@ func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgSingl
 }
 
 // OnDoubleDepositAcknowledged processes a double deposit acknowledgement, mints voucher tokens, and updates the liquidity pool.
-func (k Keeper) OnDoubleDepositAcknowledged(ctx sdk.Context, req *types.MsgMultiAssetDepositRequest, res *types.MsgMultiAssetDepositResponse) error {
+func (k Keeper) OnMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.MsgMultiAssetDepositRequest, res *types.MsgMultiAssetDepositResponse) error {
 
 	// Retrieve the liquidity pool
 	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolId)
@@ -109,7 +109,42 @@ func (k Keeper) OnDoubleDepositAcknowledged(ctx sdk.Context, req *types.MsgMulti
 	return nil
 }
 
-func (k Keeper) OnWithdrawAcknowledged(ctx sdk.Context, req *types.MsgMultiAssetWithdrawRequest, res *types.MsgMultiAssetWithdrawResponse) error {
+func (k Keeper) OnSingleWithdrawAcknowledged(ctx sdk.Context, req *types.MsgSingleAssetWithdrawRequest, res *types.MsgSingleAssetWithdrawResponse) error {
+
+	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolCoin.Denom)
+	if !found {
+		return types.ErrNotFoundPool
+	}
+
+	// update pool status
+	for _, poolAsset := range res.Tokens {
+		pool.SubAsset(*poolAsset)
+	}
+	pool.SubPoolSupply(*req.PoolCoin)
+	//burn voucher token.
+	err := k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(req.Sender), *req.PoolCoin)
+	if err != nil {
+		return err
+	}
+
+	// unlock token
+	err = k.UnlockTokens(ctx,
+		pool.EncounterPartyPort,
+		pool.EncounterPartyChannel,
+		sdk.MustAccAddressFromBech32(req.Sender),
+		sdk.NewCoins(*res.Tokens[0]),
+	)
+
+	if err != nil {
+		return err
+	}
+
+	// save pool
+	k.SetInterchainLiquidityPool(ctx, pool)
+	return nil
+}
+
+func (k Keeper) OnMultiWithdrawAcknowledged(ctx sdk.Context, req *types.MsgMultiAssetWithdrawRequest, res *types.MsgMultiAssetWithdrawResponse) error {
 
 	pool, found := k.GetInterchainLiquidityPool(ctx, req.LocalWithdraw.PoolCoin.Denom)
 	if !found {
@@ -122,7 +157,6 @@ func (k Keeper) OnWithdrawAcknowledged(ctx sdk.Context, req *types.MsgMultiAsset
 	}
 	pool.SubPoolSupply(*req.LocalWithdraw.PoolCoin)
 	pool.SubPoolSupply(*req.RemoteWithdraw.PoolCoin)
-
 	//burn voucher token.
 	err := k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(req.LocalWithdraw.Sender), *req.LocalWithdraw.PoolCoin)
 	if err != nil {
@@ -335,7 +369,42 @@ func (k Keeper) OnMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgMulti
 }
 
 // OnWithdrawReceive processes a withdrawal request and returns a response or an error.
-func (k Keeper) OnWithdrawReceived(ctx sdk.Context, msg *types.MsgMultiAssetWithdrawRequest, stateChange *types.StateChange) (*types.MsgMultiAssetWithdrawResponse, error) {
+func (k Keeper) OnSingleAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgSingleAssetWithdrawRequest, stateChange *types.StateChange) (*types.MsgSingleAssetWithdrawResponse, error) {
+
+	// Validate the message
+	if err := msg.ValidateBasic(); err != nil {
+		return nil, err
+	}
+
+	// validate remote denom
+	// check out denom
+	if !k.bankKeeper.HasSupply(ctx, msg.DenomOut) {
+		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "invalid denom in local withdraw message:%s", msg.DenomOut)
+	}
+
+	// Retrieve the liquidity pool
+	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolCoin.Denom)
+	if !found {
+		return nil, types.ErrNotFoundPool
+	}
+
+	// Update pool status by subtracting the supplied pool coin and output token
+	for _, poolAsset := range stateChange.Out {
+		pool.SubAsset(*poolAsset)
+	}
+	for _, poolToken := range stateChange.PoolTokens {
+		pool.SubPoolSupply(*poolToken)
+	}
+
+	// Save pool
+	k.SetInterchainLiquidityPool(ctx, pool)
+	return &types.MsgSingleAssetWithdrawResponse{
+		Tokens: stateChange.Out,
+	}, nil
+}
+
+// OnWithdrawReceive processes a withdrawal request and returns a response or an error.
+func (k Keeper) OnMultiAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgMultiAssetWithdrawRequest, stateChange *types.StateChange) (*types.MsgMultiAssetWithdrawResponse, error) {
 
 	// Validate the message
 	if err := msg.ValidateBasic(); err != nil {

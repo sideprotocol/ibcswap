@@ -17,10 +17,11 @@ enum SwapMessageType {
 
   TYPE_CREATE_POOL = 1 [(gogoproto.enumvalue_customname) = "CREATE_POOL"];
   TYPE_SINGLE_DEPOSIT = 2 [(gogoproto.enumvalue_customname) = "SINGLE_DEPOSIT"];
-  TYPE_DOUBLE_DEPOSIT = 3 [(gogoproto.enumvalue_customname) = "DOUBLE_DEPOSIT"];
-  TYPE_WITHDRAW = 4 [(gogoproto.enumvalue_customname) = "WITHDRAW"];
-  TYPE_LEFT_SWAP = 5 [(gogoproto.enumvalue_customname) = "LEFT_SWAP"];
-  TYPE_RIGHT_SWAP = 6 [(gogoproto.enumvalue_customname) = "RIGHT_SWAP"];
+  TYPE_MULTI_DEPOSIT = 3 [(gogoproto.enumvalue_customname) = "MULTI_DEPOSIT"];
+  TYPE_SINGLE_WITHDRAW = 4 [(gogoproto.enumvalue_customname) = "SINGLE_WITHDRAW"];
+  TYPE_MULTI_WITHDRAW = 5 [(gogoproto.enumvalue_customname) = "MULTI_WITHDRAW"];
+  TYPE_LEFT_SWAP = 6 [(gogoproto.enumvalue_customname) = "LEFT_SWAP"];
+  TYPE_RIGHT_SWAP = 7 [(gogoproto.enumvalue_customname) = "RIGHT_SWAP"];
 }
 
 message StateChange {

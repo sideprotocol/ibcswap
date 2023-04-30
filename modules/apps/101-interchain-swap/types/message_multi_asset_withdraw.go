@@ -11,13 +11,13 @@ var _ sdk.Msg = &MsgMultiAssetWithdrawRequest{}
 
 func NewMsgMultiAssetWithdraw(localSender, remoteSender, localDenomOut, remoteDenomOut string, localPoolCoin *sdk.Coin, remotePoolCoin *sdk.Coin) *MsgMultiAssetWithdrawRequest {
 	return &MsgMultiAssetWithdrawRequest{
-		LocalWithdraw: &WithdrawRequest{
+		LocalWithdraw: &MsgSingleAssetWithdrawRequest{
 			Sender:   localSender,
 			PoolCoin: localPoolCoin,
 			DenomOut: localDenomOut,
 		},
 
-		RemoteWithdraw: &WithdrawRequest{
+		RemoteWithdraw: &MsgSingleAssetWithdrawRequest{
 			Sender:   localSender,
 			PoolCoin: remotePoolCoin,
 			DenomOut: remoteDenomOut,
