@@ -88,7 +88,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		data, err := types.ModuleCdc.Marshal(res)
 		return data, err
 
-	case types.DOUBLE_DEPOSIT:
+	case types.MULTI_DEPOSIT:
 		var msg types.MsgMultiAssetDepositRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
@@ -99,12 +99,25 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		}
 		data, err := types.ModuleCdc.Marshal(res)
 		return data, err
-	case types.WITHDRAW:
+	case types.SINGLE_WITHDRAW:
+		var msg types.MsgSingleAssetWithdrawRequest
+		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+			return nil, err
+		}
+		res, err2 := k.OnSingleAssetWithdrawReceived(ctx, &msg, data.StateChange)
+		if err2 != nil {
+			return nil, err2
+		}
+
+		data, err := types.ModuleCdc.Marshal(res)
+		return data, err
+
+	case types.MULTI_WITHDRAW:
 		var msg types.MsgMultiAssetWithdrawRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		res, err2 := k.OnWithdrawReceived(ctx, &msg, data.StateChange)
+		res, err2 := k.OnMultiAssetWithdrawReceived(ctx, &msg, data.StateChange)
 		if err2 != nil {
 			return nil, err2
 		}
@@ -162,7 +175,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				return err
 			}
 
-		case types.DOUBLE_DEPOSIT:
+		case types.MULTI_DEPOSIT:
 			var msg types.MsgMultiAssetDepositRequest
 			var res types.MsgMultiAssetDepositResponse
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
@@ -174,11 +187,23 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				logger.Debug("DoubleDeposit:ack:", err.Error())
 				return err
 			}
-			if err := k.OnDoubleDepositAcknowledged(ctx, &msg, &res); err != nil {
+			if err := k.OnMultiAssetDepositAcknowledged(ctx, &msg, &res); err != nil {
 				logger.Debug("DoubleDeposit:Single", err.Error())
 				return err
 			}
-		case types.WITHDRAW:
+		case types.SINGLE_WITHDRAW:
+			var msg types.MsgSingleAssetWithdrawRequest
+			var res types.MsgSingleAssetWithdrawResponse
+			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+				return err
+			}
+			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
+				return err
+			}
+			if err := k.OnSingleWithdrawAcknowledged(ctx, &msg, &res); err != nil {
+				return err
+			}
+		case types.MULTI_WITHDRAW:
 			var msg types.MsgMultiAssetWithdrawRequest
 			var res types.MsgMultiAssetWithdrawResponse
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
@@ -187,7 +212,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
 				return err
 			}
-			if err := k.OnWithdrawAcknowledged(ctx, &msg, &res); err != nil {
+			if err := k.OnMultiWithdrawAcknowledged(ctx, &msg, &res); err != nil {
 				return err
 			}
 		case types.LEFT_SWAP, types.RIGHT_SWAP:
@@ -232,14 +257,22 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		}
 		token = *msg.Token
 		sender = msg.Sender
-	case types.DOUBLE_DEPOSIT:
+	case types.MULTI_DEPOSIT:
 		var msg types.MsgMultiAssetDepositRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
 		token = *msg.LocalDeposit.Token
 		sender = msg.LocalDeposit.Sender
-	case types.WITHDRAW:
+
+	case types.SINGLE_WITHDRAW:
+		var msg types.MsgSingleAssetWithdrawRequest
+		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+			return err
+		}
+		token = *msg.PoolCoin
+		sender = msg.Sender
+	case types.MULTI_WITHDRAW:
 		var msg types.MsgMultiAssetWithdrawRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err

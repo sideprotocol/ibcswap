@@ -20,10 +20,10 @@ func TestMsgWithdraw_ValidateBasic(t *testing.T) {
 			name: "invalid sender address",
 
 			msg: MsgMultiAssetWithdrawRequest{
-				LocalWithdraw: &WithdrawRequest{
+				LocalWithdraw: &MsgSingleAssetWithdrawRequest{
 					Sender: "invalid_address",
 				},
-				RemoteWithdraw: &WithdrawRequest{
+				RemoteWithdraw: &MsgSingleAssetWithdrawRequest{
 					Sender: "invalid_address",
 				},
 			},
@@ -32,10 +32,10 @@ func TestMsgWithdraw_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid denomout",
 			msg: MsgMultiAssetWithdrawRequest{
-				LocalWithdraw: &WithdrawRequest{
+				LocalWithdraw: &MsgSingleAssetWithdrawRequest{
 					Sender: sample.AccAddress(),
 				},
-				RemoteWithdraw: &WithdrawRequest{
+				RemoteWithdraw: &MsgSingleAssetWithdrawRequest{
 					Sender: "invalid_address",
 				},
 			},
@@ -44,7 +44,7 @@ func TestMsgWithdraw_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid pool-coin amount",
 			msg: MsgMultiAssetWithdrawRequest{
-				LocalWithdraw: &WithdrawRequest{
+				LocalWithdraw: &MsgSingleAssetWithdrawRequest{
 					Sender:   sample.AccAddress(),
 					DenomOut: types.DefaultBondDenom,
 					PoolCoin: &types.Coin{
@@ -52,7 +52,7 @@ func TestMsgWithdraw_ValidateBasic(t *testing.T) {
 						Amount: types.NewInt(0),
 					},
 				},
-				RemoteWithdraw: &WithdrawRequest{
+				RemoteWithdraw: &MsgSingleAssetWithdrawRequest{
 					Sender:   "invalid_address",
 					DenomOut: types.DefaultBondDenom,
 					PoolCoin: &types.Coin{
@@ -66,7 +66,7 @@ func TestMsgWithdraw_ValidateBasic(t *testing.T) {
 		{
 			name: "valid message",
 			msg: MsgMultiAssetWithdrawRequest{
-				LocalWithdraw: &WithdrawRequest{
+				LocalWithdraw: &MsgSingleAssetWithdrawRequest{
 					Sender:   sample.AccAddress(),
 					DenomOut: types.DefaultBondDenom,
 					PoolCoin: &types.Coin{
@@ -74,7 +74,7 @@ func TestMsgWithdraw_ValidateBasic(t *testing.T) {
 						Amount: types.NewInt(0),
 					},
 				},
-				RemoteWithdraw: &WithdrawRequest{
+				RemoteWithdraw: &MsgSingleAssetWithdrawRequest{
 					Sender:   "invalid_address",
 					DenomOut: types.DefaultBondDenom,
 					PoolCoin: &types.Coin{

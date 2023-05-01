@@ -19,6 +19,7 @@ service Msg {
   rpc CreatePool (MsgCreatePoolRequest) returns (MsgCreatePoolResponse);
   rpc SingleAssetDeposit    (MsgSingleAssetDepositRequest   ) returns (MsgSingleAssetDepositResponse   );
   rpc MultiAssetDeposit    (MsgMultiAssetDepositRequest   ) returns (MsgMultiAssetDepositResponse   );
+  rpc SingleAssetWithdraw   (MsgSingleAssetWithdrawRequest  ) returns (MsgSingleAssetWithdrawResponse  );
   rpc MultiAssetWithdraw   (MsgMultiAssetWithdrawRequest  ) returns (MsgMultiAssetWithdrawResponse  );
   rpc Swap       (MsgSwapRequest             ) returns (MsgSwapResponse      );
 }
@@ -70,15 +71,18 @@ message MsgMultiAssetDepositResponse {
 
 
 message MsgMultiAssetWithdrawRequest {
-  WithdrawRequest   localWithdraw = 1;
-  WithdrawRequest remoteWithdraw = 2;
+  MsgSingleAssetWithdrawRequest   localWithdraw = 1;
+  MsgSingleAssetWithdrawRequest remoteWithdraw = 2;
 }
 
-message WithdrawRequest {
+message MsgSingleAssetWithdrawRequest {
   string sender = 1;
   string denomOut = 2;
   cosmos.base.v1beta1.Coin poolCoin = 3;
+}
 
+message MsgSingleAssetWithdrawResponse {
+  repeated cosmos.base.v1beta1.Coin tokens = 1;
 }
 
 message MsgMultiAssetWithdrawResponse {

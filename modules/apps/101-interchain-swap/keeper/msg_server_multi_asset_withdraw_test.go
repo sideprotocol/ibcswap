@@ -70,9 +70,11 @@ func (suite *KeeperTestSuite) TestMsgWithdraw() {
 
 		//
 		coin := sdk.NewCoin(*poolId, sdk.NewInt(10))
-		msg = types.NewMsgWithdraw(
+		msg = types.NewMsgMultiAssetWithdraw(
 			suite.chainA.SenderAccount.GetAddress().String(),
 			suite.chainB.SenderAccount.GetAddress().String(),
+			sdk.DefaultBondDenom,
+			sdk.DefaultBondDenom,
 			&coin,
 			&coin,
 		)

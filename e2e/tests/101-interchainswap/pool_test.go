@@ -459,7 +459,7 @@ func (s *InterchainswapTestSuite) TestPoolStatus() {
 					fee,
 				)
 
-				outToken, err := amm.Withdraw(poolCoin, denomOut)
+				outToken, err := amm.SingleWithdraw(poolCoin, denomOut)
 				fmt.Println("pool coin:", poolCoin)
 				fmt.Println("OutToken:", outToken)
 				fmt.Println("ERR", err)

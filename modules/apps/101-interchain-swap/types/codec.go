@@ -13,7 +13,8 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgMultiAssetDepositRequest{}, "interchainswap/DoubleDeposit", nil)
 	cdc.RegisterConcrete(&RemoteDeposit{}, "interchainswap/RemoteDeposit", nil)
 	cdc.RegisterConcrete(&LocalDeposit{}, "interchainswap/LocalDeposit", nil)
-	cdc.RegisterConcrete(&MsgMultiAssetWithdrawRequest{}, "interchainswap/Withdraw", nil)
+	cdc.RegisterConcrete(&MsgSingleAssetWithdrawRequest{}, "interchainswap/SingleWithdraw", nil)
+	cdc.RegisterConcrete(&MsgMultiAssetWithdrawRequest{}, "interchainswap/MultiWithdraw", nil)
 	cdc.RegisterConcrete(&MsgSwapRequest{}, "interchainswap/Swap", nil)
 	// this line is used by starport scaffolding # 2
 }
@@ -27,6 +28,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgMultiAssetDepositRequest{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgSingleAssetWithdrawRequest{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgMultiAssetWithdrawRequest{},

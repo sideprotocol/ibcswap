@@ -220,7 +220,7 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 }
 
 // P_issued = P_supply * ((1 + At/Bt) ** Wt -1)
-func (imm *InterchainMarketMaker) DepositDoubleAsset(tokens []*types.Coin) ([]*types.Coin, error) {
+func (imm *InterchainMarketMaker) DepositMultiAsset(tokens []*types.Coin) ([]*types.Coin, error) {
 	outTokens := []*types.Coin{}
 	for _, token := range tokens {
 		asset, err := imm.Pool.FindAssetByDenom(token.Denom)
@@ -236,8 +236,7 @@ func (imm *InterchainMarketMaker) DepositDoubleAsset(tokens []*types.Coin) ([]*t
 			}
 			issueAmount = totalInitialLpAmount
 		} else {
-
-			ratio := (1 + float64(token.Amount.Int64())/float64(asset.Balance.Amount.Int64())) * Multiplier
+			ratio := float64(token.Amount.Int64()) / float64(asset.Balance.Amount.Int64()) * Multiplier
 			issueAmount = imm.Pool.Supply.Amount.Mul(types.NewInt(int64(ratio))).Quo(types.NewInt(Multiplier))
 		}
 
@@ -287,7 +286,7 @@ func (imm *InterchainMarketMaker) SingleWithdraw(redeem types.Coin, denomOut str
 
 // input the supply token, output the expected token.
 // At = Bt * (P_redeemed / P_supply)
-func (imm *InterchainMarketMaker) Withdraw(redeem types.Coin, denomOut string) (*types.Coin, error) {
+func (imm *InterchainMarketMaker) MultiAssetWithdraw(redeem types.Coin, denomOut string) (*types.Coin, error) {
 
 	asset, err := imm.Pool.FindAssetByDenom(denomOut)
 	if err != nil {

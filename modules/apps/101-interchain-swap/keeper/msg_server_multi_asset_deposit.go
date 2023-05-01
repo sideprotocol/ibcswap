@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
@@ -17,7 +16,6 @@ func (k Keeper) MultiAssetDeposit(goCtx context.Context, msg *types.MsgMultiAsse
 	if err != nil {
 		return nil, err
 	}
-
 
 	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
 	if !found {
@@ -65,7 +63,7 @@ func (k Keeper) MultiAssetDeposit(goCtx context.Context, msg *types.MsgMultiAsse
 		fee,
 	)
 
-	poolTokens, err := amm.DepositDoubleAsset([]*sdk.Coin{
+	poolTokens, err := amm.DepositMultiAsset([]*sdk.Coin{
 		msg.LocalDeposit.Token,
 		msg.RemoteDeposit.Token,
 	})
@@ -81,7 +79,7 @@ func (k Keeper) MultiAssetDeposit(goCtx context.Context, msg *types.MsgMultiAsse
 	}
 
 	packet := types.IBCSwapPacketData{
-		Type:        types.DOUBLE_DEPOSIT,
+		Type:        types.MULTI_DEPOSIT,
 		Data:        rawMsgData,
 		StateChange: &types.StateChange{PoolTokens: poolTokens},
 	}

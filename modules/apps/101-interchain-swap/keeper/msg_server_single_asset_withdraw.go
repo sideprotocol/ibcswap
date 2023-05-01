@@ -8,7 +8,7 @@ import (
 	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
-func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMultiAssetWithdrawRequest) (*types.MsgMultiAssetWithdrawResponse, error) {
+func (k msgServer) SingleAssetWithdraw(goCtx context.Context, msg *types.MsgSingleAssetWithdrawRequest) (*types.MsgSingleAssetWithdrawResponse, error) {
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	err := msg.ValidateBasic()
@@ -17,12 +17,12 @@ func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMulti
 	}
 
 	// check out denom
-	if !k.bankKeeper.HasSupply(ctx, msg.LocalWithdraw.DenomOut) {
-		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "invalid denom in local withdraw message:%s", msg.LocalWithdraw.DenomOut)
+	if !k.bankKeeper.HasSupply(ctx, msg.DenomOut) {
+		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "invalid denom in local withdraw message:%s", msg.DenomOut)
 	}
 
 	// PoolCoin.Denom is just poolID.
-	pool, found := k.GetInterchainLiquidityPool(ctx, msg.LocalWithdraw.PoolCoin.Denom)
+	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolCoin.Denom)
 
 	if !found {
 		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", types.ErrNotFoundPool)
@@ -42,13 +42,7 @@ func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMulti
 		fee,
 	)
 
-	localOut, err := amm.MultiAssetWithdraw(*msg.LocalWithdraw.PoolCoin, msg.LocalWithdraw.DenomOut)
-
-	if err != nil {
-		return nil, err
-	}
-
-	remoteOut, err := amm.MultiAssetWithdraw(*msg.LocalWithdraw.PoolCoin, msg.RemoteWithdraw.DenomOut)
+	out, err := amm.SingleWithdraw(*msg.PoolCoin, msg.DenomOut)
 
 	if err != nil {
 		return nil, err
@@ -64,8 +58,8 @@ func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMulti
 		Type: types.MULTI_WITHDRAW,
 		Data: rawMsgData,
 		StateChange: &types.StateChange{
-			Out:        []*sdk.Coin{localOut, remoteOut},
-			PoolTokens: []*sdk.Coin{msg.LocalWithdraw.PoolCoin, msg.RemoteWithdraw.PoolCoin},
+			Out:        []*sdk.Coin{out},
+			PoolTokens: []*sdk.Coin{msg.PoolCoin},
 		},
 	}
 
@@ -75,5 +69,5 @@ func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMulti
 	if err != nil {
 		return nil, types.ErrFailedWithdraw
 	}
-	return &types.MsgMultiAssetWithdrawResponse{}, nil
+	return &types.MsgSingleAssetWithdrawResponse{}, nil
 }
