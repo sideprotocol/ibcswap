@@ -8,39 +8,32 @@ import (
 	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
-func (k msgServer) SingleAssetWithdraw(goCtx context.Context, msg *types.MsgSingleAssetWithdrawRequest) (*types.MsgSingleAssetWithdrawResponse, error) {
+func (k msgServer) SingleAssetWithdraw(ctx context.Context, msg *types.MsgSingleAssetWithdrawRequest) (*types.MsgSingleAssetWithdrawResponse, error) {
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	err := msg.ValidateBasic()
 	if err != nil {
 		return nil, err
 	}
 
-	// check out denom
-	if !k.bankKeeper.HasSupply(ctx, msg.DenomOut) {
-		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "invalid denom in local withdraw message:%s", msg.DenomOut)
+	// Check denom
+	if !k.bankKeeper.HasSupply(sdkCtx, msg.DenomOut) {
+		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "invalid denom in local withdraw message: %s", msg.DenomOut)
 	}
 
 	// PoolCoin.Denom is just poolID.
-	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolCoin.Denom)
+	pool, found := k.GetInterchainLiquidityPool(sdkCtx, msg.PoolCoin.Denom)
 
 	if !found {
-		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", types.ErrNotFoundPool)
+		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "pool not found: %s", types.ErrNotFoundPool)
 	}
 
 	if pool.Status != types.PoolStatus_POOL_STATUS_READY {
-		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", types.ErrNotReadyForSwap)
+		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "pool not ready for swap: %s", types.ErrNotReadyForSwap)
 	}
 
-	if err != nil {
-		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", err)
-	}
-
-	fee := k.GetSwapFeeRate(ctx)
-	amm := *types.NewInterchainMarketMaker(
-		&pool,
-		fee,
-	)
+	fee := k.GetSwapFeeRate(sdkCtx)
+	amm := *types.NewInterchainMarketMaker(&pool, fee)
 
 	out, err := amm.SingleWithdraw(*msg.PoolCoin, msg.DenomOut)
 
@@ -48,7 +41,7 @@ func (k msgServer) SingleAssetWithdraw(goCtx context.Context, msg *types.MsgSing
 		return nil, err
 	}
 
-	// construct the IBC data packet
+	// Construct the IBC data packet
 	rawMsgData, err := types.ModuleCdc.Marshal(msg)
 	if err != nil {
 		return nil, err
@@ -63,9 +56,9 @@ func (k msgServer) SingleAssetWithdraw(goCtx context.Context, msg *types.MsgSing
 		},
 	}
 
-	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&ctx)
+	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)
 
-	err = k.SendIBCSwapPacket(ctx, pool.EncounterPartyPort, pool.EncounterPartyChannel, timeoutHeight, uint64(timeoutStamp), packet)
+	err = k.SendIBCSwapPacket(sdkCtx, pool.EncounterPartyPort, pool.EncounterPartyChannel, timeoutHeight, uint64(timeoutStamp), packet)
 	if err != nil {
 		return nil, types.ErrFailedWithdraw
 	}

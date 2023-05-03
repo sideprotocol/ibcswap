@@ -3,35 +3,34 @@ package keeper
 import (
 	"context"
 
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*types.MsgSwapResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// Validate msg
 	err := msg.ValidateBasic()
 	if err != nil {
-		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "failed to swap because of %s", err)
+		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "failed to swap due to %s", err)
 	}
 
-	pool, found := k.GetInterchainLiquidityPool(ctx, types.GetPoolId([]string{
-		msg.TokenIn.Denom, msg.TokenOut.Denom,
-	}))
+	poolID := types.GetPoolId([]string{msg.TokenIn.Denom, msg.TokenOut.Denom})
+	pool, found := k.GetInterchainLiquidityPool(sdkCtx, poolID)
 
 	if !found {
-		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "because of %s", types.ErrNotFoundPool)
+		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "pool not found: %s", types.ErrNotFoundPool)
 	}
 
 	if pool.Status != types.PoolStatus_POOL_STATUS_READY {
-		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "because of %s", types.ErrNotReadyForSwap)
+		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "pool not ready for swap: %s", types.ErrNotReadyForSwap)
 	}
 
 	// Lock swap-in token to the swap module
-	err = k.LockTokens(ctx, pool.EncounterPartyPort, pool.EncounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Sender), sdk.NewCoins(*msg.TokenIn))
+	err = k.LockTokens(sdkCtx, pool.EncounterPartyPort, pool.EncounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Sender), sdk.NewCoins(*msg.TokenIn))
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +41,7 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 		return nil, err
 	}
 
-	fee := k.GetSwapFeeRate(ctx)
+	fee := k.GetSwapFeeRate(sdkCtx)
 	amm := *types.NewInterchainMarketMaker(
 		&pool,
 		fee,
@@ -68,15 +67,15 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 		return nil, types.ErrInvalidSwapType
 	}
 
-	if tokenOut.Amount.LTE(math.NewInt(0)) {
-		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "because", tokenOut.Amount)
+	if tokenOut.Amount.LTE(sdk.NewInt(0)) {
+		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "token amount is non-positive: %s", tokenOut.Amount)
 	}
 
 	// Slippage checking
 	factor := types.MaximumSlippage - msg.Slippage
 	expected := msg.TokenOut.Amount.Mul(sdk.NewIntFromUint64(uint64(factor))).Quo(sdk.NewIntFromUint64(types.MaximumSlippage))
 	if tokenOut.Amount.LT(expected) {
-		return nil, errorsmod.Wrapf(types.ErrFailedOnSwapReceived, "doesn't meet slippage for swap!, expect: %v, output: %v, factor:%d", expected, tokenOut, factor)
+		return nil, errorsmod.Wrapf(types.ErrFailedOnSwapReceived, "slippage check failed! expected: %v, output: %v, factor: %d", expected, tokenOut, factor)
 	}
 
 	packet := types.IBCSwapPacketData{
@@ -85,14 +84,14 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 		StateChange: &types.StateChange{Out: []*sdk.Coin{tokenOut}},
 	}
 
-	timeOutHeight, timeoutStamp := types.GetDefaultTimeOut(&ctx)
+	timeoutHeight, timeoutTimestamp := types.GetDefaultTimeOut(&sdkCtx)
 
 	err = k.SendIBCSwapPacket(
 		ctx,
 		pool.EncounterPartyPort,
 		pool.EncounterPartyChannel,
-		timeOutHeight,
-		timeoutStamp,
+		timeoutHeight,
+		timeoutTimestamp,
 		packet,
 	)
 	if err != nil {

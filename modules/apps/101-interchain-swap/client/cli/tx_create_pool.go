@@ -46,11 +46,8 @@ func CmdCreatePool() *cobra.Command {
 				}
 				decimals = append(decimals, uint32(decimal))
 			}
-
-			//initialLiquidityAmount, err := strconv.ParseUint(initialLiquidity, 10, 64)
-
-			if err != nil {
-				return err
+			if len(decimals) != 2 {
+				return fmt.Errorf("invalid decimals length %s", decimals)
 			}
 
 			msg := types.NewMsgCreatePool(

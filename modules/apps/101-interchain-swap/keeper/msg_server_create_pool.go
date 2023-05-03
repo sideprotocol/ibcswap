@@ -4,51 +4,52 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
+	errormod "github.com/cosmos/cosmos-sdk/types/errors"
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
-func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolRequest) (*types.MsgCreatePoolResponse, error) {
+func (k msgServer) CreatePool(ctx context.Context, msg *types.MsgCreatePoolRequest) (*types.MsgCreatePoolResponse, error) {
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	// validate message
+	// Validate message
 	err := host.PortIdentifierValidator(msg.SourcePort)
 	if err != nil {
-		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "because of %s", err)
+		return nil, errormod.Wrapf(types.ErrFailedSwap, "due to %s", err)
 	}
 
 	err = host.ChannelIdentifierValidator(msg.SourceChannel)
 	if err != nil {
-		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "because of %s", err)
+		return nil, errormod.Wrapf(types.ErrFailedSwap, "due to %s", err)
 	}
 
 	err = msg.ValidateBasic()
 	if err != nil {
-		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "because of %s", err)
+		return nil, errormod.Wrapf(types.ErrFailedSwap, "due to %s", err)
 	}
 
 	localAssetCount := 0
 	for _, token := range msg.Tokens {
-		if k.bankKeeper.HasSupply(ctx, token.Denom) {
+		if k.bankKeeper.HasSupply(sdkCtx, token.Denom) {
 			localAssetCount += 1
 		}
 	}
 
-	// should have 1 native asset on the chain
+	// Should have 1 native asset on the chain
 	if localAssetCount < 1 {
 		return nil, types.ErrNumberOfLocalAsset
 	}
 
-	// check user owned initial liquidity or not
-	holdingNativeCoin := k.bankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(msg.Sender), msg.Tokens[0].Denom)
+	// Check if user owns initial liquidity or not
+	senderAddress := sdk.MustAccAddressFromBech32(msg.Sender)
+	holdingNativeCoin := k.bankKeeper.GetBalance(sdkCtx, senderAddress, msg.Tokens[0].Denom)
 	if holdingNativeCoin.Amount.LT(msg.Tokens[0].Amount) {
 		return nil, types.ErrEmptyInitialLiquidity
 	}
 
-	// move initial fund to liquidity pool
-	err = k.LockTokens(ctx, msg.SourcePort, msg.SourceChannel, sdk.MustAccAddressFromBech32(msg.Sender), sdk.NewCoins(*msg.Tokens[0]))
+	// Move initial funds to liquidity pool
+	err = k.LockTokens(sdkCtx, msg.SourcePort, msg.SourceChannel, senderAddress, sdk.NewCoins(*msg.Tokens[0]))
 
 	if err != nil {
 		return nil, err
@@ -59,14 +60,14 @@ func (k msgServer) CreatePool(goCtx context.Context, msg *types.MsgCreatePoolReq
 		return nil, err
 	}
 
-	// construct IBC data packet
+	// Construct IBC data packet
 	packet := types.IBCSwapPacketData{
 		Type: types.CREATE_POOL,
 		Data: poolData,
 	}
 
-	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&ctx)
-	err = k.SendIBCSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, timeoutHeight, timeoutStamp, packet)
+	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)
+	err = k.SendIBCSwapPacket(sdkCtx, msg.SourcePort, msg.SourceChannel, timeoutHeight, timeoutStamp, packet)
 	if err != nil {
 		return nil, err
 	}

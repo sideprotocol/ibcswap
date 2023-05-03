@@ -49,9 +49,9 @@ func (msg *MsgCreatePoolRequest) ValidateBasic() error {
 		return ErrInvalidAddress
 	}
 
-	denomSize := len(msg.Tokens)
-	//validation message
-	if denomSize != 2 {
+	tokenCount := len(msg.Tokens)
+	// Validation message
+	if tokenCount != 2 {
 		return ErrInvalidDenomPair
 	}
 
@@ -59,15 +59,15 @@ func (msg *MsgCreatePoolRequest) ValidateBasic() error {
 		return ErrInvalidDecimalPair
 	}
 
-	weights := strings.Split(msg.Weight, ":")
-	if len(weights) != 2 {
+	weightValues := strings.Split(msg.Weight, ":")
+	if len(weightValues) != 2 {
 		return ErrInvalidWeightPair
 	}
 
 	totalWeight := 0
-	for _, weight := range weights {
-		w, _ := strconv.Atoi(weight)
-		totalWeight += w
+	for _, weight := range weightValues {
+		weightValue, _ := strconv.Atoi(weight)
+		totalWeight += weightValue
 	}
 
 	if totalWeight != 100 {

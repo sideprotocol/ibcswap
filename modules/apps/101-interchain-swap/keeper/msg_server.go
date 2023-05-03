@@ -22,9 +22,9 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
+// OnCreatePoolAcknowledged processes the create pool acknowledgement, mints LP tokens, and saves the liquidity pool.
 func (k Keeper) OnCreatePoolAcknowledged(ctx sdk.Context, msg *types.MsgCreatePoolRequest) error {
-	//save pool after complete create operation in counter party chain.
-
+	// Save pool after completing the create operation in the counterparty chain
 	pool := types.NewInterchainLiquidityPool(
 		ctx,
 		msg.Sender,
@@ -36,34 +36,37 @@ func (k Keeper) OnCreatePoolAcknowledged(ctx sdk.Context, msg *types.MsgCreatePo
 		msg.SourceChannel,
 	)
 
-	// when add initial liquidity, we need to update pool token amount.
+	// When adding initial liquidity, update the pool token amount
 	initialLiquidity := sdk.NewCoin(pool.PoolId, msg.Tokens[0].Amount.Add(msg.Tokens[1].Amount))
 	pool.AddPoolSupply(initialLiquidity)
 
-	// mint lpToken.
+	// Mint LP tokens
 	err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(msg.Sender), initialLiquidity)
 	if err != nil {
 		return err
 	}
 
+	// Save the liquidity pool
 	k.SetInterchainLiquidityPool(ctx, *pool)
 	return nil
 }
 
+// OnSingleDepositAcknowledged processes a single deposit acknowledgement, mints voucher tokens, and updates the liquidity pool.
 func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgSingleAssetDepositRequest, res *types.MsgSingleAssetDepositResponse) error {
 
+	// Retrieve the liquidity pool
 	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolId)
 	if !found {
 		return types.ErrNotFoundPool
 	}
 
-	// mint voucher
+	// Mint voucher tokens for the sender
 	err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(req.Sender), *res.PoolToken)
 	if err != nil {
 		return err
 	}
 
-	// pool status update.
+	// Update pool supply and status
 	pool.AddPoolSupply(*res.PoolToken)
 
 	if pool.Status != types.PoolStatus_POOL_STATUS_INITIAL {
@@ -72,11 +75,12 @@ func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgSingl
 		pool.Status = types.PoolStatus_POOL_STATUS_READY
 	}
 
+	// Save the updated liquidity pool
 	k.SetInterchainLiquidityPool(ctx, pool)
 	return nil
 }
 
-// OnDoubleDepositAcknowledged processes a double deposit acknowledgement, mints voucher tokens, and updates the liquidity pool.
+// OnMultiAssetDepositAcknowledged processes a double deposit acknowledgement, mints voucher tokens, and updates the liquidity pool.
 func (k Keeper) OnMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.MsgMultiAssetDepositRequest, res *types.MsgMultiAssetDepositResponse) error {
 
 	// Retrieve the liquidity pool
@@ -118,9 +122,9 @@ func (k Keeper) OnSingleWithdrawAcknowledged(ctx sdk.Context, req *types.MsgSing
 
 	// update pool status
 	for _, poolAsset := range res.Tokens {
-		pool.SubAsset(*poolAsset)
+		pool.SubtractAsset(*poolAsset)
 	}
-	pool.SubPoolSupply(*req.PoolCoin)
+	pool.SubtractPoolSupply(*req.PoolCoin)
 	//burn voucher token.
 	err := k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(req.Sender), *req.PoolCoin)
 	if err != nil {
@@ -153,10 +157,10 @@ func (k Keeper) OnMultiWithdrawAcknowledged(ctx sdk.Context, req *types.MsgMulti
 
 	// update pool status
 	for _, poolAsset := range res.Tokens {
-		pool.SubAsset(*poolAsset)
+		pool.SubtractAsset(*poolAsset)
 	}
-	pool.SubPoolSupply(*req.LocalWithdraw.PoolCoin)
-	pool.SubPoolSupply(*req.RemoteWithdraw.PoolCoin)
+	pool.SubtractPoolSupply(*req.LocalWithdraw.PoolCoin)
+	pool.SubtractPoolSupply(*req.RemoteWithdraw.PoolCoin)
 	//burn voucher token.
 	err := k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(req.LocalWithdraw.Sender), *req.LocalWithdraw.PoolCoin)
 	if err != nil {
@@ -189,7 +193,7 @@ func (k Keeper) OnSwapAcknowledged(ctx sdk.Context, req *types.MsgSwapRequest, r
 
 	// pool status update
 	pool.AddAsset(*req.TokenIn)
-	pool.SubAsset(*res.Tokens[0])
+	pool.SubtractAsset(*res.Tokens[0])
 	k.SetInterchainLiquidityPool(ctx, pool)
 	return nil
 }
@@ -368,7 +372,7 @@ func (k Keeper) OnMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgMulti
 	}, nil
 }
 
-// OnWithdrawReceive processes a withdrawal request and returns a response or an error.
+// OnSingleAssetWithdrawReceived processes a withdrawal request and returns a response or an error.
 func (k Keeper) OnSingleAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgSingleAssetWithdrawRequest, stateChange *types.StateChange) (*types.MsgSingleAssetWithdrawResponse, error) {
 
 	// Validate the message
@@ -376,10 +380,9 @@ func (k Keeper) OnSingleAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgSin
 		return nil, err
 	}
 
-	// validate remote denom
-	// check out denom
+	// Validate remote denom
 	if !k.bankKeeper.HasSupply(ctx, msg.DenomOut) {
-		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "invalid denom in local withdraw message:%s", msg.DenomOut)
+		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "invalid denom in local withdraw message: %s", msg.DenomOut)
 	}
 
 	// Retrieve the liquidity pool
@@ -390,10 +393,10 @@ func (k Keeper) OnSingleAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgSin
 
 	// Update pool status by subtracting the supplied pool coin and output token
 	for _, poolAsset := range stateChange.Out {
-		pool.SubAsset(*poolAsset)
+		pool.SubtractAsset(*poolAsset)
 	}
 	for _, poolToken := range stateChange.PoolTokens {
-		pool.SubPoolSupply(*poolToken)
+		pool.SubtractPoolSupply(*poolToken)
 	}
 
 	// Save pool
@@ -403,7 +406,7 @@ func (k Keeper) OnSingleAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgSin
 	}, nil
 }
 
-// OnWithdrawReceive processes a withdrawal request and returns a response or an error.
+// OnMultiAssetWithdrawReceived processes a withdrawal request and returns a response or an error.
 func (k Keeper) OnMultiAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgMultiAssetWithdrawRequest, stateChange *types.StateChange) (*types.MsgMultiAssetWithdrawResponse, error) {
 
 	// Validate the message
@@ -411,10 +414,9 @@ func (k Keeper) OnMultiAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgMult
 		return nil, err
 	}
 
-	// validate remote denom
-	// check out denom
+	// Validate remote denom
 	if !k.bankKeeper.HasSupply(ctx, msg.LocalWithdraw.DenomOut) {
-		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "invalid denom in local withdraw message:%s", msg.LocalWithdraw.DenomOut)
+		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "invalid denom in local withdraw message: %s", msg.LocalWithdraw.DenomOut)
 	}
 
 	// Retrieve the liquidity pool
@@ -425,10 +427,10 @@ func (k Keeper) OnMultiAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgMult
 
 	// Update pool status by subtracting the supplied pool coin and output token
 	for _, poolAsset := range stateChange.Out {
-		pool.SubAsset(*poolAsset)
+		pool.SubtractAsset(*poolAsset)
 	}
 	for _, poolToken := range stateChange.PoolTokens {
-		pool.SubPoolSupply(*poolToken)
+		pool.SubtractPoolSupply(*poolToken)
 	}
 
 	// Save pool
@@ -454,11 +456,11 @@ func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest, state
 
 	err := k.UnlockTokens(ctx, pool.EncounterPartyPort, pool.EncounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Recipient), sdk.NewCoins(*stateChange.Out[0]))
 	if err != nil {
-		return nil, errorsmod.Wrap(err, "failed to move assets from escrow address to recipient!")
+		return nil, errorsmod.Wrap(err, "failed to move assets from escrow address to recipient")
 	}
 
 	// Update pool status by subtracting output token and adding input token
-	pool.SubAsset(*stateChange.Out[0])
+	pool.SubtractAsset(*stateChange.Out[0])
 	pool.AddAsset(*msg.TokenIn)
 
 	// Save pool

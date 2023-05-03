@@ -35,12 +35,9 @@ func (k Keeper) SendIBCSwapPacket(
 		return errorsmod.Wrapf(channeltypes.ErrChannelNotFound, "port ID (%s) channel ID (%s)", sourcePort, sourceChannel)
 	}
 
-	//destinationPort := sourceChannelEnd.GetCounterparty().GetPortID()
-	//destinationChannel := sourceChannelEnd.GetCounterparty().GetChannelID()
-
 	// get the next sequence
-	_, found2 := k.channelKeeper.GetNextSequenceSend(ctx, sourcePort, sourceChannel)
-	if !found2 {
+	_, found = k.channelKeeper.GetNextSequenceSend(ctx, sourcePort, sourceChannel)
+	if !found {
 		return errorsmod.Wrapf(
 			channeltypes.ErrSequenceSendNotFound,
 			"source port: %s, source channel: %s", sourcePort, sourceChannel,
@@ -54,8 +51,7 @@ func (k Keeper) SendIBCSwapPacket(
 		return errorsmod.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 
-	_, err := k.ics4Wrapper.SendPacket(ctx, channelCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, swapPacket.GetBytes())
-	if err != nil {
+	if _, err := k.ics4Wrapper.SendPacket(ctx, channelCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, swapPacket.GetBytes()); err != nil {
 		return err
 	}
 
@@ -69,12 +65,12 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		pooId, err := k.OnCreatePoolReceived(ctx, &msg, packet.DestinationPort, packet.DestinationChannel)
+		poolId, err := k.OnCreatePoolReceived(ctx, &msg, packet.DestinationPort, packet.DestinationChannel)
 		if err != nil {
 			return nil, err
 		}
-		data, err := types.ModuleCdc.Marshal(&types.MsgCreatePoolResponse{PoolId: *pooId}) //types.ModuleCdc.Marshal(&types.MsgCreatePoolResponse{PoolId: *pooId})
-		return data, err
+		resData, err := types.ModuleCdc.Marshal(&types.MsgCreatePoolResponse{PoolId: *poolId})
+		return resData, err
 
 	case types.SINGLE_DEPOSIT:
 		var msg types.MsgSingleAssetDepositRequest
@@ -85,8 +81,8 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err != nil {
 			return nil, err
 		}
-		data, err := types.ModuleCdc.Marshal(res)
-		return data, err
+		resData, err := types.ModuleCdc.Marshal(res)
+		return resData, err
 
 	case types.MULTI_DEPOSIT:
 		var msg types.MsgMultiAssetDepositRequest
@@ -97,33 +93,32 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err != nil {
 			return nil, err
 		}
-		data, err := types.ModuleCdc.Marshal(res)
-		return data, err
+		resData, err := types.ModuleCdc.Marshal(res)
+		return resData, err
+
 	case types.SINGLE_WITHDRAW:
 		var msg types.MsgSingleAssetWithdrawRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		res, err2 := k.OnSingleAssetWithdrawReceived(ctx, &msg, data.StateChange)
-		if err2 != nil {
-			return nil, err2
+		res, err := k.OnSingleAssetWithdrawReceived(ctx, &msg, data.StateChange)
+		if err != nil {
+			return nil, err
 		}
-
-		data, err := types.ModuleCdc.Marshal(res)
-		return data, err
+		resData, err := types.ModuleCdc.Marshal(res)
+		return resData, err
 
 	case types.MULTI_WITHDRAW:
 		var msg types.MsgMultiAssetWithdrawRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		res, err2 := k.OnMultiAssetWithdrawReceived(ctx, &msg, data.StateChange)
-		if err2 != nil {
-			return nil, err2
+		res, err := k.OnMultiAssetWithdrawReceived(ctx, &msg, data.StateChange)
+		if err != nil {
+			return nil, err
 		}
-
-		data, err := types.ModuleCdc.Marshal(res)
-		return data, err
+		resData, err := types.ModuleCdc.Marshal(res)
+		return resData, err
 
 	case types.LEFT_SWAP, types.RIGHT_SWAP:
 		var msg types.MsgSwapRequest
@@ -134,15 +129,18 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err != nil {
 			return nil, err
 		}
-		data, err := types.ModuleCdc.Marshal(res) //types.ModuleCdc.Marshal(res)
-		return data, err
+		resData, err := types.ModuleCdc.Marshal(res)
+		return resData, err
+
 	default:
 		return nil, types.ErrUnknownDataPacket
 	}
 }
 
+// OnAcknowledgementPacket processes the packet acknowledgement and performs actions based on the acknowledgement type
 func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, data *types.IBCSwapPacketData, ack channeltypes.Acknowledgement) error {
 	logger := k.Logger(ctx)
+
 	switch ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Error:
 		return k.refundPacketToken(ctx, packet, data)
@@ -233,23 +231,24 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 	return nil
 }
 
+// OnTimeoutPacket processes a timeout packet and refunds the tokens
 func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, data *types.IBCSwapPacketData) error {
 	return k.refundPacketToken(ctx, packet, data)
 }
 
+// refundPacketToken refunds tokens in case of a timeout
 func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, data *types.IBCSwapPacketData) error {
-
 	var token sdk.Coin
 	var sender string
-	switch data.Type {
 
+	switch data.Type {
 	case types.CREATE_POOL:
 		var msg types.MsgCreatePoolRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
-		// refund initial liquidity.
-		token = *msg.Tokens[0] //sdk.NewCoin(nativeDenom, sdk.NewInt(int64(msg.InitalLiquidity)))
+		// Refund initial liquidity
+		token = *msg.Tokens[0]
 	case types.SINGLE_DEPOSIT:
 		var msg types.MsgSingleAssetDepositRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
@@ -264,7 +263,6 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		}
 		token = *msg.LocalDeposit.Token
 		sender = msg.LocalDeposit.Sender
-
 	case types.SINGLE_WITHDRAW:
 		var msg types.MsgSingleAssetWithdrawRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
@@ -289,6 +287,7 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 	default:
 		return types.ErrUnknownDataPacket
 	}
+
 	escrowAccount := types.GetEscrowAddress(packet.SourcePort, packet.SourceChannel)
 	err := k.bankKeeper.SendCoins(ctx, escrowAccount, sdk.AccAddress(sender), sdk.NewCoins(token))
 	return err
