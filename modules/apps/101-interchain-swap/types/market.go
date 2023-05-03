@@ -141,7 +141,7 @@ func (ilp *InterchainLiquidityPool) SumOfPoolAssets() types.Int {
 	return totalAssets
 }
 
-//Create new market maker
+// Create new market maker
 func NewInterchainMarketMaker(
 	pool *InterchainLiquidityPool,
 	feeRate uint32,
@@ -206,11 +206,11 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 		factor := (math.Pow(ratio, float64(weight)) - 1) * Multiplier
 		issueAmount = imm.Pool.Supply.Amount.Mul(types.NewInt(int64(factor))).Quo(types.NewInt(Multiplier))
 
-		estimatedAmount := imm.Pool.Supply.Amount.Add(issueAmount)
-		estimatedLpPrice := imm.InvariantWithInput(token) / float64(estimatedAmount.Int64())
-		if math.Abs(estimatedLpPrice-float64(imm.Pool.PoolPrice))/float64(imm.Pool.PoolPrice) > 0.1 {
-			return nil, ErrNotAllowedAmount
-		}
+		//estimatedAmount := imm.Pool.Supply.Amount.Add(issueAmount)
+		// estimatedLpPrice := imm.InvariantWithInput(token) / float64(estimatedAmount.Int64())
+		// if math.Abs(estimatedLpPrice-float64(imm.Pool.PoolPrice))/float64(imm.Pool.PoolPrice) > 0.1 {
+		// 	return nil, ErrNotAllowedAmount
+		// }
 	}
 
 	outputToken := &types.Coin{

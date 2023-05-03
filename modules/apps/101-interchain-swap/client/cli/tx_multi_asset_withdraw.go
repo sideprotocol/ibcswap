@@ -1,7 +1,9 @@
 package cli
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -12,30 +14,42 @@ import (
 
 var _ = strconv.Itoa(0)
 
-func CmdDeposit() *cobra.Command {
+func CmdMultiAssetWithdraw() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "deposit [pool-id] [remote sender] [pool-token]",
-		Short: "Broadcast message Deposit",
+		Use:   "multiAsset [remote sender][demons(aside,bside)][pool coins]",
+		Short: "Broadcast message Withdraw",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			argPoolId := args[0]
-			argSender := args[1]
-			argTokens := args[2]
+
+			argRemoteSender := args[0]
+			argOutDenoms := args[1]
+			argCoin := args[2]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			tokens, err := GetTokens(argTokens)
-			if err != nil {
-				return err
+			denoms := strings.Split(argOutDenoms, ",")
+			if len(denoms) != 2 {
+				return fmt.Errorf("invalid token length! : %d", len(denoms))
 			}
 
-			msg := types.NewMsgSingleAssetDeposit(
-				argPoolId,
-				argSender,
-				tokens[0],
+			coins, err := GetTokens(argCoin)
+			if err != nil {
+				return nil
+			}
+			if len(coins) != 2 {
+				return fmt.Errorf("invalid token length! : %d", len(coins))
+			}
+
+			msg := types.NewMsgMultiAssetWithdraw(
+				clientCtx.GetFromAddress().String(),
+				argRemoteSender,
+				denoms[0],
+				denoms[1],
+				coins[0],
+				coins[1],
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
