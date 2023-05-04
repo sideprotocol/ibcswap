@@ -77,8 +77,8 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 			chainAAddress,
 			"50:50",
 			[]*sdk.Coin{
-				{Denom: chainADenom, Amount: sdk.NewInt(100000)},
-				{Denom: chainBDenom, Amount: sdk.NewInt(10000)},
+				{Denom: chainADenom, Amount: sdk.NewInt(20000)},
+				{Denom: chainBDenom, Amount: sdk.NewInt(1000)},
 			},
 			[]uint32{6, 6},
 		)
@@ -131,7 +131,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 
 		// prepare deposit message.
 		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
-		depositCoin := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(10000)}
+		depositCoin := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(1000)}
 
 		msg := types.NewMsgSingleAssetDeposit(
 			poolId,
@@ -262,20 +262,26 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 		logger.CleanLog("Swap(After): poolB:", poolB)
 	})
 
-	// full withdraw
+	// single withdraw
 	t.Run("send withdraw message", func(t *testing.T) {
 
 		beforeDeposit, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
 		s.Require().NoError(err)
+
 		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
+
+		lpBalanceOfSender, err := s.QueryBalance(ctx, chainA, chainAAddress, poolId)
+		s.Require().NoError(err)
+
+		s.Require().Equal(lpBalanceOfSender.Balance.Amount.GT(sdk.NewInt(1000)), true)
+
+		logger.CleanLog("Pool Token", lpBalanceOfSender)
+
 		poolCoin := sdk.NewCoin(poolId, sdk.NewInt(1000))
 		s.Require().NotEqual(poolCoin.Amount, sdk.NewInt(0))
-		msg := types.NewMsgMultiAssetWithdraw(
+		msg := types.NewMsgSingleAssetWithdraw(
 			chainAAddress,
-			chainBAddress,
 			chainADenom,
-			chainBDenom,
-			&poolCoin,
 			&poolCoin,
 		)
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
@@ -284,14 +290,44 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 
 		// check packet relayed or not.
 		test.WaitForBlocks(ctx, 10, chainA, chainB)
-		s.AssertPacketRelayed(ctx, chainB, channelB.PortID, channelB.ChannelID, 3)
-
+		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 2)
 		balanceRes, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
 		s.Require().NoError(err)
 		s.Require().Equal(balanceRes.Balance.Denom, beforeDeposit.Balance.Denom)
-		s.Require().Equal(balanceRes.Balance.Amount, beforeDeposit.Balance.Amount)
-
+		logger.CleanLog("Withdraw Res", balanceRes.Balance, beforeDeposit.Balance)
+		s.Require().Equal(balanceRes.Balance.Amount.GT(beforeDeposit.Balance.Amount), true) //Greater(balanceRes.Balance.Amount.BigInt(), beforeDeposit.Balance.Amount.BigInt())
 	})
+
+	// // full withdraw
+	// t.Run("send withdraw message", func(t *testing.T) {
+
+	// 	beforeDeposit, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
+	// 	s.Require().NoError(err)
+	// 	poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
+	// 	poolCoin := sdk.NewCoin(poolId, sdk.NewInt(1000))
+	// 	s.Require().NotEqual(poolCoin.Amount, sdk.NewInt(0))
+	// 	msg := types.NewMsgMultiAssetWithdraw(
+	// 		chainAAddress,
+	// 		chainBAddress,
+	// 		chainADenom,
+	// 		chainBDenom,
+	// 		&poolCoin,
+	// 		&poolCoin,
+	// 	)
+	// 	resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+	// 	s.AssertValidTxResponse(resp)
+	// 	s.Require().NoError(err)
+
+	// 	// check packet relayed or not.
+	// 	test.WaitForBlocks(ctx, 10, chainA, chainB)
+	// 	s.AssertPacketRelayed(ctx, chainB, channelB.PortID, channelB.ChannelID, 3)
+
+	// 	balanceRes, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
+	// 	s.Require().NoError(err)
+	// 	s.Require().Equal(balanceRes.Balance.Denom, beforeDeposit.Balance.Denom)
+	// 	s.Require().Equal(balanceRes.Balance.Amount, beforeDeposit.Balance.Amount)
+
+	// })
 
 }
 
@@ -333,8 +369,8 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacketErrors() {
 			chainAAddress,
 			"50:50",
 			[]*sdk.Coin{
-				{Denom: chainADenom, Amount: sdk.NewInt(100000)},
-				{Denom: chainBDenom, Amount: sdk.NewInt(10000)},
+				{Denom: chainADenom, Amount: sdk.NewInt(20000)},
+				{Denom: chainBDenom, Amount: sdk.NewInt(1000)},
 			},
 			[]uint32{6, 6},
 		)

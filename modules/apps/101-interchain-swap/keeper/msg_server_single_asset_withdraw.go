@@ -36,7 +36,6 @@ func (k msgServer) SingleAssetWithdraw(ctx context.Context, msg *types.MsgSingle
 	amm := *types.NewInterchainMarketMaker(&pool, fee)
 
 	out, err := amm.SingleWithdraw(*msg.PoolCoin, msg.DenomOut)
-
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +47,7 @@ func (k msgServer) SingleAssetWithdraw(ctx context.Context, msg *types.MsgSingle
 	}
 
 	packet := types.IBCSwapPacketData{
-		Type: types.MULTI_WITHDRAW,
+		Type: types.SINGLE_WITHDRAW,
 		Data: rawMsgData,
 		StateChange: &types.StateChange{
 			Out:        []*sdk.Coin{out},

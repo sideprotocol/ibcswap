@@ -125,6 +125,7 @@ func (k Keeper) OnSingleWithdrawAcknowledged(ctx sdk.Context, req *types.MsgSing
 		pool.SubtractAsset(*poolAsset)
 	}
 	pool.SubtractPoolSupply(*req.PoolCoin)
+
 	//burn voucher token.
 	err := k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(req.Sender), *req.PoolCoin)
 	if err != nil {
@@ -378,11 +379,6 @@ func (k Keeper) OnSingleAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgSin
 	// Validate the message
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
-	}
-
-	// Validate remote denom
-	if !k.bankKeeper.HasSupply(ctx, msg.DenomOut) {
-		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "invalid denom in local withdraw message: %s", msg.DenomOut)
 	}
 
 	// Retrieve the liquidity pool

@@ -40,9 +40,14 @@ func CmdSingleAssetDeposit() *cobra.Command {
 
 			packetTimeoutHeight, err1 := cmd.Flags().GetString("packet-timeout-height")
 			packetTimeoutTimestamp, err2 := cmd.Flags().GetUint("packet-timeout-timestamp")
+			pool, err := QueryPool(clientCtx, argPoolId)
+			if err != nil {
+				return err
+			}
 
 			if err1 == nil && err2 == nil {
-				timeoutHeight, timeoutTimestamp, err := GetTimeOuts(clientCtx, args[0], args[1], packetTimeoutHeight, uint64(packetTimeoutTimestamp), false)
+				timeoutHeight, timeoutTimestamp, err := GetTimeOuts(clientCtx, pool.EncounterPartyPort, pool.EncounterPartyChannel, packetTimeoutHeight, uint64(packetTimeoutTimestamp), false)
+
 				if err == nil {
 					msg.TimeoutHeight = timeoutHeight
 					msg.TimeoutTimeStamp = *timeoutTimestamp
@@ -57,6 +62,10 @@ func CmdSingleAssetDeposit() *cobra.Command {
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().String("packet-timeout-height", "", "Packet timeout height")
+	cmd.Flags().Uint("packet-timeout-timestamp", 0, "Packet timeout timestamp (in nanoseconds)")
 
 	return cmd
 }
+
+// QueryPool fetches the pool information from the chain using the gRPC client

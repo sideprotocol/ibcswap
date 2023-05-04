@@ -31,6 +31,7 @@ func GetPoolIdWithTokens(tokens []*sdk.Coin) string {
 	for _, token := range tokens {
 		denoms = append(denoms, token.Denom)
 	}
+	sort.Strings(denoms)
 	return GetPoolId(denoms)
 }
 func GetPoolId(denoms []string) string {

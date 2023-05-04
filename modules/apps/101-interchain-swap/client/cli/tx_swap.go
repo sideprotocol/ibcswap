@@ -16,9 +16,9 @@ var _ = strconv.Itoa(0)
 
 func CmdSwap() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "swap [swap_type] [sender] [slippage] [recipient]",
+		Use:   "swap [swap_type] [sender] [slippage] [recipient] [tokenIn] [tokenOut]",
 		Short: "Broadcast message Swap",
-		Args:  cobra.ExactArgs(5),
+		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			swapTypeArg := args[0]
 
@@ -33,19 +33,19 @@ func CmdSwap() *cobra.Command {
 			}
 
 			argSender := args[1]
-			argSlippage, err := cast.ToUint64E(args[1])
+			argSlippage, err := cast.ToUint64E(args[2])
 			if err != nil {
 				return err
 			}
-			argRecipient := args[2]
+			argRecipient := args[3]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 			fmt.Println(argSender)
-			argTokenIn := args[3]
-			argTokenOut := args[4]
+			argTokenIn := args[4]
+			argTokenOut := args[5]
 
 			tokenIn, err := GetTokens(argTokenIn)
 			if err != nil {
@@ -69,8 +69,17 @@ func CmdSwap() *cobra.Command {
 			packetTimeoutHeight, err1 := cmd.Flags().GetString("packet-timeout-height")
 			packetTimeoutTimestamp, err2 := cmd.Flags().GetUint("packet-timeout-timestamp")
 
+			poolId := types.GetPoolId([]string{tokenIn[0].Denom, tokenOut[0].Denom})
+			pool, err := QueryPool(clientCtx, poolId)
+			if err != nil {
+				return err
+			}
+
 			if err1 == nil && err2 == nil {
-				timeoutHeight, timeoutTimestamp, err := GetTimeOuts(clientCtx, args[0], args[1], packetTimeoutHeight, uint64(packetTimeoutTimestamp), false)
+				timeoutHeight, timeoutTimestamp, err := GetTimeOuts(clientCtx, pool.EncounterPartyPort, pool.EncounterPartyChannel, packetTimeoutHeight, uint64(packetTimeoutTimestamp), false)
+				fmt.Println("Timeout Height:", timeoutHeight)
+				fmt.Println("Timeout Timestamp:", timeoutTimestamp)
+				fmt.Println("Timeouts Err:", err)
 				if err == nil {
 					msg.TimeoutHeight = timeoutHeight
 					msg.TimeoutTimeStamp = *timeoutTimestamp
@@ -85,6 +94,8 @@ func CmdSwap() *cobra.Command {
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().String("packet-timeout-height", "", "Packet timeout height")
+	cmd.Flags().Uint("packet-timeout-timestamp", 0, "Packet timeout timestamp (in nanoseconds)")
 
 	return cmd
 }

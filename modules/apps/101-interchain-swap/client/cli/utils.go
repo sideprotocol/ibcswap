@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -12,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channelutils "github.com/cosmos/ibc-go/v6/modules/core/04-channel/client/utils"
+	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 func GetTokens(argTokens string) ([]*sdk.Coin, error) {
@@ -77,4 +79,19 @@ func GetTimeOuts(clientCtx client.Context, srcPort, scrChannel, timeoutHeightStr
 		}
 	}
 	return &timeoutHeight, &timeoutTimestamp, nil
+}
+
+// QueryPool fetches the pool information from the chain using the client context
+func QueryPool(clientCtx client.Context, poolId string) (*types.InterchainLiquidityPool, error) {
+	fmt.Println("PoolID:", poolId)
+	queryClient := types.NewQueryClient(clientCtx)
+	params := &types.QueryGetInterchainLiquidityPoolRequest{
+		PoolId: poolId,
+	}
+	res, err := queryClient.InterchainLiquidityPool(context.Background(), params)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res.InterchainLiquidityPool, nil
 }
