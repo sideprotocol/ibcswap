@@ -16,14 +16,12 @@ import (
 )
 
 func GetDefaultTimeOut(ctx *sdk.Context) (clienttypes.Height, uint64) {
-
 	// 100 block later than current block
 	outBlockHeight := ctx.BlockHeight() + 200
-
 	// 10 min later current block time.
 	waitDuration, _ := time.ParseDuration("10m")
 	timeoutStamp := ctx.BlockTime().Add(waitDuration)
-	timeoutHeight := clienttypes.NewHeight(clienttypes.ParseChainID(ctx.ChainID()), uint64(outBlockHeight))
+	timeoutHeight := clienttypes.NewHeight(0, uint64(outBlockHeight))
 	return timeoutHeight, uint64(timeoutStamp.UTC().UnixNano())
 }
 
