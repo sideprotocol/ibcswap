@@ -92,6 +92,15 @@ func (k Keeper) MultiAssetDeposit(ctx context.Context, msg *types.MsgMultiAssetD
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)
+
+	// Use input timeoutHeight, timeoutStamp
+	if msg.TimeoutHeight != nil {
+		timeoutHeight = *msg.TimeoutHeight
+	}
+	if msg.TimeoutTimeStamp != 0 {
+		timeoutStamp = msg.TimeoutTimeStamp
+	}
+
 	err = k.SendIBCSwapPacket(sdkCtx, pool.EncounterPartyPort, pool.EncounterPartyChannel, timeoutHeight, timeoutStamp, packet)
 	if err != nil {
 		return nil, err
