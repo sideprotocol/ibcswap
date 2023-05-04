@@ -248,6 +248,7 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 			return err
 		}
 		// Refund initial liquidity
+		sender = msg.Sender
 		token = *msg.Tokens[0]
 	case types.SINGLE_DEPOSIT:
 		var msg types.MsgSingleAssetDepositRequest
