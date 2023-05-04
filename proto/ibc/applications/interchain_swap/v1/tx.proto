@@ -30,6 +30,8 @@ message MsgCreatePoolRequest {
   repeated cosmos.base.v1beta1.Coin tokens = 4;
   repeated uint32 decimals      = 5;
            string weight        = 6;
+           ibc.core.client.v1.Height timeoutHeight =7 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
+           uint64 timeoutTimeStamp  = 8;           
 }
 
 message MsgCreatePoolResponse {
@@ -37,9 +39,11 @@ message MsgCreatePoolResponse {
 }
 
 message MsgSingleAssetDepositRequest {
-           string                         poolId = 1;
-           string                         sender = 2;
-           cosmos.base.v1beta1.Coin        token = 3;
+           string                         poolId = 1 ;
+           string                         sender = 2 ;
+           cosmos.base.v1beta1.Coin       token = 3;
+           ibc.core.client.v1.Height timeoutHeight = 4;
+           uint64 timeoutTimeStamp  = 5;  
 }
 
 message MsgSingleAssetDepositResponse {
@@ -51,6 +55,8 @@ message MsgMultiAssetDepositRequest {
   string        poolId = 1;
   LocalDeposit  localDeposit = 2;
   RemoteDeposit remoteDeposit = 3;
+  ibc.core.client.v1.Height timeoutHeight = 4;
+  uint64 timeoutTimeStamp  = 5; 
 }
 message LocalDeposit {
   string sender = 1;
@@ -73,12 +79,16 @@ message MsgMultiAssetDepositResponse {
 message MsgMultiAssetWithdrawRequest {
   MsgSingleAssetWithdrawRequest   localWithdraw = 1;
   MsgSingleAssetWithdrawRequest remoteWithdraw = 2;
+  ibc.core.client.v1.Height timeoutHeight = 3;
+  uint64 timeoutTimeStamp  = 4;  
 }
 
 message MsgSingleAssetWithdrawRequest {
   string sender = 1;
   string denomOut = 2;
   cosmos.base.v1beta1.Coin poolCoin = 3;
+  ibc.core.client.v1.Height timeoutHeight = 4;
+  uint64 timeoutTimeStamp  = 5;  
 }
 
 message MsgSingleAssetWithdrawResponse {
@@ -100,6 +110,8 @@ message MsgSwapRequest {
   cosmos.base.v1beta1.Coin tokenOut = 4;
   uint64 slippage  = 5;
   string recipient = 6;
+  ibc.core.client.v1.Height timeoutHeight = 7;
+  uint64 timeoutTimeStamp  = 8;   
 }
 
 message MsgSwapResponse {

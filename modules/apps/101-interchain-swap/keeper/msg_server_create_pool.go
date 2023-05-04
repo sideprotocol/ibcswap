@@ -67,6 +67,15 @@ func (k msgServer) CreatePool(ctx context.Context, msg *types.MsgCreatePoolReque
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)
+
+	// use input timeoutHeight, timeoutStamp
+	if msg.TimeoutHeight != nil {
+		timeoutHeight = *msg.TimeoutHeight
+	}
+	if msg.TimeoutTimeStamp != 0 {
+		timeoutStamp = msg.TimeoutTimeStamp
+	}
+
 	err = k.SendIBCSwapPacket(sdkCtx, msg.SourcePort, msg.SourceChannel, timeoutHeight, timeoutStamp, packet)
 	if err != nil {
 		return nil, err

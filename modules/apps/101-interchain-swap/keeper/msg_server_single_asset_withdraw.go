@@ -57,6 +57,13 @@ func (k msgServer) SingleAssetWithdraw(ctx context.Context, msg *types.MsgSingle
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)
+	// Use input timeoutHeight, timeoutStamp
+	if msg.TimeoutHeight != nil {
+		timeoutHeight = *msg.TimeoutHeight
+	}
+	if msg.TimeoutTimeStamp != 0 {
+		timeoutStamp = msg.TimeoutTimeStamp
+	}
 
 	err = k.SendIBCSwapPacket(sdkCtx, pool.EncounterPartyPort, pool.EncounterPartyChannel, timeoutHeight, uint64(timeoutStamp), packet)
 	if err != nil {

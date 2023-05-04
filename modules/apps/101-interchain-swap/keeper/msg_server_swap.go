@@ -86,6 +86,14 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 
 	timeoutHeight, timeoutTimestamp := types.GetDefaultTimeOut(&sdkCtx)
 
+	// Use input timeoutHeight, timeoutStamp
+	if msg.TimeoutHeight != nil {
+		timeoutHeight = *msg.TimeoutHeight
+	}
+	if msg.TimeoutTimeStamp != 0 {
+		timeoutTimestamp = msg.TimeoutTimeStamp
+	}
+
 	err = k.SendIBCSwapPacket(
 		ctx,
 		pool.EncounterPartyPort,

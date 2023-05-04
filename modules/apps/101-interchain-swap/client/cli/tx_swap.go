@@ -65,6 +65,18 @@ func CmdSwap() *cobra.Command {
 				tokenIn[0],
 				tokenOut[0],
 			)
+
+			packetTimeoutHeight, err1 := cmd.Flags().GetString("packet-timeout-height")
+			packetTimeoutTimestamp, err2 := cmd.Flags().GetUint("packet-timeout-timestamp")
+
+			if err1 == nil && err2 == nil {
+				timeoutHeight, timeoutTimestamp, err := GetTimeOuts(clientCtx, args[0], args[1], packetTimeoutHeight, uint64(packetTimeoutTimestamp), false)
+				if err == nil {
+					msg.TimeoutHeight = timeoutHeight
+					msg.TimeoutTimeStamp = *timeoutTimestamp
+				}
+			}
+
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
