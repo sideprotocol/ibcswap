@@ -9,7 +9,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
-	"github.com/gogo/protobuf/proto"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
@@ -249,7 +248,7 @@ func orderPath(sourcePort, sourceChannel, destPort, destChannel string, sequence
 
 func generateOrderId(orderPath string, msg *types.MakeSwapMsg) string {
 	prefix := []byte(orderPath)
-	bytes, _ := proto.Marshal(msg)
+	bytes, _ := types.ModuleCdc.MarshalJSON(msg)
 	hash := sha256.Sum256(append(prefix, bytes...))
 	return hex.EncodeToString(hash[:])
 }
