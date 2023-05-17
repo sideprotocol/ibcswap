@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
@@ -18,7 +17,7 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.TakeSwapMsg) (*types.
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
 	}
-	msgByte, err0 := proto.Marshal(msg)
+	msgByte, err0 := types.ModuleCdc.MarshalJSON(msg)
 	if err0 != nil {
 		return nil, err0
 	}

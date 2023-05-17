@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
@@ -17,7 +16,7 @@ func (k Keeper) CancelSwap(goCtx context.Context, msg *types.CancelSwapMsg) (*ty
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
 	}
-	msgbyte, err := proto.Marshal(msg)
+	msgbyte, err := types.ModuleCdc.MarshalJSON(msg)
 	if err != nil {
 		return nil, err
 	}

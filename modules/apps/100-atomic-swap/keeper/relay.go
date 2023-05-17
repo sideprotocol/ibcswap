@@ -3,12 +3,12 @@ package keeper
 import (
 	"errors"
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
-	"github.com/gogo/protobuf/proto"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
@@ -88,7 +88,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	switch data.Type {
 	case types.MAKE_SWAP:
 		var msg types.MakeSwapMsg
-		if err := proto.Unmarshal(data.Data, &msg); err != nil {
+		if err := types.ModuleCdc.UnmarshalJSON(data.Data, &msg); err != nil {
 			return nil, err
 		}
 
@@ -96,10 +96,10 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err != nil {
 			return nil, err
 		}
-		resp, errResp = proto.Marshal(&types.MsgMakeSwapResponse{OrderId: orderId})
+		resp, errResp = types.ModuleCdc.MarshalJSON(&types.MsgMakeSwapResponse{OrderId: orderId})
 	case types.TAKE_SWAP:
 		var msg types.TakeSwapMsg
-		if err := proto.Unmarshal(data.Data, &msg); err != nil {
+		if err := types.ModuleCdc.UnmarshalJSON(data.Data, &msg); err != nil {
 			return nil, err
 		}
 
@@ -107,17 +107,17 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err2 != nil {
 			return nil, err2
 		}
-		resp, errResp = proto.Marshal(&types.MsgTakeSwapResponse{OrderId: orderId})
+		resp, errResp = types.ModuleCdc.MarshalJSON(&types.MsgTakeSwapResponse{OrderId: orderId})
 	case types.CANCEL_SWAP:
 		var msg types.CancelSwapMsg
-		if err := proto.Unmarshal(data.Data, &msg); err != nil {
+		if err := types.ModuleCdc.UnmarshalJSON(data.Data, &msg); err != nil {
 			return nil, err
 		}
 		orderId, err2 := k.OnReceivedCancel(ctx, packet, &msg)
 		if err2 != nil {
 			return nil, err2
 		}
-		resp, errResp = proto.Marshal(&types.MsgCancelSwapResponse{OrderId: orderId})
+		resp, errResp = types.ModuleCdc.MarshalJSON(&types.MsgCancelSwapResponse{OrderId: orderId})
 	default:
 		return nil, types.ErrUnknownDataPacket
 	}
@@ -136,7 +136,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			// This is the step 4 (Acknowledge Make Packet) of the atomic swap: https://github.com/liangping/ibc/blob/atomic-swap/spec/app/ics-100-atomic-swap/ibcswap.png
 			// This logic is executed when Taker chain acknowledge the make swap packet.
 			var msg types.MakeSwapMsg
-			if err := proto.Unmarshal(data.Data, &msg); err != nil {
+			if err := types.ModuleCdc.UnmarshalJSON(data.Data, &msg); err != nil {
 				return err
 			}
 
@@ -156,7 +156,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			// This is the step 9 (Transfer Take Token & Close order): https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap
 			// The step is executed on the Taker chain.
 			takeMsg := &types.TakeSwapMsg{}
-			if err := proto.Unmarshal(data.Data, takeMsg); err != nil {
+			if err := types.ModuleCdc.UnmarshalJSON(data.Data, takeMsg); err != nil {
 				return err
 			}
 
@@ -181,7 +181,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			// It is executed on the Maker chain.
 
 			var msg types.CancelSwapMsg
-			if err := proto.Unmarshal(data.Data, &msg); err != nil {
+			if err := types.ModuleCdc.UnmarshalJSON(data.Data, &msg); err != nil {
 				return err
 			}
 
@@ -224,7 +224,7 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		// and locked tokens form the first step (see the picture on the link above) MUST be returned to the account of
 		// the maker on the maker chain.
 		makeMsg := &types.MakeSwapMsg{}
-		if err := proto.Unmarshal(swapPacket.Data, makeMsg); err != nil {
+		if err := types.ModuleCdc.UnmarshalJSON(swapPacket.Data, makeMsg); err != nil {
 			return err
 		}
 
@@ -254,7 +254,7 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		// This is the step 7.2 (Unlock order and refund) of the atomic swap: https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap
 		// This step is executed on the Taker chain when Take Swap request timeout.
 		takeMsg := &types.TakeSwapMsg{}
-		if err := proto.Unmarshal(swapPacket.Data, takeMsg); err != nil {
+		if err := types.ModuleCdc.UnmarshalJSON(swapPacket.Data, takeMsg); err != nil {
 			return err
 		}
 
