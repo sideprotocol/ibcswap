@@ -202,10 +202,6 @@ func (*CancelSwapMsg) Type() string {
 // the chain is not known to IBC.
 func (msg *CancelSwapMsg) ValidateBasic() error {
 	// NOTE: sender format must be validated as it is required by the GetSigners function.
-	_, err := sdk.AccAddressFromBech32(msg.MakerAddress)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
-	}
 	if strings.TrimSpace(msg.OrderId) == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "OrderId is required")
 	}
