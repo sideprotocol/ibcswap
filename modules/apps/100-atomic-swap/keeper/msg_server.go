@@ -145,6 +145,7 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	path := orderPath(msg.SourcePort, msg.SourceChannel, packet.DestinationPort, packet.DestinationChannel, packet.Sequence)
 	order := types.Order{
 		Id:     generateOrderId(path, msg),
+		Side:   types.REMOTE,
 		Status: types.Status_INITIAL,
 		Path:   path,
 		Maker:  msg,
@@ -236,6 +237,7 @@ func createOrder(ctx sdk.Context, msg *types.MakeSwapMsg, channelKeeper types.Ch
 	path := orderPath(msg.SourcePort, msg.SourceChannel, channel.Counterparty.PortId, channel.Counterparty.ChannelId, sequence)
 	return types.Order{
 		Id:     generateOrderId(path, msg),
+		Side:   types.NATIVE,
 		Status: types.Status_INITIAL,
 		Path:   path,
 		Maker:  msg,
