@@ -29,6 +29,7 @@ message SwapMaker {
   string source_port = 1 [(gogoproto.moretags) = "yaml:\"source_port\""];
   // the channel by which the packet will be sent
   string source_channel = 2 [(gogoproto.moretags) = "yaml:\"source_channel\""];
+
   // the tokens to be sell
   cosmos.base.v1beta1.Coin  sell_token = 3 [(gogoproto.nullable) = false];
   cosmos.base.v1beta1.Coin  buy_token = 4 [(gogoproto.nullable) = false];
@@ -53,13 +54,21 @@ message SwapTaker {
   string taker_receiving_address = 4 [(gogoproto.moretags) = "yaml:\"taker_receiving_address\""];
   int64 create_timestamp = 5;
 }
+// Type defines a classification of swap messages
+enum Side {
+  option (gogoproto.goproto_enum_prefix) = false;
+  // Default zero value enumeration
+  TYPE_NATIVE = 0 [(gogoproto.enumvalue_customname) = "NATIVE"];
+  TYPE_REMOTE = 1 [(gogoproto.enumvalue_customname) = "REMOTE"];
+}
 
 message Order {
   string id = 1;
-  MakeSwapMsg maker = 2;
-  Status status = 3;
-  string path = 4;
-  TakeSwapMsg takers = 5;
+  Side side = 2;
+  MakeSwapMsg maker = 3;
+  Status status = 4;
+  string path = 5;
+  TakeSwapMsg takers = 6;
   int64 cancel_timestamp = 7;
   int64 complete_timestamp = 8;
 }
