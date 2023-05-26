@@ -168,11 +168,15 @@ func (s *InterchainswapTestSuite) TestDoubleDepositStatus() {
 
 	// // send swap message
 	t.Run("pool status", func(t *testing.T) {
+
 		poolId := types.GetPoolId([]string{
 			chainADenom, chainBDenom,
 		})
 
 		amountOfChainBUserBeforeTx, err := s.GetBalance(ctx, chainB, chainBAddress, chainBDenom)
+		s.Require().NoError(err)
+		poolTokenAmountOfChainBUserBeforeTx, err := s.GetBalance(ctx, chainB, chainBAddress, poolId)
+		s.Require().NoError(err)
 
 		testCases := []struct {
 			name     string
@@ -206,7 +210,6 @@ func (s *InterchainswapTestSuite) TestDoubleDepositStatus() {
 					{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
 					{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
 				}
-
 				remoteDepositTx := &types.RemoteDeposit{
 					Sequence: 1,
 					Sender:   chainBAddress,
@@ -262,8 +265,14 @@ func (s *InterchainswapTestSuite) TestDoubleDepositStatus() {
 			logger.CleanLog("balance(After)", amountOfChainBUserAfterTx)
 			logger.CleanLog("depositedAmount", depositedAmount)
 			s.Require().Equal(depositedAmount.Int64(), int64(initialY))
-		}
 
+			poolTokenAmountOfChainBUserAfterTx, err := s.GetBalance(ctx, chainB, chainBAddress, poolId)
+			s.Require().NoError(err)
+			logger.CleanLog("pool Token(Before)", poolTokenAmountOfChainBUserBeforeTx)
+			logger.CleanLog("pool Token(After)", poolTokenAmountOfChainBUserAfterTx)
+			s.Require().NotEqual(poolTokenAmountOfChainBUserBeforeTx.Int64(), poolTokenAmountOfChainBUserAfterTx.Int64())
+
+		}
 	})
 }
 
