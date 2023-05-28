@@ -85,6 +85,18 @@ func (k Keeper) MultiAssetDeposit(ctx context.Context, msg *types.MsgMultiAssetD
 		StateChange: &types.StateChange{PoolTokens: poolTokens},
 	}
 
+	// temporary signature verification check
+	accAddress := sdk.MustAccAddressFromBech32(msg.LocalDeposit.Sender)
+	acc := k.authKeeper.GetAccount(sdkCtx, accAddress)
+	pubKey := acc.GetPubKey()
+
+	rawTx := types.ModuleCdc.MustMarshal(msg.LocalDeposit)
+
+	isValid := pubKey.VerifySignature(msg.RemoteDeposit.Signature, rawTx)
+	if !isValid {
+		return nil, types.ErrInvalidSignature
+	}
+
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)
 
 	// Use input timeoutHeight, timeoutStamp
