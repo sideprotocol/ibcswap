@@ -27,11 +27,12 @@ message MsgCreatePoolRequest {
            string sourcePort    = 1;
            string sourceChannel = 2;
            string sender        = 3;
-  repeated cosmos.base.v1beta1.Coin tokens = 4;
-  repeated uint32 decimals      = 5;
-           string weight        = 6;
-           ibc.core.client.v1.Height timeoutHeight =7 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
-           uint64 timeoutTimeStamp  = 8;           
+           string chainId   = 4;
+  repeated cosmos.base.v1beta1.Coin tokens = 5;
+  repeated uint32 decimals      = 6;
+           string weight        = 7;
+           ibc.core.client.v1.Height timeoutHeight = 8 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
+           uint64 timeoutTimeStamp  = 9;           
 }
 
 message MsgCreatePoolResponse {

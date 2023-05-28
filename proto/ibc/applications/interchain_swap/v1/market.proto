@@ -30,8 +30,9 @@ message InterchainLiquidityPool {
   cosmos.base.v1beta1.Coin supply = 4;
   float pool_price = 5;
   PoolStatus status = 6;
-  string encounterPartyPort = 7; 
-  string encounterPartyChannel = 8;
+  string creatorChainId = 7;
+  string encounterPartyPort = 8; 
+  string encounterPartyChannel = 9;
 }
 
 
