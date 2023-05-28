@@ -79,12 +79,6 @@ func (k Keeper) MultiAssetDeposit(ctx context.Context, msg *types.MsgMultiAssetD
 		return nil, err
 	}
 
-	// construct ibc packet
-	rawMsgData, err = types.ModuleCdc.Marshal(msg)
-	if err != nil {
-		return nil, err
-	}
-
 	packet := types.IBCSwapPacketData{
 		Type:        types.MULTI_DEPOSIT,
 		Data:        rawMsgData,

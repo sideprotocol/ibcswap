@@ -38,6 +38,9 @@ func (k Keeper) SingleAssetDeposit(ctx context.Context, msg *types.MsgSingleAsse
 			if !poolAsset.Balance.Amount.Equal(msg.Token.Amount) {
 				return nil, types.ErrInvalidInitialDeposit
 			}
+			if poolAsset.Side != types.PoolSide_REMOTE {
+				return nil, errormod.Wrapf(types.ErrInvalidInitialDeposit, "%s", "please deposit counter party coin to enable pool!")
+			}
 		}
 	}
 

@@ -215,6 +215,7 @@ func (s *InterchainswapTestSuite) TestDoubleDepositStatus() {
 					Sender:   chainBAddress,
 					Token:    &sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
 				}
+				
 				rawTx := types.ModuleCdc.MustMarshal(remoteDepositTx)
 				if err != nil {
 					fmt.Println(err)
