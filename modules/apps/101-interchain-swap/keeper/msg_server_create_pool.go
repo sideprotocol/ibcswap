@@ -54,7 +54,7 @@ func (k msgServer) CreatePool(ctx context.Context, msg *types.MsgCreatePoolReque
 	if err != nil {
 		return nil, err
 	}
-
+	msg.ChainId = sdkCtx.ChainID()
 	poolData, err := types.ModuleCdc.Marshal(msg)
 	if err != nil {
 		return nil, err

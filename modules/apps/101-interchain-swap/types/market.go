@@ -13,6 +13,7 @@ import (
 func NewInterchainLiquidityPool(
 	ctx types.Context,
 	creator string,
+	chainId string,
 	store BankKeeper,
 	tokens []*types.Coin,
 	decimals []uint32,
@@ -50,15 +51,17 @@ func NewInterchainLiquidityPool(
 	}
 
 	pool := InterchainLiquidityPool{
-		PoolId:  poolId,
-		Creator: creator,
-		Assets:  assets,
+		PoolId:         poolId,
+		Creator:        creator,
+		Assets:         assets,
+		CreatorChainId: chainId,
 		Supply: &types.Coin{
 			Amount: types.NewInt(0),
 			Denom:  poolId,
 		},
-		Status:                PoolStatus_POOL_STATUS_INITIAL,
-		PoolPrice:             0,
+		Status:    PoolStatus_POOL_STATUS_INITIAL,
+		PoolPrice: 0,
+
 		EncounterPartyPort:    portId,
 		EncounterPartyChannel: channelId,
 	}

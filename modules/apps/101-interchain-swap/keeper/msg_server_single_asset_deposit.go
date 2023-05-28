@@ -34,13 +34,15 @@ func (k Keeper) SingleAssetDeposit(ctx context.Context, msg *types.MsgSingleAsse
 
 	if pool.Status == types.PoolStatus_POOL_STATUS_INITIAL {
 		poolAsset, err := pool.FindAssetByDenom(msg.Token.Denom)
-		if err == nil {
-			if !poolAsset.Balance.Amount.Equal(msg.Token.Amount) {
-				return nil, types.ErrInvalidInitialDeposit
-			}
-			if poolAsset.Side != types.PoolSide_REMOTE {
-				return nil, errormod.Wrapf(types.ErrInvalidInitialDeposit, "%s", "please deposit counter party coin to enable pool!")
-			}
+		if err != nil {
+			return nil, err
+		}
+		if !poolAsset.Balance.Amount.Equal(msg.Token.Amount) {
+			return nil, types.ErrInvalidInitialDeposit
+		}
+
+		if pool.CreatorChainId == sdkCtx.ChainID() {
+			return nil, errormod.Wrapf(types.ErrInvalidInitialDeposit, "%s, creatorChainID:%s", "please deposit counter party coin to enable pool!", &pool.CreatorChainId)
 		}
 	}
 

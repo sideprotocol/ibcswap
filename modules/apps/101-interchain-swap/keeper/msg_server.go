@@ -28,6 +28,7 @@ func (k Keeper) OnCreatePoolAcknowledged(ctx sdk.Context, msg *types.MsgCreatePo
 	pool := types.NewInterchainLiquidityPool(
 		ctx,
 		msg.Sender,
+		msg.ChainId,
 		k.bankKeeper,
 		msg.Tokens,
 		msg.Decimals,
@@ -216,6 +217,7 @@ func (k Keeper) OnCreatePoolReceived(ctx sdk.Context, msg *types.MsgCreatePoolRe
 	pool := *types.NewInterchainLiquidityPool(
 		ctx,
 		msg.Sender,
+		msg.ChainId,
 		k.bankKeeper,
 		msg.Tokens,
 		msg.Decimals,
