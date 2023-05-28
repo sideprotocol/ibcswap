@@ -210,6 +210,7 @@ func (s *InterchainswapTestSuite) TestDoubleDepositStatus() {
 					{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
 					{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
 				}
+				
 				remoteDepositTx := &types.RemoteDeposit{
 					Sequence: 1,
 					Sender:   chainBAddress,

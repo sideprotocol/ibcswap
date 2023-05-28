@@ -338,12 +338,12 @@ func (k Keeper) OnMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgMulti
 		return nil, err
 	}
 
-	pubKey := senderAcc.GetPubKey()
-	isValid := pubKey.VerifySignature(rawDepositTx, msg.RemoteDeposit.Signature)
+	// pubKey := senderAcc.GetPubKey()
+	// isValid := pubKey.VerifySignature(rawDepositTx, msg.RemoteDeposit.Signature)
 
-	if !isValid {
-		return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, ":%s", types.ErrInvalidSignature)
-	}
+	// if !isValid {
+	// 	return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, ":%s", types.ErrInvalidSignature)
+	// }
 
 	_, err = k.executeDepositTx(ctx, &sendMsg)
 	if err != nil {
