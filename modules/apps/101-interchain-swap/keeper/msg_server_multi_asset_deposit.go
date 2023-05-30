@@ -44,9 +44,10 @@ func (k Keeper) MultiAssetDeposit(ctx context.Context, msg *types.MsgMultiAssetD
 		// Check the ratio of local amount and remote amount
 		ratioOfTokensIn := msg.LocalDeposit.Token.Amount.Mul(sdk.NewInt(types.Multiplier)).Quo(msg.RemoteDeposit.Token.Amount)
 		localAssetInPool, _ := pool.FindAssetByDenom(msg.LocalDeposit.Token.Denom)
-		remoteAssetAmountInPool, _ := pool.FindAssetByDenom(msg.LocalDeposit.Token.Denom)
+		remoteAssetAmountInPool, _ := pool.FindAssetByDenom(msg.RemoteDeposit.Token.Denom)
 		ratioOfAssetsInPool := localAssetInPool.Balance.Amount.Mul(sdk.NewInt(types.Multiplier)).Quo(remoteAssetAmountInPool.Balance.Amount)
-		if !ratioOfTokensIn.Equal(ratioOfAssetsInPool) {
+
+		if err := types.CheckSlippage(ratioOfTokensIn, ratioOfAssetsInPool, 10); err != nil {
 			return nil, errormod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrInvalidPairRatio)
 		}
 	}

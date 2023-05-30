@@ -326,24 +326,24 @@ func (k Keeper) OnMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgMulti
 		Amount:      sdk.NewCoins(*msg.RemoteDeposit.Token),
 	}
 
-	// // Recover original signed Tx.
-	// deposit := types.RemoteDeposit{
-	// 	Sequence: senderAcc.GetSequence(),
-	// 	Sender:   msg.RemoteDeposit.Sender,
-	// 	Token:    msg.RemoteDeposit.Token,
-	// }
-	// rawDepositTx, err := types.ModuleCdc.Marshal(&deposit)
+	// Recover original signed Tx.
+	deposit := types.RemoteDeposit{
+		Sequence: senderAcc.GetSequence(),
+		Sender:   msg.RemoteDeposit.Sender,
+		Token:    msg.RemoteDeposit.Token,
+	}
+	rawDepositTx, err := types.ModuleCdc.Marshal(&deposit)
 
-	// if err != nil {
-	// 	return nil, err
-	// }
+	if err != nil {
+		return nil, err
+	}
 
-	// pubKey := senderAcc.GetPubKey()
-	// isValid := pubKey.VerifySignature(rawDepositTx, msg.RemoteDeposit.Signature)
+	pubKey := senderAcc.GetPubKey()
+	isValid := pubKey.VerifySignature(rawDepositTx, msg.RemoteDeposit.Signature)
 
-	// if !isValid {
-	// 	return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, ":%s", types.ErrInvalidSignature)
-	// }
+	if !isValid {
+		return nil, errorsmod.Wrapf(types.ErrFailedDoubleDeposit, ":%s", types.ErrInvalidSignature)
+	}
 
 	_, err = k.executeDepositTx(ctx, &sendMsg)
 	if err != nil {
