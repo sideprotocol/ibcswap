@@ -65,9 +65,6 @@ func NewInterchainLiquidityPool(
 		EncounterPartyPort:    portId,
 		EncounterPartyChannel: channelId,
 	}
-	amm := NewInterchainMarketMaker(&pool, DefaultMaxFeeRate)
-	pool.PoolPrice = float32(amm.LpPrice())
-
 	return &pool
 }
 

@@ -46,7 +46,14 @@ func (k Keeper) OnCreatePoolAcknowledged(ctx sdk.Context, msg *types.MsgCreatePo
 	if err != nil {
 		return err
 	}
-
+	// calculate pool price
+	// Instantiate an interchain market maker with the default fee rate
+	fee := k.GetSwapFeeRate(ctx)
+	amm := *types.NewInterchainMarketMaker(
+		pool,
+		fee,
+	)
+	pool.PoolPrice = float32(amm.LpPrice())
 	// Save the liquidity pool
 	k.SetInterchainLiquidityPool(ctx, *pool)
 	return nil
@@ -257,7 +264,6 @@ func (k Keeper) OnCreatePoolReceived(ctx sdk.Context, msg *types.MsgCreatePoolRe
 
 	// calculate
 	pool.PoolPrice = float32(amm.LpPrice())
-
 	// save pool status
 	k.SetInterchainLiquidityPool(ctx, pool)
 	return &pooId, nil
