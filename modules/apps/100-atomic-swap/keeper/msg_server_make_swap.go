@@ -3,8 +3,8 @@ package keeper
 import (
 	"context"
 	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
@@ -18,7 +18,7 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.
 		return nil, err
 	}
 
-	msgByte, err0 := proto.Marshal(msg)
+	msgByte, err0 := types.ModuleCdc.Marshal(msg)
 	if err0 != nil {
 		return nil, err0
 	}
@@ -55,8 +55,6 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.
 	}
 
 	k.SetAtomicOrder(ctx, order)
-
 	ctx.EventManager().EmitTypedEvents(msg)
-
 	return &types.MsgMakeSwapResponse{OrderId: order.Id}, nil
 }
