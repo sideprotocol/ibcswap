@@ -73,15 +73,26 @@ func (s *AtomicSwapTestSuite) TestAtomicSwap_HappyPath() {
 		sellToken := sdk.NewCoin(chainA.Config().Denom, sdk.NewInt(100))
 		buyToken := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
 		timeoutHeight := clienttypes.NewHeight(0, 110)
-		msg := types.NewMsgMakeSwap(channelA.PortID, channelA.ChannelID, sellToken, buyToken, makerAddressOnChainA, makerReceivingAddressOnChainB, "", timeoutHeight, 0, time.Now().UTC().Unix())
+		msg := types.NewMsgMakeSwap(
+			channelA.PortID,
+			channelA.ChannelID,
+			sellToken,
+			buyToken,
+			makerAddressOnChainA,
+			makerReceivingAddressOnChainB,
+			makerReceivingAddressOnChainB,
+			timeoutHeight, 0,
+			time.Now().UTC().Unix(),
+		)
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAMakerWallet, msg)
 
 		s.AssertValidTxResponse(resp)
 		s.Require().NoError(err)
-		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 2)
 
 		// wait block when packet relay.
 		test.WaitForBlocks(ctx, 10, chainA, chainB)
+
+		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
 
 		// broadcast TAKE SWAP transaction
 		sellToken2 := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
