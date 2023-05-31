@@ -23,11 +23,12 @@ e2e-test-interchainswap-single: cleanup-ibc-test-containers
 e2e-test-interchainswap-double: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh TestInterchainswapTestSuite TestDoubleDepositStatus
 
+e2e-test-interchainswap-single: cleanup-ibc-test-containers
+	./scripts/run-e2e.sh TestInterchainswapTestSuite TestSingleWithdrawStatus
 
 e2e-test-interchainswap-timeout: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh TestInterchainswapTestSuite TestRefundMsgOnTimeoutPacket
-
-
+	
 e2e-test-atomic-swap-base: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh TestAtomicSwapTestSuite TestAtomicSwap_HappyPath
 

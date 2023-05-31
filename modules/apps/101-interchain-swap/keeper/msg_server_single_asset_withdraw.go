@@ -39,7 +39,6 @@ func (k msgServer) SingleAssetWithdraw(ctx context.Context, msg *types.MsgSingle
 	if err != nil {
 		return nil, err
 	}
-
 	// Construct the IBC data packet
 	rawMsgData, err := types.ModuleCdc.Marshal(msg)
 	if err != nil {

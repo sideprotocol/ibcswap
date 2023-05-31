@@ -258,10 +258,10 @@ func (imm *InterchainMarketMaker) SingleWithdraw(redeem types.Coin, denomOut str
 	if err != nil {
 		return nil, err
 	}
-	err = asset.Balance.Validate()
-	if err != nil {
-		return nil, err
-	}
+	// err = asset.Balance.Validate()
+	// if err != nil {
+	// 	return nil, err
+	// }
 	if imm.Pool.Status != PoolStatus_POOL_STATUS_READY {
 		return nil, fmt.Errorf("not ready for swap")
 	}
@@ -274,10 +274,11 @@ func (imm *InterchainMarketMaker) SingleWithdraw(redeem types.Coin, denomOut str
 		return nil, fmt.Errorf("invalid denom pair")
 	}
 
-	ratio := 1 - float64(redeem.Amount.Mul(types.NewInt(Multiplier)).Quo(imm.Pool.Supply.Amount).Int64())/Multiplier
+	ratio := imm.Pool.Supply.Amount.Sub(redeem.Amount).Mul(types.NewInt(Multiplier)).Quo(imm.Pool.Supply.Amount)
+	ratioFloat := float64(ratio.Int64()) / Multiplier
 
 	exponent := 1 / float64(asset.Weight)
-	factor := (1 - math.Pow(ratio, exponent)) * Multiplier
+	factor := (1 - math.Pow(ratioFloat, exponent)) * Multiplier
 	amountOut := asset.Balance.Amount.Mul(types.NewInt(int64(factor))).Quo(types.NewInt(Multiplier))
 	return &types.Coin{
 		Amount: amountOut,

@@ -96,10 +96,8 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 
 		orderId, err := k.OnReceivedMake(ctx, packet, &msg)
 		if err != nil {
-			ctx.Logger().Error("================OnReceiveMake=============", err)
 			return nil, err
 		}
-		ctx.Logger().Error("================New OrderId=============", orderId)
 		resp, errResp = types.ModuleCdc.Marshal(&types.MsgMakeSwapResponse{OrderId: orderId})
 	case types.TAKE_SWAP:
 		var msg types.TakeSwapMsg
@@ -123,7 +121,6 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		}
 		resp, errResp = types.ModuleCdc.Marshal(&types.MsgCancelSwapResponse{OrderId: orderId})
 	default:
-		ctx.Logger().Info("================Types Parse Error=============")
 		return nil, types.ErrUnknownDataPacket
 	}
 

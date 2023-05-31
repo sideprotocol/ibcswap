@@ -121,3 +121,55 @@ func TestUpdatePoolAsset(t *testing.T) {
 	require.NotEqual(t, pool.Assets[0].Balance.Amount.Uint64(), uint(0))
 
 }
+
+func TestSingleWithdraw(t *testing.T) {
+	const initialX = 2_000_000 // USDT
+	const initialY = 1000      // ETH
+	// create mock pool
+	denoms := []string{"a", "b"}
+	poolId := GetPoolId(denoms)
+	assets := []*PoolAsset{
+		{
+			Side: PoolSide_NATIVE,
+			Balance: &types.Coin{
+				Amount: types.NewInt(20000000),
+				Denom:  denoms[0],
+			},
+			Weight:  50,
+			Decimal: 6,
+		},
+		{
+			Side: PoolSide_REMOTE,
+			Balance: &types.Coin{
+				Amount: types.NewInt(1000),
+				Denom:  denoms[1],
+			},
+			Weight:  50,
+			Decimal: 6,
+		},
+	}
+
+	pool := InterchainLiquidityPool{
+		PoolId: poolId,
+		Assets: assets,
+		Supply: &types.Coin{
+			Amount: types.NewInt(initialX + initialY),
+			Denom:  poolId,
+		},
+
+		Status:                PoolStatus_POOL_STATUS_READY,
+		EncounterPartyPort:    "test",
+		EncounterPartyChannel: "test",
+	}
+
+	// create mock liquidity pool.
+	amm := NewInterchainMarketMaker(
+		&pool,
+		DefaultMaxFeeRate,
+	)
+
+	redeem := types.NewCoin(poolId, types.NewInt(initialX+initialY))
+	outToken, err := amm.SingleWithdraw(redeem, denoms[0])
+	fmt.Println(outToken.Amount.Uint64())
+	require.NoError(t, err)
+}

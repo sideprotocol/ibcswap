@@ -74,13 +74,13 @@ func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgSingl
 		return err
 	}
 
-	// Update pool supply and status
-	pool.AddPoolSupply(*res.PoolToken)
-
 	if pool.Status != types.PoolStatus_POOL_STATUS_INITIAL {
 		pool.AddAsset(*req.Token)
 	} else {
 		pool.Status = types.PoolStatus_POOL_STATUS_READY
+		// Update pool supply and status
+		pool.AddPoolSupply(*res.PoolToken)
+
 	}
 
 	// Save the updated liquidity pool
@@ -280,10 +280,9 @@ func (k Keeper) OnSingleAssetDepositReceived(ctx sdk.Context, msg *types.MsgSing
 		return nil, types.ErrNotFoundPool
 	}
 
-	// increase lp token mint amount
-	pool.AddPoolSupply(*stateChange.PoolTokens[0])
-
 	if pool.Status == types.PoolStatus_POOL_STATUS_READY {
+		// increase lp token mint amount
+		pool.AddPoolSupply(*stateChange.PoolTokens[0])
 		// update pool tokens.
 		pool.AddAsset(*msg.Token)
 	} else {
@@ -399,6 +398,7 @@ func (k Keeper) OnSingleAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgSin
 	for _, poolAsset := range stateChange.Out {
 		pool.SubtractAsset(*poolAsset)
 	}
+
 	for _, poolToken := range stateChange.PoolTokens {
 		pool.SubtractPoolSupply(*poolToken)
 	}
