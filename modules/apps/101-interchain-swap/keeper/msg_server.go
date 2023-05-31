@@ -73,16 +73,13 @@ func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgSingl
 	if err != nil {
 		return err
 	}
-
-	if pool.Status != types.PoolStatus_POOL_STATUS_INITIAL {
+	if pool.Status == types.PoolStatus_POOL_STATUS_READY {
+		// Update pool supply and status
+		pool.AddPoolSupply(*res.PoolToken)
 		pool.AddAsset(*req.Token)
 	} else {
 		pool.Status = types.PoolStatus_POOL_STATUS_READY
-		// Update pool supply and status
-		pool.AddPoolSupply(*res.PoolToken)
-
 	}
-
 	// Save the updated liquidity pool
 	k.SetInterchainLiquidityPool(ctx, pool)
 	return nil
@@ -283,6 +280,7 @@ func (k Keeper) OnSingleAssetDepositReceived(ctx sdk.Context, msg *types.MsgSing
 	if pool.Status == types.PoolStatus_POOL_STATUS_READY {
 		// increase lp token mint amount
 		pool.AddPoolSupply(*stateChange.PoolTokens[0])
+
 		// update pool tokens.
 		pool.AddAsset(*msg.Token)
 	} else {

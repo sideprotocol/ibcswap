@@ -220,6 +220,12 @@ func (s *InterchainswapTestSuite) TestSingleWithdrawStatus() {
 		s.Require().NoError(err)
 		logger.CleanLog("after withdraw asset status", asset.Balance)
 		s.Require().Equal(asset.Balance.Amount, sdk.NewInt(0))
-	})
 
+		poolResInChainB, err := s.QueryInterchainswapPool(ctx, chainB, poolId)
+		s.Require().NoError(err)
+		s.Require().NoError(err)
+		asset, err = poolResInChainB.InterchainLiquidityPool.FindAssetByDenom(chainADenom)
+		s.Require().NoError(err)
+		s.Require().Equal(asset.Balance.Amount, sdk.NewInt(0))
+	})
 }

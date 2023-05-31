@@ -10,6 +10,7 @@ import (
 
 func (k Keeper) MultiAssetDeposit(ctx context.Context, msg *types.MsgMultiAssetDepositRequest) (*types.MsgMultiAssetDepositResponse, error) {
 
+	
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// Validate message
