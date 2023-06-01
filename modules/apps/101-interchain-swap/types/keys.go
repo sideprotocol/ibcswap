@@ -32,3 +32,17 @@ var (
 func KeyPrefix(p string) []byte {
 	return []byte(p)
 }
+
+
+// InterchainLiquidityPoolKey returns the store key to retrieve a InterchainLiquidityPool from the index fields
+func InitialPoolTokenKey(
+	poolId string,
+) []byte {
+	var key []byte
+
+	poolIdBytes := []byte(poolId)
+	key = append(key, poolIdBytes...)
+	key = append(key, []byte("/")...)
+
+	return key
+}

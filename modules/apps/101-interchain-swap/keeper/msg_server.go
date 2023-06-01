@@ -74,13 +74,9 @@ func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgSingl
 		return err
 	}
 
-	// Update pool supply and status
-	if pool.Status == types.PoolStatus_POOL_STATUS_READY {
-		pool.AddPoolSupply(*res.PoolToken)
-		pool.AddAsset(*req.Token)
-	} else {
-		pool.Status = types.PoolStatus_POOL_STATUS_READY
-	}
+	// update pool status
+	updatePoolStatusWithSingleDeposit(&pool, res.PoolToken, req.Token)
+
 	// Save the updated liquidity pool
 	k.SetInterchainLiquidityPool(ctx, pool)
 	return nil
@@ -128,6 +124,14 @@ func (k Keeper) OnSingleWithdrawAcknowledged(ctx sdk.Context, req *types.MsgSing
 
 	// update pool status
 	err := updatePoolStatusBySingleWithdraw(&pool, *res.Tokens[0], []*sdk.Coin{req.PoolCoin})
+	if pool.Status == types.PoolStatus_POOL_STATUS_INITIAL && !pool.AllAssetsWithdrawn() {
+		initialPoolAssets := k.GetInitialPoolAssets(ctx, pool.PoolId)
+		totalPoolTokenSupplyAmount := sdk.NewInt(0)
+		for _, poolAsset := range initialPoolAssets {
+			totalPoolTokenSupplyAmount.Add(poolAsset.Amount)
+		}
+		pool.SetSupply(totalPoolTokenSupplyAmount)
+	}
 	if err != nil {
 		return err
 	}
@@ -269,6 +273,14 @@ func (k Keeper) OnCreatePoolReceived(ctx sdk.Context, msg *types.MsgCreatePoolRe
 	pool.PoolPrice = float32(amm.LpPrice())
 	// save pool status
 	k.SetInterchainLiquidityPool(ctx, pool)
+
+	// save initial pool asset amount
+	var poolAssets []sdk.Coin
+	for _, coin := range msg.Tokens {
+		poolAssets = append(poolAssets, *coin)
+	}
+	k.SetInitialPoolAssets(ctx, pooId, poolAssets)
+
 	return &pooId, nil
 }
 
@@ -283,21 +295,30 @@ func (k Keeper) OnSingleAssetDepositReceived(ctx sdk.Context, msg *types.MsgSing
 		return nil, types.ErrNotFoundPool
 	}
 
-	if pool.Status == types.PoolStatus_POOL_STATUS_READY {
-		// increase lp token mint amount
-		pool.AddPoolSupply(*stateChange.PoolTokens[0])
-		// update pool tokens.
-		pool.AddAsset(*msg.Token)
-	} else {
-		// switch pool status to 'READY'
-		pool.Status = types.PoolStatus_POOL_STATUS_READY
-	}
+	// update pool status
+	updatePoolStatusWithSingleDeposit(&pool, stateChange.PoolTokens[0], msg.Token)
 
 	// save pool.
 	k.SetInterchainLiquidityPool(ctx, pool)
 	return &types.MsgSingleAssetDepositResponse{
 		PoolToken: stateChange.PoolTokens[0],
 	}, nil
+}
+
+func updatePoolStatusWithSingleDeposit(pool *types.InterchainLiquidityPool, poolTokenSupply *sdk.Coin, deposit *sdk.Coin) {
+	if pool.Status == types.PoolStatus_POOL_STATUS_READY {
+		// increase lp token mint amount
+		pool.AddPoolSupply(*poolTokenSupply)
+		// update pool tokens.
+		pool.AddAsset(*deposit)
+	} else {
+		// switch pool status to 'READY'
+		pool.Status = types.PoolStatus_POOL_STATUS_READY
+		asset, _ := pool.FindAssetByDenom(deposit.Denom)
+		if asset.Balance.Amount.Equal(sdk.NewInt(0)) {
+			pool.AddAsset(*deposit)
+		}
+	}
 }
 
 // OnMultiAssetDepositReceived processes a double deposit request and returns a response or an error.
@@ -402,6 +423,15 @@ func (k Keeper) OnSingleAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgSin
 		return nil, err
 	}
 
+	if pool.Status == types.PoolStatus_POOL_STATUS_INITIAL && !pool.AllAssetsWithdrawn() {
+		initialPoolAssets := k.GetInitialPoolAssets(ctx, pool.PoolId)
+		totalPoolTokenSupplyAmount := sdk.NewInt(0)
+		for _, poolAsset := range initialPoolAssets {
+			totalPoolTokenSupplyAmount.Add(poolAsset.Amount)
+		}
+		pool.SetSupply(totalPoolTokenSupplyAmount)
+	}
+
 	// remove pool supply is zero.
 	if pool.Supply.Amount.Equal(sdk.NewInt(0)) {
 		k.RemoveInterchainLiquidityPool(ctx, pool.PoolId)
@@ -424,11 +454,8 @@ func updatePoolStatusBySingleWithdraw(pool *types.InterchainLiquidityPool, out s
 	if pool.Status == types.PoolStatus_POOL_STATUS_READY && remain.Amount.Equal(sdk.NewInt(0)) {
 		pool.Status = types.PoolStatus_POOL_STATUS_INITIAL
 	}
-
-	if pool.Status == types.PoolStatus_POOL_STATUS_READY || pool.AllAssetsWithdrawn() {
-		for _, poolToken := range poolTokens {
-			pool.SubtractPoolSupply(*poolToken)
-		}
+	for _, poolToken := range poolTokens {
+		pool.SubtractPoolSupply(*poolToken)
 	}
 	return nil
 }

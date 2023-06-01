@@ -69,6 +69,11 @@ func NewInterchainLiquidityPool(
 }
 
 // find pool asset by denom
+func (ilp *InterchainLiquidityPool) SetSupply(amount types.Int) {
+	ilp.Supply = &types.Coin{Denom: ilp.PoolId, Amount: amount}
+}
+
+// find pool asset by denom
 func (ilp *InterchainLiquidityPool) FindAssetByDenom(denom string) (*PoolAsset, error) {
 	for _, asset := range ilp.Assets {
 		if asset.Balance.Denom == denom {

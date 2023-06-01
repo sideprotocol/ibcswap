@@ -81,6 +81,7 @@ func (k msgServer) CreatePool(ctx context.Context, msg *types.MsgCreatePoolReque
 		return nil, err
 	}
 	poolId := types.GetPoolIdWithTokens(msg.Tokens)
+
 	return &types.MsgCreatePoolResponse{
 		PoolId: poolId,
 	}, nil
