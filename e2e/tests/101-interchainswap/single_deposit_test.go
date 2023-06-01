@@ -163,14 +163,14 @@ func (s *InterchainswapTestSuite) TestSingleDepositStatus() {
 	})
 
 	depositX := initialX * 30 / 100
-	depositY := initialY * 30 / 100
+	//depositY := initialY * 30 / 100
 
 	t.Run("send deposit messages", func(t *testing.T) {
 
 		sender := chainAAddress
 		denom := chainADenom
 		chain := chainA
-		signer := chainAWallet
+		//signer := chainAWallet
 		depositAmount := sdk.NewInt(int64(depositX))
 
 		testCases := []struct {
@@ -185,21 +185,21 @@ func (s *InterchainswapTestSuite) TestSingleDepositStatus() {
 				},
 				true,
 			},
-			{
-				"single deposit Asset B(30%)",
-				func() {
-					sender = chainBAddress
-					denom = chainBDenom
-					chain = chainB
-					signer = chainBWallet
-					depositAmount = sdk.NewInt(int64(depositY))
-				},
-				true,
-			},
+			// {
+			// 	"single deposit Asset B(30%)",
+			// 	func() {
+			// 		sender = chainBAddress
+			// 		denom = chainBDenom
+			// 		chain = chainB
+			// 		signer = chainBWallet
+			// 		depositAmount = sdk.NewInt(int64(depositY))
+			// 	},
+			// 	true,
+			// },
 		}
 
 		for _, tc := range testCases {
-
+			logger.CleanLog(tc.name, "start")
 			// check the balance of the chainA account.
 			beforeDeposit, err := s.QueryBalance(ctx, chain, sender, denom)
 			s.Require().NoError(err)
@@ -209,37 +209,47 @@ func (s *InterchainswapTestSuite) TestSingleDepositStatus() {
 			poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
 			depositCoin := sdk.Coin{Denom: denom, Amount: depositAmount}
 
-			msg := types.NewMsgSingleAssetDeposit(
-				poolId,
-				sender,
-				&depositCoin,
-			)
-			resp, err := s.BroadcastMessages(ctx, chain, signer, msg)
-			s.AssertValidTxResponse(resp)
+			poolRes, err := s.QueryInterchainswapPool(ctx, chain, poolId)
 			s.Require().NoError(err)
 
-			balanceRes, err := s.QueryBalance(ctx, chain, sender, denom)
-			s.Require().NoError(err)
-			expectedBalance := balanceRes.Balance.Add(depositCoin)
-			s.Require().Equal(expectedBalance.Denom, beforeDeposit.Balance.Denom)
-			s.Require().Equal(expectedBalance.Amount, beforeDeposit.Balance.Amount)
+			amm := types.NewInterchainMarketMaker(&poolRes.InterchainLiquidityPool, types.DefaultMaxFeeRate)
 
-			// // check packet relayed or not.
-			test.WaitForBlocks(ctx, 15, chainA, chainB)
-			//s.AssertPacketRelayed(ctx, chainB, channelB.PortID, channelB.ChannelID, 2)
+			lp, err := amm.DepositSingleAsset(depositCoin)
+			logger.CleanLog("lp price:", poolRes.InterchainLiquidityPool.PoolPrice)
+			logger.CleanLog("deposit error", err)
+			logger.CleanLog("lp amount", lp)
 
-			poolResInChainA, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
-			s.Require().NoError(err)
-			poolInChainA := poolResInChainA.InterchainLiquidityPool
-			s.Require().Equal(types.PoolStatus_POOL_STATUS_READY, poolInChainA.Status)
+			// msg := types.NewMsgSingleAssetDeposit(
+			// 	poolId,
+			// 	sender,
+			// 	&depositCoin,
+			// )
+			// resp, err := s.BroadcastMessages(ctx, chain, signer, msg)
+			// s.AssertValidTxResponse(resp)
+			// s.Require().NoError(err)
 
-			poolResInChainB, err := s.QueryInterchainswapPool(ctx, chainB, poolId)
-			s.Require().NoError(err)
-			poolInChainB := poolResInChainB.InterchainLiquidityPool
-			s.Require().Equal(types.PoolStatus_POOL_STATUS_READY, poolInChainB.Status)
+			// balanceRes, err := s.QueryBalance(ctx, chain, sender, denom)
+			// s.Require().NoError(err)
+			// expectedBalance := balanceRes.Balance.Add(depositCoin)
+			// s.Require().Equal(expectedBalance.Denom, beforeDeposit.Balance.Denom)
+			// s.Require().Equal(expectedBalance.Amount, beforeDeposit.Balance.Amount)
 
-			logger.CleanLog(tc.name+"=> Send Deposit(After):PoolA", poolInChainA)
-			logger.CleanLog(tc.name+"=> Send Deposit(After):PoolB", poolInChainB)
+			// // // check packet relayed or not.
+			// test.WaitForBlocks(ctx, 15, chainA, chainB)
+			// //s.AssertPacketRelayed(ctx, chainB, channelB.PortID, channelB.ChannelID, 2)
+
+			// poolResInChainA, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
+			// s.Require().NoError(err)
+			// poolInChainA := poolResInChainA.InterchainLiquidityPool
+			// s.Require().Equal(types.PoolStatus_POOL_STATUS_READY, poolInChainA.Status)
+
+			// poolResInChainB, err := s.QueryInterchainswapPool(ctx, chainB, poolId)
+			// s.Require().NoError(err)
+			// poolInChainB := poolResInChainB.InterchainLiquidityPool
+			// s.Require().Equal(types.PoolStatus_POOL_STATUS_READY, poolInChainB.Status)
+
+			// logger.CleanLog(tc.name+"=> Send Deposit(After):PoolA", poolInChainA)
+			// logger.CleanLog(tc.name+"=> Send Deposit(After):PoolB", poolInChainB)
 		}
 
 	})

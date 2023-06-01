@@ -9,6 +9,8 @@ import (
 	"github.com/cosmos/ibc-go/e2e/testsuite"
 	"github.com/cosmos/ibc-go/e2e/testvalues"
 	types "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	"github.com/strangelove-ventures/ibctest/v6/chain/cosmos"
+	"github.com/strangelove-ventures/ibctest/v6/ibc"
 	test "github.com/strangelove-ventures/ibctest/v6/testutil"
 )
 
@@ -169,63 +171,86 @@ func (s *InterchainswapTestSuite) TestSingleWithdrawStatus() {
 	// single withdraw
 	t.Run("send withdraw message", func(t *testing.T) {
 
-		beforeWithdraw, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
-		s.Require().NoError(err)
-		poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
+		testCases := []struct {
+			name    string
+			chain   *cosmos.CosmosChain
+			wallet  *ibc.Wallet       // Assuming Wallet type exists
+			channel ibc.ChannelOutput // Assuming Channel type exists
+			address string
+			denom   string
+		}{
+			{
+				name:    "Chain A Test",
+				chain:   chainA,
+				wallet:  chainAWallet,
+				channel: channelA,
+				address: chainAAddress,
+				denom:   chainADenom,
+			},
+			{
+				name:    "Chain B Test",
+				chain:   chainB,
+				wallet:  chainBWallet,
+				channel: channelB,
+				address: chainBAddress,
+				denom:   chainBDenom,
+			},
+		}
 
-		lpBalanceOfSender, err := s.QueryBalance(ctx, chainA, chainAAddress, poolId)
-		s.Require().NoError(err)
-		poolRes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
-		s.Require().NoError(err)
-		pool := poolRes.InterchainLiquidityPool
-		//s.Require().Equal(lpBalanceOfSender.Balance.Amount.GT(sdk.NewInt(1000)), true)
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				beforeWithdraw, err := s.QueryBalance(ctx, tc.chain, tc.address, tc.denom)
+				s.Require().NoError(err)
+				poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
 
-		logger.CleanLog("Pool Token", lpBalanceOfSender.Balance)
-		logger.CleanLog("Supply", pool.Supply.Amount)
+				lpBalanceOfSender, err := s.QueryBalance(ctx, tc.chain, tc.address, poolId)
+				s.Require().NoError(err)
 
-		amm := types.NewInterchainMarketMaker(&pool, fee)
+				poolRes, err := s.QueryInterchainswapPool(ctx, tc.chain, poolId)
+				s.Require().NoError(err)
+				pool := poolRes.InterchainLiquidityPool
 
-		out, err := amm.SingleWithdraw(*lpBalanceOfSender.Balance, chainADenom)
-		s.Require().NoError(err)
+				amm := types.NewInterchainMarketMaker(&pool, fee)
+				out, err := amm.SingleWithdraw(*lpBalanceOfSender.Balance, tc.denom)
+				s.Require().NoError(err)
 
-		logger.CleanLog("out amount", out)
-		s.Require().Equal(out.Amount, sdk.NewInt(initialX))
+				if tc.chain == chainA {
+					s.Require().Equal(out.Amount, sdk.NewInt(initialX))
+				} else {
+					s.Require().Equal(out.Amount, sdk.NewInt(initialY))
+				}
 
-		// poolCoin := lpBalanceOfSender.Balance
-		// s.Require().NotEqual(poolCoin.Amount, sdk.NewInt(0))
-		msg := types.NewMsgSingleAssetWithdraw(
-			chainAAddress,
-			chainADenom,
-			lpBalanceOfSender.Balance,
-		)
-		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
-		s.AssertValidTxResponse(resp)
-		s.Require().NoError(err)
+				msg := types.NewMsgSingleAssetWithdraw(
+					tc.address,
+					tc.denom,
+					lpBalanceOfSender.Balance,
+				)
 
-		// check packet relayed or not.
-		test.WaitForBlocks(ctx, 10, chainA, chainB)
-		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 2)
+				resp, err := s.BroadcastMessages(ctx, tc.chain, tc.wallet, msg)
+				s.AssertValidTxResponse(resp)
+				s.Require().NoError(err)
 
-		balanceRes, err := s.QueryBalance(ctx, chainA, chainAAddress, chainADenom)
-		s.Require().NoError(err)
-		s.Require().Equal(balanceRes.Balance.Denom, beforeWithdraw.Balance.Denom)
-		logger.CleanLog("Withdraw Res", balanceRes.Balance, beforeWithdraw.Balance)
-		s.Require().Equal(balanceRes.Balance.Amount.GT(beforeWithdraw.Balance.Amount), true) //Greater(balanceRes.Balance.Amount.BigInt(), beforeDeposit.Balance.Amount.BigInt())
+				// check packet relayed or not.
+				test.WaitForBlocks(ctx, 10, chainA, chainB)
+				s.AssertPacketRelayed(ctx, tc.chain, tc.channel.PortID, tc.channel.ChannelID, 2)
 
-		logger.CleanLog("Withdrawed Amount", balanceRes.Balance.Amount.Sub(beforeWithdraw.Balance.Amount))
-
-		poolResInChainA, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
-		s.Require().NoError(err)
-		asset, err := poolResInChainA.InterchainLiquidityPool.FindAssetByDenom(chainADenom)
-		s.Require().NoError(err)
-		logger.CleanLog("after withdraw asset status", asset.Balance)
-		s.Require().Equal(asset.Balance.Amount, sdk.NewInt(0))
-
-		poolResInChainB, err := s.QueryInterchainswapPool(ctx, chainB, poolId)
-		s.Require().NoError(err)
-		s.Require().NoError(err)
-		asset, err = poolResInChainB.InterchainLiquidityPool.FindAssetByDenom(chainADenom)
-		s.Require().NoError(err)
-		s.Require().Equal(asset.Balance.Amount, sdk.NewInt(0))
+				// check token is withdrawn or not
+				balanceRes, err := s.QueryBalance(ctx, tc.chain, tc.address, tc.denom)
+				s.Require().NoError(err)
+				s.Require().Equal(balanceRes.Balance.Denom, beforeWithdraw.Balance.Denom)
+				logger.CleanLog("Withdraw Res", balanceRes.Balance, beforeWithdraw.Balance)
+				s.Require().Equal(balanceRes.Balance.Amount.GT(beforeWithdraw.Balance.Amount), true)
+				poolRes, err = s.QueryInterchainswapPool(ctx, tc.chain, poolId)
+				if tc.name == "Chain A Test" {
+					s.Require().NoError(err)
+					asset, err := poolRes.InterchainLiquidityPool.FindAssetByDenom(tc.denom)
+					s.Require().NoError(err)
+					s.Require().Equal(asset.Balance.Amount, sdk.NewInt(0))
+					s.Require().Equal(pool.Supply.Amount, sdk.NewInt(initialX+initialY))
+				} else {
+					s.Require().Error(err)
+				}
+			})
+		}
 	})
 }
