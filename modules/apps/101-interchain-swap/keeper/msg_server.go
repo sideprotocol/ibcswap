@@ -54,6 +54,13 @@ func (k Keeper) OnCreatePoolAcknowledged(ctx sdk.Context, msg *types.MsgCreatePo
 		fee,
 	)
 	pool.PoolPrice = float32(amm.LpPrice())
+	// save initial pool asset amount
+	var poolAssets []sdk.Coin
+	for _, coin := range msg.Tokens {
+		poolAssets = append(poolAssets, *coin)
+	}
+	k.SetInitialPoolAssets(ctx, pool.PoolId, poolAssets)
+
 	// Save the liquidity pool
 	k.SetInterchainLiquidityPool(ctx, *pool)
 	return nil
