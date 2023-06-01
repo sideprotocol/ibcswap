@@ -28,9 +28,9 @@ func (k msgServer) SingleAssetWithdraw(ctx context.Context, msg *types.MsgSingle
 		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "pool not found: %s", types.ErrNotFoundPool)
 	}
 
-	if pool.Status != types.PoolStatus_POOL_STATUS_READY {
-		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "pool not ready for swap: %s", types.ErrNotReadyForSwap)
-	}
+	// if pool.Status != types.PoolStatus_POOL_STATUS_READY {
+	// 	return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "pool not ready for swap: %s", types.ErrNotReadyForSwap)
+	// }
 
 	fee := k.GetSwapFeeRate(sdkCtx)
 	amm := *types.NewInterchainMarketMaker(&pool, fee)

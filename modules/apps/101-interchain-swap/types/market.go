@@ -102,14 +102,15 @@ func (ilp *InterchainLiquidityPool) AddAsset(token types.Coin) error {
 }
 
 // Update denom
-func (ilp *InterchainLiquidityPool) SubtractAsset(token types.Coin) error {
+func (ilp *InterchainLiquidityPool) SubtractAsset(token types.Coin) (*types.Coin, error) {
 	for index, asset := range ilp.Assets {
 		if asset.Balance.Denom == token.Denom {
 			updatedCoin := ilp.Assets[index].Balance.Sub(token)
 			ilp.Assets[index].Balance = &updatedCoin
+			return ilp.Assets[index].Balance, nil
 		}
 	}
-	return ErrNotFoundDenomInPool
+	return nil, ErrNotFoundDenomInPool
 }
 
 // Increase pool suppy
@@ -130,6 +131,17 @@ func (ilp *InterchainLiquidityPool) SubtractPoolSupply(token types.Coin) error {
 	updatedCoin := ilp.Supply.Sub(token)
 	ilp.Supply = &updatedCoin
 	return nil
+}
+
+// Decrease pool suppy
+func (ilp *InterchainLiquidityPool) AllAssetsWithdrawn() bool {
+	allAssetsWithdrawn := true
+	for _, asset := range ilp.Assets {
+		if !asset.Balance.Amount.IsZero() {
+			allAssetsWithdrawn = false
+		}
+	}
+	return allAssetsWithdrawn
 }
 
 // Calculate total amount of assets in pool
@@ -206,11 +218,14 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 		factor := (math.Pow(ratio, float64(weight)) - 1) * Multiplier
 		issueAmount = imm.Pool.Supply.Amount.Mul(types.NewInt(int64(factor))).Quo(types.NewInt(Multiplier))
 
-		//estimatedAmount := imm.Pool.Supply.Amount.Add(issueAmount)
-		// estimatedLpPrice := imm.InvariantWithInput(token) / float64(estimatedAmount.Int64())
-		// if math.Abs(estimatedLpPrice-float64(imm.Pool.PoolPrice))/float64(imm.Pool.PoolPrice) > 0.1 {
-		// 	return nil, ErrNotAllowedAmount
-		// }
+		estimatedAmount := imm.Pool.Supply.Amount.Add(issueAmount)
+		estimatedLpPrice := imm.InvariantWithInput(token) / float64(estimatedAmount.Int64())
+
+		// if it trigger 5% over change in pool price, we will not allow this amount deposit.
+		slippage := math.Abs(estimatedLpPrice-float64(imm.Pool.PoolPrice))/float64(imm.Pool.PoolPrice)
+		if slippage > 0.05 {
+			return nil, ErrNotAllowedAmount
+		}
 	}
 
 	outputToken := &types.Coin{
@@ -258,13 +273,13 @@ func (imm *InterchainMarketMaker) SingleWithdraw(redeem types.Coin, denomOut str
 	if err != nil {
 		return nil, err
 	}
-	// err = asset.Balance.Validate()
-	// if err != nil {
-	// 	return nil, err
-	// }
-	if imm.Pool.Status != PoolStatus_POOL_STATUS_READY {
-		return nil, fmt.Errorf("not ready for swap")
+	err = asset.Balance.Validate()
+	if err != nil {
+		return nil, err
 	}
+	// if imm.Pool.Status != PoolStatus_POOL_STATUS_READY {
+	// 	return nil, fmt.Errorf("not ready for swap")
+	// }
 
 	if redeem.Amount.GT(imm.Pool.Supply.Amount) {
 		return nil, fmt.Errorf("bigger than balance")

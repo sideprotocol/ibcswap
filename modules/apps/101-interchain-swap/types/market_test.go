@@ -122,6 +122,63 @@ func TestUpdatePoolAsset(t *testing.T) {
 
 }
 
+func TestSingleDeposit(t *testing.T) {
+	const initialX = 2_000_000 // USDT
+	const initialY = 1000      // ETH
+	// create mock pool
+	denoms := []string{"a", "b"}
+	poolId := GetPoolId(denoms)
+	assets := []*PoolAsset{
+		{
+			Side: PoolSide_NATIVE,
+			Balance: &types.Coin{
+				Amount: types.NewInt(initialX),
+				Denom:  denoms[0],
+			},
+			Weight:  50,
+			Decimal: 6,
+		},
+		{
+			Side: PoolSide_REMOTE,
+			Balance: &types.Coin{
+				Amount: types.NewInt(initialY),
+				Denom:  denoms[1],
+			},
+			Weight:  50,
+			Decimal: 6,
+		},
+	}
+
+	pool := InterchainLiquidityPool{
+		PoolId: poolId,
+		Assets: assets,
+		Supply: &types.Coin{
+			Amount: types.NewInt(initialX + initialY),
+			Denom:  poolId,
+		},
+
+		Status:                PoolStatus_POOL_STATUS_READY,
+		EncounterPartyPort:    "test",
+		EncounterPartyChannel: "test",
+	}
+
+	// create mock liquidity pool.
+	amm := NewInterchainMarketMaker(
+		&pool,
+		DefaultMaxFeeRate,
+	)
+
+	pool.PoolPrice = float32(amm.LpPrice())
+
+	newDeposit := &types.Coin{
+		Amount: types.NewInt(initialY * 0.5),
+		Denom:  denoms[0],
+	}
+
+	_, err := amm.DepositSingleAsset(*newDeposit)
+	require.Error(t, err)
+}
+
 func TestSingleWithdraw(t *testing.T) {
 	const initialX = 2_000_000 // USDT
 	const initialY = 1000      // ETH

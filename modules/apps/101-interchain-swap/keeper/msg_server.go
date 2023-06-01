@@ -73,8 +73,9 @@ func (k Keeper) OnSingleDepositAcknowledged(ctx sdk.Context, req *types.MsgSingl
 	if err != nil {
 		return err
 	}
+
+	// Update pool supply and status
 	if pool.Status == types.PoolStatus_POOL_STATUS_READY {
-		// Update pool supply and status
 		pool.AddPoolSupply(*res.PoolToken)
 		pool.AddAsset(*req.Token)
 	} else {
@@ -126,13 +127,13 @@ func (k Keeper) OnSingleWithdrawAcknowledged(ctx sdk.Context, req *types.MsgSing
 	}
 
 	// update pool status
-	for _, poolAsset := range res.Tokens {
-		pool.SubtractAsset(*poolAsset)
+	err := updatePoolStatusBySingleWithdraw(&pool, *res.Tokens[0], []*sdk.Coin{req.PoolCoin})
+	if err != nil {
+		return err
 	}
-	pool.SubtractPoolSupply(*req.PoolCoin)
 
 	//burn voucher token.
-	err := k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(req.Sender), *req.PoolCoin)
+	err = k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(req.Sender), *req.PoolCoin)
 	if err != nil {
 		return err
 	}
@@ -149,8 +150,13 @@ func (k Keeper) OnSingleWithdrawAcknowledged(ctx sdk.Context, req *types.MsgSing
 		return err
 	}
 
-	// save pool
-	k.SetInterchainLiquidityPool(ctx, pool)
+	// remove pool supply is zero.
+	if pool.Supply.Amount.Equal(sdk.NewInt(0)) {
+		k.RemoveInterchainLiquidityPool(ctx, pool.PoolId)
+	} else {
+		// save pool
+		k.SetInterchainLiquidityPool(ctx, pool)
+	}
 	return nil
 }
 
@@ -280,7 +286,6 @@ func (k Keeper) OnSingleAssetDepositReceived(ctx sdk.Context, msg *types.MsgSing
 	if pool.Status == types.PoolStatus_POOL_STATUS_READY {
 		// increase lp token mint amount
 		pool.AddPoolSupply(*stateChange.PoolTokens[0])
-
 		// update pool tokens.
 		pool.AddAsset(*msg.Token)
 	} else {
@@ -378,7 +383,6 @@ func (k Keeper) OnMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgMulti
 	}, nil
 }
 
-// OnSingleAssetWithdrawReceived processes a withdrawal request and returns a response or an error.
 func (k Keeper) OnSingleAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgSingleAssetWithdrawRequest, stateChange *types.StateChange) (*types.MsgSingleAssetWithdrawResponse, error) {
 
 	// Validate the message
@@ -392,20 +396,41 @@ func (k Keeper) OnSingleAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgSin
 		return nil, types.ErrNotFoundPool
 	}
 
-	// Update pool status by subtracting the supplied pool coin and output token
-	for _, poolAsset := range stateChange.Out {
-		pool.SubtractAsset(*poolAsset)
+	// update pool status
+	err := updatePoolStatusBySingleWithdraw(&pool, *stateChange.Out[0], stateChange.PoolTokens)
+	if err != nil {
+		return nil, err
 	}
 
-	for _, poolToken := range stateChange.PoolTokens {
-		pool.SubtractPoolSupply(*poolToken)
+	// remove pool supply is zero.
+	if pool.Supply.Amount.Equal(sdk.NewInt(0)) {
+		k.RemoveInterchainLiquidityPool(ctx, pool.PoolId)
+	} else {
+		// save pool
+		k.SetInterchainLiquidityPool(ctx, pool)
 	}
-
-	// Save pool
-	k.SetInterchainLiquidityPool(ctx, pool)
 	return &types.MsgSingleAssetWithdrawResponse{
 		Tokens: stateChange.Out,
 	}, nil
+}
+
+func updatePoolStatusBySingleWithdraw(pool *types.InterchainLiquidityPool, out sdk.Coin, poolTokens []*sdk.Coin) error {
+	// Update pool status by subtracting the supplied pool coin and output token
+	remain, err := pool.SubtractAsset(out)
+	if err != nil {
+		return err
+	}
+
+	if pool.Status == types.PoolStatus_POOL_STATUS_READY && remain.Amount.Equal(sdk.NewInt(0)) {
+		pool.Status = types.PoolStatus_POOL_STATUS_INITIAL
+	}
+
+	if pool.Status == types.PoolStatus_POOL_STATUS_READY || pool.AllAssetsWithdrawn() {
+		for _, poolToken := range poolTokens {
+			pool.SubtractPoolSupply(*poolToken)
+		}
+	}
+	return nil
 }
 
 // OnMultiAssetWithdrawReceived processes a withdrawal request and returns a response or an error.
