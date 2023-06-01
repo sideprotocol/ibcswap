@@ -232,7 +232,11 @@ func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, ms
 }
 
 func createOrder(ctx sdk.Context, msg *types.MakeSwapMsg, channelKeeper types.ChannelKeeper) types.Order {
+	// What if channel is not found ?
 	channel, _ := channelKeeper.GetChannel(ctx, msg.SourcePort, msg.SourceChannel)
+	// What if sequence is not found ?
+	// Will this sequence always be different ? Order ID duplication depends on it.
+	// Should we add a check for duplicate order id ?
 	sequence, _ := channelKeeper.GetNextSequenceSend(ctx, msg.SourcePort, msg.SourceChannel)
 	path := orderPath(msg.SourcePort, msg.SourceChannel, channel.Counterparty.PortId, channel.Counterparty.ChannelId, sequence)
 	return types.Order{
@@ -250,11 +254,13 @@ func orderPath(sourcePort, sourceChannel, destPort, destChannel string, sequence
 
 func generateOrderId(orderPath string, msg *types.MakeSwapMsg) string {
 	prefix := []byte(orderPath)
+	// error handling is not done, what if marshaljson fails ?
 	bytes, _ := types.ModuleCdc.MarshalJSON(msg)
 	hash := sha256.Sum256(append(prefix, bytes...))
 	return hex.EncodeToString(hash[:])
 }
 
+// Optional: Add tests for creating order path and extracting channel, port
 func extractSourceChannelForTakerMsg(path string) string {
 	parts := strings.Split(path, "/")
 	return parts[5]

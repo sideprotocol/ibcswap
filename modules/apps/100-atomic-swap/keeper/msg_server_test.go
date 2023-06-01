@@ -74,3 +74,5 @@ func (suite *KeeperTestSuite) TestMsgSwap() {
 		}
 	}
 }
+
+// Add tests for take swap message and cancel swap message
