@@ -174,6 +174,7 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 				return err
 			}
 
+			// TODO: Remove comments if not needed
 			//absoluteTimeouts, err := cmd.Flags().GetBool(flagAbsoluteTimeouts)
 			//if err != nil {
 			//	return err
