@@ -123,8 +123,8 @@ func TestUpdatePoolAsset(t *testing.T) {
 }
 
 func TestSingleDeposit(t *testing.T) {
-	const initialX = 2_000_000 // USDT
-	const initialY = 1000      // ETH
+	const initialX = 2_000_000_000_000 // USDT
+	const initialY = 1000_000_000      // ETH
 	// create mock pool
 	denoms := []string{"a", "b"}
 	poolId := GetPoolId(denoms)
@@ -171,7 +171,7 @@ func TestSingleDeposit(t *testing.T) {
 	pool.PoolPrice = float32(amm.LpPrice())
 
 	newDeposit := &types.Coin{
-		Amount: types.NewInt(initialY * 0.5),
+		Amount: types.NewInt(initialY),
 		Denom:  denoms[0],
 	}
 

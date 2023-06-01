@@ -217,15 +217,6 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 		ratio := 1 + float64(token.Amount.Int64())/float64(asset.Balance.Amount.Int64())
 		factor := (math.Pow(ratio, float64(weight)) - 1) * Multiplier
 		issueAmount = imm.Pool.Supply.Amount.Mul(types.NewInt(int64(factor))).Quo(types.NewInt(Multiplier))
-
-		estimatedAmount := imm.Pool.Supply.Amount.Add(issueAmount)
-		estimatedLpPrice := imm.InvariantWithInput(token) / float64(estimatedAmount.Int64())
-
-		// if it trigger 5% over change in pool price, we will not allow this amount deposit.
-		slippage := math.Abs(estimatedLpPrice-float64(imm.Pool.PoolPrice))/float64(imm.Pool.PoolPrice)
-		if slippage > 0.05 {
-			return nil, ErrNotAllowedAmount
-		}
 	}
 
 	outputToken := &types.Coin{
@@ -396,12 +387,14 @@ func (imm *InterchainMarketMaker) MinusFees(amount types.Int) types.Dec {
 func (imm *InterchainMarketMaker) Invariant() float64 {
 	v := 1.0
 	totalBalance := types.NewDec(0)
-	for _, pool := range imm.Pool.Assets {
-		totalBalance = totalBalance.Add(types.NewDecFromBigInt(pool.Balance.Amount.BigInt()))
+	for _, asset := range imm.Pool.Assets {
+		decimal := types.NewInt(int64(math.Pow10(int(asset.Decimal))))
+		totalBalance = totalBalance.Add(types.NewDecFromBigInt(asset.Balance.Amount.Quo(decimal).BigInt()))
 	}
-	for _, pool := range imm.Pool.Assets {
-		w := float64(pool.Weight) / 100.0
-		balance := types.NewDecFromBigInt(pool.Balance.Amount.BigInt()).Quo(totalBalance) /// totalBalance
+	for _, asset := range imm.Pool.Assets {
+		w := float64(asset.Weight) / 100.0
+		decimal := types.NewInt(int64(math.Pow10(int(asset.Decimal))))
+		balance := types.NewDecFromBigInt(asset.Balance.Amount.Quo(decimal).BigInt())
 		v *= math.Pow(balance.MustFloat64(), w)
 	}
 	return v
@@ -410,19 +403,21 @@ func (imm *InterchainMarketMaker) Invariant() float64 {
 func (imm *InterchainMarketMaker) InvariantWithInput(tokenIn types.Coin) float64 {
 	v := 1.0
 	totalBalance := types.NewDec(0)
-	for _, pool := range imm.Pool.Assets {
-		totalBalance = totalBalance.Add(types.NewDecFromBigInt(pool.Balance.Amount.BigInt()))
-		if pool.Balance.Denom == tokenIn.Denom {
+	for _, asset := range imm.Pool.Assets {
+		decimal := types.NewInt(int64(math.Pow10(int(asset.Decimal))))
+		totalBalance = totalBalance.Add(types.NewDecFromBigInt(asset.Balance.Amount.Quo(decimal).BigInt()))
+		if asset.Balance.Denom == tokenIn.Denom {
 			totalBalance.Add(types.NewDecFromBigInt(tokenIn.Amount.BigInt()))
 		}
 	}
-	for _, pool := range imm.Pool.Assets {
-		w := float64(pool.Weight) / 100.0
+	for _, asset := range imm.Pool.Assets {
+		w := float64(asset.Weight) / 100.0
+		decimal := types.NewInt(int64(math.Pow10(int(asset.Decimal))))
 		var balance types.Dec
-		if tokenIn.Denom != pool.Balance.Denom {
-			balance = types.NewDecFromBigInt(pool.Balance.Amount.BigInt()).Quo(totalBalance) /// totalBalance
+		if tokenIn.Denom != asset.Balance.Denom {
+			balance = types.NewDecFromBigInt(asset.Balance.Amount.Quo(decimal).BigInt())
 		} else {
-			balance = types.NewDecFromBigInt(pool.Balance.Amount.Add(tokenIn.Amount).BigInt()).Quo(totalBalance) /// totalBalance
+			balance = types.NewDecFromBigInt(asset.Balance.Amount.Add(tokenIn.Amount).Quo(decimal).BigInt())
 		}
 		v *= math.Pow(balance.MustFloat64(), w)
 	}
