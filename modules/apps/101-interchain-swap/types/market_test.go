@@ -15,7 +15,7 @@ func TestLeftSwap(t *testing.T) {
 	poolId := GetPoolId(demons)
 	assets := []*PoolAsset{
 		{
-			Side: PoolSide_NATIVE,
+			Side: PoolAssetSide_SOURCE,
 			Balance: &types.Coin{
 				Amount: types.NewInt(100000000),
 				Denom:  demons[0],
@@ -24,7 +24,7 @@ func TestLeftSwap(t *testing.T) {
 			Decimal: 6,
 		},
 		{
-			Side: PoolSide_REMOTE,
+			Side: PoolAssetSide_TARGET,
 			Balance: &types.Coin{
 				Amount: types.NewInt(0),
 				Denom:  demons[1],
@@ -35,22 +35,21 @@ func TestLeftSwap(t *testing.T) {
 	}
 
 	pool := InterchainLiquidityPool{
-		PoolId: poolId,
+		Id:     poolId,
 		Assets: assets,
 		Supply: &types.Coin{
 			Amount: types.NewInt(100000000),
 			Denom:  poolId,
 		},
-
-		Status:                PoolStatus_POOL_STATUS_READY,
-		EncounterPartyPort:    "test",
-		EncounterPartyChannel: "test",
+		SwapFee:             300,
+		Status:              PoolStatus_ACTIVE,
+		CounterPartyPort:    "test",
+		CounterPartyChannel: "test",
 	}
 
 	// create mock liquidity pool.
 	amm := NewInterchainMarketMaker(
 		&pool,
-		DefaultMaxFeeRate,
 	)
 
 	// mock swap message
@@ -74,7 +73,7 @@ func TestUpdatePoolAsset(t *testing.T) {
 	poolId := GetPoolId(demons)
 	assets := []*PoolAsset{
 		{
-			Side: PoolSide_NATIVE,
+			Side: PoolAssetSide_SOURCE,
 			Balance: &types.Coin{
 				Amount: types.NewInt(0),
 				Denom:  demons[0],
@@ -83,7 +82,7 @@ func TestUpdatePoolAsset(t *testing.T) {
 			Decimal: 6,
 		},
 		{
-			Side: PoolSide_REMOTE,
+			Side: PoolAssetSide_TARGET,
 			Balance: &types.Coin{
 				Amount: types.NewInt(0),
 				Denom:  demons[1],
@@ -94,16 +93,16 @@ func TestUpdatePoolAsset(t *testing.T) {
 	}
 
 	pool := InterchainLiquidityPool{
-		PoolId: poolId,
+		Id:     poolId,
 		Assets: assets,
 		Supply: &types.Coin{
 			Amount: types.NewInt(0),
 			Denom:  poolId,
 		},
-
-		Status:                PoolStatus_POOL_STATUS_READY,
-		EncounterPartyPort:    "test",
-		EncounterPartyChannel: "test",
+		SwapFee:             300,
+		Status:              PoolStatus_ACTIVE,
+		CounterPartyPort:    "test",
+		CounterPartyChannel: "test",
 	}
 
 	// mock swap message
@@ -130,7 +129,7 @@ func TestSingleDeposit(t *testing.T) {
 	poolId := GetPoolId(denoms)
 	assets := []*PoolAsset{
 		{
-			Side: PoolSide_NATIVE,
+			Side: PoolAssetSide_SOURCE,
 			Balance: &types.Coin{
 				Amount: types.NewInt(initialX),
 				Denom:  denoms[0],
@@ -139,7 +138,7 @@ func TestSingleDeposit(t *testing.T) {
 			Decimal: 6,
 		},
 		{
-			Side: PoolSide_REMOTE,
+			Side: PoolAssetSide_TARGET,
 			Balance: &types.Coin{
 				Amount: types.NewInt(initialY),
 				Denom:  denoms[1],
@@ -150,22 +149,21 @@ func TestSingleDeposit(t *testing.T) {
 	}
 
 	pool := InterchainLiquidityPool{
-		PoolId: poolId,
+		Id:     poolId,
 		Assets: assets,
 		Supply: &types.Coin{
 			Amount: types.NewInt(initialX + initialY),
 			Denom:  poolId,
 		},
-
-		Status:                PoolStatus_POOL_STATUS_READY,
-		EncounterPartyPort:    "test",
-		EncounterPartyChannel: "test",
+		SwapFee:             300,
+		Status:              PoolStatus_ACTIVE,
+		CounterPartyPort:    "test",
+		CounterPartyChannel: "test",
 	}
 
 	// create mock liquidity pool.
 	amm := NewInterchainMarketMaker(
 		&pool,
-		DefaultMaxFeeRate,
 	)
 
 	pool.PoolPrice = float32(amm.LpPrice())
@@ -187,7 +185,7 @@ func TestSingleWithdraw(t *testing.T) {
 	poolId := GetPoolId(denoms)
 	assets := []*PoolAsset{
 		{
-			Side: PoolSide_NATIVE,
+			Side: PoolAssetSide_SOURCE,
 			Balance: &types.Coin{
 				Amount: types.NewInt(20000000),
 				Denom:  denoms[0],
@@ -196,7 +194,7 @@ func TestSingleWithdraw(t *testing.T) {
 			Decimal: 6,
 		},
 		{
-			Side: PoolSide_REMOTE,
+			Side: PoolAssetSide_TARGET,
 			Balance: &types.Coin{
 				Amount: types.NewInt(1000),
 				Denom:  denoms[1],
@@ -207,22 +205,21 @@ func TestSingleWithdraw(t *testing.T) {
 	}
 
 	pool := InterchainLiquidityPool{
-		PoolId: poolId,
+		Id:     poolId,
 		Assets: assets,
 		Supply: &types.Coin{
 			Amount: types.NewInt(initialX + initialY),
 			Denom:  poolId,
 		},
-
-		Status:                PoolStatus_POOL_STATUS_READY,
-		EncounterPartyPort:    "test",
-		EncounterPartyChannel: "test",
+		SwapFee:             300,
+		Status:              PoolStatus_INITIALIZED,
+		CounterPartyPort:    "test",
+		CounterPartyChannel: "test",
 	}
 
 	// create mock liquidity pool.
 	amm := NewInterchainMarketMaker(
 		&pool,
-		DefaultMaxFeeRate,
 	)
 
 	redeem := types.NewCoin(poolId, types.NewInt(initialX+initialY))

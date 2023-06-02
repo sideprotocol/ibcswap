@@ -17,20 +17,32 @@ func (suite *KeeperTestSuite) SetupPool() (*string, error) {
 		path.EndpointA.ChannelConfig.PortID,
 		path.EndpointA.ChannelID,
 		suite.chainA.SenderAccount.GetAddress().String(),
-		"50:50",
-		[]*sdk.Coin{{
-			Denom:  sdk.DefaultBondDenom,
-			Amount: sdk.NewInt(1000),
-		}, {
-			Denom:  "bside",
-			Amount: sdk.NewInt(1000),
-		}},
-		[]uint32{10, 100},
+		suite.chainB.SenderAccount.GetAddress().String(),
+		[]byte("0"),
+		types.PoolAsset{
+			Side: types.PoolAssetSide_SOURCE,
+			Balance: &sdk.Coin{
+				Denom:  sdk.DefaultBondDenom,
+				Amount: sdk.NewInt(1000),
+			},
+			Weight:  50,
+			Decimal: 6,
+		},
+
+		types.PoolAsset{
+			Side: types.PoolAssetSide_SOURCE,
+			Balance: &sdk.Coin{
+				Denom:  sdk.DefaultBondDenom,
+				Amount: sdk.NewInt(1000),
+			},
+			Weight:  50,
+			Decimal: 6,
+		},
 	)
 
 	ctx := suite.chainA.GetContext()
 	suite.chainA.GetSimApp().InterchainSwapKeeper.OnCreatePoolAcknowledged(ctx, msg)
-	poolId := types.GetPoolIdWithTokens(msg.Tokens)
+	poolId := types.GetPoolId(msg.GetLiquidityDenoms())
 	return &poolId, nil
 }
 
@@ -45,22 +57,34 @@ func (suite *KeeperTestSuite) SetupPoolWithDenomPair(denomPair []string) (*strin
 		path.EndpointA.ChannelConfig.PortID,
 		path.EndpointA.ChannelID,
 		suite.chainA.SenderAccount.GetAddress().String(),
-		"50:50",
-		[]*sdk.Coin{{
-			Denom:  denomPair[0],
-			Amount: sdk.NewInt(1000),
-		}, {
-			Denom:  denomPair[1],
-			Amount: sdk.NewInt(1000),
-		}},
-		[]uint32{10, 100},
+		suite.chainB.SenderAccount.GetAddress().String(),
+		[]byte("0"),
+		types.PoolAsset{
+			Side: types.PoolAssetSide_SOURCE,
+			Balance: &sdk.Coin{
+				Denom:  sdk.DefaultBondDenom,
+				Amount: sdk.NewInt(1000),
+			},
+			Weight:  50,
+			Decimal: 6,
+		},
+
+		types.PoolAsset{
+			Side: types.PoolAssetSide_SOURCE,
+			Balance: &sdk.Coin{
+				Denom:  sdk.DefaultBondDenom,
+				Amount: sdk.NewInt(1000),
+			},
+			Weight:  50,
+			Decimal: 6,
+		},
 	)
 
 	ctxA := suite.chainA.GetContext()
 	suite.chainA.GetSimApp().InterchainSwapKeeper.OnCreatePoolAcknowledged(ctxA, msg)
 	ctxB := suite.chainB.GetContext()
 	suite.chainB.GetSimApp().InterchainSwapKeeper.OnCreatePoolAcknowledged(ctxB, msg)
-	poolId := types.GetPoolIdWithTokens(msg.Tokens)
+	poolId := types.GetPoolId(msg.GetLiquidityDenoms())
 	return &poolId, nil
 }
 

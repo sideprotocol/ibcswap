@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	"encoding/base64"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -14,21 +16,31 @@ import (
 
 func CmdCreatePool() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create_pool [source-port] [source-channel] [sender] [weight] [tokens] [decimals]",
+		Use:   "create-pool [source-port] [source-channel] [creator] [counterPartyCreator] [counterPartySignature] [weight] [tokens] [decimals]",
 		Short: "Broadcast message CreatePool",
-		Args:  cobra.ExactArgs(6),
+		Args:  cobra.ExactArgs(8),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			tokens, err := GetTokens(args[4])
+			sig, err := base64.StdEncoding.DecodeString(args[4])
 			if err != nil {
 				return err
 			}
 
-			decimals, err := parseDecimals(args[5])
+			weights, err := parseWeights(args[5])
+			if err != nil {
+				return err
+			}
+
+			tokens, err := GetTokens(args[6])
+			if err != nil {
+				return err
+			}
+
+			decimals, err := parseDecimals(args[7])
 			if err != nil {
 				return err
 			}
@@ -37,9 +49,20 @@ func CmdCreatePool() *cobra.Command {
 				args[0], // argSourcePort
 				args[1], // argSourceChannel
 				args[2], // argSender
-				args[3], // argWeight
-				tokens,
-				decimals,
+				args[3], // argCounterPartySender
+				sig,     // counterParty Signature
+				types.PoolAsset{
+					Side:    types.PoolAssetSide_SOURCE,
+					Balance: tokens[0],
+					Weight:  weights[0],
+					Decimal: decimals[0],
+				},
+				types.PoolAsset{
+					Side:    types.PoolAssetSide_TARGET,
+					Balance: tokens[1],
+					Weight:  weights[1],
+					Decimal: decimals[1],
+				},
 			)
 
 			packetTimeoutHeight, err1 := cmd.Flags().GetString("packet-timeout-height")
@@ -83,4 +106,27 @@ func parseDecimals(decimalsStr string) ([]uint32, error) {
 	}
 
 	return decimals, nil
+}
+
+func parseWeights(weightsStr string) ([]uint32, error) {
+	weights := strings.Split(weightsStr, ",")
+	if len(weights) != 2 {
+		return nil, fmt.Errorf("invalid weights length %v", weights)
+	}
+
+	totalWeight := 0
+	weightsAsInt := []uint32{}
+	for _, weight := range weights {
+		weightAsInt, err := strconv.Atoi(weight)
+		if err != nil || weightAsInt <= 0 {
+			return nil, fmt.Errorf("can't parse weight value %v", err)
+		}
+		totalWeight += weightAsInt
+		weightsAsInt = append(weightsAsInt, uint32(weightAsInt))
+	}
+
+	if totalWeight != 100 {
+		return nil, fmt.Errorf("weight sum has to be equal to 100 %v", totalWeight)
+	}
+	return weightsAsInt, nil
 }

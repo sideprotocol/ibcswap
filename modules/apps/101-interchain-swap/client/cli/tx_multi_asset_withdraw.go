@@ -3,11 +3,11 @@ package cli
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	"github.com/spf13/cobra"
 )
@@ -16,23 +16,20 @@ var _ = strconv.Itoa(0)
 
 func CmdMultiAssetWithdraw() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "multi_asset_withdraw [remote sender][demons(aside,bside)][pool coins]",
+		Use:   "multi_asset_withdraw [receiver] [remote sender][pool coins]",
 		Short: "Broadcast message Withdraw",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-
-			argRemoteSender := args[0]
-			argOutDenoms := args[1]
+			argSender := args[0]
+			argRemoteSender := args[1]
 			argCoin := args[2]
+
+			sdk.MustAccAddressFromBech32(argSender)
+			sdk.MustAccAddressFromBech32(argRemoteSender)
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
-			}
-
-			denoms := strings.Split(argOutDenoms, ",")
-			if len(denoms) != 2 {
-				return fmt.Errorf("invalid token length! : %d", len(denoms))
 			}
 
 			coins, err := GetTokens(argCoin)
@@ -44,10 +41,8 @@ func CmdMultiAssetWithdraw() *cobra.Command {
 			}
 
 			msg := types.NewMsgMultiAssetWithdraw(
-				clientCtx.GetFromAddress().String(),
+				argSender,
 				argRemoteSender,
-				denoms[0],
-				denoms[1],
 				coins[0],
 				coins[1],
 			)
@@ -60,7 +55,7 @@ func CmdMultiAssetWithdraw() *cobra.Command {
 			}
 
 			if err1 == nil && err2 == nil {
-				timeoutHeight, timeoutTimestamp, err := GetTimeOuts(clientCtx, pool.EncounterPartyPort, pool.EncounterPartyChannel, packetTimeoutHeight, uint64(packetTimeoutTimestamp), false)
+				timeoutHeight, timeoutTimestamp, err := GetTimeOuts(clientCtx, pool.CounterPartyPort, pool.CounterPartyChannel, packetTimeoutHeight, uint64(packetTimeoutTimestamp), false)
 
 				if err == nil {
 					msg.TimeoutHeight = timeoutHeight

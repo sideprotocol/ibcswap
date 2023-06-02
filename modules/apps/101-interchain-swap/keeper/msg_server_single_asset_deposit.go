@@ -32,31 +32,17 @@ func (k Keeper) SingleAssetDeposit(ctx context.Context, msg *types.MsgSingleAsse
 		return nil, types.ErrInvalidAmount
 	}
 
-	if pool.Status == types.PoolStatus_POOL_STATUS_INITIAL {
-		if pool.CreatorChainId == sdkCtx.ChainID() {
-			return nil, errormod.Wrapf(types.ErrInvalidInitialDeposit, "%s, creatorChainID:%s", "please deposit counter party coin to enable pool!", &pool.CreatorChainId)
-		}
-		poolAssets := k.GetInitialPoolAssets(sdkCtx, msg.PoolId)
-		ok, asset := poolAssets.Find(msg.Token.Denom)
-		if !ok {
-			return nil, types.ErrNotFoundDenomInPool
-		}
-		if !asset.Amount.Equal(msg.Token.Amount) {
-			return nil, types.ErrInvalidInitialDeposit
-		}
+	if pool.Status != types.PoolStatus_ACTIVE {
+		return nil, errormod.Wrapf(types.ErrFailedDeposit, "%s", types.ErrNotReadyForSwap)
 	}
 
 	// Deposit assets to the escrowed account
-	err = k.LockTokens(sdkCtx, pool.EncounterPartyPort, pool.EncounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Sender), sdk.NewCoins(*msg.Token))
+	err = k.LockTokens(sdkCtx, pool.CounterPartyPort, pool.CounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Sender), sdk.NewCoins(*msg.Token))
 	if err != nil {
 		return nil, errormod.Wrapf(types.ErrFailedDeposit, "%s", err)
 	}
 
-	fee := k.GetSwapFeeRate(sdkCtx)
-	amm := *types.NewInterchainMarketMaker(
-		&pool,
-		fee,
-	)
+	amm := *types.NewInterchainMarketMaker(&pool)
 
 	poolToken, err := amm.DepositSingleAsset(*msg.Token)
 	if err != nil {
@@ -85,7 +71,7 @@ func (k Keeper) SingleAssetDeposit(ctx context.Context, msg *types.MsgSingleAsse
 		timeoutStamp = msg.TimeoutTimeStamp
 	}
 
-	err = k.SendIBCSwapPacket(sdkCtx, pool.EncounterPartyPort, pool.EncounterPartyChannel, timeoutHeight, timeoutStamp, packet)
+	err = k.SendIBCSwapPacket(sdkCtx, pool.CounterPartyPort, pool.CounterPartyChannel, timeoutHeight, timeoutStamp, packet)
 	if err != nil {
 		return nil, err
 	}

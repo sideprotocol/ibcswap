@@ -2,25 +2,24 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const TypeMsgWithdraw = "withdraw"
 
 var _ sdk.Msg = &MsgMultiAssetWithdrawRequest{}
 
-func NewMsgMultiAssetWithdraw(localSender, remoteSender, localDenomOut, remoteDenomOut string, localPoolCoin *sdk.Coin, remotePoolCoin *sdk.Coin) *MsgMultiAssetWithdrawRequest {
+func NewMsgMultiAssetWithdraw(sourceSender, targetSender string, sourcePoolToken *sdk.Coin, targetPoolToken *sdk.Coin) *MsgMultiAssetWithdrawRequest {
 	return &MsgMultiAssetWithdrawRequest{
-		LocalWithdraw: &MsgSingleAssetWithdrawRequest{
-			Sender:   localSender,
-			PoolCoin: localPoolCoin,
-			DenomOut: localDenomOut,
-		},
 
-		RemoteWithdraw: &MsgSingleAssetWithdrawRequest{
-			Sender:   localSender,
-			PoolCoin: remotePoolCoin,
-			DenomOut: remoteDenomOut,
+		Withdraws: []*WithdrawAsset{
+			{
+				Receiver: sourceSender,
+				Balance:  sourcePoolToken,
+			},
+			{
+				Receiver: targetSender,
+				Balance:  targetPoolToken,
+			},
 		},
 	}
 }
@@ -34,7 +33,7 @@ func (msg *MsgMultiAssetWithdrawRequest) Type() string {
 }
 
 func (msg *MsgMultiAssetWithdrawRequest) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.LocalWithdraw.Sender)
+	creator, err := sdk.AccAddressFromBech32(msg.Withdraws[0].Receiver)
 	if err != nil {
 		panic(err)
 	}
@@ -47,22 +46,19 @@ func (msg *MsgMultiAssetWithdrawRequest) GetSignBytes() []byte {
 }
 
 func (msg *MsgMultiAssetWithdrawRequest) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.LocalWithdraw.Sender)
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)
+		return ErrInvalidAddress
 	}
 
-	_, err = sdk.AccAddressFromBech32(msg.RemoteWithdraw.Sender)
-	if err != nil {
-		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)
-	}
-
-	if msg.LocalWithdraw.PoolCoin == nil || msg.LocalWithdraw.PoolCoin.Amount.LTE(sdk.NewInt(0)) {
-		return errorsmod.Wrapf(ErrInvalidAmount, "invalid pool coin amount (%s)", msg.LocalWithdraw.PoolCoin.Amount)
-	}
-
-	if msg.RemoteWithdraw.PoolCoin == nil || msg.RemoteWithdraw.PoolCoin.Amount.LTE(sdk.NewInt(0)) {
-		return errorsmod.Wrapf(ErrInvalidAmount, "invalid pool coin amount (%s)", msg.RemoteWithdraw.PoolCoin.Amount)
+	for _, asset := range msg.Withdraws {
+		_, err := sdk.AccAddressFromBech32(asset.Receiver)
+		if err != nil {
+			return ErrInvalidAddress
+		}
+		if asset.Balance.Amount.Equal(sdk.NewInt(0)) {
+			return ErrInvalidAmount
+		}
 	}
 	return nil
 }

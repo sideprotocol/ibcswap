@@ -1,9 +1,7 @@
 package types
 
 import (
-	"github.com/btcsuite/btcutil/bech32"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const TypeMsgDoubleDeposit = "deposit"
@@ -13,14 +11,16 @@ var _ sdk.Msg = &MsgSingleAssetDepositRequest{}
 func NewMsgMultiAssetDeposit(poolId string, senders []string, tokens []*sdk.Coin, sig []byte) *MsgMultiAssetDepositRequest {
 	return &MsgMultiAssetDepositRequest{
 		PoolId: poolId,
-		LocalDeposit: &LocalDeposit{
-			Sender: senders[0],
-			Token:  tokens[0],
-		},
-		RemoteDeposit: &RemoteDeposit{
-			Sender:    senders[1],
-			Token:     tokens[1],
-			Signature: sig,
+		Deposits: []*DepositAsset{
+			{
+				Sender:  senders[0],
+				Balance: tokens[0],
+			},
+			{
+				Sender:    senders[1],
+				Balance:   tokens[1],
+				Signature: sig,
+			},
 		},
 	}
 }
@@ -35,7 +35,8 @@ func (msg *MsgMultiAssetDepositRequest) Type() string {
 
 func (msg *MsgMultiAssetDepositRequest) GetSigners() []sdk.AccAddress {
 	signers := []sdk.AccAddress{}
-	creator, err := sdk.AccAddressFromBech32(msg.LocalDeposit.Sender)
+
+	creator, err := sdk.AccAddressFromBech32(msg.Deposits[0].Sender)
 	if err != nil {
 		panic(err)
 	}
@@ -49,23 +50,15 @@ func (msg *MsgMultiAssetDepositRequest) GetSignBytes() []byte {
 }
 
 func (msg *MsgMultiAssetDepositRequest) ValidateBasic() error {
-
 	// Check address
-	_, err := sdk.AccAddressFromBech32(msg.LocalDeposit.Sender)
-	if err != nil {
-		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)
-	}
-
-	senderPrefix, _, err := bech32.Decode(msg.LocalDeposit.Sender)
-	if err != nil {
-		return err
-	}
-	if sdk.GetConfig().GetBech32AccountAddrPrefix() != senderPrefix {
-		return errorsmod.ErrInvalidAddress
-	}
-	_, err = sdk.AccAddressFromBech32(msg.RemoteDeposit.Sender)
-	if err != nil {
-		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)
+	for _, deposit := range msg.Deposits {
+		_, err := sdk.AccAddressFromBech32(deposit.Sender)
+		if err != nil {
+			return ErrInvalidAddress
+		}
+		if deposit.Balance.Amount.Equal(sdk.NewInt(0)) {
+			return ErrInvalidAmount
+		}
 	}
 	return nil
 }

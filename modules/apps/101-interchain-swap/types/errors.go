@@ -24,7 +24,9 @@ var (
 	//relevant for pool
 	ErrNotFoundDenomInPool = errorsmod.Register(ModuleName, 1509, "not find denom in the pool")
 	ErrInvalidDenomPair    = errorsmod.Register(ModuleName, 1510, "invalid denom pair")
+	ErrInvalidDecimal      = errorsmod.Register(ModuleName, 1551, "invalid decimal")
 	ErrInvalidDecimalPair  = errorsmod.Register(ModuleName, 1511, "invalid decimal pair")
+	ErrInvalidWeight       = errorsmod.Register(ModuleName, 1552, "invalid weight pair")
 	ErrInvalidWeightPair   = errorsmod.Register(ModuleName, 1512, "invalid weight pair")
 	ErrEmptyDenom          = errorsmod.Register(ModuleName, 1513, "dropped denom")
 	ErrInvalidSlippage     = errorsmod.Register(ModuleName, 1514, "invalid slippage")
@@ -70,4 +72,5 @@ var (
 	ErrInvalidMessage              = errorsmod.Register(ModuleName, 1547, "invalid message")
 	ErrInEnoughAmount              = errorsmod.Register(ModuleName, 1548, "invalid enough amount")
 	ErrInvalidPairRatio            = errorsmod.Register(ModuleName, 1549, "invalid ratio of inputted tokens")
+	ErrInvalidLiquidity            = errorsmod.Register(ModuleName, 1554, "doesn't exist this denom in the chain")
 )

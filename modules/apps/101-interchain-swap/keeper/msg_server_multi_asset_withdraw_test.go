@@ -49,14 +49,14 @@ func (suite *KeeperTestSuite) TestMsgWithdraw() {
 		{
 			"invalid address",
 			func() {
-				msg.LocalWithdraw.Sender = "invalid address"
+				msg.Sender = "invalid address"
 			},
 			false,
 		},
 		{
 			"invalid amount",
 			func() {
-				msg.LocalWithdraw.Sender = sample.AccAddress()
+				msg.Sender = sample.AccAddress()
 			},
 			false,
 		},
@@ -73,8 +73,6 @@ func (suite *KeeperTestSuite) TestMsgWithdraw() {
 		msg = types.NewMsgMultiAssetWithdraw(
 			suite.chainA.SenderAccount.GetAddress().String(),
 			suite.chainB.SenderAccount.GetAddress().String(),
-			sdk.DefaultBondDenom,
-			sdk.DefaultBondDenom,
 			&coin,
 			&coin,
 		)

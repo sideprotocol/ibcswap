@@ -13,7 +13,7 @@ func (k Keeper) SetInterchainLiquidityPool(ctx sdk.Context, interchainLiquidityP
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InterchainLiquidityPoolKeyPrefix))
 	b := k.cdc.MustMarshal(&interchainLiquidityPool)
 	store.Set(types.InterchainLiquidityPoolKey(
-		interchainLiquidityPool.PoolId,
+		interchainLiquidityPool.Id,
 	), b)
 }
 

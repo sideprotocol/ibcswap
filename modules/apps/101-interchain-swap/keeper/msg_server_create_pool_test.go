@@ -33,15 +33,27 @@ func (suite *KeeperTestSuite) TestMsgCreatePool() {
 			path.EndpointA.ChannelConfig.PortID,
 			path.EndpointA.ChannelID,
 			suite.chainA.SenderAccount.GetAddress().String(),
-			"50:50",
-			[]*sdk.Coin{{
-				Denom:  sdk.DefaultBondDenom,
-				Amount: sdk.NewInt(1000),
-			}, {
-				Denom:  "bside",
-				Amount: sdk.NewInt(1000),
-			}},
-			[]uint32{6, 6},
+			suite.chainB.SenderAccount.GetAddress().String(),
+			[]byte("0"),
+			types.PoolAsset{
+				Side: types.PoolAssetSide_SOURCE,
+				Balance: &sdk.Coin{
+					Denom:  sdk.DefaultBondDenom,
+					Amount: sdk.NewInt(1000),
+				},
+				Weight:  50,
+				Decimal: 6,
+			},
+
+			types.PoolAsset{
+				Side: types.PoolAssetSide_SOURCE,
+				Balance: &sdk.Coin{
+					Denom:  sdk.DefaultBondDenom,
+					Amount: sdk.NewInt(1000),
+				},
+				Weight:  50,
+				Decimal: 6,
+			},
 		)
 		msgSrv := keeper.NewMsgServerImpl(suite.chainA.GetSimApp().InterchainSwapKeeper)
 		res, err := msgSrv.CreatePool(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)

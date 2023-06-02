@@ -100,10 +100,10 @@ func (suite *KeeperTestSuite) TestMsgDoubleDeposit() {
 
 	nonce := suite.chainB.SenderAccount.GetSequence()
 
-	remoteDepositTx := types.RemoteDeposit{
+	remoteDepositTx := types.DepositSignature{
 		Sequence: nonce,
 		Sender:   suite.chainB.SenderAccount.GetAddress().String(),
-		Token:    &sdk.Coin{Denom: denomPair[1], Amount: sdk.NewInt(1000)},
+		Balance:  &sdk.Coin{Denom: denomPair[1], Amount: sdk.NewInt(1000)},
 	}
 
 	rawDepositTx := types.ModuleCdc.MustMarshal(&remoteDepositTx)

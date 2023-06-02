@@ -50,7 +50,7 @@ func CmdMultiAssetDeposit() *cobra.Command {
 			}
 
 			if err1 == nil && err2 == nil {
-				timeoutHeight, timeoutTimestamp, err := GetTimeOuts(clientCtx, pool.EncounterPartyPort, pool.EncounterPartyChannel, packetTimeoutHeight, uint64(packetTimeoutTimestamp), false)
+				timeoutHeight, timeoutTimestamp, err := GetTimeOuts(clientCtx, pool.CounterPartyPort, pool.CounterPartyChannel, packetTimeoutHeight, uint64(packetTimeoutTimestamp), false)
 				fmt.Println("Timeout Height:", timeoutHeight)
 				fmt.Println("Timeout Timestamp:", timeoutTimestamp)
 				fmt.Println("Timeouts Err:", err)
