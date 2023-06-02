@@ -29,7 +29,8 @@ message MsgCreatePoolRequest {
            string creator        = 3;
            string counterPartyCreator = 4;
   repeated PoolAsset liquidity = 5;
-           bytes  counterPartySig = 6;
+           uint32 swapFee = 6;
+          bytes  counterPartySig = 7;
            ibc.core.client.v1.Height timeoutHeight = 8 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
            uint64 timeoutTimeStamp  = 9;           
 }
