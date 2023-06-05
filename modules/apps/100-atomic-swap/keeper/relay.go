@@ -94,7 +94,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 			return nil, err
 		}
 
-		orderId, err := k.OnReceivedMake(ctx, packet, &msg)
+		orderId, err := k.OnReceivedMake(ctx, packet, data.OrderId, &msg)
 		if err != nil {
 			return nil, err
 		}

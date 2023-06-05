@@ -23,6 +23,7 @@ enum SwapMessageType {
 message AtomicSwapPacketData {
   SwapMessageType   type = 1;
   bytes  data = 2;
-  string memo = 3;
+  string orderId = 3;
+  string memo = 4;
 }
 

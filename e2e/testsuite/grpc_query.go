@@ -7,6 +7,7 @@ import (
 	govtypesbeta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	intertxtypes "github.com/cosmos/interchain-accounts/x/inter-tx/types"
 	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	atomicswaptypes "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 	"github.com/strangelove-ventures/ibctest/v6/chain/cosmos"
 	"github.com/strangelove-ventures/ibctest/v6/ibc"
 
@@ -172,6 +173,20 @@ func (s *E2ETestSuite) QueryInterchainswapPool(ctx context.Context, chain ibc.Ch
 		&types.QueryGetInterchainLiquidityPoolRequest{
 			PoolId: poolID,
 		},
+	)
+
+	if err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
+// QueryClientStatus queries the status of the client by clientID
+func (s *E2ETestSuite) QueryAtomicswapOrders(ctx context.Context, chain ibc.Chain) (*atomicswaptypes.QueryOrdersResponse, error) {
+	queryClient := s.GetChainGRCPClients(chain).AtomicQueryClient
+	res, err := queryClient.Orders(
+		ctx,
+		&atomicswaptypes.QueryOrdersRequest{},
 	)
 
 	if err != nil {

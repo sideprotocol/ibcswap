@@ -38,6 +38,7 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	atomicswaptypes "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
 	interchainswaptypes "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
@@ -87,6 +88,8 @@ type GRPCClients struct {
 	ParamsQueryClient paramsproposaltypes.QueryClient
 	AuthQueryClient   authtypes.QueryClient
 
+	//
+	AtomicQueryClient atomicswaptypes.QueryClient
 	// Interchainswap clients
 	InterchainQueryClient interchainswaptypes.QueryClient
 
@@ -421,6 +424,7 @@ func (s *E2ETestSuite) initGRPCClients(chain *cosmos.CosmosChain) {
 		ParamsQueryClient:     paramsproposaltypes.NewQueryClient(grpcConn),
 		AuthQueryClient:       authtypes.NewQueryClient(grpcConn),
 		InterchainQueryClient: interchainswaptypes.NewQueryClient(grpcConn),
+		AtomicQueryClient:     atomicswaptypes.NewQueryClient(grpcConn),
 		BankQueryClient:       banktypes.NewQueryClient(grpcConn),
 		AccountQueryClient:    authtypes.NewQueryClient(grpcConn),
 	}
