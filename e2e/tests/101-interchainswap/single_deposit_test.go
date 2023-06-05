@@ -62,23 +62,48 @@ func (s *InterchainswapTestSuite) TestSingleDepositStatus() {
 	const initialY = 1000      // ETH
 	//const fee = 300
 
+	// make force transaction to set pub key
+	err = s.SendCoins(ctx, chainB, chainBWallet, chainAAddress, sdk.NewCoins(sdk.NewCoin(
+		chainBDenom, sdk.NewInt(10),
+	)))
+	s.Require().NoError(err)
+
 	t.Run("start relayer", func(t *testing.T) {
 		s.StartRelayer(relayer)
 	})
 
 	t.Run("send create pool message", func(t *testing.T) {
+		depositSignMsg := types.DepositSignature{
+			Sender:   chainBAddress,
+			Balance:  &sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
+			Sequence: 1,
+		}
+
+		rawDepositMsg, err := types.ModuleCdc.Marshal(&depositSignMsg)
+		s.Require().NoError(err)
+		signature, err := priv.Sign(rawDepositMsg)
+		s.Require().NoError(err)
+
 		msg := types.NewMsgCreatePool(
 			channelA.PortID,
 			channelA.ChannelID,
 			chainAAddress,
-			"50:50",
-			[]*sdk.Coin{
-				{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
-				{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
+			chainBAddress,
+			signature,
+			types.PoolAsset{
+				Side:    types.PoolAssetSide_SOURCE,
+				Balance: &sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
+				Weight:  50,
+				Decimal: 6,
 			},
-			[]uint32{6, 6},
+			types.PoolAsset{
+				Side:    types.PoolAssetSide_TARGET,
+				Balance: &sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
+				Weight:  50,
+				Decimal: 6,
+			},
+			300,
 		)
-
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
 		s.AssertValidTxResponse(resp)
 		s.Require().NoError(err)
@@ -88,22 +113,22 @@ func (s *InterchainswapTestSuite) TestSingleDepositStatus() {
 		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
 
 		// check pool info in chainA and chainB
-		poolId := types.GetPoolIdWithTokens(msg.Tokens)
+		poolId := types.GetPoolId(msg.GetLiquidityDenoms())
 		poolARes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
 		s.Require().NoError(err)
 		poolAInfo := poolARes.InterchainLiquidityPool
 
 		// check pool info sync status.
 
-		s.Require().EqualValues(msg.SourceChannel, poolAInfo.EncounterPartyChannel)
-		s.Require().EqualValues(msg.SourcePort, poolAInfo.EncounterPartyPort)
+		s.Require().EqualValues(msg.SourceChannel, poolAInfo.CounterPartyChannel)
+		s.Require().EqualValues(msg.SourcePort, poolAInfo.CounterPartyPort)
 		//s.Require().EqualValues(msg.Tokens[0].Amount, poolAInfo.Supply.Amount)
 
 		poolBRes, err := s.QueryInterchainswapPool(ctx, chainB, poolId)
 		s.Require().NoError(err)
 		poolBInfo := poolBRes.InterchainLiquidityPool
-		s.Require().EqualValues(msg.SourceChannel, poolBInfo.EncounterPartyChannel)
-		s.Require().EqualValues(msg.SourcePort, poolBInfo.EncounterPartyPort)
+		s.Require().EqualValues(msg.SourceChannel, poolBInfo.CounterPartyChannel)
+		s.Require().EqualValues(msg.SourcePort, poolBInfo.CounterPartyPort)
 		//s.Require().EqualValues(msg.Tokens[1].Amount, poolBInfo.Supply.Amount)
 
 		fmt.Println(poolAInfo)
@@ -117,7 +142,7 @@ func (s *InterchainswapTestSuite) TestSingleDepositStatus() {
 		s.Require().EqualValues(poolAInfo.Assets[1].Balance.Amount, poolBInfo.Assets[1].Balance.Amount)
 	})
 
-	t.Run("send deposit message (enable pool)", func(t *testing.T) {
+	t.Run("send deposit message", func(t *testing.T) {
 
 		// check the balance of the chainA account.
 		beforeDeposit, err := s.QueryBalance(ctx, chainB, chainBAddress, chainBDenom)
@@ -150,12 +175,12 @@ func (s *InterchainswapTestSuite) TestSingleDepositStatus() {
 		poolResInChainA, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
 		s.Require().NoError(err)
 		poolInChainA := poolResInChainA.InterchainLiquidityPool
-		s.Require().Equal(types.PoolStatus_POOL_STATUS_READY, poolInChainA.Status)
+		s.Require().Equal(types.PoolStatus_ACTIVE, poolInChainA.Status)
 
 		poolResInChainB, err := s.QueryInterchainswapPool(ctx, chainB, poolId)
 		s.Require().NoError(err)
 		poolInChainB := poolResInChainB.InterchainLiquidityPool
-		s.Require().Equal(types.PoolStatus_POOL_STATUS_READY, poolInChainB.Status)
+		s.Require().Equal(types.PoolStatus_ACTIVE, poolInChainB.Status)
 
 		logger.CleanLog("Send Deposit(After):PoolA", poolInChainA)
 		logger.CleanLog("Send Deposit(After):PoolB", poolInChainB)
@@ -212,44 +237,12 @@ func (s *InterchainswapTestSuite) TestSingleDepositStatus() {
 			poolRes, err := s.QueryInterchainswapPool(ctx, chain, poolId)
 			s.Require().NoError(err)
 
-			amm := types.NewInterchainMarketMaker(&poolRes.InterchainLiquidityPool, types.DefaultMaxFeeRate)
+			amm := types.NewInterchainMarketMaker(&poolRes.InterchainLiquidityPool)
 
 			lp, err := amm.DepositSingleAsset(depositCoin)
 			logger.CleanLog("lp price:", poolRes.InterchainLiquidityPool.PoolPrice)
 			logger.CleanLog("deposit error", err)
 			logger.CleanLog("lp amount", lp)
-
-			// msg := types.NewMsgSingleAssetDeposit(
-			// 	poolId,
-			// 	sender,
-			// 	&depositCoin,
-			// )
-			// resp, err := s.BroadcastMessages(ctx, chain, signer, msg)
-			// s.AssertValidTxResponse(resp)
-			// s.Require().NoError(err)
-
-			// balanceRes, err := s.QueryBalance(ctx, chain, sender, denom)
-			// s.Require().NoError(err)
-			// expectedBalance := balanceRes.Balance.Add(depositCoin)
-			// s.Require().Equal(expectedBalance.Denom, beforeDeposit.Balance.Denom)
-			// s.Require().Equal(expectedBalance.Amount, beforeDeposit.Balance.Amount)
-
-			// // // check packet relayed or not.
-			// test.WaitForBlocks(ctx, 15, chainA, chainB)
-			// //s.AssertPacketRelayed(ctx, chainB, channelB.PortID, channelB.ChannelID, 2)
-
-			// poolResInChainA, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
-			// s.Require().NoError(err)
-			// poolInChainA := poolResInChainA.InterchainLiquidityPool
-			// s.Require().Equal(types.PoolStatus_POOL_STATUS_READY, poolInChainA.Status)
-
-			// poolResInChainB, err := s.QueryInterchainswapPool(ctx, chainB, poolId)
-			// s.Require().NoError(err)
-			// poolInChainB := poolResInChainB.InterchainLiquidityPool
-			// s.Require().Equal(types.PoolStatus_POOL_STATUS_READY, poolInChainB.Status)
-
-			// logger.CleanLog(tc.name+"=> Send Deposit(After):PoolA", poolInChainA)
-			// logger.CleanLog(tc.name+"=> Send Deposit(After):PoolB", poolInChainB)
 		}
 
 	})
