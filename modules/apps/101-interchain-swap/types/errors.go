@@ -24,7 +24,9 @@ var (
 	//relevant for pool
 	ErrNotFoundDenomInPool = errorsmod.Register(ModuleName, 1509, "not find denom in the pool")
 	ErrInvalidDenomPair    = errorsmod.Register(ModuleName, 1510, "invalid denom pair")
+	ErrInvalidDecimal      = errorsmod.Register(ModuleName, 1551, "invalid decimal")
 	ErrInvalidDecimalPair  = errorsmod.Register(ModuleName, 1511, "invalid decimal pair")
+	ErrInvalidWeight       = errorsmod.Register(ModuleName, 1552, "invalid weight pair")
 	ErrInvalidWeightPair   = errorsmod.Register(ModuleName, 1512, "invalid weight pair")
 	ErrEmptyDenom          = errorsmod.Register(ModuleName, 1513, "dropped denom")
 	ErrInvalidSlippage     = errorsmod.Register(ModuleName, 1514, "invalid slippage")
@@ -55,6 +57,7 @@ var (
 	ErrEmptyInitialLiquidity          = errorsmod.Register(ModuleName, 1533, "creator don't have liquidity!")
 	ErrIncorrectInitialLiquidityDenom = errorsmod.Register(ModuleName, 1534, "initial liquidity denom has to match with one of pool denom pair")
 	ErrInvalidSwapType                = errorsmod.Register(ModuleName, 1535, "invalid swap type!")
+	ErrInvalidSwapFee                = errorsmod.Register(ModuleName, 1556, "invalid swap Fee!")
 
 	ErrInvalidDenom          = errorsmod.Register(ModuleName, 1536, "invalid denom")
 	ErrInvalidAddressPair    = errorsmod.Register(ModuleName, 1537, "invalid address pair!")
@@ -70,4 +73,5 @@ var (
 	ErrInvalidMessage              = errorsmod.Register(ModuleName, 1547, "invalid message")
 	ErrInEnoughAmount              = errorsmod.Register(ModuleName, 1548, "invalid enough amount")
 	ErrInvalidPairRatio            = errorsmod.Register(ModuleName, 1549, "invalid ratio of inputted tokens")
+	ErrInvalidLiquidity            = errorsmod.Register(ModuleName, 1554, "doesn't exist this denom in the chain")
 )

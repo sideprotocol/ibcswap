@@ -18,104 +18,148 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid address",
 			msg: MsgCreatePoolRequest{
-				Sender:        "invalid_address",
-				SourcePort:    "interchainswap",
-				SourceChannel: "interchainswap-1",
-				Weight:        "50:50",
-				Tokens: []*sdk.Coin{{
-					Denom:  "aside",
-					Amount: sdk.NewInt(1000),
-				}, {
-					Denom:  "bside",
-					Amount: sdk.NewInt(1000),
-				}},
-				Decimals: []uint32{10, 10},
+				Creator:             "invalid_address",
+				CounterPartyCreator: "invalid_address",
+				SourcePort:          "interchainswap",
+				SourceChannel:       "interchainswap-1",
+				Liquidity: []*PoolAsset{
+					{
+						Balance: &sdk.Coin{
+							Denom:  "aside",
+							Amount: sdk.NewInt(1000),
+						},
+						Weight:  50,
+						Decimal: 6,
+					},
+					{
+						Balance: &sdk.Coin{
+							Denom:  "bside",
+							Amount: sdk.NewInt(1000),
+						},
+						Weight:  50,
+						Decimal: 6,
+					},
+				},
 			},
 			err: ErrInvalidAddress,
 		},
 		{
 			name: "valid address",
 			msg: MsgCreatePoolRequest{
-				Sender:        sample.AccAddress(),
-				SourcePort:    "interchainswap",
-				SourceChannel: "interchainswap-1",
-				Weight:        "50:50",
-				Tokens: []*sdk.Coin{{
-					Denom:  "aside",
-					Amount: sdk.NewInt(1000),
-				}, {
-					Denom:  "bside",
-					Amount: sdk.NewInt(1000),
-				}},
-				Decimals: []uint32{10, 10},
+				Creator:             sample.AccAddress(),
+				CounterPartyCreator: sample.AccAddress(),
+				SourcePort:          "interchainswap",
+				SourceChannel:       "interchainswap-1",
+				Liquidity: []*PoolAsset{
+					{
+						Balance: &sdk.Coin{
+							Denom:  "aside",
+							Amount: sdk.NewInt(1000),
+						},
+						Weight:  50,
+						Decimal: 6,
+					},
+					{
+						Balance: &sdk.Coin{
+							Denom:  "bside",
+							Amount: sdk.NewInt(1000),
+						},
+						Weight:  50,
+						Decimal: 6,
+					},
+				},
 			},
 		},
 		{
 			name: "invalid denom length",
 			msg: MsgCreatePoolRequest{
-				Sender:        sample.AccAddress(),
-				SourcePort:    "interchainswap",
-				SourceChannel: "interchainswap-1",
-				Weight:        "50:50",
-				Tokens: []*sdk.Coin{{
-					Denom:  "aside",
-					Amount: sdk.NewInt(1000),
-				}},
-				Decimals: []uint32{10, 10},
+				Creator:             sample.AccAddress(),
+				CounterPartyCreator: sample.AccAddress(),
+				SourcePort:          "interchainswap",
+				SourceChannel:       "interchainswap-1",
+				Liquidity: []*PoolAsset{
+					{
+						Balance: &sdk.Coin{
+							Denom:  "aside",
+							Amount: sdk.NewInt(1000),
+						},
+						Weight:  20,
+						Decimal: 6,
+					},
+					{
+						Balance: &sdk.Coin{
+							Denom:  "bside",
+							Amount: sdk.NewInt(1000),
+						},
+						Weight:  50,
+						Decimal: 6,
+					},
+				},
 			},
 			err: ErrInvalidDenomPair,
 		},
 		{
 			name: "invalid decimal pair",
 			msg: MsgCreatePoolRequest{
-				Sender:        sample.AccAddress(),
-				SourcePort:    "interchainswap",
-				SourceChannel: "interchainswap-1",
-				Weight:        "50:50",
-				Tokens: []*sdk.Coin{{
-					Denom:  "aside",
-					Amount: sdk.NewInt(1000),
-				}, {
-					Denom:  "bside",
-					Amount: sdk.NewInt(1000),
-				}},
-				Decimals: []uint32{10},
+				Creator:             sample.AccAddress(),
+				CounterPartyCreator: sample.AccAddress(),
+				SourcePort:          "interchainswap",
+				SourceChannel:       "interchainswap-1",
+				Liquidity: []*PoolAsset{
+					{
+						Balance: &sdk.Coin{
+							Denom:  "aside",
+							Amount: sdk.NewInt(1000),
+						},
+						Weight:  50,
+						Decimal: 6,
+					},
+					{
+						Balance: &sdk.Coin{
+							Denom:  "bside",
+							Amount: sdk.NewInt(1000),
+						},
+						Weight:  50,
+						Decimal: 20,
+					},
+				},
 			},
 			err: ErrInvalidDecimalPair,
 		},
-		{
-			name: "invalid weight type",
-			msg: MsgCreatePoolRequest{
-				Sender:        sample.AccAddress(),
-				SourcePort:    "interchainswap",
-				SourceChannel: "interchainswap-1",
-				Weight:        "3df:50",
-				Tokens: []*sdk.Coin{{
-					Denom:  "aside",
-					Amount: sdk.NewInt(1000),
-				}, {
-					Denom:  "bside",
-					Amount: sdk.NewInt(1000),
-				}},
-				Decimals: []uint32{10, 10},
-			},
-			err: ErrInvalidWeightPair,
-		},
+
 		{
 			name: "invalid weight length",
 			msg: MsgCreatePoolRequest{
-				Sender:        sample.AccAddress(),
-				SourcePort:    "interchainswap",
-				SourceChannel: "interchainswap-1",
-				Weight:        "50:50:30",
-				Tokens: []*sdk.Coin{{
-					Denom:  "aside",
-					Amount: sdk.NewInt(1000),
-				}, {
-					Denom:  "bside",
-					Amount: sdk.NewInt(1000),
-				}},
-				Decimals: []uint32{10, 10},
+				Creator:             sample.AccAddress(),
+				CounterPartyCreator: sample.AccAddress(),
+				SourcePort:          "interchainswap",
+				SourceChannel:       "interchainswap-1",
+				Liquidity: []*PoolAsset{
+					{
+						Balance: &sdk.Coin{
+							Denom:  "aside",
+							Amount: sdk.NewInt(1000),
+						},
+						Weight:  50,
+						Decimal: 6,
+					},
+					{
+						Balance: &sdk.Coin{
+							Denom:  "bside",
+							Amount: sdk.NewInt(1000),
+						},
+						Weight:  50,
+						Decimal: 6,
+					},
+					{
+						Balance: &sdk.Coin{
+							Denom:  "bside",
+							Amount: sdk.NewInt(1000),
+						},
+						Weight:  50,
+						Decimal: 6,
+					},
+				},
 			},
 			err: ErrInvalidWeightPair,
 		},

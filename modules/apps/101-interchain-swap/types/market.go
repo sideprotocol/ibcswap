@@ -3,8 +3,6 @@ package types
 import (
 	"fmt"
 	math "math"
-	"strconv"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -13,64 +11,40 @@ import (
 func NewInterchainLiquidityPool(
 	ctx types.Context,
 	creator string,
-	chainId string,
 	store BankKeeper,
-	tokens []*types.Coin,
-	decimals []uint32,
-	weight string,
+	poolId string,
+	assets []*PoolAsset,
+	swapFee uint32,
 	portId string,
 	channelId string,
+
 ) *InterchainLiquidityPool {
 
-	//generate poolId
-	poolId := GetPoolIdWithTokens(tokens)
-
-	weights := strings.Split(weight, ":")
-	weightSize := len(weights)
-	denomSize := len(tokens)
-	decimalSize := len(decimals)
-	assets := []*PoolAsset{}
-
-	if denomSize == weightSize && decimalSize == weightSize {
-		for index, token := range tokens {
-			side := PoolSide_NATIVE
-			if !store.HasSupply(ctx, token.Denom) {
-				side = PoolSide_REMOTE
-			}
-			weight, _ := strconv.ParseUint(weights[index], 10, 32)
-			asset := PoolAsset{
-				Side:    side,
-				Balance: token,
-				Weight:  uint32(weight),
-				Decimal: decimals[index],
-			}
-			assets = append(assets, &asset)
-		}
-	} else {
-		return nil
+	initialLiquidity := types.NewInt(0)
+	for _, asset := range assets {
+		initialLiquidity = initialLiquidity.Add(asset.Balance.Amount)
 	}
 
 	pool := InterchainLiquidityPool{
-		PoolId:         poolId,
-		Creator:        creator,
-		Assets:         assets,
-		CreatorChainId: chainId,
+		Id:      poolId,
+		Creator: creator,
+		Assets:  assets,
 		Supply: &types.Coin{
-			Amount: types.NewInt(0),
 			Denom:  poolId,
+			Amount: initialLiquidity,
 		},
-		Status:    PoolStatus_POOL_STATUS_INITIAL,
-		PoolPrice: 0,
-
-		EncounterPartyPort:    portId,
-		EncounterPartyChannel: channelId,
+		Status:              PoolStatus_INITIALIZED,
+		PoolPrice:           0,
+		CounterPartyPort:    portId,
+		CounterPartyChannel: channelId,
+		SwapFee:             swapFee,
 	}
 	return &pool
 }
 
 // find pool asset by denom
 func (ilp *InterchainLiquidityPool) SetSupply(amount types.Int) {
-	ilp.Supply = &types.Coin{Denom: ilp.PoolId, Amount: amount}
+	ilp.Supply = &types.Coin{Denom: ilp.Id, Amount: amount}
 }
 
 // find pool asset by denom
@@ -83,8 +57,18 @@ func (ilp *InterchainLiquidityPool) FindAssetByDenom(denom string) (*PoolAsset, 
 	return nil, ErrNotFoundDenomInPool
 }
 
+// find pool asset by denom
+func (ilp *InterchainLiquidityPool) FindDenomBySide(side PoolAssetSide) (*string, error) {
+	for _, asset := range ilp.Assets {
+		if asset.Side == side {
+			return &asset.Balance.Denom, nil
+		}
+	}
+	return nil, ErrNotFoundDenomInPool
+}
+
 // update denom
-func (ilp *InterchainLiquidityPool) UpdateAssetPoolSide(denom string, side PoolSide) (*PoolAsset, error) {
+func (ilp *InterchainLiquidityPool) UpdateAssetPoolSide(denom string, side PoolAssetSide) (*PoolAsset, error) {
 	for index, asset := range ilp.Assets {
 		if asset.Balance.Denom == denom {
 			ilp.Assets[index].Side = side
@@ -120,7 +104,7 @@ func (ilp *InterchainLiquidityPool) SubtractAsset(token types.Coin) (*types.Coin
 
 // Increase pool suppy
 func (ilp *InterchainLiquidityPool) AddPoolSupply(token types.Coin) error {
-	if token.Denom != ilp.PoolId {
+	if token.Denom != ilp.Id {
 		return ErrInvalidDenom
 	}
 	updatedCoin := ilp.Supply.Add(token)
@@ -130,7 +114,7 @@ func (ilp *InterchainLiquidityPool) AddPoolSupply(token types.Coin) error {
 
 // Decrease pool suppy
 func (ilp *InterchainLiquidityPool) SubtractPoolSupply(token types.Coin) error {
-	if token.Denom != ilp.PoolId {
+	if token.Denom != ilp.Id {
 		return ErrInvalidDenom
 	}
 	updatedCoin := ilp.Supply.Sub(token)
@@ -161,11 +145,9 @@ func (ilp *InterchainLiquidityPool) SumOfPoolAssets() types.Int {
 // Create new market maker
 func NewInterchainMarketMaker(
 	pool *InterchainLiquidityPool,
-	feeRate uint32,
 ) *InterchainMarketMaker {
 	return &InterchainMarketMaker{
-		Pool:    pool,
-		FeeRate: feeRate,
+		Pool: pool,
 	}
 }
 
@@ -209,13 +191,8 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 	}
 
 	var issueAmount types.Int
-
-	if imm.Pool.Status == PoolStatus_POOL_STATUS_INITIAL {
-		totalInitialLpAmount := types.NewInt(0)
-		for _, asset := range imm.Pool.Assets {
-			totalInitialLpAmount = totalInitialLpAmount.Add(asset.Balance.Amount)
-		}
-		issueAmount = totalInitialLpAmount
+	if imm.Pool.Status != PoolStatus_ACTIVE {
+		return nil, err
 	} else {
 
 		weight := float64(asset.Weight) / 100
@@ -239,14 +216,9 @@ func (imm *InterchainMarketMaker) DepositMultiAsset(tokens []*types.Coin) ([]*ty
 		if err != nil {
 			return nil, err
 		}
-
 		var issueAmount types.Int
-		if imm.Pool.Status == PoolStatus_POOL_STATUS_INITIAL {
-			totalInitialLpAmount := types.NewInt(0)
-			for _, asset := range imm.Pool.Assets {
-				totalInitialLpAmount = totalInitialLpAmount.Add(asset.Balance.Amount)
-			}
-			issueAmount = totalInitialLpAmount
+		if imm.Pool.Status == PoolStatus_INITIALIZED {
+			issueAmount = asset.Balance.Amount
 		} else {
 			ratio := float64(token.Amount.Int64()) / float64(asset.Balance.Amount.Int64()) * Multiplier
 			issueAmount = imm.Pool.Supply.Amount.Mul(types.NewInt(int64(ratio))).Quo(types.NewInt(Multiplier))
@@ -269,12 +241,9 @@ func (imm *InterchainMarketMaker) SingleWithdraw(redeem types.Coin, denomOut str
 	if err != nil {
 		return nil, err
 	}
-	err = asset.Balance.Validate()
-	if err != nil {
-		return nil, err
-	}
-	// if imm.Pool.Status != PoolStatus_POOL_STATUS_READY {
-	// 	return nil, fmt.Errorf("not ready for swap")
+	// err = asset.Balance.Validate()
+	// if err != nil {
+	// 	return nil, err
 	// }
 
 	if redeem.Amount.GT(imm.Pool.Supply.Amount) {
@@ -285,10 +254,11 @@ func (imm *InterchainMarketMaker) SingleWithdraw(redeem types.Coin, denomOut str
 		return nil, fmt.Errorf("invalid denom pair")
 	}
 
+	w := float64(asset.Weight) / 100
 	ratio := imm.Pool.Supply.Amount.Sub(redeem.Amount).Mul(types.NewInt(Multiplier)).Quo(imm.Pool.Supply.Amount)
 	ratioFloat := float64(ratio.Int64()) / Multiplier
 
-	exponent := 1 / float64(asset.Weight)
+	exponent := 1 / w
 	factor := (1 - math.Pow(ratioFloat, exponent)) * Multiplier
 	amountOut := asset.Balance.Amount.Mul(types.NewInt(int64(factor))).Quo(types.NewInt(Multiplier))
 	return &types.Coin{
@@ -382,7 +352,7 @@ func (imm *InterchainMarketMaker) RightSwap(amountIn types.Coin, amountOut types
 
 func (imm *InterchainMarketMaker) MinusFees(amount types.Int) types.Dec {
 	amountDec := types.NewDecFromInt(amount)
-	feeRate := types.NewDec(int64(imm.FeeRate)).Quo(types.NewDec(10000))
+	feeRate := types.NewDec(int64(imm.Pool.SwapFee)).Quo(types.NewDec(10000))
 	fees := amountDec.Mul(feeRate)
 	amountMinusFees := amountDec.Sub(fees)
 	return amountMinusFees

@@ -53,19 +53,33 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 			"successful transfer creat pool request",
 			func() {
 				suite.coordinator.CreateChannels(path)
+
 				msg := types.NewMsgCreatePool(
 					path.EndpointA.ChannelConfig.PortID,
 					path.EndpointA.ChannelID,
 					suite.chainA.SenderAccount.GetAddress().String(),
-					"1:2",
-					[]*sdk.Coin{{
-						Denom:  sdk.DefaultBondDenom,
-						Amount: sdk.NewInt(1000),
-					}, {
-						Denom:  "bside",
-						Amount: sdk.NewInt(1000),
-					}},
-					[]uint32{10, 100},
+					suite.chainB.SenderAccount.GetAddress().String(),
+					[]byte("0"),
+					types.PoolAsset{
+						Side: types.PoolAssetSide_SOURCE,
+						Balance: &sdk.Coin{
+							Denom:  sdk.DefaultBondDenom,
+							Amount: sdk.NewInt(1000),
+						},
+						Weight:  50,
+						Decimal: 6,
+					},
+
+					types.PoolAsset{
+						Side: types.PoolAssetSide_SOURCE,
+						Balance: &sdk.Coin{
+							Denom:  sdk.DefaultBondDenom,
+							Amount: sdk.NewInt(1000),
+						},
+						Weight:  50,
+						Decimal: 6,
+					},
+					300,
 				)
 
 				msgbyte, err = types.ModuleCdc.Marshal(msg)
@@ -91,10 +105,9 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 			func() {
 				suite.coordinator.CreateChannels(path)
 				msg := types.NewMsgMultiAssetWithdraw(
+					types.GetPoolId([]string{sdk.DefaultBondDenom, sdk.DefaultBondDenom}),
 					suite.chainA.SenderAccount.GetAddress().String(),
 					suite.chainB.SenderAccount.GetAddress().String(),
-					sdk.DefaultBondDenom,
-					sdk.DefaultBondDenom,
 					&sdk.Coin{
 						Denom:  sdk.DefaultBondDenom,
 						Amount: sdk.NewInt(10),
@@ -183,26 +196,38 @@ func (suite *KeeperTestSuite) TestOnReceived() {
 					path.EndpointA.ChannelConfig.PortID,
 					path.EndpointA.ChannelID,
 					suite.chainA.SenderAccount.GetAddress().String(),
-					"50:50",
-					[]*sdk.Coin{{
-						Denom:  sdk.DefaultBondDenom,
-						Amount: sdk.NewInt(1000),
-					}, {
-						Denom:  "bside",
-						Amount: sdk.NewInt(1000),
-					}},
-					[]uint32{10, 100},
+					suite.chainB.SenderAccount.GetAddress().String(),
+					[]byte("0"),
+					types.PoolAsset{
+						Side: types.PoolAssetSide_SOURCE,
+						Balance: &sdk.Coin{
+							Denom:  sdk.DefaultBondDenom,
+							Amount: sdk.NewInt(1000),
+						},
+						Weight:  50,
+						Decimal: 6,
+					},
+
+					types.PoolAsset{
+						Side: types.PoolAssetSide_SOURCE,
+						Balance: &sdk.Coin{
+							Denom:  sdk.DefaultBondDenom,
+							Amount: sdk.NewInt(1000),
+						},
+						Weight:  50,
+						Decimal: 6,
+					},
+					300,
 				)
 				destPort := path.EndpointA.Counterparty.ChannelConfig.PortID
 				destChannel := path.EndpointA.ChannelID
-				poolId, err := suite.chainA.GetSimApp().InterchainSwapKeeper.OnCreatePoolReceived(
+				_, err := suite.chainA.GetSimApp().InterchainSwapKeeper.OnCreatePoolReceived(
 					ctx,
 					msg,
 					destPort,
 					destChannel,
 				)
 				suite.Require().NoError(err)
-				suite.Require().Equal(*poolId, types.GetPoolIdWithTokens(msg.Tokens))
 			}, true, true,
 		},
 	}
@@ -225,42 +250,3 @@ func (suite *KeeperTestSuite) TestOnReceived() {
 		})
 	}
 }
-
-// import (
-// 	"fmt"
-
-// 	sdk "github.com/cosmos/cosmos-sdk/types"
-// 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-// 	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
-// 	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
-// )
-
-// func (suite *KeeperTestSuite) TestMsgDoubleDeposit() {
-// 	var msg *types.MsgDoubleDepositRequest
-// 	testCases := []struct {
-// 		name     string
-// 		malleate func()
-// 		expPass  bool
-// 	}{
-// 		{
-// 			"success",
-// 			func() {},
-// 			true,
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		// create pool first of all.
-// 		pooId, err := suite.SetupPool()
-// 		suite.Require().NoError(err)
-// 		fmt.Println(pooId)
-
-// 		if tc.expPass {
-// 			suite.Require().NoError(err)
-// 			suite.Require().NotNil(res)
-// 		} else {
-// 			suite.Require().Error(err)
-// 			suite.Require().Nil(res)
-// 		}
-// 	}
-// }

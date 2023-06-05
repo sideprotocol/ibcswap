@@ -168,7 +168,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				logger.Debug("Deposit:ack:", err.Error())
 				return err
 			}
-			if err := k.OnSingleDepositAcknowledged(ctx, &msg, &res); err != nil {
+			if err := k.OnSingleAssetDepositAcknowledged(ctx, &msg, &res); err != nil {
 				logger.Debug("Deposit:Single", err.Error())
 				return err
 			}
@@ -198,7 +198,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
 				return err
 			}
-			if err := k.OnSingleWithdrawAcknowledged(ctx, &msg, &res); err != nil {
+			if err := k.OnSingleAssetWithdrawAcknowledged(ctx, &msg, &res); err != nil {
 				return err
 			}
 		case types.MULTI_WITHDRAW:
@@ -248,8 +248,8 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 			return err
 		}
 		// Refund initial liquidity
-		sender = msg.Sender
-		token = *msg.Tokens[0]
+		sender = msg.Creator
+		token = *msg.Liquidity[0].Balance
 
 	case types.SINGLE_DEPOSIT:
 		var msg types.MsgSingleAssetDepositRequest
@@ -263,8 +263,8 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
-		token = *msg.LocalDeposit.Token
-		sender = msg.LocalDeposit.Sender
+		token = *msg.Deposits[0].Balance
+		sender = msg.Deposits[0].Sender
 	case types.SINGLE_WITHDRAW:
 		var msg types.MsgSingleAssetWithdrawRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
@@ -277,8 +277,8 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
-		token = *msg.LocalWithdraw.PoolCoin
-		sender = msg.LocalWithdraw.Sender
+		token = *msg.Withdraws[0].Balance
+		sender = msg.Sender
 	case types.RIGHT_SWAP:
 		var msg types.MsgSwapRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {

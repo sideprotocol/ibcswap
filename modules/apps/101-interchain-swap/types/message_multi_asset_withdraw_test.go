@@ -20,44 +20,45 @@ func TestMsgWithdraw_ValidateBasic(t *testing.T) {
 			name: "invalid sender address",
 
 			msg: MsgMultiAssetWithdrawRequest{
-				LocalWithdraw: &MsgSingleAssetWithdrawRequest{
-					Sender: "invalid_address",
-				},
-				RemoteWithdraw: &MsgSingleAssetWithdrawRequest{
-					Sender: "invalid_address",
+				PoolId: "test",
+				Sender: "invalid address",
+				Withdraws: []*WithdrawAsset{
+					{
+						Receiver: sample.AccAddress(),
+						Balance: &types.Coin{
+							Denom:  "atm",
+							Amount: types.NewInt(0),
+						},
+					},
+					{
+						Receiver: sample.AccAddress(),
+						Balance: &types.Coin{
+							Denom:  "btm",
+							Amount: types.NewInt(0),
+						},
+					},
 				},
 			},
 			err: errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", ""),
 		},
 		{
-			name: "invalid denomout",
-			msg: MsgMultiAssetWithdrawRequest{
-				LocalWithdraw: &MsgSingleAssetWithdrawRequest{
-					Sender: sample.AccAddress(),
-				},
-				RemoteWithdraw: &MsgSingleAssetWithdrawRequest{
-					Sender: "invalid_address",
-				},
-			},
-			err: errorsmod.Wrapf(ErrEmptyDenom, "none exist denom (%s)", ""),
-		},
-		{
 			name: "invalid pool-coin amount",
 			msg: MsgMultiAssetWithdrawRequest{
-				LocalWithdraw: &MsgSingleAssetWithdrawRequest{
-					Sender:   sample.AccAddress(),
-					DenomOut: types.DefaultBondDenom,
-					PoolCoin: &types.Coin{
-						Denom:  "atm",
-						Amount: types.NewInt(0),
+				Sender: sample.AccAddress(),
+				Withdraws: []*WithdrawAsset{
+					{
+						Receiver: sample.AccAddress(),
+						Balance: &types.Coin{
+							Denom:  "atm",
+							Amount: types.NewInt(0),
+						},
 					},
-				},
-				RemoteWithdraw: &MsgSingleAssetWithdrawRequest{
-					Sender:   "invalid_address",
-					DenomOut: types.DefaultBondDenom,
-					PoolCoin: &types.Coin{
-						Denom:  "btm",
-						Amount: types.NewInt(0),
+					{
+						Receiver: sample.AccAddress(),
+						Balance: &types.Coin{
+							Denom:  "btm",
+							Amount: types.NewInt(0),
+						},
 					},
 				},
 			},
@@ -66,20 +67,21 @@ func TestMsgWithdraw_ValidateBasic(t *testing.T) {
 		{
 			name: "valid message",
 			msg: MsgMultiAssetWithdrawRequest{
-				LocalWithdraw: &MsgSingleAssetWithdrawRequest{
-					Sender:   sample.AccAddress(),
-					DenomOut: types.DefaultBondDenom,
-					PoolCoin: &types.Coin{
-						Denom:  "atm",
-						Amount: types.NewInt(0),
+				Sender: sample.AccAddress(),
+				Withdraws: []*WithdrawAsset{
+					{
+						Receiver: sample.AccAddress(),
+						Balance: &types.Coin{
+							Denom:  "atm",
+							Amount: types.NewInt(1000),
+						},
 					},
-				},
-				RemoteWithdraw: &MsgSingleAssetWithdrawRequest{
-					Sender:   "invalid_address",
-					DenomOut: types.DefaultBondDenom,
-					PoolCoin: &types.Coin{
-						Denom:  "btm",
-						Amount: types.NewInt(0),
+					{
+						Receiver: sample.AccAddress(),
+						Balance: &types.Coin{
+							Denom:  "btm",
+							Amount: types.NewInt(1000),
+						},
 					},
 				},
 			},

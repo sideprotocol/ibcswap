@@ -24,10 +24,10 @@ func TestGenesisState_Validate(t *testing.T) {
 				PortId: types.PortID,
 				InterchainLiquidityPoolList: []types.InterchainLiquidityPool{
 					{
-						PoolId: "0",
+						Id: "0",
 					},
 					{
-						PoolId: "1",
+						Id: "1",
 					},
 				},
 				InterchainMarketMakerList: []types.InterchainMarketMaker{
@@ -47,10 +47,10 @@ func TestGenesisState_Validate(t *testing.T) {
 			genState: &types.GenesisState{
 				InterchainLiquidityPoolList: []types.InterchainLiquidityPool{
 					{
-						PoolId: "0",
+						Id: "0",
 					},
 					{
-						PoolId: "0",
+						Id: "0",
 					},
 				},
 			},

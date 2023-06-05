@@ -13,7 +13,6 @@ func NewMsgSingleAssetWithdraw(sender, denomOut string, poolCoin *sdk.Coin) *Msg
 	return &MsgSingleAssetWithdrawRequest{
 		Sender:   sender,
 		PoolCoin: poolCoin,
-		DenomOut: denomOut,
 	}
 }
 

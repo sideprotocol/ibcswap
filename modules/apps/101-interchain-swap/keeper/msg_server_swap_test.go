@@ -24,7 +24,7 @@ func (suite *KeeperTestSuite) TestMsgSwap() {
 				ctx := suite.chainA.GetContext()
 				pool, found := suite.chainA.GetSimApp().InterchainSwapKeeper.GetInterchainLiquidityPool(ctx, *poolId)
 				suite.Require().Equal(found, true)
-				pool.Status = types.PoolStatus_POOL_STATUS_READY
+				pool.Status = types.PoolStatus_ACTIVE
 				suite.chainA.GetSimApp().InterchainSwapKeeper.SetInterchainLiquidityPool(ctx, pool)
 			},
 			true,

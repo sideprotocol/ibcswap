@@ -30,7 +30,7 @@ func (gs GenesisState) Validate() error {
 	interchainLiquidityPoolIndexMap := make(map[string]struct{})
 
 	for _, elem := range gs.InterchainLiquidityPoolList {
-		index := string(InterchainLiquidityPoolKey(elem.PoolId))
+		index := string(InterchainLiquidityPoolKey(elem.Id))
 		if _, ok := interchainLiquidityPoolIndexMap[index]; ok {
 			return fmt.Errorf("duplicated index for interchainLiquidityPool")
 		}

@@ -16,11 +16,6 @@ func (k msgServer) SingleAssetWithdraw(ctx context.Context, msg *types.MsgSingle
 		return nil, err
 	}
 
-	// Check denom
-	if !k.bankKeeper.HasSupply(sdkCtx, msg.DenomOut) {
-		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "invalid denom in local withdraw message: %s", msg.DenomOut)
-	}
-
 	// PoolCoin.Denom is just poolID.
 	pool, found := k.GetInterchainLiquidityPool(sdkCtx, msg.PoolCoin.Denom)
 
@@ -28,14 +23,9 @@ func (k msgServer) SingleAssetWithdraw(ctx context.Context, msg *types.MsgSingle
 		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "pool not found: %s", types.ErrNotFoundPool)
 	}
 
-	// if pool.Status != types.PoolStatus_POOL_STATUS_READY {
-	// 	return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "pool not ready for swap: %s", types.ErrNotReadyForSwap)
-	// }
-
-	fee := k.GetSwapFeeRate(sdkCtx)
-	amm := *types.NewInterchainMarketMaker(&pool, fee)
-
-	out, err := amm.SingleWithdraw(*msg.PoolCoin, msg.DenomOut)
+	amm := *types.NewInterchainMarketMaker(&pool)
+	denomOut, _ := pool.FindDenomBySide(types.PoolAssetSide_SOURCE)
+	out, err := amm.SingleWithdraw(*msg.PoolCoin, *denomOut)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +53,7 @@ func (k msgServer) SingleAssetWithdraw(ctx context.Context, msg *types.MsgSingle
 		timeoutStamp = msg.TimeoutTimeStamp
 	}
 
-	err = k.SendIBCSwapPacket(sdkCtx, pool.EncounterPartyPort, pool.EncounterPartyChannel, timeoutHeight, uint64(timeoutStamp), packet)
+	err = k.SendIBCSwapPacket(sdkCtx, pool.CounterPartyPort, pool.CounterPartyChannel, timeoutHeight, uint64(timeoutStamp), packet)
 	if err != nil {
 		return nil, types.ErrFailedWithdraw
 	}

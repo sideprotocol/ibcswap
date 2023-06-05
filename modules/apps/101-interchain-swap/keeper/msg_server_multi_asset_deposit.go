@@ -10,7 +10,6 @@ import (
 
 func (k Keeper) MultiAssetDeposit(ctx context.Context, msg *types.MsgMultiAssetDepositRequest) (*types.MsgMultiAssetDepositResponse, error) {
 
-	
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// Validate message
@@ -24,51 +23,41 @@ func (k Keeper) MultiAssetDeposit(ctx context.Context, msg *types.MsgMultiAssetD
 		return nil, errormod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrNotFoundPool)
 	}
 
-	balance := k.bankKeeper.GetBalance(sdkCtx, sdk.MustAccAddressFromBech32(msg.LocalDeposit.Sender), msg.LocalDeposit.Token.Denom)
-
-	if balance.Amount.LT(msg.LocalDeposit.Token.Amount) {
+	// check asset owned status
+	balance := k.bankKeeper.GetBalance(sdkCtx, sdk.MustAccAddressFromBech32(msg.Deposits[0].Sender), msg.Deposits[0].Balance.Denom)
+	if balance.Amount.LT(msg.Deposits[0].Balance.Amount) {
 		return nil, errormod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrInEnoughAmount)
 	}
 
 	// Check initial deposit condition
-	if pool.Status == types.PoolStatus_POOL_STATUS_INITIAL {
-		for _, asset := range sdk.NewCoins(*msg.LocalDeposit.Token, *msg.RemoteDeposit.Token) {
-			orderedAmount, err := pool.FindAssetByDenom(asset.Denom)
-			if err != nil {
-				return nil, err
-			}
-			if !orderedAmount.Balance.Amount.Equal(asset.Amount) {
-				return nil, errormod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrNotAllowedAmount)
-			}
-		}
+	if pool.Status != types.PoolStatus_ACTIVE {
+		return nil, errormod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrNotReadyForSwap)
 	} else {
 		// Check the ratio of local amount and remote amount
-		ratioOfTokensIn := msg.LocalDeposit.Token.Amount.Mul(sdk.NewInt(types.Multiplier)).Quo(msg.RemoteDeposit.Token.Amount)
-		localAssetInPool, _ := pool.FindAssetByDenom(msg.LocalDeposit.Token.Denom)
-		remoteAssetAmountInPool, _ := pool.FindAssetByDenom(msg.RemoteDeposit.Token.Denom)
-		ratioOfAssetsInPool := localAssetInPool.Balance.Amount.Mul(sdk.NewInt(types.Multiplier)).Quo(remoteAssetAmountInPool.Balance.Amount)
+		// ratioOfTokensIn := msg.Deposits[0].Balance.Amount.Mul(sdk.NewInt(types.Multiplier)).Quo(msg.Deposits[1].Balance.Amount)
+		// localAssetInPool, _ := pool.FindAssetByDenom(msg.Deposits[0].Balance.Denom)
+		// remoteAssetAmountInPool, _ := pool.FindAssetByDenom(msg.Deposits[1].Balance.Denom)
+		// ratioOfAssetsInPool := localAssetInPool.Balance.Amount.Mul(sdk.NewInt(types.Multiplier)).Quo(remoteAssetAmountInPool.Balance.Amount)
 
-		if err := types.CheckSlippage(ratioOfTokensIn, ratioOfAssetsInPool, 10); err != nil {
-			return nil, errormod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrInvalidPairRatio)
-		}
+		// if err := types.CheckSlippage(ratioOfTokensIn, ratioOfAssetsInPool, 10); err != nil {
+		// 	return nil, errormod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrInvalidPairRatio)
+		// }
 	}
 
 	// Create escrow module account here
-	err = k.LockTokens(sdkCtx, pool.EncounterPartyPort, pool.EncounterPartyChannel, sdk.MustAccAddressFromBech32(msg.LocalDeposit.Sender), sdk.NewCoins(*msg.LocalDeposit.Token))
+	err = k.LockTokens(sdkCtx, pool.CounterPartyPort, pool.CounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Deposits[0].Sender), sdk.NewCoins(*msg.Deposits[0].Balance))
 
 	if err != nil {
 		return nil, errormod.Wrapf(types.ErrFailedDoubleDeposit, "due to %s", err)
 	}
 
-	fee := k.GetSwapFeeRate(sdkCtx)
 	amm := *types.NewInterchainMarketMaker(
 		&pool,
-		fee,
 	)
 
 	poolTokens, err := amm.DepositMultiAsset([]*sdk.Coin{
-		msg.LocalDeposit.Token,
-		msg.RemoteDeposit.Token,
+		msg.Deposits[0].Balance,
+		msg.Deposits[1].Balance,
 	})
 
 	if err != nil {
@@ -87,18 +76,6 @@ func (k Keeper) MultiAssetDeposit(ctx context.Context, msg *types.MsgMultiAssetD
 		StateChange: &types.StateChange{PoolTokens: poolTokens},
 	}
 
-	// // temporary signature verification check
-	// accAddress := sdk.MustAccAddressFromBech32(msg.LocalDeposit.Sender)
-	// acc := k.authKeeper.GetAccount(sdkCtx, accAddress)
-	// pubKey := acc.GetPubKey()
-
-	// rawTx := types.ModuleCdc.MustMarshal(msg.LocalDeposit)
-
-	// isValid := pubKey.VerifySignature(rawTx, msg.RemoteDeposit.Signature)
-	// if !isValid {
-	// 	return nil, errormod.Wrapf(types.ErrFailedDeposit, "pubkey:%v,original sig: %v, rawTx: %v", pubKey, msg.RemoteDeposit.Signature, rawTx)
-	// }
-
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)
 
 	// Use input timeoutHeight, timeoutStamp
@@ -109,7 +86,7 @@ func (k Keeper) MultiAssetDeposit(ctx context.Context, msg *types.MsgMultiAssetD
 		timeoutStamp = msg.TimeoutTimeStamp
 	}
 
-	err = k.SendIBCSwapPacket(sdkCtx, pool.EncounterPartyPort, pool.EncounterPartyChannel, timeoutHeight, timeoutStamp, packet)
+	err = k.SendIBCSwapPacket(sdkCtx, pool.CounterPartyPort, pool.CounterPartyChannel, timeoutHeight, timeoutStamp, packet)
 	if err != nil {
 		return nil, err
 	}

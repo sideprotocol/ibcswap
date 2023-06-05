@@ -1,9 +1,6 @@
 package types
 
 import (
-	"strconv"
-	"strings"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -11,14 +8,28 @@ const TypeMsgCreatePool = "create_pool"
 
 var _ sdk.Msg = &MsgCreatePoolRequest{}
 
-func NewMsgCreatePool(sourcePort string, sourceChannel string, sender string, weight string, tokens []*sdk.Coin, decimals []uint32) *MsgCreatePoolRequest {
+func NewMsgCreatePool(
+	sourcePort string,
+	sourceChannel string,
+	creator string,
+	counterPartyCreator string,
+	counterPartySig []byte,
+	sourceLiquidity,
+	targetLiquidity PoolAsset,
+	swapFee uint32,
+) *MsgCreatePoolRequest {
+
 	return &MsgCreatePoolRequest{
-		SourcePort:    sourcePort,
-		SourceChannel: sourceChannel,
-		Sender:        sender,
-		Weight:        weight,
-		Tokens:        tokens,
-		Decimals:      decimals,
+		SourcePort:          sourcePort,
+		SourceChannel:       sourceChannel,
+		Creator:             creator,
+		CounterPartyCreator: counterPartyCreator,
+		Liquidity: []*PoolAsset{
+			&sourceLiquidity,
+			&targetLiquidity,
+		},
+		CounterPartySig: counterPartySig,
+		SwapFee:         swapFee,
 	}
 }
 
@@ -31,7 +42,7 @@ func (msg *MsgCreatePoolRequest) Type() string {
 }
 
 func (msg *MsgCreatePoolRequest) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Sender)
+	creator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
 	}
@@ -43,41 +54,35 @@ func (msg *MsgCreatePoolRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
+func (msg *MsgCreatePoolRequest) GetLiquidityDenoms() []string {
+	denoms := []string{}
+	for _, asset := range msg.Liquidity {
+		denoms = append(denoms, asset.Balance.Denom)
+	}
+	return denoms
+}
+
 func (msg *MsgCreatePoolRequest) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	_, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return ErrInvalidAddress
+	}
+	_, err = sdk.AccAddressFromBech32(msg.CounterPartyCreator)
 	if err != nil {
 		return ErrInvalidAddress
 	}
 
-	tokenCount := len(msg.Tokens)
+	tokenCount := len(msg.Liquidity)
 	// Validation message
 	if tokenCount != 2 {
 		return ErrInvalidDenomPair
 	}
 
-	if len(msg.Decimals) != 2 {
-		return ErrInvalidDecimalPair
+	if err := ValidateLiquidityBasic(msg.Liquidity); err != nil {
+		return err
 	}
-
-	weightValues := strings.Split(msg.Weight, ":")
-	if len(weightValues) != 2 {
-		return ErrInvalidWeightPair
-	}
-
-	totalWeight := 0
-	for _, weight := range weightValues {
-		weightValue, _ := strconv.Atoi(weight)
-		totalWeight += weightValue
-	}
-
-	if totalWeight != 100 {
-		return ErrInvalidWeightPair
-	}
-
-	for _, token := range msg.Tokens {
-		if token.Amount.LTE(sdk.NewInt(0)) {
-			return ErrInvalidAmount
-		}
+	if msg.SwapFee < 0 || msg.SwapFee > 10000 {
+		return ErrInvalidSwapFee
 	}
 	return nil
 }

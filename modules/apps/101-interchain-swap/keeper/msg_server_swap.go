@@ -25,12 +25,12 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "pool not found: %s", types.ErrNotFoundPool)
 	}
 
-	if pool.Status != types.PoolStatus_POOL_STATUS_READY {
+	if pool.Status != types.PoolStatus_ACTIVE {
 		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "pool not ready for swap: %s", types.ErrNotReadyForSwap)
 	}
 
 	// Lock swap-in token to the swap module
-	err = k.LockTokens(sdkCtx, pool.EncounterPartyPort, pool.EncounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Sender), sdk.NewCoins(*msg.TokenIn))
+	err = k.LockTokens(sdkCtx, pool.CounterPartyPort, pool.CounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Sender), sdk.NewCoins(*msg.TokenIn))
 	if err != nil {
 		return nil, err
 	}
@@ -41,11 +41,7 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 		return nil, err
 	}
 
-	fee := k.GetSwapFeeRate(sdkCtx)
-	amm := *types.NewInterchainMarketMaker(
-		&pool,
-		fee,
-	)
+	amm := *types.NewInterchainMarketMaker(&pool)
 
 	var tokenOut *sdk.Coin
 	var msgType types.SwapMessageType
@@ -96,8 +92,8 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 
 	err = k.SendIBCSwapPacket(
 		ctx,
-		pool.EncounterPartyPort,
-		pool.EncounterPartyChannel,
+		pool.CounterPartyPort,
+		pool.CounterPartyChannel,
 		timeoutHeight,
 		timeoutTimestamp,
 		packet,
