@@ -241,10 +241,10 @@ func (imm *InterchainMarketMaker) SingleWithdraw(redeem types.Coin, denomOut str
 	if err != nil {
 		return nil, err
 	}
-	// err = asset.Balance.Validate()
-	// if err != nil {
-	// 	return nil, err
-	// }
+	err = asset.Balance.Validate()
+	if err != nil {
+		return nil, err
+	}
 
 	if redeem.Amount.GT(imm.Pool.Supply.Amount) {
 		return nil, fmt.Errorf("bigger than balance")

@@ -22,6 +22,7 @@ service Msg {
   rpc SingleAssetWithdraw   (MsgSingleAssetWithdrawRequest  ) returns (MsgSingleAssetWithdrawResponse  );
   rpc MultiAssetWithdraw   (MsgMultiAssetWithdrawRequest  ) returns (MsgMultiAssetWithdrawResponse  );
   rpc Swap       (MsgSwapRequest             ) returns (MsgSwapResponse      );
+
 }
 message MsgCreatePoolRequest {
            string sourcePort     = 1;
@@ -124,3 +125,4 @@ message DepositSignature {
   cosmos.base.v1beta1.Coin balance = 2;
   uint64 sequence = 3;
 }
+

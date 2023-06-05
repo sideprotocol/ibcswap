@@ -32,16 +32,6 @@ func (k Keeper) MultiAssetDeposit(ctx context.Context, msg *types.MsgMultiAssetD
 	// Check initial deposit condition
 	if pool.Status != types.PoolStatus_ACTIVE {
 		return nil, errormod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrNotReadyForSwap)
-	} else {
-		// Check the ratio of local amount and remote amount
-		// ratioOfTokensIn := msg.Deposits[0].Balance.Amount.Mul(sdk.NewInt(types.Multiplier)).Quo(msg.Deposits[1].Balance.Amount)
-		// localAssetInPool, _ := pool.FindAssetByDenom(msg.Deposits[0].Balance.Denom)
-		// remoteAssetAmountInPool, _ := pool.FindAssetByDenom(msg.Deposits[1].Balance.Denom)
-		// ratioOfAssetsInPool := localAssetInPool.Balance.Amount.Mul(sdk.NewInt(types.Multiplier)).Quo(remoteAssetAmountInPool.Balance.Amount)
-
-		// if err := types.CheckSlippage(ratioOfTokensIn, ratioOfAssetsInPool, 10); err != nil {
-		// 	return nil, errormod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrInvalidPairRatio)
-		// }
 	}
 
 	// Create escrow module account here

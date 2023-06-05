@@ -178,8 +178,8 @@ func TestSingleDeposit(t *testing.T) {
 }
 
 func TestSingleWithdraw(t *testing.T) {
-	const initialX = 2_000_000 // USDT
-	const initialY = 1000      // ETH
+	const initialX = 1_000_000 // USDT
+	const initialY = 1_000_000 // ETH
 	// create mock pool
 	denoms := []string{"a", "b"}
 	poolId := GetPoolId(denoms)

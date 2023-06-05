@@ -56,8 +56,8 @@ func (s *InterchainswapTestSuite) TestSingleWithdrawStatus() {
 	s.Require().NotEqual(resB.Balance.Amount, sdk.NewInt(0))
 	s.Require().NoError(err)
 
-	const initialX = 2_000_000 // USDT
-	const initialY = 1000      // ETH
+	const initialX = 1000_000 // USDT
+	const initialY = 1000_000 // ETH
 
 	// make force transaction to set pub key
 	err = s.SendCoins(ctx, chainB, chainBWallet, chainAAddress, sdk.NewCoins(sdk.NewCoin(
@@ -182,9 +182,7 @@ func (s *InterchainswapTestSuite) TestSingleWithdrawStatus() {
 		s.Require().NoError(err)
 		logger.CleanLog("====outA====", outA)
 		s.Require().Equal(checkSlippage(outA.Amount, depositToken.Amount, 1), true)
-
 	})
-
 }
 
 func syncPool(s *InterchainswapTestSuite, ctx context.Context, chain *cosmos.CosmosChain, poolId string) types.InterchainLiquidityPool {

@@ -29,6 +29,9 @@ e2e-test-interchainswap-multi-deposit: cleanup-ibc-test-containers
 e2e-test-interchainswap-single-withdraw: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh TestInterchainswapTestSuite TestSingleWithdrawStatus
 
+e2e-test-interchainswap-multi-withdraw: cleanup-ibc-test-containers
+	./scripts/run-e2e.sh TestInterchainswapTestSuite TestMultiWithdrawStatus
+
 e2e-test-interchainswap-timeout: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh TestInterchainswapTestSuite TestRefundMsgOnTimeoutPacket
 	
