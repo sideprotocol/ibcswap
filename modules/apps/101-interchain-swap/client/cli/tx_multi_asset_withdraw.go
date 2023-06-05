@@ -16,13 +16,14 @@ var _ = strconv.Itoa(0)
 
 func CmdMultiAssetWithdraw() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "multi_asset_withdraw [receiver] [remote sender][pool coins]",
+		Use:   "multi_asset_withdraw [poolId] [receiver] [remote sender][pool coins]",
 		Short: "Broadcast message Withdraw",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			argSender := args[0]
-			argRemoteSender := args[1]
-			argCoin := args[2]
+			poolId := args[0]
+			argSender := args[1]
+			argRemoteSender := args[2]
+			argCoin := args[3]
 
 			sdk.MustAccAddressFromBech32(argSender)
 			sdk.MustAccAddressFromBech32(argRemoteSender)
@@ -41,6 +42,7 @@ func CmdMultiAssetWithdraw() *cobra.Command {
 			}
 
 			msg := types.NewMsgMultiAssetWithdraw(
+				poolId,
 				argSender,
 				argRemoteSender,
 				coins[0],

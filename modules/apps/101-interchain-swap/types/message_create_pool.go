@@ -16,6 +16,7 @@ func NewMsgCreatePool(
 	counterPartySig []byte,
 	sourceLiquidity,
 	targetLiquidity PoolAsset,
+	swapFee uint32,
 ) *MsgCreatePoolRequest {
 
 	return &MsgCreatePoolRequest{
@@ -28,6 +29,7 @@ func NewMsgCreatePool(
 			&targetLiquidity,
 		},
 		CounterPartySig: counterPartySig,
+		SwapFee:         swapFee,
 	}
 }
 
@@ -78,6 +80,9 @@ func (msg *MsgCreatePoolRequest) ValidateBasic() error {
 
 	if err := ValidateLiquidityBasic(msg.Liquidity); err != nil {
 		return err
+	}
+	if msg.SwapFee < 0 || msg.SwapFee > 10000 {
+		return ErrInvalidSwapFee
 	}
 	return nil
 }

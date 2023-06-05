@@ -16,9 +16,9 @@ import (
 
 func CmdCreatePool() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-pool [source-port] [source-channel] [creator] [counterPartyCreator] [counterPartySignature] [weight] [tokens] [decimals]",
+		Use:   "create-pool [source-port] [source-channel] [creator] [counterPartyCreator] [counterPartySignature] [weight] [tokens] [decimals] [swap-fee]",
 		Short: "Broadcast message CreatePool",
-		Args:  cobra.ExactArgs(8),
+		Args:  cobra.ExactArgs(9),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -45,6 +45,15 @@ func CmdCreatePool() *cobra.Command {
 				return err
 			}
 
+			swapFee, err := strconv.Atoi(args[8])
+			if err != nil {
+				return err
+			}
+
+			if swapFee < 0 || swapFee > 10000 {
+				return fmt.Errorf("invalid swap value. swapFee has to be in between 0 and 10000")
+			}
+
 			msg := types.NewMsgCreatePool(
 				args[0], // argSourcePort
 				args[1], // argSourceChannel
@@ -63,6 +72,7 @@ func CmdCreatePool() *cobra.Command {
 					Weight:  weights[1],
 					Decimal: decimals[1],
 				},
+				uint32(swapFee),
 			)
 
 			packetTimeoutHeight, err1 := cmd.Flags().GetString("packet-timeout-height")

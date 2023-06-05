@@ -38,6 +38,7 @@ func (suite *KeeperTestSuite) SetupPool() (*string, error) {
 			Weight:  50,
 			Decimal: 6,
 		},
+		300,
 	)
 
 	ctx := suite.chainA.GetContext()
@@ -78,6 +79,7 @@ func (suite *KeeperTestSuite) SetupPoolWithDenomPair(denomPair []string) (*strin
 			Weight:  50,
 			Decimal: 6,
 		},
+		300,
 	)
 
 	ctxA := suite.chainA.GetContext()

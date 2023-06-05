@@ -14,25 +14,30 @@ func NewInterchainLiquidityPool(
 	store BankKeeper,
 	poolId string,
 	assets []*PoolAsset,
+	swapFee uint32,
 	portId string,
 	channelId string,
+
 ) *InterchainLiquidityPool {
 
-	initialLiquidity := types.NewCoin(poolId, types.NewInt(0))
+	initialLiquidity := types.NewInt(0)
 	for _, asset := range assets {
-		initialLiquidity.Amount.Add(asset.Balance.Amount)
+		initialLiquidity = initialLiquidity.Add(asset.Balance.Amount)
 	}
 
 	pool := InterchainLiquidityPool{
-		Id:        poolId,
-		Creator:   creator,
-		Assets:    assets,
-		Supply:    &initialLiquidity,
-		Status:    PoolStatus_INITIALIZED,
-		PoolPrice: 0,
-
+		Id:      poolId,
+		Creator: creator,
+		Assets:  assets,
+		Supply: &types.Coin{
+			Denom:  poolId,
+			Amount: initialLiquidity,
+		},
+		Status:              PoolStatus_INITIALIZED,
+		PoolPrice:           0,
 		CounterPartyPort:    portId,
 		CounterPartyChannel: channelId,
+		SwapFee:             swapFee,
 	}
 	return &pool
 }
@@ -236,10 +241,10 @@ func (imm *InterchainMarketMaker) SingleWithdraw(redeem types.Coin, denomOut str
 	if err != nil {
 		return nil, err
 	}
-	err = asset.Balance.Validate()
-	if err != nil {
-		return nil, err
-	}
+	// err = asset.Balance.Validate()
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	if redeem.Amount.GT(imm.Pool.Supply.Amount) {
 		return nil, fmt.Errorf("bigger than balance")
@@ -249,10 +254,11 @@ func (imm *InterchainMarketMaker) SingleWithdraw(redeem types.Coin, denomOut str
 		return nil, fmt.Errorf("invalid denom pair")
 	}
 
+	w := float64(asset.Weight) / 100
 	ratio := imm.Pool.Supply.Amount.Sub(redeem.Amount).Mul(types.NewInt(Multiplier)).Quo(imm.Pool.Supply.Amount)
 	ratioFloat := float64(ratio.Int64()) / Multiplier
 
-	exponent := 1 / float64(asset.Weight)
+	exponent := 1 / w
 	factor := (1 - math.Pow(ratioFloat, exponent)) * Multiplier
 	amountOut := asset.Balance.Amount.Mul(types.NewInt(int64(factor))).Quo(types.NewInt(Multiplier))
 	return &types.Coin{

@@ -168,7 +168,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				logger.Debug("Deposit:ack:", err.Error())
 				return err
 			}
-			if err := k.OnSingleDepositAcknowledged(ctx, &msg, &res); err != nil {
+			if err := k.OnSingleAssetDepositAcknowledged(ctx, &msg, &res); err != nil {
 				logger.Debug("Deposit:Single", err.Error())
 				return err
 			}
@@ -198,7 +198,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
 				return err
 			}
-			if err := k.OnSingleWithdrawAcknowledged(ctx, &msg, &res); err != nil {
+			if err := k.OnSingleAssetWithdrawAcknowledged(ctx, &msg, &res); err != nil {
 				return err
 			}
 		case types.MULTI_WITHDRAW:

@@ -8,9 +8,10 @@ const TypeMsgWithdraw = "withdraw"
 
 var _ sdk.Msg = &MsgMultiAssetWithdrawRequest{}
 
-func NewMsgMultiAssetWithdraw(sourceSender, targetSender string, sourcePoolToken *sdk.Coin, targetPoolToken *sdk.Coin) *MsgMultiAssetWithdrawRequest {
+func NewMsgMultiAssetWithdraw(poolId string, sourceSender, targetSender string, sourcePoolToken *sdk.Coin, targetPoolToken *sdk.Coin) *MsgMultiAssetWithdrawRequest {
 	return &MsgMultiAssetWithdrawRequest{
-
+		PoolId: poolId,
+		Sender: sourceSender,
 		Withdraws: []*WithdrawAsset{
 			{
 				Receiver: sourceSender,

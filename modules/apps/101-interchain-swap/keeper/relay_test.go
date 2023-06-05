@@ -79,6 +79,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 						Weight:  50,
 						Decimal: 6,
 					},
+					300,
 				)
 
 				msgbyte, err = types.ModuleCdc.Marshal(msg)
@@ -104,6 +105,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 			func() {
 				suite.coordinator.CreateChannels(path)
 				msg := types.NewMsgMultiAssetWithdraw(
+					types.GetPoolId([]string{sdk.DefaultBondDenom, sdk.DefaultBondDenom}),
 					suite.chainA.SenderAccount.GetAddress().String(),
 					suite.chainB.SenderAccount.GetAddress().String(),
 					&sdk.Coin{
@@ -215,6 +217,7 @@ func (suite *KeeperTestSuite) TestOnReceived() {
 						Weight:  50,
 						Decimal: 6,
 					},
+					300,
 				)
 				destPort := path.EndpointA.Counterparty.ChannelConfig.PortID
 				destChannel := path.EndpointA.ChannelID

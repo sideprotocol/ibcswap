@@ -54,6 +54,7 @@ func (suite *KeeperTestSuite) TestMsgCreatePool() {
 				Weight:  50,
 				Decimal: 6,
 			},
+			300,
 		)
 		msgSrv := keeper.NewMsgServerImpl(suite.chainA.GetSimApp().InterchainSwapKeeper)
 		res, err := msgSrv.CreatePool(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)

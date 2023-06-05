@@ -32,7 +32,7 @@ func (suite *KeeperTestSuite) TestMsgWithdraw() {
 					&sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(1000)},
 				)
 
-				err := suite.chainA.GetSimApp().InterchainSwapKeeper.OnSingleDepositAcknowledged(
+				err := suite.chainA.GetSimApp().InterchainSwapKeeper.OnSingleAssetDepositAcknowledged(
 					suite.chainA.GetContext(),
 					depositMsg,
 					&types.MsgSingleAssetDepositResponse{
@@ -71,6 +71,7 @@ func (suite *KeeperTestSuite) TestMsgWithdraw() {
 		//
 		coin := sdk.NewCoin(*poolId, sdk.NewInt(10))
 		msg = types.NewMsgMultiAssetWithdraw(
+			*poolId,
 			suite.chainA.SenderAccount.GetAddress().String(),
 			suite.chainB.SenderAccount.GetAddress().String(),
 			&coin,

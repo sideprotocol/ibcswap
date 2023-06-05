@@ -187,7 +187,7 @@ func TestSingleWithdraw(t *testing.T) {
 		{
 			Side: PoolAssetSide_SOURCE,
 			Balance: &types.Coin{
-				Amount: types.NewInt(20000000),
+				Amount: types.NewInt(initialX),
 				Denom:  denoms[0],
 			},
 			Weight:  50,
@@ -196,7 +196,7 @@ func TestSingleWithdraw(t *testing.T) {
 		{
 			Side: PoolAssetSide_TARGET,
 			Balance: &types.Coin{
-				Amount: types.NewInt(1000),
+				Amount: types.NewInt(initialY),
 				Denom:  denoms[1],
 			},
 			Weight:  50,
@@ -222,7 +222,7 @@ func TestSingleWithdraw(t *testing.T) {
 		&pool,
 	)
 
-	redeem := types.NewCoin(poolId, types.NewInt(initialX+initialY))
+	redeem := types.NewCoin(poolId, types.NewInt(initialX))
 	outToken, err := amm.SingleWithdraw(redeem, denoms[0])
 	fmt.Println(outToken.Amount.Uint64())
 	require.NoError(t, err)
