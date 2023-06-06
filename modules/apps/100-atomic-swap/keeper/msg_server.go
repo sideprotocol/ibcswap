@@ -234,8 +234,8 @@ func createOrder(ctx sdk.Context, msg *types.MakeSwapMsg, channelKeeper types.Ch
 	if !found {
 		return nil, types.ErrNotFoundChannel
 	}
-	sequence := types.GenerateRandomString(ctx.ChainID(), 10)
-	path := orderPath(msg.SourcePort, msg.SourceChannel, channel.Counterparty.PortId, channel.Counterparty.ChannelId, sequence)
+	pathID := types.GenerateRandomString(ctx.ChainID(), 10)
+	path := orderPath(msg.SourcePort, msg.SourceChannel, channel.Counterparty.PortId, channel.Counterparty.ChannelId, pathID)
 	return &types.Order{
 		Id:     generateOrderId(path, msg),
 		Side:   types.NATIVE,
@@ -245,15 +245,19 @@ func createOrder(ctx sdk.Context, msg *types.MakeSwapMsg, channelKeeper types.Ch
 	}, nil
 }
 
-func orderPath(sourcePort, sourceChannel, destPort, destChannel, sequence string) string {
-	return fmt.Sprintf("channel/%s/port/%s/channel/%s/port/%s/%d", sourceChannel, sourcePort, destChannel, destPort, sequence)
+func orderPath(sourcePort, sourceChannel, destPort, destChannel, pathID string) string {
+	return fmt.Sprintf("channel/%s/port/%s/channel/%s/port/%s/%d", sourceChannel, sourcePort, destChannel, destPort, pathID)
 }
 
 func generateOrderId(orderPath string, msg *types.MakeSwapMsg) string {
 	prefix := []byte(orderPath)
 	bytes, _ := types.ModuleCdc.MarshalJSON(msg)
 	hash := sha256.Sum256(append(prefix, bytes...))
-	return hex.EncodeToString(hash[:])
+
+	// Convert to hex and truncate to desired length.
+	encoded := hex.EncodeToString(hash[:])
+
+	return encoded[:20] // Returns first 20 characters of the hash.
 }
 
 func extractSourceChannelForTakerMsg(path string) string {

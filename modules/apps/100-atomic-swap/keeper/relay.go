@@ -262,10 +262,6 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 			return err
 		}
 
-		//channel, _ := k.channelKeeper.GetChannel(ctx, takeMsg.SourceChannel, makeMsg.SourcePort)
-		//sequence, _ := k.channelKeeper.GetNextSequenceSend(ctx, makeMsg.SourceChannel, makeMsg.SourcePort)
-		//path := orderPath(makeMsg.SourcePort, makeMsg.SourceChannel, channel.Counterparty.PortId, channel.Counterparty.ChannelId, sequence)
-		//orderID := generateOrderId(packet)
 		order, found := k.GetAtomicOrder(ctx, takeMsg.OrderId)
 		if !found {
 			return fmt.Errorf("order not found for ID %s", takeMsg.OrderId)
