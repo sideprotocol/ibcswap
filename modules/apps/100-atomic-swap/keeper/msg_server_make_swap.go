@@ -42,13 +42,13 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.
 		return nil, err
 	}
 
-	packet := types.AtomicSwapPacketData{
-		Type: types.MAKE_SWAP,
-		Data: msgByte,
-		Memo: "",
-	}
-
 	order := createOrder(ctx, msg, k.channelKeeper)
+	packet := types.AtomicSwapPacketData{
+		Type:    types.MAKE_SWAP,
+		Data:    msgByte,
+		OrderId: order.Id,
+		Memo:    "",
+	}
 
 	if err := k.SendSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
 		return nil, err

@@ -42,8 +42,6 @@ message InterchainMarketMaker {
   InterchainLiquidityPool pool = 2; 
 }
 
-
-
 // MarketFeeUpdateProposal details a proposal for updating market fee.
 
 message MarketFeeUpdateProposal {

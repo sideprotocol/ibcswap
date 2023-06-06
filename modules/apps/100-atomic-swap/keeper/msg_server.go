@@ -134,7 +134,7 @@ func (k Keeper) executeCancel(ctx sdk.Context, msg *types.CancelSwapMsg, step in
 // OnReceivedMake is the step 3.1 (Save order) from the atomic swap:
 // https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap
 // The step is executed on the Taker chain.
-func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg *types.MakeSwapMsg) (string, error) {
+func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, orderId string, msg *types.MakeSwapMsg) (string, error) {
 	// Check if buyToken is a valid token on the taker chain, could be either native or ibc token
 	// Disable it for demo at 2023-3-18
 	//supply := k.bankKeeper.GetSupply(ctx, msg.BuyToken.Denom)
@@ -144,7 +144,7 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, msg 
 
 	path := orderPath(msg.SourcePort, msg.SourceChannel, packet.DestinationPort, packet.DestinationChannel, packet.Sequence)
 	order := types.Order{
-		Id:     generateOrderId(path, msg),
+		Id:     orderId,
 		Side:   types.REMOTE,
 		Status: types.Status_INITIAL,
 		Path:   path,
