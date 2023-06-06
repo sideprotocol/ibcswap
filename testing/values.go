@@ -15,8 +15,8 @@ import (
 	ibctmtypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
 	"github.com/cosmos/ibc-go/v6/testing/mock"
 	"github.com/cosmos/ibc-go/v6/testing/simapp"
-	atomicswaptypes "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
-	interchainswaptypes "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	atomicswaptypes "github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	interchainswaptypes "github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 const (

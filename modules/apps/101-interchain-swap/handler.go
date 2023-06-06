@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 func NewMarketFeeUpdateProposalHandler(k keeper.Keeper) govtypes.Handler {

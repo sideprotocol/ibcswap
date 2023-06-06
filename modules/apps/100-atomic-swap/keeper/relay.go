@@ -9,7 +9,7 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
 func (k Keeper) SendSwapPacket(

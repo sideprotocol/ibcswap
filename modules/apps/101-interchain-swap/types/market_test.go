@@ -24,7 +24,7 @@ func TestLeftSwap(t *testing.T) {
 			Decimal: 6,
 		},
 		{
-			Side: PoolAssetSide_TARGET,
+			Side: PoolAssetSide_DESTINATION,
 			Balance: &types.Coin{
 				Amount: types.NewInt(0),
 				Denom:  demons[1],
@@ -82,7 +82,7 @@ func TestUpdatePoolAsset(t *testing.T) {
 			Decimal: 6,
 		},
 		{
-			Side: PoolAssetSide_TARGET,
+			Side: PoolAssetSide_DESTINATION,
 			Balance: &types.Coin{
 				Amount: types.NewInt(0),
 				Denom:  demons[1],
@@ -138,7 +138,7 @@ func TestSingleDeposit(t *testing.T) {
 			Decimal: 6,
 		},
 		{
-			Side: PoolAssetSide_TARGET,
+			Side: PoolAssetSide_DESTINATION,
 			Balance: &types.Coin{
 				Amount: types.NewInt(initialY),
 				Denom:  denoms[1],
@@ -194,7 +194,7 @@ func TestSingleWithdraw(t *testing.T) {
 			Decimal: 6,
 		},
 		{
-			Side: PoolAssetSide_TARGET,
+			Side: PoolAssetSide_DESTINATION,
 			Balance: &types.Coin{
 				Amount: types.NewInt(initialY),
 				Denom:  denoms[1],

@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
-	ibctesting "github.com/ibcswap/ibcswap/v6/testing"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	ibctesting "github.com/sideprotocol/ibcswap/v6/testing"
 )
 
 type InterchainSwapTestSuite struct {

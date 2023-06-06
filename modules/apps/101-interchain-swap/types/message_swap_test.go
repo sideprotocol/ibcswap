@@ -7,7 +7,7 @@ import (
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ibcswap/ibcswap/v6/testing/testutil/sample"
+	"github.com/sideprotocol/ibcswap/v6/testing/testutil/sample"
 	"github.com/stretchr/testify/require"
 )
 

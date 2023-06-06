@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	"github.com/spf13/cobra"
 )
 

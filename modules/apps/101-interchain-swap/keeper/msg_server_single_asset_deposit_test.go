@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
-	"github.com/ibcswap/ibcswap/v6/testing/testutil/sample"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/testing/testutil/sample"
 )
 
 func (suite *KeeperTestSuite) SetupPool() (*string, error) {

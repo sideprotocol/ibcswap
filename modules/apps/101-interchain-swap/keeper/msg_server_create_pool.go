@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errormod "github.com/cosmos/cosmos-sdk/types/errors"
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 func (k msgServer) CreatePool(ctx context.Context, msg *types.MsgCreatePoolRequest) (*types.MsgCreatePoolResponse, error) {

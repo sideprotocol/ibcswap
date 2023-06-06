@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
 // MakeSwap is called when the maker wants to make atomic swap. The method create new order and lock tokens.

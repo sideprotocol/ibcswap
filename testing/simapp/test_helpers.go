@@ -30,8 +30,8 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/ibcswap/ibcswap/v6/testing/mock"
-	"github.com/ibcswap/ibcswap/v6/testing/simapp/helpers"
+	"github.com/sideprotocol/ibcswap/v6/testing/mock"
+	"github.com/sideprotocol/ibcswap/v6/testing/simapp/helpers"
 )
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in

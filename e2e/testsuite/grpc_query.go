@@ -6,8 +6,8 @@ import (
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesbeta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	intertxtypes "github.com/cosmos/interchain-accounts/x/inter-tx/types"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
-	atomicswaptypes "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	atomicswaptypes "github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	"github.com/strangelove-ventures/ibctest/v6/chain/cosmos"
 	"github.com/strangelove-ventures/ibctest/v6/ibc"
 
@@ -224,7 +224,7 @@ func (s *E2ETestSuite) GetBalance(ctx context.Context, chain ibc.Chain, addr str
 // QueryClientStatus queries the status of the client by clientID
 func (s *E2ETestSuite) QueryAccount(ctx context.Context, chain ibc.Chain, addr string) (*authtypes.QueryAccountResponse, error) {
 	queryClient := s.GetChainGRCPClients(chain).AccountQueryClient
-	
+
 	res, err := queryClient.Account(
 		ctx,
 		&authtypes.QueryAccountRequest{
@@ -237,11 +237,10 @@ func (s *E2ETestSuite) QueryAccount(ctx context.Context, chain ibc.Chain, addr s
 	return res, nil
 }
 
-
 // QueryClientStatus queries the status of the client by clientID
 func (s *E2ETestSuite) QueryModuleAccount(ctx context.Context, chain ibc.Chain, name string) (*authtypes.QueryModuleAccountByNameResponse, error) {
 	queryClient := s.GetChainGRCPClients(chain).AccountQueryClient
-	
+
 	res, err := queryClient.ModuleAccountByName(
 		ctx,
 		&authtypes.QueryModuleAccountByNameRequest{

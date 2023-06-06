@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errormod "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 func (k Keeper) MultiAssetDeposit(ctx context.Context, msg *types.MsgMultiAssetDepositRequest) (*types.MsgMultiAssetDepositResponse, error) {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 func (k Keeper) LockTokens(ctx sdk.Context, sourcePort string, sourceChannel string, sender sdk.AccAddress, tokens sdk.Coins) error {
@@ -55,7 +55,7 @@ func (k Keeper) UnlockTokens(ctx sdk.Context, sourcePort string, sourceChannel s
 
 	// create the escrow address for the tokens
 	escrowAddress := types.GetEscrowAddress(sourcePort, sourceChannel)
-	
+
 	// escrow source tokens. It fails if balance insufficient
 	if err := k.bankKeeper.SendCoins(
 		ctx, escrowAddress, receiver, tokens,

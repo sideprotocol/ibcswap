@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ibcswap/ibcswap/v6/testing/simapp"
-	"github.com/ibcswap/ibcswap/v6/testing/simapp/simd/cmd"
+	"github.com/sideprotocol/ibcswap/v6/testing/simapp"
+	"github.com/sideprotocol/ibcswap/v6/testing/simapp/simd/cmd"
 )
 
 func TestInitCmd(t *testing.T) {

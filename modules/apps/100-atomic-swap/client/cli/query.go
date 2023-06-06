@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
 
-	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
 // GetCmdParams returns the command handler for atomic swap parameter querying.

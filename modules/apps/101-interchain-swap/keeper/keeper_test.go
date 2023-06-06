@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
-	ibctesting "github.com/ibcswap/ibcswap/v6/testing"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	ibctesting "github.com/sideprotocol/ibcswap/v6/testing"
 )
 
 type KeeperTestSuite struct {

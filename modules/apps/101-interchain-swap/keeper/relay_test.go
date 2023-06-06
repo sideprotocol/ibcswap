@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
-	ibctesting "github.com/ibcswap/ibcswap/v6/testing"
-	"github.com/ibcswap/ibcswap/v6/testing/testutil/sample"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	ibctesting "github.com/sideprotocol/ibcswap/v6/testing"
+	"github.com/sideprotocol/ibcswap/v6/testing/testutil/sample"
 )
 
 // test sending from chainA to chainB using both coin that orignate on

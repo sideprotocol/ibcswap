@@ -6,7 +6,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	simappparams "github.com/ibcswap/ibcswap/v6/testing/simapp/params"
+	simappparams "github.com/sideprotocol/ibcswap/v6/testing/simapp/params"
 )
 
 func Codec() *codec.ProtoCodec {

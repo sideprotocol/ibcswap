@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMultiAssetWithdrawRequest) (*types.MsgMultiAssetWithdrawResponse, error) {
@@ -38,7 +38,7 @@ func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMulti
 	if err != nil {
 		return nil, err
 	}
-	targetDenom, _ := pool.FindDenomBySide(types.PoolAssetSide_TARGET)
+	targetDenom, _ := pool.FindDenomBySide(types.PoolAssetSide_DESTINATION)
 	targetOut, err := amm.MultiAssetWithdraw(*msg.Withdraws[1].Balance, *targetDenom)
 
 	if err != nil {

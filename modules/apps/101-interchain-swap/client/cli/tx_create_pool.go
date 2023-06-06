@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	"github.com/spf13/cobra"
 )
 
@@ -67,7 +67,7 @@ func CmdCreatePool() *cobra.Command {
 					Decimal: decimals[0],
 				},
 				types.PoolAsset{
-					Side:    types.PoolAssetSide_TARGET,
+					Side:    types.PoolAssetSide_DESTINATION,
 					Balance: tokens[1],
 					Weight:  weights[1],
 					Decimal: decimals[1],

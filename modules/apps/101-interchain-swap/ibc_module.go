@@ -12,8 +12,8 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 type IBCModule struct {

@@ -3,7 +3,7 @@ package types
 import (
 	"testing"
 
-	"github.com/ibcswap/ibcswap/v6/testing/testutil/sample"
+	"github.com/sideprotocol/ibcswap/v6/testing/testutil/sample"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

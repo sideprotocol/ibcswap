@@ -13,7 +13,7 @@ import (
 
 	//"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	types "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	types "github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	"github.com/strangelove-ventures/ibctest/v6/chain/cosmos"
 	"github.com/strangelove-ventures/ibctest/v6/ibc"
 

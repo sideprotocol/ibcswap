@@ -9,7 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
 var (

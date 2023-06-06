@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/ibc-go/e2e/testsuite"
 	"github.com/cosmos/ibc-go/e2e/testvalues"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/types"
 	test "github.com/strangelove-ventures/ibctest/v6/testutil"
 	"github.com/stretchr/testify/suite"
 )

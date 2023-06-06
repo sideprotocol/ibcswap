@@ -13,7 +13,7 @@ import (
 
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channelutils "github.com/cosmos/ibc-go/v6/modules/core/04-channel/client/utils"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
 const (

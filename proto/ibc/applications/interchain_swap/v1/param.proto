@@ -3,7 +3,7 @@ package ibc.applications.interchain_swap.v1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types";
+option go_package = "github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types";
 
 // Params defines the set of IBC swap parameters.
 message Params {

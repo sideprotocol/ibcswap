@@ -27,7 +27,7 @@ import (
 
 	"github.com/cosmos/ibc-go/v6/modules/core/keeper"
 	ibctestingtypes "github.com/cosmos/ibc-go/v6/testing/types"
-	"github.com/ibcswap/ibcswap/v6/testing/simapp"
+	"github.com/sideprotocol/ibcswap/v6/testing/simapp"
 )
 
 var DefaultTestingAppInit = SetupTestingApp

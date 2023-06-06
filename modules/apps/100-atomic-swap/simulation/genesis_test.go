@@ -1,10 +1,11 @@
 package simulation_test
 
 import (
-	"cosmossdk.io/math"
 	"encoding/json"
 	"math/rand"
 	"testing"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -12,8 +13,8 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/simulation"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/simulation"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.

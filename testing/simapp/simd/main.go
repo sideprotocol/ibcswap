@@ -6,8 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 
-	"github.com/ibcswap/ibcswap/v6/testing/simapp"
-	"github.com/ibcswap/ibcswap/v6/testing/simapp/simd/cmd"
+	"github.com/sideprotocol/ibcswap/v6/testing/simapp"
+	"github.com/sideprotocol/ibcswap/v6/testing/simapp/simd/cmd"
 )
 
 func main() {
@@ -22,4 +22,3 @@ func main() {
 		}
 	}
 }
-

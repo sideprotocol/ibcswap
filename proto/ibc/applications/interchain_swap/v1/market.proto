@@ -4,12 +4,12 @@ package ibc.applications.interchain_swap.v1;
 import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types";
+option go_package = "github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types";
 
 
 enum PoolAssetSide {
   SOURCE = 0;
-  TARGET = 1;
+  DESTINATION = 1;
 }
 
 enum PoolStatus {

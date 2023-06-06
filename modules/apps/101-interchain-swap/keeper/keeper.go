@@ -16,7 +16,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 type (

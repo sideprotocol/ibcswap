@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 func (suite *KeeperTestSuite) TestGenesis() {

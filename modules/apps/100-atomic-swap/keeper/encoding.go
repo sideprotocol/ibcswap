@@ -1,6 +1,6 @@
 package keeper
 
-import "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+import "github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/types"
 
 // Unmarshal attempts to decode and return an LimitOrder object from
 // raw encoded bytes.

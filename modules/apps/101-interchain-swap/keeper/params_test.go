@@ -1,6 +1,6 @@
 package keeper_test
 
-import "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+import "github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 
 func (suite *KeeperTestSuite) TestParams() {
 	expParams := types.DefaultParams()

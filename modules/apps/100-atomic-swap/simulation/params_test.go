@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/simulation"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/simulation"
 )
 
 func TestParamChanges(t *testing.T) {

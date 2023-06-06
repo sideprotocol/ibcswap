@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/ibc-go/e2e/testsuite"
 	"github.com/cosmos/ibc-go/e2e/testvalues"
-	types "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	types "github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	"github.com/strangelove-ventures/ibctest/v6/chain/cosmos"
 	test "github.com/strangelove-ventures/ibctest/v6/testutil"
 )

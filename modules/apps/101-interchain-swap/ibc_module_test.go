@@ -5,12 +5,12 @@ import (
 	"math"
 
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	interchainswap "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	interchainswap "github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
-	ibctesting "github.com/ibcswap/ibcswap/v6/testing"
+	ibctesting "github.com/sideprotocol/ibcswap/v6/testing"
 )
 
 func (suite *InterchainSwapTestSuite) TestOnChanOpenInit() {

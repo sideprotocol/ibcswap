@@ -34,8 +34,8 @@ import (
 
 	//"github.com/cosmos/ibc-go/v6/testing/mock"
 	//"github.com/cosmos/ibc-go/v6/testing/simapp"
-	"github.com/ibcswap/ibcswap/v6/testing/mock"
-	"github.com/ibcswap/ibcswap/v6/testing/simapp"
+	"github.com/sideprotocol/ibcswap/v6/testing/mock"
+	"github.com/sideprotocol/ibcswap/v6/testing/simapp"
 )
 
 var MaxAccounts = 10

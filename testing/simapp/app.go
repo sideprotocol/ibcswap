@@ -113,15 +113,15 @@ import (
 	ibcmock "github.com/cosmos/ibc-go/v6/testing/mock"
 	v6 "github.com/cosmos/ibc-go/v6/testing/simapp/upgrades/v6"
 	ibctestingtypes "github.com/cosmos/ibc-go/v6/testing/types"
-	atomicswap "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap"
-	atomicswapkeeper "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/keeper"
-	atomicswaptypes "github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
-	simappparams "github.com/ibcswap/ibcswap/v6/testing/simapp/params"
-	simappupgrades "github.com/ibcswap/ibcswap/v6/testing/simapp/upgrades"
+	atomicswap "github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap"
+	atomicswapkeeper "github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/keeper"
+	atomicswaptypes "github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	simappparams "github.com/sideprotocol/ibcswap/v6/testing/simapp/params"
+	simappupgrades "github.com/sideprotocol/ibcswap/v6/testing/simapp/upgrades"
 
-	interchainswap "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap"
-	interchainswapkeeper "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
-	interchainswaptypes "github.com/ibcswap/ibcswap/v6/modules/apps/101-interchain-swap/types"
+	interchainswap "github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap"
+	interchainswapkeeper "github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/keeper"
+	interchainswaptypes "github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 const appName = "SimApp"

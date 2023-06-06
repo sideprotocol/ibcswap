@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/hex"
+
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -12,7 +13,7 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
 

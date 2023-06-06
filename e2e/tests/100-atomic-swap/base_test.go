@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/ibc-go/e2e/testvalues"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	"github.com/gogo/protobuf/proto"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/types"
 	"github.com/strangelove-ventures/ibctest/v6/ibc"
 	test "github.com/strangelove-ventures/ibctest/v6/testutil"
 	"github.com/stretchr/testify/suite"

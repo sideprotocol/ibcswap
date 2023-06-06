@@ -2,7 +2,7 @@ module github.com/cosmos/ibc-go/e2e
 
 go 1.18
 
-replace github.com/ibcswap/ibcswap/v6 => ../
+replace github.com/sideprotocol/ibcswap/v6 => ../
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
@@ -12,7 +12,7 @@ require (
 	github.com/cosmos/interchain-accounts v0.4.0
 	github.com/docker/docker v20.10.19+incompatible
 	github.com/gogo/protobuf v1.3.3
-	github.com/ibcswap/ibcswap/v6 v6.0.0-00010101000000-000000000000
+	github.com/sideprotocol/ibcswap/v6 v6.0.0-00010101000000-000000000000
 	github.com/strangelove-ventures/ibctest/v6 v6.0.0-20221209152048-e8388a0b91fd
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/tendermint v0.34.24

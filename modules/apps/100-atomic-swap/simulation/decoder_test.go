@@ -7,9 +7,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/simulation"
-	"github.com/ibcswap/ibcswap/v6/modules/apps/100-atomic-swap/types"
-	"github.com/ibcswap/ibcswap/v6/testing/simapp"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/simulation"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/types"
+	"github.com/sideprotocol/ibcswap/v6/testing/simapp"
 )
 
 func TestDecodeStore(t *testing.T) {
