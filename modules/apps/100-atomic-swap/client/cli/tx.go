@@ -233,7 +233,7 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 // NewCancelSwapTxCmd returns the command to create a CancelSwapMessage transaction
 func NewCancelSwapTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cancel [order-id]",
+		Use:   "cancel [src-channel] [order-id]",
 		Short: "Cancel an swap",
 		Long: strings.TrimSpace(`Swap a token through IBC. Timeouts can be specified
 as absolute or relative using the "absolute-timeouts" flag. Timeout height can be set by passing in the height string
@@ -244,88 +244,77 @@ corresponding to the counterparty channel. Any timeout set to 0 is disabled.`),
 		// Example: fmt.Sprintf("%s tx ibc-transfer transfer [src-channel] [receiver] [amount]", version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			//clientCtx, err := client.GetClientTxContext(cmd)
-			//if err != nil {
-			//	return err
-			//}
-			//sender := clientCtx.GetFromAddress().String()
-			//srcChannel := args[0]
-			//receivingAddress := args[2]
-			//
-			//fromCoin, err := sdk.ParseCoinNormalized(args[1])
-			//if err != nil {
-			//	return err
-			//}
-			//toCoin, err2 := sdk.ParseCoinNormalized(args[3])
-			//if err2 != nil {
-			//	return err
-			//}
-			//
-			////if !strings.HasPrefix(coin.Denom, "ibc/") {
-			////	denomTrace := types.ParseDenomTrace(coin.Denom)
-			////	coin.Denom = denomTrace.IBCDenom()
-			////}
-			//
-			//timeoutHeightStr, err := cmd.Flags().GetString(flagPacketTimeoutHeight)
-			//if err != nil {
-			//	return err
-			//}
-			//timeoutHeight, err := clienttypes.ParseHeight(timeoutHeightStr)
-			//if err != nil {
-			//	return err
-			//}
-			//
-			//timeoutTimestamp, err := cmd.Flags().GetUint64(flagPacketTimeoutTimestamp)
-			//if err != nil {
-			//	return err
-			//}
-			//
-			//absoluteTimeouts, err := cmd.Flags().GetBool(flagAbsoluteTimeouts)
-			//if err != nil {
-			//	return err
-			//}
-			//
-			//// if the timeouts are not absolute, retrieve latest block height and block timestamp
-			//// for the consensus state connected to the destination port/channel
-			//if !absoluteTimeouts {
-			//	consensusState, height, _, err := channelutils.QueryLatestConsensusState(clientCtx, types.PortID, srcChannel)
-			//	if err != nil {
-			//		return err
-			//	}
-			//
-			//	if !timeoutHeight.IsZero() {
-			//		absoluteHeight := height
-			//		absoluteHeight.RevisionNumber += timeoutHeight.RevisionNumber
-			//		absoluteHeight.RevisionHeight += timeoutHeight.RevisionHeight
-			//		timeoutHeight = absoluteHeight
-			//	}
-			//
-			//	if timeoutTimestamp != 0 {
-			//		// use local clock time as reference time if it is later than the
-			//		// consensus state timestamp of the counter party chain, otherwise
-			//		// still use consensus state timestamp as reference
-			//		now := time.Now().UnixNano()
-			//		consensusStateTimestamp := consensusState.GetTimestamp()
-			//		if now > 0 {
-			//			now := uint64(now)
-			//			if now > consensusStateTimestamp {
-			//				timeoutTimestamp = now + timeoutTimestamp
-			//			} else {
-			//				timeoutTimestamp = consensusStateTimestamp + timeoutTimestamp
-			//			}
-			//		} else {
-			//			return errors.New("local clock time is not greater than Jan 1st, 1970 12:00 AM")
-			//		}
-			//	}
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			sender := clientCtx.GetFromAddress().String()
+			srcChannel := args[0]
+			orderId := args[1]
+
+			//if !strings.HasPrefix(coin.Denom, "ibc/") {
+			//	denomTrace := types.ParseDenomTrace(coin.Denom)
+			//	coin.Denom = denomTrace.IBCDenom()
 			//}
 
-			//msg := types.NewMsgCancelSwap(
-			//	types.PortID, srcChannel, fromCoin, toCoin,
-			//	sender, receivingAddress, expectedCounterparty,
-			//	timeoutHeight, timeoutTimestamp, time.Now().UTC().Unix(),
-			//)
-			//return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-			return nil
+			timeoutHeightStr, err := cmd.Flags().GetString(flagPacketTimeoutHeight)
+			if err != nil {
+				return err
+			}
+			timeoutHeight, err := clienttypes.ParseHeight(timeoutHeightStr)
+			if err != nil {
+				return err
+			}
+
+			timeoutTimestamp, err := cmd.Flags().GetUint64(flagPacketTimeoutTimestamp)
+			if err != nil {
+				return err
+			}
+
+			absoluteTimeouts, err := cmd.Flags().GetBool(flagAbsoluteTimeouts)
+			if err != nil {
+				return err
+			}
+
+			// if the timeouts are not absolute, retrieve latest block height and block timestamp
+			// for the consensus state connected to the destination port/channel
+			if !absoluteTimeouts {
+				consensusState, height, _, err := channelutils.QueryLatestConsensusState(clientCtx, types.PortID, srcChannel)
+				if err != nil {
+					return err
+				}
+
+				if !timeoutHeight.IsZero() {
+					absoluteHeight := height
+					absoluteHeight.RevisionNumber += timeoutHeight.RevisionNumber
+					absoluteHeight.RevisionHeight += timeoutHeight.RevisionHeight
+					timeoutHeight = absoluteHeight
+				}
+
+				if timeoutTimestamp != 0 {
+					// use local clock time as reference time if it is later than the
+					// consensus state timestamp of the counter party chain, otherwise
+					// still use consensus state timestamp as reference
+					now := time.Now().UnixNano()
+					consensusStateTimestamp := consensusState.GetTimestamp()
+					if now > 0 {
+						now := uint64(now)
+						if now > consensusStateTimestamp {
+							timeoutTimestamp = now + timeoutTimestamp
+						} else {
+							timeoutTimestamp = consensusStateTimestamp + timeoutTimestamp
+						}
+					} else {
+						return errors.New("local clock time is not greater than Jan 1st, 1970 12:00 AM")
+					}
+				}
+			}
+
+			msg := types.NewMsgCancelSwap(
+				sender,
+				orderId,
+				timeoutHeight, timeoutTimestamp)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 	cmd.Flags().String(flagPacketTimeoutHeight, types.DefaultRelativePacketTimeoutHeight, "Packet timeout block height. The timeout is disabled when set to 0-0.")
