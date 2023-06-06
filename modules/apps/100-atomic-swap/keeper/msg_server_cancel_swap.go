@@ -27,6 +27,8 @@ func (k Keeper) CancelSwap(goCtx context.Context, msg *types.CancelSwapMsg) (*ty
 	}
 
 	// Make sure the sender is the maker of the order.
+	// TODO: New Message logic for cancel swap is incomplete. (using command line)
+	// We should verify/make sure that msg.MakerAddress and sender of TX is same. Otherwise this should fail
 	if order.Maker.MakerAddress != msg.MakerAddress {
 		return &types.MsgCancelSwapResponse{}, fmt.Errorf("sender is not the maker of the order")
 	}

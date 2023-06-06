@@ -40,7 +40,7 @@ func GetCmdParams() *cobra.Command {
 	return cmd
 }
 
-// GetCmdQueryEscrowAddress returns the command handler for ibc-swap parameter querying.
+// GetCmdQueryEscrowAddress returns the escrow address for a particular port and channel id.
 func GetCmdQueryEscrowAddress() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "escrow-address",
@@ -65,7 +65,7 @@ func GetCmdQueryEscrowAddress() *cobra.Command {
 	return cmd
 }
 
-// GetCmdQueryEscrowAddress returns the command handler for ibc-swap parameter querying.
+// GetCmdOrderList returns all the orders
 func GetCmdOrderList() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "orders",

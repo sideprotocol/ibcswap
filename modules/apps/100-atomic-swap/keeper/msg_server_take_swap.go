@@ -83,5 +83,5 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.TakeSwapMsg) (*types.
 
 	ctx.EventManager().EmitTypedEvents(msg)
 
-	return &types.MsgTakeSwapResponse{}, nil
+	return &types.MsgTakeSwapResponse{OrderId: msg.OrderId}, nil
 }
