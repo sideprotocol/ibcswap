@@ -94,7 +94,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 			return nil, err
 		}
 
-		orderId, err := k.OnReceivedMake(ctx, packet, data.OrderId, &msg)
+		orderId, err := k.OnReceivedMake(ctx, packet, data.OrderId, data.Path, &msg)
 		if err != nil {
 			return nil, err
 		}
@@ -141,11 +141,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				return err
 			}
-
-			// check order status
-			path := orderPath(msg.SourcePort, msg.SourceChannel, packet.DestinationPort, packet.DestinationChannel, packet.Sequence)
-			orderId := generateOrderId(path, &msg)
-			order, ok := k.GetAtomicOrder(ctx, orderId)
+			order, ok := k.GetAtomicOrder(ctx, data.OrderId)
 			if !ok {
 				return types.ErrOrderDoesNotExists
 				//return nil
@@ -240,14 +236,9 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		if err != nil {
 			return err
 		}
-
-		channel, _ := k.channelKeeper.GetChannel(ctx, makeMsg.SourceChannel, makeMsg.SourcePort)
-		sequence, _ := k.channelKeeper.GetNextSequenceSend(ctx, makeMsg.SourceChannel, makeMsg.SourcePort)
-		path := orderPath(makeMsg.SourcePort, makeMsg.SourceChannel, channel.Counterparty.PortId, channel.Counterparty.ChannelId, sequence)
-		orderID := generateOrderId(path, makeMsg)
-		order, found := k.GetAtomicOrder(ctx, orderID)
+		order, found := k.GetAtomicOrder(ctx, data.OrderId)
 		if !found {
-			return fmt.Errorf("order not found for ID %s", orderID)
+			return fmt.Errorf("order not found for ID %s", data.OrderId)
 		}
 		order.Status = types.Status_CANCEL
 		k.SetAtomicOrder(ctx, order)
@@ -271,10 +262,6 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 			return err
 		}
 
-		//channel, _ := k.channelKeeper.GetChannel(ctx, takeMsg.SourceChannel, makeMsg.SourcePort)
-		//sequence, _ := k.channelKeeper.GetNextSequenceSend(ctx, makeMsg.SourceChannel, makeMsg.SourcePort)
-		//path := orderPath(makeMsg.SourcePort, makeMsg.SourceChannel, channel.Counterparty.PortId, channel.Counterparty.ChannelId, sequence)
-		//orderID := generateOrderId(packet)
 		order, found := k.GetAtomicOrder(ctx, takeMsg.OrderId)
 		if !found {
 			return fmt.Errorf("order not found for ID %s", takeMsg.OrderId)

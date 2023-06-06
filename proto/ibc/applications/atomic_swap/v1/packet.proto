@@ -24,6 +24,7 @@ message AtomicSwapPacketData {
   SwapMessageType   type = 1;
   bytes  data = 2;
   string orderId = 3;
-  string memo = 4;
+  string path = 4;
+  string memo = 5;
 }
 

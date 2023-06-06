@@ -22,4 +22,6 @@ var (
 	ErrOrderDenominationMismatched = sdkerrors.Register(ModuleName, 15, "denomination are not matched")
 	ErrOrderInsufficientAmount     = sdkerrors.Register(ModuleName, 16, "amount of taker token is insufficient")
 	ErrOrderPermissionIsNotAllowed = sdkerrors.Register(ModuleName, 17, "sender is not the owner of the order")
+	ErrNotFoundChannel             = sdkerrors.Register(ModuleName, 18, "did not find channel")
+	ErrFailedMakeSwap              = sdkerrors.Register(ModuleName, 19, "Failed to make swap")
 )
