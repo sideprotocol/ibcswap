@@ -134,15 +134,13 @@ func (k Keeper) executeCancel(ctx sdk.Context, msg *types.CancelSwapMsg, step in
 // OnReceivedMake is the step 3.1 (Save order) from the atomic swap:
 // https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap
 // The step is executed on the Taker chain.
-func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, orderId string, msg *types.MakeSwapMsg) (string, error) {
+func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, orderId, path string, msg *types.MakeSwapMsg) (string, error) {
 	// Check if buyToken is a valid token on the taker chain, could be either native or ibc token
 	// Disable it for demo at 2023-3-18
 	//supply := k.bankKeeper.GetSupply(ctx, msg.BuyToken.Denom)
 	//if supply.Amount.Int64() <= 0 {
 	//	return errors.New("buy token does not exist on the taker chain")
 	//}
-
-	path := orderPath(msg.SourcePort, msg.SourceChannel, packet.DestinationPort, packet.DestinationChannel, packet.Sequence)
 	order := types.Order{
 		Id:     orderId,
 		Side:   types.REMOTE,
@@ -231,20 +229,23 @@ func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, ms
 	return order.Id, nil
 }
 
-func createOrder(ctx sdk.Context, msg *types.MakeSwapMsg, channelKeeper types.ChannelKeeper) types.Order {
-	channel, _ := channelKeeper.GetChannel(ctx, msg.SourcePort, msg.SourceChannel)
-	sequence, _ := channelKeeper.GetNextSequenceSend(ctx, msg.SourcePort, msg.SourceChannel)
+func createOrder(ctx sdk.Context, msg *types.MakeSwapMsg, channelKeeper types.ChannelKeeper) (*types.Order, error) {
+	channel, found := channelKeeper.GetChannel(ctx, msg.SourcePort, msg.SourceChannel)
+	if !found {
+		return nil, types.ErrNotFoundChannel
+	}
+	sequence := types.GenerateRandomString(ctx.ChainID(), 10)
 	path := orderPath(msg.SourcePort, msg.SourceChannel, channel.Counterparty.PortId, channel.Counterparty.ChannelId, sequence)
-	return types.Order{
+	return &types.Order{
 		Id:     generateOrderId(path, msg),
 		Side:   types.NATIVE,
 		Status: types.Status_INITIAL,
 		Path:   path,
 		Maker:  msg,
-	}
+	}, nil
 }
 
-func orderPath(sourcePort, sourceChannel, destPort, destChannel string, sequence uint64) string {
+func orderPath(sourcePort, sourceChannel, destPort, destChannel, sequence string) string {
 	return fmt.Sprintf("channel/%s/port/%s/channel/%s/port/%s/%d", sourceChannel, sourcePort, destChannel, destPort, sequence)
 }
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errormod "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
@@ -42,11 +43,16 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.
 		return nil, err
 	}
 
-	order := createOrder(ctx, msg, k.channelKeeper)
+	order, err := createOrder(ctx, msg, k.channelKeeper)
+	if err != nil {
+		return nil, errormod.Wrapf(types.ErrFailedMakeSwap, "due to %s", err)
+	}
+
 	packet := types.AtomicSwapPacketData{
 		Type:    types.MAKE_SWAP,
 		Data:    msgByte,
 		OrderId: order.Id,
+		Path: order.Path,
 		Memo:    "",
 	}
 
@@ -54,7 +60,7 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.
 		return nil, err
 	}
 
-	k.SetAtomicOrder(ctx, order)
+	k.SetAtomicOrder(ctx, *order)
 	ctx.EventManager().EmitTypedEvents(msg)
 	return &types.MsgMakeSwapResponse{OrderId: order.Id}, nil
 }
