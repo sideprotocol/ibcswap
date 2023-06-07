@@ -98,32 +98,17 @@ func (suite *KeeperTestSuite) TestMsgDoubleDeposit() {
 	bankAKeeper.SendCoinsFromModuleToAccount(suite.chainA.GetContext(), types.ModuleName, suite.chainA.SenderAccount.GetAddress(), stakeATokens)
 	bankBKeeper.SendCoinsFromModuleToAccount(suite.chainB.GetContext(), types.ModuleName, suite.chainB.SenderAccount.GetAddress(), stakeBTokens)
 
-	nonce := suite.chainB.SenderAccount.GetSequence()
-
-	remoteDepositTx := types.DepositSignature{
-		Sequence: nonce,
-		Sender:   suite.chainB.SenderAccount.GetAddress().String(),
-		Balance:  &sdk.Coin{Denom: denomPair[1], Amount: sdk.NewInt(1000)},
-	}
-
-	rawDepositTx := types.ModuleCdc.MustMarshal(&remoteDepositTx)
-
 	if err != nil {
 		fmt.Println("Marshal Error:", err)
 	}
-	signedDepositTx, err := suite.chainB.SenderPrivKey.Sign(rawDepositTx)
-	suite.Require().NoError(err)
-	isValid := verifySignedMessage(rawDepositTx, signedDepositTx, suite.chainB.SenderAccount.GetPubKey())
-	suite.Require().Equal(isValid, true)
 
-	msg := types.NewMsgMultiAssetDeposit(
+	msg := types.NewMsgMakeMultiAssetDeposit(
 		*pooId,
 		[]string{suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String()},
 		[]*sdk.Coin{{Denom: denomPair[0], Amount: sdk.NewInt(1000)}, {Denom: denomPair[1], Amount: sdk.NewInt(1000)}},
-		signedDepositTx,
 	)
 
-	res, err := suite.chainB.GetSimApp().InterchainSwapKeeper.OnMultiAssetDepositReceived(
+	res, err := suite.chainB.GetSimApp().InterchainSwapKeeper.OnMakeMultiAssetDepositReceived(
 		ctx, msg,
 		&types.StateChange{
 			PoolTokens: nil,

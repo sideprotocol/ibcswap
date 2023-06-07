@@ -8,11 +8,11 @@ import (
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgCreatePoolRequest{}, "interchainswap/CreatePool", nil)
+	cdc.RegisterConcrete(&MsgMakePoolRequest{}, "interchainswap/MakePool", nil)
+	cdc.RegisterConcrete(&MsgTakePoolRequest{}, "interchainswap/TakePool", nil)
 	cdc.RegisterConcrete(&MsgSingleAssetDepositRequest{}, "interchainswap/Deposit", nil)
-	cdc.RegisterConcrete(&MsgMultiAssetDepositRequest{}, "interchainswap/DoubleDeposit", nil)
-	cdc.RegisterConcrete(&DepositSignature{}, "interchainswap/DepositSignature", nil)
-	cdc.RegisterConcrete(&MsgSingleAssetWithdrawRequest{}, "interchainswap/SingleWithdraw", nil)
+	cdc.RegisterConcrete(&MsgMakeMultiAssetDepositRequest{}, "interchainswap/MakeMultiAssetDeposit", nil)
+	cdc.RegisterConcrete(&MsgTakeMultiAssetDepositRequest{}, "interchainswap/TakeMultiAssetDeposit", nil)
 	cdc.RegisterConcrete(&MsgMultiAssetWithdrawRequest{}, "interchainswap/MultiWithdraw", nil)
 	cdc.RegisterConcrete(&MsgSwapRequest{}, "interchainswap/Swap", nil)
 	// this line is used by starport scaffolding # 2
@@ -20,16 +20,19 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgCreatePoolRequest{},
+		&MsgMakePoolRequest{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgTakePoolRequest{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSingleAssetDepositRequest{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgMultiAssetDepositRequest{},
+		&MsgMakeMultiAssetDepositRequest{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgSingleAssetWithdrawRequest{},
+		&MsgTakeMultiAssetDepositRequest{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgMultiAssetWithdrawRequest{},

@@ -55,4 +55,13 @@ message MarketFeeUpdateProposal {
   uint32   fee_rate                        = 4;
 }
 
+// multi asset deposit order
+message MultiAssetDepositOrder {
+  string id = 1;
+  string poolId = 2;
+  string chainId = 3;
+  string sourceMaker = 4;
+  string destinationTaker = 5;
+}
+
 

@@ -15,7 +15,7 @@ var _ = strconv.Itoa(0)
 
 func CmdMultiAssetDeposit() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "multi_asset_deposit [pool-id] [local sender] [remote sender] [pool-tokens(1000aside,1000bside)] [remote sender signature]",
+		Use:   "multi_asset_deposit [pool-id] [local sender] [remote sender] [pool-tokens(1000aside,1000bside)]",
 		Short: "Broadcast message Deposit",
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
@@ -23,7 +23,6 @@ func CmdMultiAssetDeposit() *cobra.Command {
 			argLocalSender := args[1]
 			argRemoteSender := args[2]
 			argTokens := args[3]
-			argSignature := args[4]
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -34,11 +33,10 @@ func CmdMultiAssetDeposit() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgMultiAssetDeposit(
+			msg := types.NewMsgMakeMultiAssetDeposit(
 				argPoolId,
 				[]string{argLocalSender, argRemoteSender},
 				tokens,
-				[]byte(argSignature),
 			)
 
 			packetTimeoutHeight, err1 := cmd.Flags().GetString("packet-timeout-height")

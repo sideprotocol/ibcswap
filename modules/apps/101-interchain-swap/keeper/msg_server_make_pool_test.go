@@ -6,8 +6,8 @@ import (
 	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
-func (suite *KeeperTestSuite) TestMsgCreatePool() {
-	var msg *types.MsgCreatePoolRequest
+func (suite *KeeperTestSuite) TestMsgMakePool() {
+	var msg *types.MsgMakePoolRequest
 
 	testCases := []struct {
 		name    string
@@ -29,12 +29,11 @@ func (suite *KeeperTestSuite) TestMsgCreatePool() {
 		path := NewInterchainSwapPath(suite.chainA, suite.chainB)
 		suite.coordinator.Setup(path)
 
-		msg = types.NewMsgCreatePool(
+		msg = types.NewMsgMakePool(
 			path.EndpointA.ChannelConfig.PortID,
 			path.EndpointA.ChannelID,
 			suite.chainA.SenderAccount.GetAddress().String(),
 			suite.chainB.SenderAccount.GetAddress().String(),
-			[]byte("0"),
 			types.PoolAsset{
 				Side: types.PoolAssetSide_SOURCE,
 				Balance: &sdk.Coin{
@@ -57,7 +56,7 @@ func (suite *KeeperTestSuite) TestMsgCreatePool() {
 			300,
 		)
 		msgSrv := keeper.NewMsgServerImpl(suite.chainA.GetSimApp().InterchainSwapKeeper)
-		res, err := msgSrv.CreatePool(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+		res, err := msgSrv.MakePool(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 
 		if tc.expPass {
 			suite.Require().NoError(err)

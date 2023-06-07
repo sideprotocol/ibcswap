@@ -13,12 +13,11 @@ func (suite *KeeperTestSuite) SetupPool() (*string, error) {
 	suite.SetupTest()
 	path := NewInterchainSwapPath(suite.chainA, suite.chainB)
 	suite.coordinator.Setup(path)
-	msg := types.NewMsgCreatePool(
+	msg := types.NewMsgMakePool(
 		path.EndpointA.ChannelConfig.PortID,
 		path.EndpointA.ChannelID,
 		suite.chainA.SenderAccount.GetAddress().String(),
 		suite.chainB.SenderAccount.GetAddress().String(),
-		[]byte("0"),
 		types.PoolAsset{
 			Side: types.PoolAssetSide_SOURCE,
 			Balance: &sdk.Coin{
@@ -42,7 +41,7 @@ func (suite *KeeperTestSuite) SetupPool() (*string, error) {
 	)
 
 	ctx := suite.chainA.GetContext()
-	suite.chainA.GetSimApp().InterchainSwapKeeper.OnCreatePoolAcknowledged(ctx, msg)
+	suite.chainA.GetSimApp().InterchainSwapKeeper.OnMakePoolAcknowledged(ctx, msg)
 	poolId := types.GetPoolId(msg.GetLiquidityDenoms())
 	return &poolId, nil
 }
@@ -54,12 +53,11 @@ func (suite *KeeperTestSuite) SetupPoolWithDenomPair(denomPair []string) (*strin
 	suite.SetupTest()
 	path := NewInterchainSwapPath(suite.chainA, suite.chainB)
 	suite.coordinator.Setup(path)
-	msg := types.NewMsgCreatePool(
+	msg := types.NewMsgMakePool(
 		path.EndpointA.ChannelConfig.PortID,
 		path.EndpointA.ChannelID,
 		suite.chainA.SenderAccount.GetAddress().String(),
 		suite.chainB.SenderAccount.GetAddress().String(),
-		[]byte("0"),
 		types.PoolAsset{
 			Side: types.PoolAssetSide_SOURCE,
 			Balance: &sdk.Coin{
@@ -83,9 +81,9 @@ func (suite *KeeperTestSuite) SetupPoolWithDenomPair(denomPair []string) (*strin
 	)
 
 	ctxA := suite.chainA.GetContext()
-	suite.chainA.GetSimApp().InterchainSwapKeeper.OnCreatePoolAcknowledged(ctxA, msg)
+	suite.chainA.GetSimApp().InterchainSwapKeeper.OnMakePoolAcknowledged(ctxA, msg)
 	ctxB := suite.chainB.GetContext()
-	suite.chainB.GetSimApp().InterchainSwapKeeper.OnCreatePoolAcknowledged(ctxB, msg)
+	suite.chainB.GetSimApp().InterchainSwapKeeper.OnMakePoolAcknowledged(ctxB, msg)
 	poolId := types.GetPoolId(msg.GetLiquidityDenoms())
 	return &poolId, nil
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
-func (k Keeper) MultiAssetDeposit(ctx context.Context, msg *types.MsgMultiAssetDepositRequest) (*types.MsgMultiAssetDepositResponse, error) {
+func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMultiAssetDepositRequest) (*types.MsgMultiAssetDepositResponse, error) {
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -61,7 +61,7 @@ func (k Keeper) MultiAssetDeposit(ctx context.Context, msg *types.MsgMultiAssetD
 	}
 
 	packet := types.IBCSwapPacketData{
-		Type:        types.MULTI_DEPOSIT,
+		Type:        types.MAKE_MULTI_DEPOSIT,
 		Data:        rawMsgData,
 		StateChange: &types.StateChange{PoolTokens: poolTokens},
 	}
@@ -80,6 +80,7 @@ func (k Keeper) MultiAssetDeposit(ctx context.Context, msg *types.MsgMultiAssetD
 	if err != nil {
 		return nil, err
 	}
+	
 
 	return &types.MsgMultiAssetDepositResponse{
 		PoolTokens: poolTokens,

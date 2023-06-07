@@ -4,12 +4,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const TypeMsgDoubleDeposit = "deposit"
+const TypeMsgMakeMultiAssetDeposit = "make_multi_asset_deposit"
 
-var _ sdk.Msg = &MsgSingleAssetDepositRequest{}
+var _ sdk.Msg = &MsgMakeMultiAssetDepositRequest{}
 
-func NewMsgMultiAssetDeposit(poolId string, senders []string, tokens []*sdk.Coin, sig []byte) *MsgMultiAssetDepositRequest {
-	return &MsgMultiAssetDepositRequest{
+func NewMsgMakeMultiAssetDeposit(poolId string, senders []string, tokens []*sdk.Coin) *MsgMakeMultiAssetDepositRequest {
+	return &MsgMakeMultiAssetDepositRequest{
 		PoolId: poolId,
 		Deposits: []*DepositAsset{
 			{
@@ -17,23 +17,22 @@ func NewMsgMultiAssetDeposit(poolId string, senders []string, tokens []*sdk.Coin
 				Balance: tokens[0],
 			},
 			{
-				Sender:    senders[1],
-				Balance:   tokens[1],
-				Signature: sig,
+				Sender:  senders[1],
+				Balance: tokens[1],
 			},
 		},
 	}
 }
 
-func (msg *MsgMultiAssetDepositRequest) Route() string {
+func (msg *MsgMakeMultiAssetDepositRequest) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgMultiAssetDepositRequest) Type() string {
+func (msg *MsgMakeMultiAssetDepositRequest) Type() string {
 	return TypeMsgDeposit
 }
 
-func (msg *MsgMultiAssetDepositRequest) GetSigners() []sdk.AccAddress {
+func (msg *MsgMakeMultiAssetDepositRequest) GetSigners() []sdk.AccAddress {
 	signers := []sdk.AccAddress{}
 
 	creator, err := sdk.AccAddressFromBech32(msg.Deposits[0].Sender)
@@ -44,12 +43,12 @@ func (msg *MsgMultiAssetDepositRequest) GetSigners() []sdk.AccAddress {
 	return signers
 }
 
-func (msg *MsgMultiAssetDepositRequest) GetSignBytes() []byte {
+func (msg *MsgMakeMultiAssetDepositRequest) GetSignBytes() []byte {
 	marshaledMsg := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(marshaledMsg)
 }
 
-func (msg *MsgMultiAssetDepositRequest) ValidateBasic() error {
+func (msg *MsgMakeMultiAssetDepositRequest) ValidateBasic() error {
 	// Check address
 	for _, deposit := range msg.Deposits {
 		_, err := sdk.AccAddressFromBech32(deposit.Sender)
