@@ -12,10 +12,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func CmdCreatePool() *cobra.Command {
+func CmdMakePool() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-pool [source-port] [source-channel] [creator] [counterPartyCreator] [weight] [tokens] [decimals] [swap-fee]",
-		Short: "Broadcast message CreatePool",
+		Use:   "make-pool [source-port] [source-channel] [creator] [counterPartyCreator] [weight] [tokens] [decimals] [swap-fee]",
+		Short: "Broadcast message MakePool",
 		Args:  cobra.ExactArgs(9),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)

@@ -3,6 +3,6 @@ import (
 	"testing"
 )
 
-func TestCmdCreatePool(t *testing.T) {
+func TestCmdMakePool(t *testing.T) {
 	
 }
