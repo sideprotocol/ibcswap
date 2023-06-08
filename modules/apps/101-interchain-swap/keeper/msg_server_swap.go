@@ -18,8 +18,8 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "failed to swap due to %s", err)
 	}
 
-	poolID := types.GetPoolId([]string{msg.TokenIn.Denom, msg.TokenOut.Denom})
-	pool, found := k.GetInterchainLiquidityPool(sdkCtx, poolID)
+	//poolID := types.GetPoolId([]string{msg.TokenIn.Denom, msg.TokenOut.Denom})
+	pool, found := k.GetInterchainLiquidityPool(sdkCtx, msg.PoolId)
 
 	if !found {
 		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "pool not found: %s", types.ErrNotFoundPool)

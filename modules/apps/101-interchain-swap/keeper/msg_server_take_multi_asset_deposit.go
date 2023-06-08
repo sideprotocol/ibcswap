@@ -3,12 +3,14 @@ package keeper
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
 func (k Keeper) TakeMultiAssetDeposit(ctx context.Context, msg *types.MsgTakeMultiAssetDepositRequest) (*types.MsgMultiAssetDepositResponse, error) {
 
-	//sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// Validate message
 	err := msg.ValidateBasic()
@@ -16,63 +18,64 @@ func (k Keeper) TakeMultiAssetDeposit(ctx context.Context, msg *types.MsgTakeMul
 		return nil, err
 	}
 
-	// pool, found := k.GetInterchainLiquidityPool(sdkCtx, msg.PoolId)
-	// if !found {
-	// 	return nil, errormod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrNotFoundPool)
-	// }
+	pool, found := k.GetInterchainLiquidityPool(sdkCtx, msg.PoolId)
+	if !found {
+		return nil, errorsmod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrNotFoundPool)
+	}
 
-	// // check asset owned status
-	// balance := k.bankKeeper.GetBalance(sdkCtx, sdk.MustAccAddressFromBech32(msg.Deposits[0].Sender), msg.Deposits[0].Balance.Denom)
+	order, found := k.GetMultiDepositOrder(sdkCtx, msg.OrderId)
+	if !found {
+		return nil, errorsmod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrNotFoundPool)
+	}
 
-	// // Check initial deposit condition
-	// if pool.Status != types.PoolStatus_ACTIVE {
-	// 	return nil, errormod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrNotReadyForSwap)
-	// }
+	if order.ChainId == sdkCtx.ChainID() {
+		return nil, errorsmod.Wrapf(types.ErrFailedMultiAssetDeposit, "due to %s of other's", types.ErrSameChain)
+	}
 
-	// // Create escrow module account here
-	// err = k.LockTokens(sdkCtx, pool.CounterPartyPort, pool.CounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Deposits[0].Sender), sdk.NewCoins(*msg.Deposits[0].Balance))
+	if msg.Sender != order.DestinationTaker {
+		return nil, errorsmod.Wrapf(types.ErrFailedMultiAssetDeposit, "due to %s of other's", types.ErrMultipleAssetDepositNotAllowed)
+	}
 
-	// if err != nil {
-	// 	return nil, errormod.Wrapf(types.ErrFailedDoubleDeposit, "due to %s", err)
-	// }
+	// check asset owned status
+	asset, err := pool.FindAssetBySide(types.PoolAssetSide_SOURCE)
+	balance := k.bankKeeper.GetBalance(sdkCtx, sdk.MustAccAddressFromBech32(msg.Sender), asset.Denom)
 
-	// amm := *types.NewInterchainMarketMaker(
-	// 	&pool,
-	// )
+	if balance.Amount.LT(asset.Amount) {
+		return nil, errorsmod.Wrapf(types.ErrFailedMultiAssetDeposit, "due to %s of Lp", types.ErrInEnoughAmount)
+	}
 
-	// if err != nil {
-	// 	return nil, err
-	// }
+	// Create escrow module account here
+	err = k.LockTokens(sdkCtx, pool.CounterPartyPort, pool.CounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Sender), sdk.NewCoins(*asset))
 
-	// // Construct IBC packet
-	// rawMsgData, err := types.ModuleCdc.Marshal(msg)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	if err != nil {
+		return nil, errorsmod.Wrapf(types.ErrFailedMultiAssetDeposit, "due to %s", err)
+	}
 
-	// packet := types.IBCSwapPacketData{
-	// 	Type:        types.MULTI_DEPOSIT,
-	// 	Data:        rawMsgData,
-	// 	StateChange: &types.StateChange{PoolTokens: poolTokens},
-	// }
+	// Construct IBC packet
+	rawMsgData, err := types.ModuleCdc.Marshal(msg)
+	if err != nil {
+		return nil, err
+	}
 
-	// timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)
+	packet := types.IBCSwapPacketData{
+		Type: types.TAKE_MULTI_DEPOSIT,
+		Data: rawMsgData,
+	}
 
-	// // Use input timeoutHeight, timeoutStamp
-	// if msg.TimeoutHeight != nil {
-	// 	timeoutHeight = *msg.TimeoutHeight
-	// }
-	// if msg.TimeoutTimeStamp != 0 {
-	// 	timeoutStamp = msg.TimeoutTimeStamp
-	// }
+	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)
 
-	// err = k.SendIBCSwapPacket(sdkCtx, pool.CounterPartyPort, pool.CounterPartyChannel, timeoutHeight, timeoutStamp, packet)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	// Use input timeoutHeight, timeoutStamp
+	if msg.TimeoutHeight != nil {
+		timeoutHeight = *msg.TimeoutHeight
+	}
+	if msg.TimeoutTimeStamp != 0 {
+		timeoutStamp = msg.TimeoutTimeStamp
+	}
 
-	// return &types.MsgMultiAssetDepositResponse{
-	// 	PoolTokens: poolTokens,
-	// }, nil
-	return nil, nil
+	err = k.SendIBCSwapPacket(sdkCtx, pool.CounterPartyPort, pool.CounterPartyChannel, timeoutHeight, timeoutStamp, packet)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgMultiAssetDepositResponse{}, nil
 }

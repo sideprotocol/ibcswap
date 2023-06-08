@@ -11,14 +11,14 @@ import (
 func TestLeftSwap(t *testing.T) {
 
 	// create mock pool
-	demons := []string{"a", "b"}
-	poolId := GetPoolId(demons)
+	denoms := []string{"a", "b"}
+	poolId := GetPoolId("test", denoms)
 	assets := []*PoolAsset{
 		{
 			Side: PoolAssetSide_SOURCE,
 			Balance: &types.Coin{
 				Amount: types.NewInt(100000000),
-				Denom:  demons[0],
+				Denom:  denoms[0],
 			},
 			Weight:  1,
 			Decimal: 6,
@@ -27,7 +27,7 @@ func TestLeftSwap(t *testing.T) {
 			Side: PoolAssetSide_DESTINATION,
 			Balance: &types.Coin{
 				Amount: types.NewInt(0),
-				Denom:  demons[1],
+				Denom:  denoms[1],
 			},
 			Weight:  1,
 			Decimal: 6,
@@ -56,8 +56,8 @@ func TestLeftSwap(t *testing.T) {
 	msg := MsgSwapRequest{
 		SwapType:  SwapMsgType_LEFT,
 		Sender:    "",
-		TokenIn:   &types.Coin{Denom: demons[1], Amount: types.NewInt(1000)},
-		TokenOut:  &types.Coin{Denom: demons[0], Amount: types.NewInt(1000)},
+		TokenIn:   &types.Coin{Denom: denoms[1], Amount: types.NewInt(1000)},
+		TokenOut:  &types.Coin{Denom: denoms[0], Amount: types.NewInt(1000)},
 		Slippage:  10,
 		Recipient: "",
 	}
@@ -70,7 +70,7 @@ func TestUpdatePoolAsset(t *testing.T) {
 
 	// create mock pool
 	demons := []string{"a", "b"}
-	poolId := GetPoolId(demons)
+	poolId := GetPoolId("test", demons)
 	assets := []*PoolAsset{
 		{
 			Side: PoolAssetSide_SOURCE,
@@ -126,7 +126,7 @@ func TestSingleDeposit(t *testing.T) {
 	const initialY = 1000_000_000      // ETH
 	// create mock pool
 	denoms := []string{"a", "b"}
-	poolId := GetPoolId(denoms)
+	poolId := GetPoolId("test", denoms)
 	assets := []*PoolAsset{
 		{
 			Side: PoolAssetSide_SOURCE,
@@ -182,7 +182,7 @@ func TestSingleWithdraw(t *testing.T) {
 	const initialY = 1_000_000 // ETH
 	// create mock pool
 	denoms := []string{"a", "b"}
-	poolId := GetPoolId(denoms)
+	poolId := GetPoolId("test", denoms)
 	assets := []*PoolAsset{
 		{
 			Side: PoolAssetSide_SOURCE,

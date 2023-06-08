@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -16,9 +17,9 @@ var _ = strconv.Itoa(0)
 
 func CmdSwap() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "swap [swap_type] [sender] [slippage] [recipient] [tokenIn] [tokenOut]",
+		Use:   "swap [swap_type] [sender] [poolId] [slippage] [recipient] [tokenIn] [tokenOut]",
 		Short: "Broadcast message Swap",
-		Args:  cobra.ExactArgs(6),
+		Args:  cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			swapTypeArg := args[0]
 
@@ -33,19 +34,26 @@ func CmdSwap() *cobra.Command {
 			}
 
 			argSender := args[1]
-			argSlippage, err := cast.ToUint64E(args[2])
+
+			_, err = sdk.AccAddressFromBech32(argSender)
 			if err != nil {
 				return err
 			}
-			argRecipient := args[3]
+
+			poolId := args[2]
+			argSlippage, err := cast.ToUint64E(args[3])
+			if err != nil {
+				return err
+			}
+			argRecipient := args[4]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 			fmt.Println(argSender)
-			argTokenIn := args[4]
-			argTokenOut := args[5]
+			argTokenIn := args[5]
+			argTokenOut := args[6]
 
 			tokenIn, err := GetTokens(argTokenIn)
 			if err != nil {
@@ -59,7 +67,8 @@ func CmdSwap() *cobra.Command {
 
 			msg := types.NewMsgSwap(
 				swapType,
-				clientCtx.GetFromAddress().String(),
+				argSender,
+				poolId,
 				argSlippage,
 				argRecipient,
 				tokenIn[0],
@@ -69,7 +78,7 @@ func CmdSwap() *cobra.Command {
 			packetTimeoutHeight, err1 := cmd.Flags().GetString("packet-timeout-height")
 			packetTimeoutTimestamp, err2 := cmd.Flags().GetUint("packet-timeout-timestamp")
 
-			poolId := types.GetPoolId([]string{tokenIn[0].Denom, tokenOut[0].Denom})
+		
 			pool, err := QueryPool(clientCtx, poolId)
 			if err != nil {
 				return err

@@ -20,25 +20,25 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 
 	pool, found := k.GetInterchainLiquidityPool(sdkCtx, msg.PoolId)
 	if !found {
-		return nil, errormod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrNotFoundPool)
+		return nil, errormod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrNotFoundPool)
 	}
 
 	// check asset owned status
 	balance := k.bankKeeper.GetBalance(sdkCtx, sdk.MustAccAddressFromBech32(msg.Deposits[0].Sender), msg.Deposits[0].Balance.Denom)
 	if balance.Amount.LT(msg.Deposits[0].Balance.Amount) {
-		return nil, errormod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrInEnoughAmount)
+		return nil, errormod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrInEnoughAmount)
 	}
 
 	// Check initial deposit condition
 	if pool.Status != types.PoolStatus_ACTIVE {
-		return nil, errormod.Wrapf(types.ErrFailedDoubleDeposit, "%s", types.ErrNotReadyForSwap)
+		return nil, errormod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrNotReadyForSwap)
 	}
 
 	// Create escrow module account here
 	err = k.LockTokens(sdkCtx, pool.CounterPartyPort, pool.CounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Deposits[0].Sender), sdk.NewCoins(*msg.Deposits[0].Balance))
 
 	if err != nil {
-		return nil, errormod.Wrapf(types.ErrFailedDoubleDeposit, "due to %s", err)
+		return nil, errormod.Wrapf(types.ErrFailedMultiAssetDeposit, "due to %s", err)
 	}
 
 	amm := *types.NewInterchainMarketMaker(
@@ -54,6 +54,22 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 		return nil, err
 	}
 
+	// create order
+	orderId := types.GetOrderId(sdkCtx.ChainID())
+
+	order := types.MultiAssetDepositOrder{
+		Id:                      orderId,
+		PoolId:                  msg.PoolId,
+		ChainId:                 sdkCtx.ChainID(),
+		SourceMaker:             msg.Deposits[0].Sender,
+		DestinationTaker:        msg.Deposits[1].Sender,
+		SourceMakerLpToken:      poolTokens[0],
+		DestinationTakerLpToken: poolTokens[1],
+	}
+
+	// save order in source chain
+	k.SetMultiDepositOrder(sdkCtx, order)
+
 	// Construct IBC packet
 	rawMsgData, err := types.ModuleCdc.Marshal(msg)
 	if err != nil {
@@ -67,7 +83,6 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)
-
 	// Use input timeoutHeight, timeoutStamp
 	if msg.TimeoutHeight != nil {
 		timeoutHeight = *msg.TimeoutHeight
@@ -80,7 +95,6 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 	if err != nil {
 		return nil, err
 	}
-	
 
 	return &types.MsgMultiAssetDepositResponse{
 		PoolTokens: poolTokens,

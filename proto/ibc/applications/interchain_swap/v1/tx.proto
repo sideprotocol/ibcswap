@@ -120,12 +120,13 @@ enum SwapMsgType {
 message MsgSwapRequest {
   SwapMsgType swap_type = 1;
   string sender    = 2;
-  cosmos.base.v1beta1.Coin tokenIn = 3;
-  cosmos.base.v1beta1.Coin tokenOut = 4;
-  uint64 slippage  = 5;
-  string recipient = 6;
-  ibc.core.client.v1.Height timeoutHeight = 7;
-  uint64 timeoutTimeStamp  = 8;   
+  string poolId = 3;
+  cosmos.base.v1beta1.Coin tokenIn = 4;
+  cosmos.base.v1beta1.Coin tokenOut = 5;
+  uint64 slippage  = 6;
+  string recipient = 7;
+  ibc.core.client.v1.Height timeoutHeight = 8;
+  uint64 timeoutTimeStamp  = 9;   
 }
 
 message MsgSwapResponse {

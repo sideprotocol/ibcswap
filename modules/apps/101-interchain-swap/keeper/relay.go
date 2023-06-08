@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
@@ -65,7 +67,12 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		poolId, err := k.OnMakePoolReceived(ctx, &msg, packet.DestinationPort, packet.DestinationChannel)
+
+		if strings.TrimSpace(data.StateChange.PoolId) == "" {
+			return nil, types.ErrEmptyPoolId
+		}
+
+		poolId, err := k.OnMakePoolReceived(ctx, &msg, data.StateChange.PoolId)
 		if err != nil {
 			return nil, err
 		}
@@ -154,7 +161,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				logger.Debug(err.Error())
 				return err
 			}
-			err := k.OnMakePoolAcknowledged(ctx, &msg)
+			err := k.OnMakePoolAcknowledged(ctx, &msg, data.StateChange.PoolId)
 			if err != nil {
 				return err
 			}
@@ -165,6 +172,11 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				logger.Debug(err.Error())
 				return err
 			}
+			err := k.OnTakePoolAcknowledged(ctx, &msg)
+			if err != nil {
+				return err
+			}
+
 			return nil
 
 		case types.SINGLE_DEPOSIT:

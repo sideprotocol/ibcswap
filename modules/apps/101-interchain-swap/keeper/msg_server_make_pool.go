@@ -26,11 +26,11 @@ func (k msgServer) MakePool(ctx context.Context, msg *types.MsgMakePoolRequest) 
 
 	err = msg.ValidateBasic()
 	if err != nil {
-		return nil, errormod.Wrapf(types.ErrFailedCreatePool, "due to %s", err)
+		return nil, errormod.Wrapf(types.ErrFailedMakePool, "due to %s", err)
 	}
 
 	if !k.bankKeeper.HasSupply(sdkCtx, msg.Liquidity[0].Balance.Denom) {
-		return nil, errormod.Wrapf(types.ErrFailedCreatePool, "due to %s", types.ErrInvalidLiquidity)
+		return nil, errormod.Wrapf(types.ErrFailedMakePool, "due to %s", types.ErrInvalidLiquidity)
 	}
 
 	// Check if user owns initial liquidity or not
@@ -53,10 +53,14 @@ func (k msgServer) MakePool(ctx context.Context, msg *types.MsgMakePoolRequest) 
 		return nil, err
 	}
 
+	poolId := types.GetPoolId(sdkCtx.ChainID(), msg.GetLiquidityDenoms())
 	// Construct IBC data packet
 	packet := types.IBCSwapPacketData{
 		Type: types.MAKE_POOL,
 		Data: poolData,
+		StateChange: &types.StateChange{
+			PoolId: poolId,
+		},
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)
@@ -73,7 +77,7 @@ func (k msgServer) MakePool(ctx context.Context, msg *types.MsgMakePoolRequest) 
 	if err != nil {
 		return nil, err
 	}
-	poolId := types.GetPoolId(msg.GetLiquidityDenoms())
+
 	return &types.MsgMakePoolResponse{
 		PoolId: poolId,
 	}, nil

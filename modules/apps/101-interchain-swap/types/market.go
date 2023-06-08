@@ -10,7 +10,8 @@ import (
 // create new liquidity pool
 func NewInterchainLiquidityPool(
 	ctx types.Context,
-	creator string,
+	sourceCreator string,
+	destinationCreator string,
 	store BankKeeper,
 	poolId string,
 	assets []*PoolAsset,
@@ -26,9 +27,10 @@ func NewInterchainLiquidityPool(
 	}
 
 	pool := InterchainLiquidityPool{
-		Id:      poolId,
-		Creator: creator,
-		Assets:  assets,
+		Id:                 poolId,
+		SourceCreator:      sourceCreator,
+		DestinationCreator: destinationCreator,
+		Assets:             assets,
 		Supply: &types.Coin{
 			Denom:  poolId,
 			Amount: initialLiquidity,
@@ -62,6 +64,16 @@ func (ilp *InterchainLiquidityPool) FindDenomBySide(side PoolAssetSide) (*string
 	for _, asset := range ilp.Assets {
 		if asset.Side == side {
 			return &asset.Balance.Denom, nil
+		}
+	}
+	return nil, ErrNotFoundDenomInPool
+}
+
+// find pool asset by denom
+func (ilp *InterchainLiquidityPool) FindAssetBySide(side PoolAssetSide) (*types.Coin, error) {
+	for _, asset := range ilp.Assets {
+		if asset.Side == side {
+			return asset.Balance, nil
 		}
 	}
 	return nil, ErrNotFoundDenomInPool
