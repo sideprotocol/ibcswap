@@ -13,8 +13,8 @@ e2e-test: cleanup-ibc-test-containers
 e2e-test-interchainswap-basic: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh TestInterchainswapTestSuite TestBasicMsgPacket
 
-e2e-test-interchainswap-create-pool: cleanup-ibc-test-containers
-	./scripts/run-e2e.sh TestInterchainswapTestSuite TestCreatePoolMsgPacket
+e2e-test-interchainswap-make-pool: cleanup-ibc-test-containers
+	./scripts/run-e2e.sh TestInterchainswapTestSuite TestMakePoolMsgPacket
 
 e2e-test-interchainswap-pool: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh TestInterchainswapTestSuite TestPoolStatus
