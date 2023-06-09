@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"github.com/btcsuite/btcutil/bech32"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -41,7 +39,7 @@ func (k Keeper) OnMakePoolAcknowledged(ctx sdk.Context, msg *types.MsgMakePoolRe
 
 	// Mint LP tokens
 	err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(msg.Creator), sdk.Coin{
-		Denom: pool.Supply.Denom, Amount: *&msg.Liquidity[0].Balance.Amount,
+		Denom: pool.Supply.Denom, Amount: msg.Liquidity[0].Balance.Amount,
 	})
 
 	if err != nil {
@@ -147,13 +145,11 @@ func (k Keeper) OnTakeMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.
 
 	// Retrieve the liquidity pool
 	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolId)
-	fmt.Println("Pool=======", pool)
 	if !found {
 		return types.ErrNotFoundPool
 	}
 
 	order, found := k.GetMultiDepositOrder(ctx, req.PoolId, req.OrderId)
-	fmt.Println("Order=======", order)
 	if !found {
 		return types.ErrNotFoundMultiDepositOrder
 	}
@@ -375,7 +371,8 @@ func (k Keeper) OnTakeMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgT
 	}
 
 	order.Status = types.OrderStatus_COMPLETE
-	// // pool status update
+
+	// pool status update
 	for _, supply := range order.PoolTokens {
 		pool.AddPoolSupply(*supply)
 	}

@@ -34,6 +34,23 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 		return nil, errormod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrNotReadyForSwap)
 	}
 
+	// Check input ration of tokens
+	sourceAsset, err := pool.FindAssetBySide(types.PoolAssetSide_SOURCE)
+	if err != nil {
+		return nil, errormod.Wrapf(types.ErrNotFoundDenomInPool, "%s", types.ErrFailedMultiAssetDeposit)
+	}
+	destinationAsset, err := pool.FindAssetBySide(types.PoolAssetSide_DESTINATION)
+	if err != nil {
+		return nil, errormod.Wrapf(types.ErrNotFoundDenomInPool, "%s:", types.ErrFailedMultiAssetDeposit)
+	}
+
+	currentRatio := sourceAsset.Amount.Mul(sdk.NewInt(types.Multiplier)).Quo(destinationAsset.Amount)
+	inputRatio := msg.Deposits[0].Balance.Amount.Mul(sdk.NewInt(types.Multiplier)).Quo(msg.Deposits[1].Balance.Amount)
+
+	if err := types.CheckSlippage(currentRatio, inputRatio, 10); err != nil {
+		return nil, errormod.Wrapf(types.ErrInvalidPairRatio, "%s", types.ErrFailedMultiAssetDeposit)
+	}
+
 	// Create escrow module account here
 	err = k.LockTokens(sdkCtx, pool.CounterPartyPort, pool.CounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Deposits[0].Sender), sdk.NewCoins(*msg.Deposits[0].Balance))
 

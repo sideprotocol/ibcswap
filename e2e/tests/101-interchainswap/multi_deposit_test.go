@@ -238,6 +238,20 @@ func (s *InterchainswapTestSuite) TestMultiDepositStatus() {
 			switch tc.msgType {
 			case "make multi-deposit":
 
+				sourceAsset, err := pool.FindAssetBySide(types.PoolAssetSide_SOURCE)
+				s.Require().NoError(err)
+				destinationAsset, err := pool.FindAssetBySide(types.PoolAssetSide_DESTINATION)
+				s.Require().NoError(err)
+
+				currentRatio := sourceAsset.Amount.Mul(sdk.NewInt(types.Multiplier)).Quo(destinationAsset.Amount)
+				inputRatio := depositTokens[0].Amount.Mul(sdk.NewInt(types.Multiplier)).Quo(depositTokens[1].Amount)
+
+				logger.CleanLog("=current ratio=", currentRatio)
+				logger.CleanLog("=input ratio=", currentRatio)
+
+				err = types.CheckSlippage(currentRatio, inputRatio, 10)
+				s.NoError(err)
+
 				msg := types.NewMsgMakeMultiAssetDeposit(
 					poolId,
 					[]string{
@@ -280,7 +294,7 @@ func (s *InterchainswapTestSuite) TestMultiDepositStatus() {
 				logger.CleanLog("PoolB", poolB)
 
 				s.Require().EqualValues(poolA.Id, poolB.Id)
-			
+
 				for i := 0; i < len(poolA.Assets); i++ {
 					s.Require().Equal(poolA.Assets[i].Balance.Amount, poolB.Assets[i].Balance.Amount)
 				}
@@ -294,8 +308,20 @@ func (s *InterchainswapTestSuite) TestMultiDepositStatus() {
 						s.Require().Equal(asset.Balance.Amount, sdk.NewInt(initialY*2))
 					}
 				}
-
 			}
+
+			pool := getFirstPool(s, ctx, chainA)
+			amm := types.NewInterchainMarketMaker(&pool)
+			poolTokens, err := amm.DepositMultiAsset(depositTokens)
+			s.Require().NoError(err)
+			logger.CleanLog("Pool Tokens", poolTokens)
+
+			sourceMakerPoolToken, err := s.QueryBalance(ctx, chainA, chainAAddress, pool.Id)
+			s.Require().NoError(err)
+			destinationTakerPoolToken, err := s.QueryBalance(ctx, chainB, chainBAddress, pool.Id)
+			s.Require().NoError(err)
+			logger.CleanLog("chanA user lp", sourceMakerPoolToken)
+			logger.CleanLog("chanB user lp", destinationTakerPoolToken)
 
 		}
 	})
