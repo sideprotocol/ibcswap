@@ -24,7 +24,7 @@ e2e-test-interchainswap-single-deposit: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh TestInterchainswapTestSuite TestSingleDepositStatus
 
 e2e-test-interchainswap-multi-deposit: cleanup-ibc-test-containers
-	./scripts/run-e2e.sh TestInterchainswapTestSuite TestDoubleDepositStatus
+	./scripts/run-e2e.sh TestInterchainswapTestSuite TestMultiDepositStatus
 
 e2e-test-interchainswap-single-withdraw: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh TestInterchainswapTestSuite TestSingleWithdrawStatus

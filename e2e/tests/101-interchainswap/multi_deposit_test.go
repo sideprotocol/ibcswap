@@ -3,7 +3,7 @@ package e2e
 import (
 	"context"
 	"fmt"
-	 "testing"
+	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
@@ -192,13 +192,18 @@ func (s *InterchainswapTestSuite) TestMultiDepositStatus() {
 	// // send swap message
 	t.Run("pool status", func(t *testing.T) {
 
-		pool := getFirstPool(s,ctx,chainA)
+		pool := getFirstPool(s, ctx, chainA)
 		poolId := pool.Id
 
-		amountOfChainBUserBeforeTx, err := s.GetBalance(ctx, chainB, chainBAddress, chainBDenom)
-		s.Require().NoError(err)
-		poolTokenAmountOfChainBUserBeforeTx, err := s.GetBalance(ctx, chainB, chainBAddress, poolId)
-		s.Require().NoError(err)
+		depositTokens := []*sdk.Coin{
+			{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
+			{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
+		}
+
+		wallet := *chainAWallet
+		chain := chainA
+		channel := channelA
+		packetSequence := 2
 
 		testCases := []struct {
 			name     string
@@ -208,90 +213,92 @@ func (s *InterchainswapTestSuite) TestMultiDepositStatus() {
 		}{
 
 			{
-				"double deposit Assets (initialX,initialY)",
+				"make deposit Assets (initialX,initialY)",
 				func() {
-					// depositCoins = []*sdk.Coin{
-					// 	{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
-					// 	{Denom: chainBDenom, Amount: sdk.NewInt(1000)},
-					// }
-					// wallet = *chainAWallet
-					// chain = chainA
-					// channel = channelA
-					// packetSequence = 2
 				},
-				"double deposit",
+				"make multi-deposit",
+				true,
+			},
+
+			{
+				"take multi-deposit Assets (initialX,initialY)",
+				func() {
+					wallet = *chainBWallet
+					chain = chainB
+					channel = channelB
+					packetSequence = 2
+				},
+				"take multi-deposit",
 				true,
 			},
 		}
 
 		for _, tc := range testCases {
+			tc.malleate()
 			switch tc.msgType {
-			case "double deposit":
+			case "make multi-deposit":
 
-				depositTokens := []*sdk.Coin{
-					{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
-					{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
-				}
-
-				msg := types.NewMsgMultiAssetDeposit(
+				msg := types.NewMsgMakeMultiAssetDeposit(
 					poolId,
 					[]string{
 						chainAAddress,
 						chainBAddress,
 					},
 					depositTokens,
-					signedTx,
 				)
 
-				txRes, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
+				txRes, err := s.BroadcastMessages(ctx, chain, &wallet, msg)
+				s.Require().NoError(err)
+				s.AssertValidTxResponse(txRes)
+			case "take multi-deposit":
+				msg := types.NewMsgTakeMultiAssetDeposit(
+					chainBAddress,
+					poolId,
+					0,
+				)
+
+				txRes, err := s.BroadcastMessages(ctx, chain, &wallet, msg)
 				s.Require().NoError(err)
 				s.AssertValidTxResponse(txRes)
 			}
 
 			test.WaitForBlocks(ctx, 15, chainA, chainB)
-			s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 2)
+			s.AssertPacketRelayed(ctx, chain, channel.PortID, channel.ChannelID, uint64(packetSequence))
 
 			// pool status log.
-			pool, err := getPool(s, ctx, chainA, poolId)
-			s.Require().NoError(err)
-			amm := types.NewInterchainMarketMaker(pool)
+			if tc.msgType == "take multi-deposit" {
+				poolA := getFirstPool(s, ctx, chainA)
+				poolB := getFirstPool(s, ctx, chainB)
+				s.Require().NoError(err)
+				amm := types.NewInterchainMarketMaker(&poolA)
 
-			priceA_B, _ := amm.MarketPrice(chainADenom, chainBDenom)
-			priceB_A, _ := amm.MarketPrice(chainBDenom, chainADenom)
+				priceA_B, _ := amm.MarketPrice(chainADenom, chainBDenom)
+				priceB_A, _ := amm.MarketPrice(chainBDenom, chainADenom)
 
-			logger.CleanLog("Price: A->B, B->A", *priceA_B, *priceB_A)
-			logger.CleanLog("Pool Info", pool)
+				logger.CleanLog("Price: A->B, B->A", *priceA_B, *priceB_A)
+				logger.CleanLog("PoolA", poolA)
+				logger.CleanLog("PoolB", poolB)
 
-			amountOfChainBUserAfterTx, err := s.GetBalance(ctx, chainB, chainBAddress, chainBDenom)
-			s.Require().NoError(err)
-			depositedAmount := amountOfChainBUserBeforeTx.Sub(*amountOfChainBUserAfterTx)
-			logger.CleanLog("balance(Before)", amountOfChainBUserBeforeTx)
-			logger.CleanLog("balance(After)", amountOfChainBUserAfterTx)
-			logger.CleanLog("depositedAmount", depositedAmount)
-			s.Require().Equal(depositedAmount.Int64(), int64(initialY))
-
-			poolTokenAmountOfChainBUserAfterTx, err := s.GetBalance(ctx, chainB, chainBAddress, poolId)
-			s.Require().NoError(err)
-			logger.CleanLog("pool Token(Before)", poolTokenAmountOfChainBUserBeforeTx)
-			logger.CleanLog("pool Token(After)", poolTokenAmountOfChainBUserAfterTx)
-			//s.Require().NotEqual(poolTokenAmountOfChainBUserBeforeTx.Int64(), poolTokenAmountOfChainBUserAfterTx.Int64())
-
-			// check balance update status
-			for _, asset := range pool.Assets {
-				if asset.Balance.Denom == chainADenom {
-					s.Require().Equal(asset.Balance.Amount, sdk.NewInt(initialX*2))
+				s.Require().EqualValues(poolA.Id, poolB.Id)
+			
+				for i := 0; i < len(poolA.Assets); i++ {
+					s.Require().Equal(poolA.Assets[i].Balance.Amount, poolB.Assets[i].Balance.Amount)
 				}
-				if asset.Balance.Denom == chainBDenom {
-					s.Require().Equal(asset.Balance.Amount, sdk.NewInt(initialY*2))
+
+				// check balance update status
+				for _, asset := range poolA.Assets {
+					if asset.Balance.Denom == chainADenom {
+						s.Require().Equal(asset.Balance.Amount, sdk.NewInt(initialX*2))
+					}
+					if asset.Balance.Denom == chainBDenom {
+						s.Require().Equal(asset.Balance.Amount, sdk.NewInt(initialY*2))
+					}
 				}
+
 			}
+
 		}
 	})
-}
-
-func verifySignedMessage(rawTx []byte, signedMessage []byte, publicKey crypto.PubKey) bool {
-	// Replace this with the actual rawTx bytes you want to verify
-	return publicKey.VerifySignature(rawTx, signedMessage)
 }
 
 func createNewMnemonic() (string, error) {

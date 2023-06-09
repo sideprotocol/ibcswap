@@ -24,6 +24,11 @@ func CmdTakeMultiAssetDeposit() *cobra.Command {
 			argPoolId := args[1]
 			argOrderId := args[2]
 
+			orderId, err := strconv.Atoi(argOrderId)
+			if err != nil {
+				return err
+			}
+
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -35,7 +40,7 @@ func CmdTakeMultiAssetDeposit() *cobra.Command {
 			msg := types.NewMsgTakeMultiAssetDeposit(
 				argSender,
 				argPoolId,
-				argOrderId,
+				uint64(orderId),
 			)
 
 			packetTimeoutHeight, err1 := cmd.Flags().GetString("packet-timeout-height")

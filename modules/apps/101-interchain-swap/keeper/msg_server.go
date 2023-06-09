@@ -1,12 +1,13 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/btcsuite/btcutil/bech32"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
@@ -46,18 +47,11 @@ func (k Keeper) OnMakePoolAcknowledged(ctx sdk.Context, msg *types.MsgMakePoolRe
 	if err != nil {
 		return err
 	}
+
 	// calculate pool price
 	// Instantiate an interchain market maker with the default fee rate
 	amm := *types.NewInterchainMarketMaker(pool)
 	pool.PoolPrice = float32(amm.LpPrice())
-	pool.Status = types.PoolStatus_ACTIVE
-	// save initial pool asset amount
-	var poolAssets []sdk.Coin
-	for _, asset := range msg.Liquidity {
-		poolAssets = append(poolAssets, *asset.Balance)
-	}
-	//k.SetInitialPoolAssets(ctx, pool.Id, poolAssets)
-	// Save the liquidity pool
 	k.SetInterchainLiquidityPool(ctx, *pool)
 	return nil
 }
@@ -145,6 +139,47 @@ func (k Keeper) OnMakeMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.
 	}
 	// Save the updated liquidity pool
 	k.SetInterchainLiquidityPool(ctx, pool)
+	return nil
+}
+
+// OnMultiAssetDepositAcknowledged processes a double deposit acknowledgement, mints voucher tokens, and updates the liquidity pool.
+func (k Keeper) OnTakeMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.MsgTakeMultiAssetDepositRequest) error {
+
+	// Retrieve the liquidity pool
+	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolId)
+	fmt.Println("Pool=======", pool)
+	if !found {
+		return types.ErrNotFoundPool
+	}
+
+	order, found := k.GetMultiDepositOrder(ctx, req.PoolId, req.OrderId)
+	fmt.Println("Order=======", order)
+	if !found {
+		return types.ErrNotFoundMultiDepositOrder
+	}
+
+	// Mint voucher tokens for the sender
+	err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(order.DestinationTaker), *order.PoolTokens[1])
+
+	if err != nil {
+		return err
+	}
+
+	// Update pool supply and status
+	for _, poolToken := range order.PoolTokens {
+		pool.AddPoolSupply(*poolToken)
+	}
+
+	for _, deposit := range order.Deposits {
+		pool.AddAsset(*deposit)
+	}
+	order.Status = types.OrderStatus_COMPLETE
+
+	// Save the updated liquidity pool
+	k.SetInterchainLiquidityPool(ctx, pool)
+
+	// Update order statuse
+	k.SetMultiDepositOrder(ctx, pool.Id, order)
 	return nil
 }
 
@@ -298,46 +333,60 @@ func (k Keeper) OnMakeMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgM
 		return nil, errorsmod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrNotFoundPool)
 	}
 
-	// Lock assets from senders to escrow account
-	escrowAccount := types.GetEscrowAddress(pool.CounterPartyPort, pool.CounterPartyChannel)
-
-	// Create a deposit message
-	sendMsg := banktypes.MsgSend{
-		FromAddress: senderAcc.GetAddress().String(),
-		ToAddress:   escrowAccount.String(),
-		Amount:      sdk.NewCoins(*msg.Deposits[1].Balance),
-	}
-
-	// err = k.VerifySignature(ctx, senderAcc, *msg.Deposits[1].Balance, msg.Deposits[1].Signature)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	_, err = k.executeDepositTx(ctx, &sendMsg)
-	if err != nil {
-		return nil, err
-	}
-
-	// Increase LP token mint amount
-	for _, token := range stateChange.PoolTokens {
-		pool.AddPoolSupply(*token)
-	}
-
-	// Update pool tokens or switch pool status to 'READY'
-	for _, deposit := range msg.Deposits {
-		pool.AddAsset(*deposit.Balance)
-	}
-
-	// Mint voucher tokens for the sender
-	err = k.MintTokens(ctx, senderAcc.GetAddress(), *stateChange.PoolTokens[1])
 	if err != nil {
 		return nil, errorsmod.Wrapf(types.ErrFailedMultiAssetDeposit, ":%s", err)
 	}
-	// Save pool
-	k.SetInterchainLiquidityPool(ctx, pool)
+
+	// create order
+	order := types.MultiAssetDepositOrder{
+		PoolId:           msg.PoolId,
+		ChainId:          pool.OriginatingChainId,
+		SourceMaker:      msg.Deposits[0].Sender,
+		DestinationTaker: msg.Deposits[1].Sender,
+		Deposits:         types.GetCoinsFromDepositAssets(msg.Deposits),
+		PoolTokens:       stateChange.PoolTokens,
+		Status:           types.OrderStatus_PENDING,
+		CreatedAt:        ctx.BlockHeight(),
+	}
+
+	k.AppendMultiDepositOrder(ctx, msg.PoolId, order)
 	return &types.MsgMultiAssetDepositResponse{
 		PoolTokens: stateChange.PoolTokens,
 	}, nil
+}
+
+// OnMultiAssetDepositReceived processes a double deposit request and returns a response or an error.
+func (k Keeper) OnTakeMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgTakeMultiAssetDepositRequest, stateChange *types.StateChange) (*types.MsgMultiAssetDepositResponse, error) {
+
+	// Validate the message
+	if err := msg.ValidateBasic(); err != nil {
+		return nil, err
+	}
+
+	// Retrieve the liquidity pool
+	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
+	if !found {
+		return nil, errorsmod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrNotFoundPool)
+	}
+
+	order, found := k.GetMultiDepositOrder(ctx, msg.PoolId, msg.OrderId)
+	if !found {
+		return nil, errorsmod.Wrapf(types.ErrNotFoundPool, "%s", types.ErrFailedMultiAssetDeposit)
+	}
+
+	order.Status = types.OrderStatus_COMPLETE
+	// // pool status update
+	for _, supply := range order.PoolTokens {
+		pool.AddPoolSupply(*supply)
+	}
+
+	for _, asset := range order.Deposits {
+		pool.AddAsset(*asset)
+	}
+
+	k.SetInterchainLiquidityPool(ctx, pool)
+	k.SetMultiDepositOrder(ctx, pool.Id, order)
+	return &types.MsgMultiAssetDepositResponse{}, nil
 }
 
 // OnMultiAssetWithdrawReceived processes a withdrawal request and returns a response or an error.

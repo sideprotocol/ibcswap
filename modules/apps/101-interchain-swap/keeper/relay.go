@@ -84,7 +84,12 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		return nil, nil
+		poolId, err := k.OnTakePoolReceived(ctx, &msg)
+		if err != nil {
+			return nil, err
+		}
+		resData, err := types.ModuleCdc.Marshal(&types.MsgMakePoolResponse{PoolId: *poolId})
+		return resData, err
 
 	case types.SINGLE_DEPOSIT:
 		var msg types.MsgSingleAssetDepositRequest
@@ -115,7 +120,12 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		return nil, nil
+		res, err := k.OnTakeMultiAssetDepositReceived(ctx, &msg, data.StateChange)
+		if err != nil {
+			return nil, err
+		}
+		resData, err := types.ModuleCdc.Marshal(res)
+		return resData, err
 
 	case types.MULTI_WITHDRAW:
 		var msg types.MsgMultiAssetWithdrawRequest
@@ -176,9 +186,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			if err != nil {
 				return err
 			}
-
 			return nil
-
 		case types.SINGLE_DEPOSIT:
 			var msg types.MsgSingleAssetDepositRequest
 			var res types.MsgSingleAssetDepositResponse
@@ -197,28 +205,33 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			}
 
 		case types.MAKE_MULTI_DEPOSIT:
+
 			var msg types.MsgMakeMultiAssetDepositRequest
 			var res types.MsgMultiAssetDepositResponse
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
-				logger.Debug("DoubleDeposit:packet:", err.Error())
+				logger.Debug("MakeMultiDeposit:packet:", err.Error())
 				return err
 			}
 
 			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
-				logger.Debug("DoubleDeposit:ack:", err.Error())
+				logger.Debug("MakeMultiDeposit:ack:", err.Error())
 				return err
 			}
 			if err := k.OnMakeMultiAssetDepositAcknowledged(ctx, &msg, &res); err != nil {
-				logger.Debug("DoubleDeposit:Single", err.Error())
+				logger.Debug("MakeMultiDeposit:Single", err.Error())
 				return err
 			}
 		case types.TAKE_MULTI_DEPOSIT:
 			var msg types.MsgTakeMultiAssetDepositRequest
-			var res types.MsgSingleAssetWithdrawResponse
+			var res types.MsgTakePoolResponse
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				return err
 			}
 			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
+				return err
+			}
+			if err := k.OnTakeMultiAssetDepositAcknowledged(ctx, &msg); err != nil {
+				logger.Debug("TakeMultiDeposit:Single", err.Error())
 				return err
 			}
 			return nil

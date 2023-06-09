@@ -28,3 +28,11 @@ func ValidateLiquidityBasic(liquidity []*PoolAsset) error {
 	}
 	return nil
 }
+
+func GetCoinsFromDepositAssets(assets []*DepositAsset) []*sdk.Coin {
+	var coins []*sdk.Coin
+	for _, asset := range assets {
+		coins = append(coins, asset.Balance)
+	}
+	return coins
+}

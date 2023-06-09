@@ -8,7 +8,7 @@ const TypeMsgTakeMultiAssetDeposit = "take_multi_asset_deposit"
 
 var _ sdk.Msg = &MsgTakeMultiAssetDepositRequest{}
 
-func NewMsgTakeMultiAssetDeposit(sender, poolId, orderId string) *MsgTakeMultiAssetDepositRequest {
+func NewMsgTakeMultiAssetDeposit(sender, poolId string, orderId uint64) *MsgTakeMultiAssetDepositRequest {
 	return &MsgTakeMultiAssetDepositRequest{
 		Sender:  sender,
 		PoolId:  poolId,

@@ -26,26 +26,30 @@ func (k msgServer) TakePool(ctx context.Context, msg *types.MsgTakePoolRequest) 
 	creatorAddr := sdk.MustAccAddressFromBech32(msg.Creator)
 
 	asset, err := pool.FindAssetBySide(types.PoolAssetSide_SOURCE)
-
 	if err != nil {
 		return nil, errorsmod.Wrapf(types.ErrFailedTakePool, "due to %", err)
 	}
 
 	liquidity := k.bankKeeper.GetBalance(sdkCtx, creatorAddr, asset.Denom)
 	if liquidity.Amount.LTE(sdk.NewInt(0)) {
-		return nil, errorsmod.Wrapf(types.ErrFailedOnDepositReceived, "due to %s", types.ErrInEnoughAmount)
+		return nil, errorsmod.Wrapf(types.ErrInEnoughAmount, "due to %s", types.ErrFailedOnDepositReceived)
 	}
 
 	// Move initial funds to liquidity pool
 	err = k.LockTokens(sdkCtx, pool.CounterPartyPort, pool.CounterPartyChannel, creatorAddr, sdk.NewCoins(*asset))
 
+	if err != nil {
+		return nil, errorsmod.Wrapf(types.ErrInEnoughAmount, "due to %s", types.ErrFailedOnDepositReceived)
+	}
+
 	rawMsg, err := types.ModuleCdc.Marshal(msg)
 	if err != nil {
 		return nil, err
 	}
+
 	// Construct IBC data packet
 	packet := types.IBCSwapPacketData{
-		Type: types.MAKE_POOL,
+		Type: types.TAKE_POOL,
 		Data: rawMsg,
 	}
 

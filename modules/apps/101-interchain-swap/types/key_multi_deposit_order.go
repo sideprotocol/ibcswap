@@ -6,7 +6,8 @@ var _ binary.ByteOrder
 
 const (
 	// MultiDepositOrderKeyPrefix is the prefix to retrieve all MultiDepositOrder
-	MultiDepositOrderKeyPrefix = "MultiDepositOrder/value/"
+	MultiDepositOrderKeyPrefix      = "MultiDepositOrder/value/"
+	MultiDepositOrderCountKeyPrefix = "MultiDepositOrderCount/value/"
 )
 
 // MultiDepositOrderPrefixKey returns the store key to retrieve a MultiDepositOrder from the index fields

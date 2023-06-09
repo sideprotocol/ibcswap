@@ -56,15 +56,23 @@ message MarketFeeUpdateProposal {
   uint32   fee_rate                        = 4;
 }
 
+enum OrderStatus {
+  PENDING = 0;
+  COMPLETE = 1;
+}
+
+
 // multi asset deposit order
 message MultiAssetDepositOrder {
-  string id = 1;
+  uint64 id = 1;
   string poolId = 2;
   string chainId = 3;
   string sourceMaker = 4;
   string destinationTaker = 5;
-  cosmos.base.v1beta1.Coin sourceMakerLpToken = 6;
-  cosmos.base.v1beta1.Coin destinationTakerLpToken = 7;
+  repeated cosmos.base.v1beta1.Coin deposits = 6;
+  repeated cosmos.base.v1beta1.Coin poolTokens = 7;
+  OrderStatus status = 8;
+  int64 createdAt = 9;
 }
 
 

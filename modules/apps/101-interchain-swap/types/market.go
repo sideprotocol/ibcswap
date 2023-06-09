@@ -22,15 +22,22 @@ func NewInterchainLiquidityPool(
 ) *InterchainLiquidityPool {
 
 	initialLiquidity := types.NewInt(0)
+	liquidity := []*PoolAsset{}
 	for _, asset := range assets {
 		initialLiquidity = initialLiquidity.Add(asset.Balance.Amount)
+		if store.HasSupply(ctx, asset.Balance.Denom) {
+			asset.Side = PoolAssetSide_SOURCE
+		} else {
+			asset.Side = PoolAssetSide_DESTINATION
+		}
+		liquidity = append(liquidity, asset)
 	}
 
 	pool := InterchainLiquidityPool{
 		Id:                 poolId,
 		SourceCreator:      sourceCreator,
 		DestinationCreator: destinationCreator,
-		Assets:             assets,
+		Assets:             liquidity,
 		Supply: &types.Coin{
 			Denom:  poolId,
 			Amount: initialLiquidity,

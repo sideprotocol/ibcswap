@@ -55,20 +55,31 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 	}
 
 	// create order
-	orderId := types.GetOrderId(sdkCtx.ChainID())
-
 	order := types.MultiAssetDepositOrder{
-		Id:                      orderId,
-		PoolId:                  msg.PoolId,
-		ChainId:                 sdkCtx.ChainID(),
-		SourceMaker:             msg.Deposits[0].Sender,
-		DestinationTaker:        msg.Deposits[1].Sender,
-		SourceMakerLpToken:      poolTokens[0],
-		DestinationTakerLpToken: poolTokens[1],
+		PoolId:           msg.PoolId,
+		ChainId:          sdkCtx.ChainID(),
+		SourceMaker:      msg.Deposits[0].Sender,
+		DestinationTaker: msg.Deposits[1].Sender,
+		Deposits:         types.GetCoinsFromDepositAssets(msg.Deposits),
+		PoolTokens:       poolTokens,
+		Status:           types.OrderStatus_PENDING,
+		CreatedAt:        sdkCtx.BlockHeight(),
+	}
+
+	order, found = k.GetLatestMultiDepositOrder(sdkCtx, pool.Id)
+
+	pendingHeight := sdkCtx.BlockHeight() - order.CreatedAt
+	if found && order.Status == types.OrderStatus_PENDING && pendingHeight < types.MULTI_DEPOSIT_PENDING_LIMIT {
+		return nil, errormod.Wrapf(types.ErrPreviousOrderNotCompleted, "due to %s", types.ErrFailedMultiAssetDeposit)
+	}
+
+	// protect malicious deposit action. we will not refund token as a penalty.
+	if found && pendingHeight > types.MULTI_DEPOSIT_PENDING_LIMIT {
+		k.RemoveLatestMultiDepositOrder(sdkCtx, pool.Id)
 	}
 
 	// save order in source chain
-	k.SetMultiDepositOrder(sdkCtx, order)
+	k.AppendMultiDepositOrder(sdkCtx, pool.Id, order)
 
 	// Construct IBC packet
 	rawMsgData, err := types.ModuleCdc.Marshal(msg)
