@@ -80,7 +80,7 @@ Assuming these tokens are withdrawn:
 
 ### Scenario 4 (Revised Again)
 
-Consider an uneven initial distribution for a pool (`X = 2000000, Y = 1000, Wx = 0.2, Wy=0.8`), leading to an initial LP token supply of `400800(2000000*0.2 + 1000*0.8)`.
+Consider an uneven initial distribution for a pool (`X = 2000000, Y = 1000, Wx = 0.2, Wy=0.8`), leading to an initial LP token supply of `2001000(2001000*0.2 + 2001000*0.8)`.
 
 Now, suppose a second user deposits `10%` of the original assets into this pool:
 
@@ -89,20 +89,17 @@ Now, suppose a second user deposits `10%` of the original assets into this pool:
 
 Applying Balancer's multi-deposit formula, the newly minted LP tokens are:
 
-- For X tokens: `Pix = 400800 *0.2*200000/2000000 = 8016`
-- For Y tokens: `Piy = 400800 *0.8*100/1000 = 32064`
+- For X tokens: `Pix = 2001000 *0.2*200000/2000000 = 40020`
+- For Y tokens: `Piy = 2001000 *0.8*100/1000 = 160080`
 
-The total supply of LP tokens now is `Ps = 400800 + 8016 + 32064 = 440880`, with `Bx = 2200000, By = 1100`.
+The total supply of LP tokens now is `Ps = 2001000 + 40020 + 160080 = 2201100`, with `Bx = 2200000, By = 1100`.
 
-Now, if the original depositor attempts to withdraw all assets using all the initial and subsequent LP tokens (`2000000*0.2 + 40020` for X and `1000*0.8 + 160080` for Y), the quantities withdrawn are:
+Now, if the original depositor attempts to withdraw all assets using all the initial and subsequent LP tokens (`2001000*0.2 + 40020` for X and `2001000*0.8 + 160080` for Y), the quantities withdrawn are:
 
-- For X tokens: `Ax = 2200000 * (2000000*0.2 + 40020)/2201100/0.2 = 2199000`
-- For Y tokens: `Ay = 1100 * (1000*0.8 + 160080)/2201100/0.8 = 100`
+- For X tokens: `Ax = 2200000 * (2001000*0.2 + 40020)/2201100/0.2 = 2200000`
+- For Y tokens: `Ay = 1100 * (2001000*0.8 + 160080)/2201100/0.8 = 100`
 
 The remaining quantities in the pool will be:
 
-- For X tokens: `Bx_remaining = Bx - Ax = 2200000 - 2199000 = 1000`
-- For Y tokens: `By_remaining = By - Ay = 1100 - 100 = 1000`
-
-
-
+- For X tokens: `Bx_remaining = Bx - Ax = 2200000 - 2200000 = 0`
+- For Y tokens: `By_remaining = By - Ay = 1100 - 1100 = 0`
