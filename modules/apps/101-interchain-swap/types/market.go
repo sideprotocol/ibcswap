@@ -86,6 +86,16 @@ func (ilp *InterchainLiquidityPool) FindAssetBySide(side PoolAssetSide) (*types.
 	return nil, ErrNotFoundDenomInPool
 }
 
+// find pool asset by denom
+func (ilp *InterchainLiquidityPool) FindPoolAssetBySide(side PoolAssetSide) (*PoolAsset, error) {
+	for _, asset := range ilp.Assets {
+		if asset.Side == side {
+			return asset, nil
+		}
+	}
+	return nil, ErrNotFoundDenomInPool
+}
+
 // update denom
 func (ilp *InterchainLiquidityPool) UpdateAssetPoolSide(denom string, side PoolAssetSide) (*PoolAsset, error) {
 	for index, asset := range ilp.Assets {
@@ -237,7 +247,11 @@ func (imm *InterchainMarketMaker) DepositMultiAsset(tokens []*types.Coin) ([]*ty
 		}
 		var issueAmount types.Int
 		if imm.Pool.Status == PoolStatus_INITIALIZED {
-			issueAmount = asset.Balance.Amount.Mul(types.NewInt(int64(asset.Weight))).Quo(types.NewInt(100))
+			totalAssetAmount := types.NewInt(0)
+			for _, asset := range imm.Pool.Assets {
+				totalAssetAmount = totalAssetAmount.Add(asset.Balance.Amount)
+			}
+			issueAmount = totalAssetAmount.Mul(types.NewInt(int64(asset.Weight))).Quo(types.NewInt(100))
 		} else {
 			ratio := float64(token.Amount.Int64()) / float64(asset.Balance.Amount.Int64()) * Multiplier
 			issueAmount = imm.Pool.Supply.Amount.Mul(types.NewInt(int64(asset.Weight))).Mul(types.NewInt(int64(ratio))).Quo(types.NewInt(100)).Quo(types.NewInt(Multiplier))

@@ -38,8 +38,12 @@ func (k Keeper) OnMakePoolAcknowledged(ctx sdk.Context, msg *types.MsgMakePoolRe
 	)
 
 	// Mint LP tokens
+	totalAmount := sdk.NewInt(0)
+	for _, asset := range msg.Liquidity {
+		totalAmount = totalAmount.Add(asset.Balance.Amount)
+	}
 	err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(msg.Creator), sdk.Coin{
-		Denom: pool.Supply.Denom, Amount: msg.Liquidity[0].Balance.Amount,
+		Denom: pool.Supply.Denom, Amount: totalAmount.Mul(sdk.NewInt(int64(msg.Liquidity[0].Weight))).Quo(sdk.NewInt((100))),
 	})
 
 	if err != nil {
@@ -64,14 +68,19 @@ func (k Keeper) OnTakePoolAcknowledged(ctx sdk.Context, msg *types.MsgTakePoolRe
 		return types.ErrNotFoundPool
 	}
 
-	asset, err := pool.FindAssetBySide(types.PoolAssetSide_SOURCE)
+	asset, err := pool.FindPoolAssetBySide(types.PoolAssetSide_SOURCE)
 	if err != nil {
 		return err
 	}
 
+	totalAmount := sdk.NewInt(0)
+	for _, asset := range pool.Assets {
+		totalAmount = totalAmount.Add(asset.Balance.Amount)
+	}
+
 	// Mint LP tokens
 	err = k.MintTokens(ctx, sdk.MustAccAddressFromBech32(msg.Creator), sdk.Coin{
-		Denom: pool.Supply.Denom, Amount: asset.Amount,
+		Denom: pool.Supply.Denom, Amount: totalAmount.Mul(sdk.NewInt(int64(asset.Weight))).Quo(sdk.NewInt(100)),
 	})
 
 	if err != nil {
