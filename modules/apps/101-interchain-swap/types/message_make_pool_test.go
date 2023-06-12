@@ -12,12 +12,12 @@ import (
 func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  MsgCreatePoolRequest
+		msg  MsgMakePoolRequest
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: MsgCreatePoolRequest{
+			msg: MsgMakePoolRequest{
 				Creator:             "invalid_address",
 				CounterPartyCreator: "invalid_address",
 				SourcePort:          "interchainswap",
@@ -45,7 +45,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "valid address",
-			msg: MsgCreatePoolRequest{
+			msg: MsgMakePoolRequest{
 				Creator:             sample.AccAddress(),
 				CounterPartyCreator: sample.AccAddress(),
 				SourcePort:          "interchainswap",
@@ -72,7 +72,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid denom length",
-			msg: MsgCreatePoolRequest{
+			msg: MsgMakePoolRequest{
 				Creator:             sample.AccAddress(),
 				CounterPartyCreator: sample.AccAddress(),
 				SourcePort:          "interchainswap",
@@ -100,7 +100,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid decimal pair",
-			msg: MsgCreatePoolRequest{
+			msg: MsgMakePoolRequest{
 				Creator:             sample.AccAddress(),
 				CounterPartyCreator: sample.AccAddress(),
 				SourcePort:          "interchainswap",
@@ -129,7 +129,7 @@ func TestMsgCreatePool_ValidateBasic(t *testing.T) {
 
 		{
 			name: "invalid weight length",
-			msg: MsgCreatePoolRequest{
+			msg: MsgMakePoolRequest{
 				Creator:             sample.AccAddress(),
 				CounterPartyCreator: sample.AccAddress(),
 				SourcePort:          "interchainswap",

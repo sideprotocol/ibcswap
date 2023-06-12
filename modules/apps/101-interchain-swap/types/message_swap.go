@@ -11,8 +11,9 @@ const TypeMsgSwap = "swap"
 
 var _ sdk.Msg = &MsgSwapRequest{}
 
-func NewMsgSwap(swapType SwapMsgType, sender string, slippage uint64, recipient string, tokenIn, tokenOut *sdk.Coin) *MsgSwapRequest {
+func NewMsgSwap(swapType SwapMsgType, sender, poolId string, slippage uint64, recipient string, tokenIn, tokenOut *sdk.Coin) *MsgSwapRequest {
 	return &MsgSwapRequest{
+		PoolId:    poolId,
 		Sender:    sender,
 		Slippage:  slippage,
 		Recipient: recipient,

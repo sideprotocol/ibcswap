@@ -29,10 +29,11 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(CmdCreatePool())
+	cmd.AddCommand(CmdMakePool())
+	cmd.AddCommand(CmdTakePool())
 	cmd.AddCommand(CmdSingleAssetDeposit())
-	cmd.AddCommand(CmdMultiAssetDeposit())
-	cmd.AddCommand(CmdSingleAssetWithdraw())
+	cmd.AddCommand(CmdMakeMultiAssetDeposit())
+	cmd.AddCommand(CmdTakeMultiAssetDeposit())
 	cmd.AddCommand(CmdMultiAssetWithdraw())
 	cmd.AddCommand(CmdSwap())
 	// this line is used by starport scaffolding # 1

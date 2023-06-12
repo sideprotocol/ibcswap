@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
@@ -60,16 +62,33 @@ func (k Keeper) SendIBCSwapPacket(
 
 func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.IBCSwapPacketData) ([]byte, error) {
 	switch data.Type {
-	case types.CREATE_POOL:
-		var msg types.MsgCreatePoolRequest
+	case types.MAKE_POOL:
+		var msg types.MsgMakePoolRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		poolId, err := k.OnCreatePoolReceived(ctx, &msg, packet.DestinationPort, packet.DestinationChannel)
+
+		if strings.TrimSpace(data.StateChange.PoolId) == "" {
+			return nil, types.ErrEmptyPoolId
+		}
+
+		poolId, err := k.OnMakePoolReceived(ctx, &msg, data.StateChange.PoolId)
 		if err != nil {
 			return nil, err
 		}
-		resData, err := types.ModuleCdc.Marshal(&types.MsgCreatePoolResponse{PoolId: *poolId})
+		resData, err := types.ModuleCdc.Marshal(&types.MsgMakePoolResponse{PoolId: *poolId})
+		return resData, err
+
+	case types.TAKE_POOL:
+		var msg types.MsgTakePoolRequest
+		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+			return nil, err
+		}
+		poolId, err := k.OnTakePoolReceived(ctx, &msg)
+		if err != nil {
+			return nil, err
+		}
+		resData, err := types.ModuleCdc.Marshal(&types.MsgMakePoolResponse{PoolId: *poolId})
 		return resData, err
 
 	case types.SINGLE_DEPOSIT:
@@ -84,24 +103,24 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		resData, err := types.ModuleCdc.Marshal(res)
 		return resData, err
 
-	case types.MULTI_DEPOSIT:
-		var msg types.MsgMultiAssetDepositRequest
+	case types.MAKE_MULTI_DEPOSIT:
+		var msg types.MsgMakeMultiAssetDepositRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		res, err := k.OnMultiAssetDepositReceived(ctx, &msg, data.StateChange)
+		res, err := k.OnMakeMultiAssetDepositReceived(ctx, &msg, data.StateChange)
 		if err != nil {
 			return nil, err
 		}
 		resData, err := types.ModuleCdc.Marshal(res)
 		return resData, err
 
-	case types.SINGLE_WITHDRAW:
-		var msg types.MsgSingleAssetWithdrawRequest
+	case types.TAKE_MULTI_DEPOSIT:
+		var msg types.MsgTakeMultiAssetDepositRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		res, err := k.OnSingleAssetWithdrawReceived(ctx, &msg, data.StateChange)
+		res, err := k.OnTakeMultiAssetDepositReceived(ctx, &msg, data.StateChange)
 		if err != nil {
 			return nil, err
 		}
@@ -146,16 +165,28 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 		return k.refundPacketToken(ctx, packet, data)
 	default:
 		switch data.Type {
-		case types.CREATE_POOL:
-			var msg types.MsgCreatePoolRequest
+		case types.MAKE_POOL:
+			var msg types.MsgMakePoolRequest
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				logger.Debug(err.Error())
 				return err
 			}
-			err := k.OnCreatePoolAcknowledged(ctx, &msg)
+			err := k.OnMakePoolAcknowledged(ctx, &msg, data.StateChange.PoolId)
 			if err != nil {
 				return err
 			}
+
+		case types.TAKE_POOL:
+			var msg types.MsgTakePoolRequest
+			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+				logger.Debug(err.Error())
+				return err
+			}
+			err := k.OnTakePoolAcknowledged(ctx, &msg)
+			if err != nil {
+				return err
+			}
+			return nil
 		case types.SINGLE_DEPOSIT:
 			var msg types.MsgSingleAssetDepositRequest
 			var res types.MsgSingleAssetDepositResponse
@@ -173,34 +204,38 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				return err
 			}
 
-		case types.MULTI_DEPOSIT:
-			var msg types.MsgMultiAssetDepositRequest
+		case types.MAKE_MULTI_DEPOSIT:
+
+			var msg types.MsgMakeMultiAssetDepositRequest
 			var res types.MsgMultiAssetDepositResponse
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
-				logger.Debug("DoubleDeposit:packet:", err.Error())
+				logger.Debug("MakeMultiDeposit:packet:", err.Error())
 				return err
 			}
 
 			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
-				logger.Debug("DoubleDeposit:ack:", err.Error())
+				logger.Debug("MakeMultiDeposit:ack:", err.Error())
 				return err
 			}
-			if err := k.OnMultiAssetDepositAcknowledged(ctx, &msg, &res); err != nil {
-				logger.Debug("DoubleDeposit:Single", err.Error())
+			if err := k.OnMakeMultiAssetDepositAcknowledged(ctx, &msg, &res); err != nil {
+				logger.Debug("MakeMultiDeposit:Single", err.Error())
 				return err
 			}
-		case types.SINGLE_WITHDRAW:
-			var msg types.MsgSingleAssetWithdrawRequest
-			var res types.MsgSingleAssetWithdrawResponse
+		case types.TAKE_MULTI_DEPOSIT:
+			var msg types.MsgTakeMultiAssetDepositRequest
+			var res types.MsgTakePoolResponse
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				return err
 			}
 			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
 				return err
 			}
-			if err := k.OnSingleAssetWithdrawAcknowledged(ctx, &msg, &res); err != nil {
+			if err := k.OnTakeMultiAssetDepositAcknowledged(ctx, &msg); err != nil {
+				logger.Debug("TakeMultiDeposit:Single", err.Error())
 				return err
 			}
+			return nil
+
 		case types.MULTI_WITHDRAW:
 			var msg types.MsgMultiAssetWithdrawRequest
 			var res types.MsgMultiAssetWithdrawResponse
@@ -242,8 +277,8 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 	var sender string
 
 	switch data.Type {
-	case types.CREATE_POOL:
-		var msg types.MsgCreatePoolRequest
+	case types.MAKE_POOL:
+		var msg types.MsgMakePoolRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
@@ -258,20 +293,20 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		}
 		token = *msg.Token
 		sender = msg.Sender
-	case types.MULTI_DEPOSIT:
-		var msg types.MsgMultiAssetDepositRequest
+	case types.MAKE_MULTI_DEPOSIT:
+		var msg types.MsgMakeMultiAssetDepositRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
 		token = *msg.Deposits[0].Balance
 		sender = msg.Deposits[0].Sender
-	case types.SINGLE_WITHDRAW:
-		var msg types.MsgSingleAssetWithdrawRequest
+	case types.TAKE_MULTI_DEPOSIT:
+		var msg types.MsgTakeMultiAssetDepositRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
-		token = *msg.PoolCoin
-		sender = msg.Sender
+		//token = *msg.
+		//sender = msg.Sender
 	case types.MULTI_WITHDRAW:
 		var msg types.MsgMultiAssetWithdrawRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {

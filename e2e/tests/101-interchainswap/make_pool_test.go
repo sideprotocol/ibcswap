@@ -13,13 +13,13 @@ import (
 	test "github.com/strangelove-ventures/ibctest/v6/testutil"
 )
 
-func (s *InterchainswapTestSuite) TestCreatePoolMsgPacket() {
+func (s *InterchainswapTestSuite) TestMakePoolMsgPacket() {
 
 	t := s.T()
 	ctx := context.TODO()
 	logger := testsuite.NewLogger()
 	// setup relayers and connection-0 between two chains.
-	relayer, channelA, _ := s.SetupChainsRelayerAndChannel(ctx, interchainswapChannelOptions())
+	relayer, channelA, channelB := s.SetupChainsRelayerAndChannel(ctx, interchainswapChannelOptions())
 
 	chainA, chainB := s.GetChains()
 
@@ -69,26 +69,13 @@ func (s *InterchainswapTestSuite) TestCreatePoolMsgPacket() {
 		s.StartRelayer(relayer)
 	})
 
-	t.Run("send create pool message", func(t *testing.T) {
+	t.Run("send make pool message", func(t *testing.T) {
 
-		depositSignMsg := types.DepositSignature{
-			Sender:   chainBAddress,
-			Balance:  &sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
-			Sequence: 1,
-		}
-
-		rawDepositMsg, err := types.ModuleCdc.Marshal(&depositSignMsg)
-		s.Require().NoError(err)
-		signature, err := priv.Sign(rawDepositMsg)
-		s.Require().NoError(err)
-		s.Require().Equal(priv.PubKey().VerifySignature(rawDepositMsg, signature), true)
-
-		msg := types.NewMsgCreatePool(
+		msg := types.NewMsgMakePool(
 			channelA.PortID,
 			channelA.ChannelID,
 			chainAAddress,
 			chainBAddress,
-			signature,
 			types.PoolAsset{
 				Side:    types.PoolAssetSide_SOURCE,
 				Balance: &sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
@@ -96,7 +83,7 @@ func (s *InterchainswapTestSuite) TestCreatePoolMsgPacket() {
 				Decimal: 6,
 			},
 			types.PoolAsset{
-				Side:    types.PoolAssetSide_TARGET,
+				Side:    types.PoolAssetSide_DESTINATION,
 				Balance: &sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(1000)},
 				Weight:  50,
 				Decimal: 6,
@@ -114,45 +101,82 @@ func (s *InterchainswapTestSuite) TestCreatePoolMsgPacket() {
 		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
 
 		// check pool info in chainA and chainB
-		poolId := types.GetPoolId(msg.GetLiquidityDenoms())
-
-		logger.CleanLog("poolId", poolId)
-		poolARes, err := s.QueryInterchainswapPool(ctx, chainA, poolId)
-
-		s.Require().NoError(err)
-		poolAInfo := poolARes.InterchainLiquidityPool
+		poolA := getFirstPool(s, ctx, chainA)
 
 		// check pool info sync status.
-		s.Require().EqualValues(msg.SourceChannel, poolAInfo.CounterPartyChannel)
-		s.Require().EqualValues(msg.SourcePort, poolAInfo.CounterPartyPort)
+		s.Require().EqualValues(msg.SourceChannel, poolA.CounterPartyChannel)
+		s.Require().EqualValues(msg.SourcePort, poolA.CounterPartyPort)
 
-		poolBRes, err := s.QueryInterchainswapPool(ctx, chainB, poolId)
-		s.Require().NoError(err)
-		poolBInfo := poolBRes.InterchainLiquidityPool
-		s.Require().EqualValues(msg.SourceChannel, poolBInfo.CounterPartyChannel)
-		s.Require().EqualValues(msg.SourcePort, poolBInfo.CounterPartyPort)
+		poolB := getFirstPool(s, ctx, chainB)
+
+		s.Require().EqualValues(msg.SourceChannel, poolB.CounterPartyChannel)
+		s.Require().EqualValues(msg.SourcePort, poolB.CounterPartyPort)
 		//s.Require().EqualValues(msg.Tokens[1].Amount, poolBInfo.Supply.Amount)
 
-		fmt.Println(poolAInfo)
-		logger.CleanLog("Create Pool: PoolA", poolAInfo)
+		fmt.Println(poolB)
+		logger.CleanLog("Create Pool: PoolA", poolA)
 		fmt.Println("===================")
-		logger.CleanLog("Create Pool: PoolB", poolBInfo)
+		logger.CleanLog("Create Pool: PoolB", poolB)
 
 		// compare pool info sync status
-		s.Require().EqualValues(poolAInfo.Supply, poolBInfo.Supply)
-		s.Require().EqualValues(poolAInfo.Assets[0].Balance.Amount, poolBInfo.Assets[0].Balance.Amount)
-		s.Require().EqualValues(poolAInfo.Assets[1].Balance.Amount, poolBInfo.Assets[1].Balance.Amount)
-		s.Require().Equal(poolAInfo.Status, types.PoolStatus_ACTIVE)
+		s.Require().EqualValues(poolA.Supply, poolB.Supply)
+		s.Require().EqualValues(poolA.Assets[0].Balance.Amount, poolB.Assets[0].Balance.Amount)
+		s.Require().EqualValues(poolA.Assets[1].Balance.Amount, poolB.Assets[1].Balance.Amount)
+		s.Require().Equal(poolA.Status, types.PoolStatus_INITIALIZED)
 
 		// check liquidity status in escrow account and my wallet.
-		escrowAccount := types.GetEscrowAddress(poolAInfo.CounterPartyPort, poolAInfo.CounterPartyChannel)
+		escrowAccount := types.GetEscrowAddress(poolA.CounterPartyPort, poolA.CounterPartyChannel)
+		resA, err := s.QueryBalance(ctx, chainA, escrowAccount.String(), chainADenom)
+		s.Require().NoError(err)
+		for _, asset := range poolA.Assets {
+			if asset.Balance.Denom == chainADenom {
+				s.Require().Equal(asset.Balance, resA.Balance)
+			}
+		}
+		s.Require().Equal(poolA.Supply.Amount, sdk.NewInt(initialX+initialY))
+	})
+
+	t.Run("send take pool message", func(t *testing.T) {
+
+		pool := getFirstPool(s, ctx, chainA)
+		msg := types.NewMsgTakePool(
+			chainBAddress,
+			pool.Id,
+		)
+
+		resp, err := s.BroadcastMessages(ctx, chainB, chainBWallet, msg)
+
+		s.AssertValidTxResponse(resp)
+		s.Require().NoError(err)
+
+		// wait block when packet relay.
+		test.WaitForBlocks(ctx, 10, chainA, chainB)
+		s.AssertPacketRelayed(ctx, chainB, channelB.PortID, channelB.ChannelID, 2)
+
+		// check pool info in chainA and chainB
+		poolA := getFirstPool(s, ctx, chainA)
+		poolB := getFirstPool(s, ctx, chainB)
+
+		fmt.Println(poolB)
+		logger.CleanLog("Take Pool: PoolA", poolA)
+		fmt.Println("===================")
+		logger.CleanLog("Take Pool: PoolB", poolB)
+
+		// compare pool info sync status
+		s.Require().EqualValues(poolA.Supply, poolB.Supply)
+		s.Require().EqualValues(poolA.Assets[0].Balance.Amount, poolB.Assets[0].Balance.Amount)
+		s.Require().EqualValues(poolA.Assets[1].Balance.Amount, poolB.Assets[1].Balance.Amount)
+		s.Require().Equal(poolA.Status, types.PoolStatus_ACTIVE)
+
+		// check liquidity status in escrow account and my wallet.
+		escrowAccount := types.GetEscrowAddress(poolA.CounterPartyPort, poolA.CounterPartyChannel)
 		resA, err := s.QueryBalance(ctx, chainA, escrowAccount.String(), chainADenom)
 		s.Require().NoError(err)
 
-		resB, err = s.QueryBalance(ctx, chainB, escrowAccount.String(), chainBDenom)
+		resB, err := s.QueryBalance(ctx, chainB, escrowAccount.String(), chainBDenom)
 		s.Require().NoError(err)
 
-		for _, asset := range poolAInfo.Assets {
+		for _, asset := range poolA.Assets {
 			if asset.Balance.Denom == chainADenom {
 				s.Require().Equal(asset.Balance, resA.Balance)
 
@@ -161,7 +185,7 @@ func (s *InterchainswapTestSuite) TestCreatePoolMsgPacket() {
 				s.Require().Equal(asset.Balance, resB.Balance)
 			}
 		}
-		s.Require().Equal(poolAInfo.Supply.Amount, sdk.NewInt(initialX+initialY))
+		s.Require().Equal(poolA.Supply.Amount, sdk.NewInt(initialX+initialY))
 	})
 
 }

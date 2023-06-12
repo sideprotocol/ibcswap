@@ -5,8 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	"encoding/base64"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -14,18 +12,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func CmdCreatePool() *cobra.Command {
+func CmdMakePool() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-pool [source-port] [source-channel] [creator] [counterPartyCreator] [counterPartySignature] [weight] [tokens] [decimals] [swap-fee]",
-		Short: "Broadcast message CreatePool",
+		Use:   "make-pool [source-port] [source-channel] [creator] [counterPartyCreator] [weight] [tokens] [decimals] [swap-fee]",
+		Short: "Broadcast message MakePool",
 		Args:  cobra.ExactArgs(9),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			sig, err := base64.StdEncoding.DecodeString(args[4])
 			if err != nil {
 				return err
 			}
@@ -54,12 +47,11 @@ func CmdCreatePool() *cobra.Command {
 				return fmt.Errorf("invalid swap value. swapFee has to be in between 0 and 10000")
 			}
 
-			msg := types.NewMsgCreatePool(
+			msg := types.NewMsgMakePool(
 				args[0], // argSourcePort
 				args[1], // argSourceChannel
 				args[2], // argSender
 				args[3], // argCounterPartySender
-				sig,     // counterParty Signature
 				types.PoolAsset{
 					Side:    types.PoolAssetSide_SOURCE,
 					Balance: tokens[0],

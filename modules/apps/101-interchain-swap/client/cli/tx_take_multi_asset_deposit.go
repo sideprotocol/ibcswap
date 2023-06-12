@@ -7,38 +7,40 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	"github.com/spf13/cobra"
 )
 
 var _ = strconv.Itoa(0)
 
-func CmdMultiAssetDeposit() *cobra.Command {
+func CmdTakeMultiAssetDeposit() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "multi_asset_deposit [pool-id] [local sender] [remote sender] [pool-tokens(1000aside,1000bside)] [remote sender signature]",
-		Short: "Broadcast message Deposit",
+		Use:   "take_multi_asset_deposit [sender] [pool-id] [order-id]",
+		Short: "Broadcast message TakeMultiAssetDeposit",
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			argPoolId := args[0]
-			argLocalSender := args[1]
-			argRemoteSender := args[2]
-			argTokens := args[3]
-			argSignature := args[4]
+			argSender := args[0]
+			argPoolId := args[1]
+			argOrderId := args[2]
+
+			orderId, err := strconv.Atoi(argOrderId)
+			if err != nil {
+				return err
+			}
+
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
-			tokens, err := GetTokens(argTokens)
-			if err != nil {
+			if _, err = sdk.AccAddressFromBech32(argSender); err != nil {
 				return err
 			}
 
-			msg := types.NewMsgMultiAssetDeposit(
+			msg := types.NewMsgTakeMultiAssetDeposit(
+				argSender,
 				argPoolId,
-				[]string{argLocalSender, argRemoteSender},
-				tokens,
-				[]byte(argSignature),
+				uint64(orderId),
 			)
 
 			packetTimeoutHeight, err1 := cmd.Flags().GetString("packet-timeout-height")

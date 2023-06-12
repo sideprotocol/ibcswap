@@ -22,6 +22,8 @@ const (
 
 	Multiplier      = 1e18
 	MaximumSlippage = 10000
+
+	MULTI_DEPOSIT_PENDING_LIMIT = 10
 )
 
 var (
@@ -32,7 +34,6 @@ var (
 func KeyPrefix(p string) []byte {
 	return []byte(p)
 }
-
 
 // InterchainLiquidityPoolKey returns the store key to retrieve a InterchainLiquidityPool from the index fields
 func InitialPoolTokenKey(

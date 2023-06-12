@@ -7,79 +7,42 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
-	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 )
 
 var _ = strconv.Itoa(0)
 
-func CmdSwap() *cobra.Command {
+func CmdMakeMultiAssetDeposit() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "swap [swap_type] [sender] [poolId] [slippage] [recipient] [tokenIn] [tokenOut]",
-		Short: "Broadcast message Swap",
-		Args:  cobra.ExactArgs(7),
+		Use:   "make_multi_asset_deposit [pool-id] [local sender] [remote sender] [pool-tokens(1000aside,1000bside)]",
+		Short: "Broadcast message MakeMultiAssetDeposit",
+		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			swapTypeArg := args[0]
-
-			swapType := types.SwapMsgType_LEFT
-			switch swapTypeArg {
-			case "right":
-				swapType = types.SwapMsgType_RIGHT
-			case "left":
-				swapType = types.SwapMsgType_LEFT
-			default:
-				return fmt.Errorf("invalid swap type:: %s, please try 'left' or 'right' only", swapTypeArg)
-			}
-
-			argSender := args[1]
-
-			_, err = sdk.AccAddressFromBech32(argSender)
-			if err != nil {
-				return err
-			}
-
-			poolId := args[2]
-			argSlippage, err := cast.ToUint64E(args[3])
-			if err != nil {
-				return err
-			}
-			argRecipient := args[4]
-
+			argPoolId := args[0]
+			argLocalSender := args[1]
+			argRemoteSender := args[2]
+			argTokens := args[3]
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-			fmt.Println(argSender)
-			argTokenIn := args[5]
-			argTokenOut := args[6]
 
-			tokenIn, err := GetTokens(argTokenIn)
+			tokens, err := GetTokens(argTokens)
 			if err != nil {
 				return err
 			}
 
-			tokenOut, err := GetTokens(argTokenOut)
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgSwap(
-				swapType,
-				argSender,
-				poolId,
-				argSlippage,
-				argRecipient,
-				tokenIn[0],
-				tokenOut[0],
+			msg := types.NewMsgMakeMultiAssetDeposit(
+				argPoolId,
+				[]string{argLocalSender, argRemoteSender},
+				tokens,
 			)
 
 			packetTimeoutHeight, err1 := cmd.Flags().GetString("packet-timeout-height")
 			packetTimeoutTimestamp, err2 := cmd.Flags().GetUint("packet-timeout-timestamp")
 
-		
-			pool, err := QueryPool(clientCtx, poolId)
+			pool, err := QueryPool(clientCtx, argPoolId)
 			if err != nil {
 				return err
 			}

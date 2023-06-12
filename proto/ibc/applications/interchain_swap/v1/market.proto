@@ -25,15 +25,16 @@ message PoolAsset {
 
 message InterchainLiquidityPool {
   string id = 1;
-  string creator = 2;
-  repeated PoolAsset assets = 3;
-  uint32 swapFee = 4;
-  cosmos.base.v1beta1.Coin supply = 5;
-  PoolStatus status = 6;
-  float pool_price = 7;
-  string originatingChainId = 8;
-  string counterPartyPort = 9; 
-  string counterPartyChannel = 10;
+  string sourceCreator = 2;
+  string destinationCreator = 3;
+  repeated PoolAsset assets = 4;
+  uint32 swapFee = 5;
+  cosmos.base.v1beta1.Coin supply = 6;
+  PoolStatus status = 7;
+  float pool_price = 8;
+  string originatingChainId = 9;
+  string counterPartyPort = 10; 
+  string counterPartyChannel = 11;
 }
 
 
@@ -53,6 +54,25 @@ message MarketFeeUpdateProposal {
   string   description                     = 2;
   string   pool_id                         = 3;
   uint32   fee_rate                        = 4;
+}
+
+enum OrderStatus {
+  PENDING = 0;
+  COMPLETE = 1;
+}
+
+
+// multi asset deposit order
+message MultiAssetDepositOrder {
+  uint64 id = 1;
+  string poolId = 2;
+  string chainId = 3;
+  string sourceMaker = 4;
+  string destinationTaker = 5;
+  repeated cosmos.base.v1beta1.Coin deposits = 6;
+  repeated cosmos.base.v1beta1.Coin poolTokens = 7;
+  OrderStatus status = 8;
+  int64 createdAt = 9;
 }
 
 

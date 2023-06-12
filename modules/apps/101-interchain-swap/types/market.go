@@ -10,7 +10,8 @@ import (
 // create new liquidity pool
 func NewInterchainLiquidityPool(
 	ctx types.Context,
-	creator string,
+	sourceCreator string,
+	destinationCreator string,
 	store BankKeeper,
 	poolId string,
 	assets []*PoolAsset,
@@ -21,14 +22,22 @@ func NewInterchainLiquidityPool(
 ) *InterchainLiquidityPool {
 
 	initialLiquidity := types.NewInt(0)
+	liquidity := []*PoolAsset{}
 	for _, asset := range assets {
 		initialLiquidity = initialLiquidity.Add(asset.Balance.Amount)
+		if store.HasSupply(ctx, asset.Balance.Denom) {
+			asset.Side = PoolAssetSide_SOURCE
+		} else {
+			asset.Side = PoolAssetSide_DESTINATION
+		}
+		liquidity = append(liquidity, asset)
 	}
 
 	pool := InterchainLiquidityPool{
-		Id:      poolId,
-		Creator: creator,
-		Assets:  assets,
+		Id:                 poolId,
+		SourceCreator:      sourceCreator,
+		DestinationCreator: destinationCreator,
+		Assets:             liquidity,
 		Supply: &types.Coin{
 			Denom:  poolId,
 			Amount: initialLiquidity,
@@ -62,6 +71,26 @@ func (ilp *InterchainLiquidityPool) FindDenomBySide(side PoolAssetSide) (*string
 	for _, asset := range ilp.Assets {
 		if asset.Side == side {
 			return &asset.Balance.Denom, nil
+		}
+	}
+	return nil, ErrNotFoundDenomInPool
+}
+
+// find pool asset by denom
+func (ilp *InterchainLiquidityPool) FindAssetBySide(side PoolAssetSide) (*types.Coin, error) {
+	for _, asset := range ilp.Assets {
+		if asset.Side == side {
+			return asset.Balance, nil
+		}
+	}
+	return nil, ErrNotFoundDenomInPool
+}
+
+// find pool asset by denom
+func (ilp *InterchainLiquidityPool) FindPoolAssetBySide(side PoolAssetSide) (*PoolAsset, error) {
+	for _, asset := range ilp.Assets {
+		if asset.Side == side {
+			return asset, nil
 		}
 	}
 	return nil, ErrNotFoundDenomInPool
@@ -208,7 +237,7 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 	return outputToken, nil
 }
 
-// P_issued = P_supply * ((1 + At/Bt) ** Wt -1)
+// P_issued = P_supply * Wt * Dt/Bt
 func (imm *InterchainMarketMaker) DepositMultiAsset(tokens []*types.Coin) ([]*types.Coin, error) {
 	outTokens := []*types.Coin{}
 	for _, token := range tokens {
@@ -218,10 +247,14 @@ func (imm *InterchainMarketMaker) DepositMultiAsset(tokens []*types.Coin) ([]*ty
 		}
 		var issueAmount types.Int
 		if imm.Pool.Status == PoolStatus_INITIALIZED {
-			issueAmount = asset.Balance.Amount
+			totalAssetAmount := types.NewInt(0)
+			for _, asset := range imm.Pool.Assets {
+				totalAssetAmount = totalAssetAmount.Add(asset.Balance.Amount)
+			}
+			issueAmount = totalAssetAmount.Mul(types.NewInt(int64(asset.Weight))).Quo(types.NewInt(100))
 		} else {
 			ratio := float64(token.Amount.Int64()) / float64(asset.Balance.Amount.Int64()) * Multiplier
-			issueAmount = imm.Pool.Supply.Amount.Mul(types.NewInt(int64(ratio))).Quo(types.NewInt(Multiplier))
+			issueAmount = imm.Pool.Supply.Amount.Mul(types.NewInt(int64(asset.Weight))).Mul(types.NewInt(int64(ratio))).Quo(types.NewInt(100)).Quo(types.NewInt(Multiplier))
 		}
 
 		outputToken := &types.Coin{
@@ -268,14 +301,14 @@ func (imm *InterchainMarketMaker) SingleWithdraw(redeem types.Coin, denomOut str
 }
 
 // input the supply token, output the expected token.
-// At = Bt * (P_redeemed / P_supply)
+// At = Bt * (P_redeemed / P_supply)/Wt
 func (imm *InterchainMarketMaker) MultiAssetWithdraw(redeem types.Coin, denomOut string) (*types.Coin, error) {
 
 	asset, err := imm.Pool.FindAssetByDenom(denomOut)
 	if err != nil {
 		return nil, err
 	}
-	out := asset.Balance.Amount.Mul(redeem.Amount).Quo(imm.Pool.Supply.Amount)
+	out := asset.Balance.Amount.Mul(redeem.Amount).Mul(types.NewInt(100)).Quo(imm.Pool.Supply.Amount).Quo(types.NewInt(int64(asset.Weight)))
 	return &types.Coin{
 		Denom:  denomOut,
 		Amount: out,

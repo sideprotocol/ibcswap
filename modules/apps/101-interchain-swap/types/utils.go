@@ -2,7 +2,9 @@ package types
 
 import (
 	"bytes"
+	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
@@ -26,23 +28,24 @@ func GetDefaultTimeOut(ctx *sdk.Context) (clienttypes.Height, uint64) {
 	return timeoutHeight, uint64(timeoutStamp.UTC().UnixNano())
 }
 
-func GetPoolIdWithTokens(tokens []*sdk.Coin) string {
-
-	denoms := []string{}
-	for _, token := range tokens {
-		denoms = append(denoms, token.Denom)
-	}
-	sort.Strings(denoms)
-	return GetPoolId(denoms)
-}
-func GetPoolId(denoms []string) string {
+func GetPoolId(chainID string, denoms []string) string {
 	//generate poolId
 	sort.Strings(denoms)
 	poolIdHash := sha256.New()
+	salt := GenerateRandomString(chainID, 10)
+	denoms = append(denoms, salt)
 	poolIdHash.Write([]byte(strings.Join(denoms, "")))
 	poolId := "pool" + fmt.Sprintf("%v", hex.EncodeToString(poolIdHash.Sum(nil)))
-	//poolId := "pool" + fmt.Sprintf("%v", hex.EncodeToString(poolIdHash.Sum(nil)))
 	return poolId
+}
+
+func GetOrderId(chainID string) string {
+	//generate poolId
+	orderIdHash := sha256.New()
+	salt := GenerateRandomString(chainID, 10)
+	orderIdHash.Write([]byte(salt))
+	orderId := "order" + fmt.Sprintf("%v", hex.EncodeToString(orderIdHash.Sum(nil)))
+	return orderId
 }
 
 func GetEscrowAddress(portID, channelID string) sdk.AccAddress {
@@ -68,6 +71,15 @@ func GetEscrowAddressWithModuleName(name string) sdk.AccAddress {
 	preImage = append(preImage, name...)
 	hash := sha256.Sum256(preImage)
 	return hash[:20]
+}
+
+func GenerateRandomString(chainID string, n int) string {
+	b := make([]byte, n)
+	_, err := rand.Read(b)
+	if err != nil {
+		panic(err)
+	}
+	return chainID + base64.URLEncoding.EncodeToString(b)
 }
 
 func GetEscrowModuleName(portID, channelID string) string {

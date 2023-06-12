@@ -54,12 +54,11 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 			func() {
 				suite.coordinator.CreateChannels(path)
 
-				msg := types.NewMsgCreatePool(
+				msg := types.NewMsgMakePool(
 					path.EndpointA.ChannelConfig.PortID,
 					path.EndpointA.ChannelID,
 					suite.chainA.SenderAccount.GetAddress().String(),
 					suite.chainB.SenderAccount.GetAddress().String(),
-					[]byte("0"),
 					types.PoolAsset{
 						Side: types.PoolAssetSide_SOURCE,
 						Balance: &sdk.Coin{
@@ -105,7 +104,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 			func() {
 				suite.coordinator.CreateChannels(path)
 				msg := types.NewMsgMultiAssetWithdraw(
-					types.GetPoolId([]string{sdk.DefaultBondDenom, sdk.DefaultBondDenom}),
+					types.GetPoolId(suite.chainA.GetContext().ChainID(), []string{sdk.DefaultBondDenom, sdk.DefaultBondDenom}),
 					suite.chainA.SenderAccount.GetAddress().String(),
 					suite.chainB.SenderAccount.GetAddress().String(),
 					&sdk.Coin{
@@ -192,12 +191,11 @@ func (suite *KeeperTestSuite) TestOnReceived() {
 			"successful on create received.",
 			func() {
 				ctx := suite.chainA.GetContext()
-				msg := types.NewMsgCreatePool(
+				msg := types.NewMsgMakePool(
 					path.EndpointA.ChannelConfig.PortID,
 					path.EndpointA.ChannelID,
 					suite.chainA.SenderAccount.GetAddress().String(),
 					suite.chainB.SenderAccount.GetAddress().String(),
-					[]byte("0"),
 					types.PoolAsset{
 						Side: types.PoolAssetSide_SOURCE,
 						Balance: &sdk.Coin{
@@ -219,13 +217,14 @@ func (suite *KeeperTestSuite) TestOnReceived() {
 					},
 					300,
 				)
-				destPort := path.EndpointA.Counterparty.ChannelConfig.PortID
-				destChannel := path.EndpointA.ChannelID
-				_, err := suite.chainA.GetSimApp().InterchainSwapKeeper.OnCreatePoolReceived(
+
+				poolId := types.GetPoolId(suite.chainA.ChainID, []string{
+					sdk.DefaultBondDenom, sdk.DefaultBondDenom,
+				})
+				_, err := suite.chainA.GetSimApp().InterchainSwapKeeper.OnMakePoolReceived(
 					ctx,
 					msg,
-					destPort,
-					destChannel,
+					poolId,
 				)
 				suite.Require().NoError(err)
 			}, true, true,

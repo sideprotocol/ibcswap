@@ -4,22 +4,21 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const TypeMsgCreatePool = "create_pool"
+const TypeMsgMakePool = "make_pool"
 
-var _ sdk.Msg = &MsgCreatePoolRequest{}
+var _ sdk.Msg = &MsgMakePoolRequest{}
 
-func NewMsgCreatePool(
+func NewMsgMakePool(
 	sourcePort string,
 	sourceChannel string,
 	creator string,
 	counterPartyCreator string,
-	counterPartySig []byte,
 	sourceLiquidity,
 	targetLiquidity PoolAsset,
 	swapFee uint32,
-) *MsgCreatePoolRequest {
+) *MsgMakePoolRequest {
 
-	return &MsgCreatePoolRequest{
+	return &MsgMakePoolRequest{
 		SourcePort:          sourcePort,
 		SourceChannel:       sourceChannel,
 		Creator:             creator,
@@ -28,20 +27,19 @@ func NewMsgCreatePool(
 			&sourceLiquidity,
 			&targetLiquidity,
 		},
-		CounterPartySig: counterPartySig,
-		SwapFee:         swapFee,
+		SwapFee: swapFee,
 	}
 }
 
-func (msg *MsgCreatePoolRequest) Route() string {
+func (msg *MsgMakePoolRequest) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgCreatePoolRequest) Type() string {
-	return TypeMsgCreatePool
+func (msg *MsgMakePoolRequest) Type() string {
+	return TypeMsgMakePool
 }
 
-func (msg *MsgCreatePoolRequest) GetSigners() []sdk.AccAddress {
+func (msg *MsgMakePoolRequest) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
@@ -49,12 +47,12 @@ func (msg *MsgCreatePoolRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgCreatePoolRequest) GetSignBytes() []byte {
+func (msg *MsgMakePoolRequest) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgCreatePoolRequest) GetLiquidityDenoms() []string {
+func (msg *MsgMakePoolRequest) GetLiquidityDenoms() []string {
 	denoms := []string{}
 	for _, asset := range msg.Liquidity {
 		denoms = append(denoms, asset.Balance.Denom)
@@ -62,7 +60,7 @@ func (msg *MsgCreatePoolRequest) GetLiquidityDenoms() []string {
 	return denoms
 }
 
-func (msg *MsgCreatePoolRequest) ValidateBasic() error {
+func (msg *MsgMakePoolRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return ErrInvalidAddress
