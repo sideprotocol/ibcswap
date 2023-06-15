@@ -268,7 +268,6 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 			chainAAddress,
 			chainBAddress,
 			chainAPoolToken.Balance,
-			chainBPoolToken.Balance,
 		)
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
 		s.AssertValidTxResponse(resp)
@@ -288,7 +287,6 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 			chainAAddress,
 			chainBAddress,
 			chainAPoolToken.Balance,
-			chainBPoolToken.Balance,
 		)
 
 		resp, err = s.BroadcastMessages(ctx, chainA, chainAWallet, withdrawMsg)
@@ -400,7 +398,6 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacketErrors() {
 			chainAInvalidAddress,
 			chainBInvalidAddress,
 			poolCoin,
-			poolCoin,
 		)
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
 		s.Require().Equal("invalid address", resp.RawLog)
@@ -453,7 +450,6 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacketErrors() {
 			pool.Id,
 			chainAInvalidAddress,
 			chainBInvalidAddress,
-			poolCoin,
 			poolCoin,
 		)
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)

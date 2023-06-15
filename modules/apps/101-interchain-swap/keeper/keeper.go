@@ -136,6 +136,21 @@ func (k Keeper) EscrowAddress(ctx context.Context, req *types.QueryEscrowAddress
 	}, nil
 }
 
+// You may need to adjust the function signature, return types, and parameter types based on your module's implementation
+func (k Keeper) MultiDepositOrders(ctx context.Context, req *types.QueryMultiDepositOrdersRequest) (*types.QueryMultiDepositOrdersResponse, error) {
+    sdkCtx := sdk.UnwrapSDKContext(ctx)
+    orders := k.GetAllMultiDepositOrder(sdkCtx, req.PoolId)
+    
+    ordersPtr := make([]*types.MultiAssetDepositOrder, len(orders))
+    for i := range orders {
+        ordersPtr[i] = &orders[i]
+    }
+    
+    return &types.QueryMultiDepositOrdersResponse{
+        Orders: ordersPtr,
+    },nil
+}
+
 func (k Keeper) validateCoins(ctx sdk.Context, pool *types.InterchainLiquidityPool, sender string, tokensIn []*sdk.Coin) ([]sdk.Coin, error) {
 	// Deposit token to Escrow account
 	coins := []sdk.Coin{}

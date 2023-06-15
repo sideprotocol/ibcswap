@@ -8,20 +8,12 @@ const TypeMsgWithdraw = "withdraw"
 
 var _ sdk.Msg = &MsgMultiAssetWithdrawRequest{}
 
-func NewMsgMultiAssetWithdraw(poolId string, sourceSender, targetSender string, sourcePoolToken *sdk.Coin, targetPoolToken *sdk.Coin) *MsgMultiAssetWithdrawRequest {
+func NewMsgMultiAssetWithdraw(poolId string, sourceReceiver, destinationReceiver string, poolToken *sdk.Coin) *MsgMultiAssetWithdrawRequest {
 	return &MsgMultiAssetWithdrawRequest{
-		PoolId: poolId,
-		Sender: sourceSender,
-		Withdraws: []*WithdrawAsset{
-			{
-				Receiver: sourceSender,
-				Balance:  sourcePoolToken,
-			},
-			{
-				Receiver: targetSender,
-				Balance:  targetPoolToken,
-			},
-		},
+		PoolId:               poolId,
+		Receiver:             sourceReceiver,
+		CounterPartyReceiver: destinationReceiver,
+		PoolToken:            poolToken,
 	}
 }
 
@@ -34,7 +26,7 @@ func (msg *MsgMultiAssetWithdrawRequest) Type() string {
 }
 
 func (msg *MsgMultiAssetWithdrawRequest) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Withdraws[0].Receiver)
+	creator, err := sdk.AccAddressFromBech32(msg.Receiver)
 	if err != nil {
 		panic(err)
 	}
@@ -47,19 +39,12 @@ func (msg *MsgMultiAssetWithdrawRequest) GetSignBytes() []byte {
 }
 
 func (msg *MsgMultiAssetWithdrawRequest) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	_, err := sdk.AccAddressFromBech32(msg.Receiver)
 	if err != nil {
 		return ErrInvalidAddress
 	}
-
-	for _, asset := range msg.Withdraws {
-		_, err := sdk.AccAddressFromBech32(asset.Receiver)
-		if err != nil {
-			return ErrInvalidAddress
-		}
-		if asset.Balance.Amount.Equal(sdk.NewInt(0)) {
-			return ErrInvalidAmount
-		}
+	if msg.PoolToken.Amount.LTE(sdk.NewInt(0)) {
+		return ErrInvalidAmount
 	}
 	return nil
 }

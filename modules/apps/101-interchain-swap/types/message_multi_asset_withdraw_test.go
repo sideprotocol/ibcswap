@@ -21,22 +21,10 @@ func TestMsgWithdraw_ValidateBasic(t *testing.T) {
 
 			msg: MsgMultiAssetWithdrawRequest{
 				PoolId: "test",
-				Sender: "invalid address",
-				Withdraws: []*WithdrawAsset{
-					{
-						Receiver: sample.AccAddress(),
-						Balance: &types.Coin{
-							Denom:  "atm",
-							Amount: types.NewInt(0),
-						},
-					},
-					{
-						Receiver: sample.AccAddress(),
-						Balance: &types.Coin{
-							Denom:  "btm",
-							Amount: types.NewInt(0),
-						},
-					},
+				Receiver: "invalid address",
+				PoolToken: &types.Coin{
+					Denom:  "atm",
+					Amount: types.NewInt(0),
 				},
 			},
 			err: errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", ""),
@@ -44,22 +32,10 @@ func TestMsgWithdraw_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid pool-coin amount",
 			msg: MsgMultiAssetWithdrawRequest{
-				Sender: sample.AccAddress(),
-				Withdraws: []*WithdrawAsset{
-					{
-						Receiver: sample.AccAddress(),
-						Balance: &types.Coin{
-							Denom:  "atm",
-							Amount: types.NewInt(0),
-						},
-					},
-					{
-						Receiver: sample.AccAddress(),
-						Balance: &types.Coin{
-							Denom:  "btm",
-							Amount: types.NewInt(0),
-						},
-					},
+				Receiver: sample.AccAddress(),
+				PoolToken: &types.Coin{
+					Denom:  "atm",
+					Amount: types.NewInt(0),
 				},
 			},
 			err: errorsmod.Wrapf(ErrInvalidAmount, "invalid pool coin amount (%s)", ""),
@@ -67,22 +43,10 @@ func TestMsgWithdraw_ValidateBasic(t *testing.T) {
 		{
 			name: "valid message",
 			msg: MsgMultiAssetWithdrawRequest{
-				Sender: sample.AccAddress(),
-				Withdraws: []*WithdrawAsset{
-					{
-						Receiver: sample.AccAddress(),
-						Balance: &types.Coin{
-							Denom:  "atm",
-							Amount: types.NewInt(1000),
-						},
-					},
-					{
-						Receiver: sample.AccAddress(),
-						Balance: &types.Coin{
-							Denom:  "btm",
-							Amount: types.NewInt(1000),
-						},
-					},
+				Receiver: sample.AccAddress(),
+				PoolToken: &types.Coin{
+					Denom:  "atm",
+					Amount: types.NewInt(0),
 				},
 			},
 		},

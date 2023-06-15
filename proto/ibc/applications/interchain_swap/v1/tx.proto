@@ -91,13 +91,13 @@ message MsgMultiAssetDepositResponse {
   repeated cosmos.base.v1beta1.Coin poolTokens = 1;
 }
 
-
 message MsgMultiAssetWithdrawRequest {
   string poolId = 1;
-  string sender = 2;
-  repeated WithdrawAsset withdraws = 3;
-  ibc.core.client.v1.Height timeoutHeight = 4;
-  uint64 timeoutTimeStamp  = 5;  
+  string receiver = 2;
+  string counterPartyReceiver = 3;
+  cosmos.base.v1beta1.Coin poolToken = 4;
+  ibc.core.client.v1.Height timeoutHeight = 5;
+  uint64 timeoutTimeStamp  = 6;  
 }
 
 message WithdrawAsset {
@@ -105,9 +105,6 @@ message WithdrawAsset {
   cosmos.base.v1beta1.Coin balance = 2;
 }
 
-message MsgSingleAssetWithdrawResponse {
-  repeated cosmos.base.v1beta1.Coin tokens = 1;
-}
 
 message MsgMultiAssetWithdrawResponse {
   repeated cosmos.base.v1beta1.Coin tokens = 1;

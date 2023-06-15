@@ -331,7 +331,6 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 			chainAAddress,
 			chainBAddress,
 			sourceMakerPoolToken.Balance,
-			destinationTakerPoolToken.Balance,
 		)
 
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
@@ -351,5 +350,9 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 		logger.CleanLog("Take Pool: PoolA", poolA)
 		fmt.Println("===================")
 		logger.CleanLog("Take Pool: PoolB", poolB)
+
+		sourceMakerPoolToken, err = s.QueryBalance(ctx, chainA, chainAAddress, pool.Id)
+		s.Require().NoError(err)
+		s.Require().Equal(sourceMakerPoolToken.Balance.Amount, sdk.NewInt(0))
 	})
 }

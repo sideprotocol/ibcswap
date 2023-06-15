@@ -16,7 +16,7 @@ var _ = strconv.Itoa(0)
 
 func CmdMultiAssetWithdraw() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "multi_asset_withdraw [poolId] [receiver] [remote sender][pool coins]",
+		Use:   "multi_asset_withdraw [poolId] [receiver] [remote sender][pool coin]",
 		Short: "Broadcast message Withdraw",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
@@ -37,7 +37,7 @@ func CmdMultiAssetWithdraw() *cobra.Command {
 			if err != nil {
 				return nil
 			}
-			if len(coins) != 2 {
+			if len(coins) != 0 {
 				return fmt.Errorf("invalid token length! : %d", len(coins))
 			}
 
@@ -46,7 +46,6 @@ func CmdMultiAssetWithdraw() *cobra.Command {
 				argSender,
 				argRemoteSender,
 				coins[0],
-				coins[1],
 			)
 			packetTimeoutHeight, err1 := cmd.Flags().GetString("packet-timeout-height")
 			packetTimeoutTimestamp, err2 := cmd.Flags().GetUint("packet-timeout-timestamp")
