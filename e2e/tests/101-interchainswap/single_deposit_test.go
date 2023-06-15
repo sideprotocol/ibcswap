@@ -314,15 +314,14 @@ func (s *InterchainswapTestSuite) TestSingleDepositStatus() {
 		pool := getFirstPool(s, ctx, chainA)
 		sourceMakerPoolToken, err := s.QueryBalance(ctx, chainA, chainAAddress, pool.Id)
 		s.Require().NoError(err)
-		destinationTakerPoolToken, err := s.QueryBalance(ctx, chainB, chainBAddress, pool.Id)
-		s.Require().NoError(err)
+		// destinationTakerPoolToken, err := s.QueryBalance(ctx, chainB, chainBAddress, pool.Id)
+		// s.Require().NoError(err)
 
 		msg := types.NewMsgMultiAssetWithdraw(
 			pool.Id,
 			chainAAddress,
 			chainBAddress,
 			sourceMakerPoolToken.Balance,
-			destinationTakerPoolToken.Balance,
 		)
 
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)

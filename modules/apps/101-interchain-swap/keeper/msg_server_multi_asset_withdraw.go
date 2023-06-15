@@ -17,12 +17,12 @@ func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMulti
 	}
 
 	// check out denom
-	if !k.bankKeeper.HasSupply(ctx, msg.Withdraws[0].Balance.Denom) {
-		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "invalid denom in local withdraw message:%s", msg.Withdraws[0].Balance.Denom)
+	if !k.bankKeeper.HasSupply(ctx, msg.PoolToken.Denom) {
+		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "invalid denom in local withdraw message:%s", msg.PoolToken.Denom)
 	}
 
 	// PoolCoin.Denom is just poolID.
-	pool, found := k.GetInterchainLiquidityPool(ctx, msg.Withdraws[0].Balance.Denom)
+	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolToken.Denom)
 
 	if !found {
 		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "because of %s", types.ErrNotFoundPool)
@@ -32,21 +32,16 @@ func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMulti
 		&pool,
 	)
 
-	totalLpAmount := sdk.NewInt(0)
-	for _, withdraw := range msg.Withdraws {
-		totalLpAmount = totalLpAmount.Add(withdraw.Balance.Amount)
-	}
-
 	srcDenom, _ := pool.FindDenomBySide(types.PoolAssetSide_SOURCE)
 	srcOut, err := amm.MultiAssetWithdraw(sdk.Coin{
-		Denom: pool.Id, Amount: totalLpAmount.Quo(sdk.NewInt(2)),
+		Denom: pool.Id, Amount: msg.PoolToken.Amount.Quo(sdk.NewInt(2)),
 	}, *srcDenom)
 	if err != nil {
 		return nil, err
 	}
 	targetDenom, _ := pool.FindDenomBySide(types.PoolAssetSide_DESTINATION)
 	targetOut, err := amm.MultiAssetWithdraw(sdk.Coin{
-		Denom: pool.Id, Amount: totalLpAmount.Quo(sdk.NewInt(2)),
+		Denom: pool.Id, Amount: msg.PoolToken.Amount.Quo(sdk.NewInt(2)),
 	}, *targetDenom)
 
 	if err != nil {
@@ -64,7 +59,7 @@ func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMulti
 		Data: rawMsgData,
 		StateChange: &types.StateChange{
 			Out:        []*sdk.Coin{srcOut, targetOut},
-			PoolTokens: []*sdk.Coin{msg.Withdraws[0].Balance, msg.Withdraws[1].Balance},
+			PoolTokens: []*sdk.Coin{msg.PoolToken},
 		},
 	}
 

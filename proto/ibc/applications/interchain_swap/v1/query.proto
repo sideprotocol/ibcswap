@@ -29,7 +29,6 @@ service Query {
   // Queries a list of InterchainLiquidityPool items.
   rpc InterchainLiquidityPool    (QueryGetInterchainLiquidityPoolRequest) returns (QueryGetInterchainLiquidityPoolResponse) {
     option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_liquidity_pool/{poolId}";
-  
   }
   rpc InterchainLiquidityPoolAll (QueryAllInterchainLiquidityPoolRequest) returns (QueryAllInterchainLiquidityPoolResponse) {
     option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_liquidity_pool";
@@ -43,9 +42,20 @@ service Query {
   rpc InterchainMarketMakerAll (QueryAllInterchainMarketMakerRequest) returns (QueryAllInterchainMarketMakerResponse) {
     option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_market_maker";
   }
-
-
+  rpc MultiDepositOrders(QueryMultiDepositOrdersRequest) returns (QueryMultiDepositOrdersResponse) {
+    option (google.api.http).get = "/ibc/apps/atomicswap/v1/orders";
+  }
 }
+
+// QueryOrdersRequest is the request type for the Query/MutliDepositOrder RPC method
+message QueryMultiDepositOrdersRequest {
+  string poolId = 1;
+}
+message QueryMultiDepositOrdersResponse {
+  // params defines the parameters of the module.
+  repeated ibc.applications.interchain_swap.v1.MultiAssetDepositOrder orders = 1;
+}
+
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
 message QueryParamsRequest {}

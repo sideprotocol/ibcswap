@@ -28,6 +28,7 @@ type QueryClient interface {
 	// Queries a list of InterchainMarketMaker items.
 	InterchainMarketMaker(ctx context.Context, in *QueryGetInterchainMarketMakerRequest, opts ...grpc.CallOption) (*QueryGetInterchainMarketMakerResponse, error)
 	InterchainMarketMakerAll(ctx context.Context, in *QueryAllInterchainMarketMakerRequest, opts ...grpc.CallOption) (*QueryAllInterchainMarketMakerResponse, error)
+	MultiDepositOrders(ctx context.Context, in *QueryMultiDepositOrdersRequest, opts ...grpc.CallOption) (*QueryMultiDepositOrdersResponse, error)
 }
 
 type queryClient struct {
@@ -92,6 +93,15 @@ func (c *queryClient) InterchainMarketMakerAll(ctx context.Context, in *QueryAll
 	return out, nil
 }
 
+func (c *queryClient) MultiDepositOrders(ctx context.Context, in *QueryMultiDepositOrdersRequest, opts ...grpc.CallOption) (*QueryMultiDepositOrdersResponse, error) {
+	out := new(QueryMultiDepositOrdersResponse)
+	err := c.cc.Invoke(ctx, "/ibc.applications.interchain_swap.v1.Query/MultiDepositOrders", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations should embed UnimplementedQueryServer
 // for forward compatibility
@@ -106,6 +116,7 @@ type QueryServer interface {
 	// Queries a list of InterchainMarketMaker items.
 	InterchainMarketMaker(context.Context, *QueryGetInterchainMarketMakerRequest) (*QueryGetInterchainMarketMakerResponse, error)
 	InterchainMarketMakerAll(context.Context, *QueryAllInterchainMarketMakerRequest) (*QueryAllInterchainMarketMakerResponse, error)
+	MultiDepositOrders(context.Context, *QueryMultiDepositOrdersRequest) (*QueryMultiDepositOrdersResponse, error)
 }
 
 // UnimplementedQueryServer should be embedded to have forward compatible implementations.
@@ -129,6 +140,9 @@ func (UnimplementedQueryServer) InterchainMarketMaker(context.Context, *QueryGet
 }
 func (UnimplementedQueryServer) InterchainMarketMakerAll(context.Context, *QueryAllInterchainMarketMakerRequest) (*QueryAllInterchainMarketMakerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InterchainMarketMakerAll not implemented")
+}
+func (UnimplementedQueryServer) MultiDepositOrders(context.Context, *QueryMultiDepositOrdersRequest) (*QueryMultiDepositOrdersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MultiDepositOrders not implemented")
 }
 
 // UnsafeQueryServer may be embedded to opt out of forward compatibility for this service.
@@ -250,6 +264,24 @@ func _Query_InterchainMarketMakerAll_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_MultiDepositOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryMultiDepositOrdersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).MultiDepositOrders(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ibc.applications.interchain_swap.v1.Query/MultiDepositOrders",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).MultiDepositOrders(ctx, req.(*QueryMultiDepositOrdersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -280,6 +312,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "InterchainMarketMakerAll",
 			Handler:    _Query_InterchainMarketMakerAll_Handler,
+		},
+		{
+			MethodName: "MultiDepositOrders",
+			Handler:    _Query_MultiDepositOrders_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

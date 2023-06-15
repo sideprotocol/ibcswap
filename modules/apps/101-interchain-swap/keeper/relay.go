@@ -312,8 +312,8 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
-		token = *msg.Withdraws[0].Balance
-		sender = msg.Sender
+		token = *msg.PoolToken
+		sender = msg.Receiver
 	case types.RIGHT_SWAP:
 		var msg types.MsgSwapRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {

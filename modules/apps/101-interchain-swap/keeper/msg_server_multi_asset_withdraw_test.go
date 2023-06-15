@@ -49,14 +49,14 @@ func (suite *KeeperTestSuite) TestMsgWithdraw() {
 		{
 			"invalid address",
 			func() {
-				msg.Sender = "invalid address"
+				msg.Receiver = "invalid address"
 			},
 			false,
 		},
 		{
 			"invalid amount",
 			func() {
-				msg.Sender = sample.AccAddress()
+				msg.Receiver = sample.AccAddress()
 			},
 			false,
 		},
@@ -74,7 +74,6 @@ func (suite *KeeperTestSuite) TestMsgWithdraw() {
 			*poolId,
 			suite.chainA.SenderAccount.GetAddress().String(),
 			suite.chainB.SenderAccount.GetAddress().String(),
-			&coin,
 			&coin,
 		)
 
