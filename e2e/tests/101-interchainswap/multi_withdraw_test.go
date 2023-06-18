@@ -256,6 +256,7 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 				txRes, err := s.BroadcastMessages(ctx, chain, &wallet, msg)
 				s.Require().NoError(err)
 				s.AssertValidTxResponse(txRes)
+				
 			case "take multi-deposit":
 				msg := types.NewMsgTakeMultiAssetDeposit(
 					chainBAddress,
