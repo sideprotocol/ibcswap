@@ -43,7 +43,7 @@ service Query {
     option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_market_maker";
   }
   rpc MultiDepositOrders(QueryMultiDepositOrdersRequest) returns (QueryMultiDepositOrdersResponse) {
-    option (google.api.http).get = "/ibc/apps/interchainswap/v1/orders";
+    option (google.api.http).get = "/ibc/apps/interchainswap/v1/multi_deposit_orders";
   }
 }
 
