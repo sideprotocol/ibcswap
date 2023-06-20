@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,7 +73,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 			return nil, types.ErrEmptyPoolId
 		}
 
-		poolId, err := k.OnMakePoolReceived(ctx, &msg, data.StateChange.PoolId)
+		poolId, err := k.OnMakePoolReceived(ctx, &msg, data.StateChange.PoolId, data.StateChange.SourceChainId)
 		if err != nil {
 			return nil, err
 		}
@@ -254,7 +255,8 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
 				return err
 			}
-			if err := k.OnTakeMultiAssetDepositAcknowledged(ctx, &msg); err != nil {
+
+			if err := k.OnTakeMultiAssetDepositAcknowledged(ctx, &msg, *data.StateChange); err != nil {
 				logger.Debug("TakeMultiDeposit:Single", err.Error())
 				return err
 			}
@@ -265,7 +267,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			},
 				sdk.Attribute{
 					Key:   "OrderId",
-					Value: data.StateChange.MutiDepositOrderId,
+					Value: fmt.Sprintf("%d", msg.OrderId),
 				}))
 			return nil
 

@@ -37,6 +37,8 @@ func (k Keeper) OnMakePoolAcknowledged(ctx sdk.Context, msg *types.MsgMakePoolRe
 		msg.SourceChannel,
 	)
 
+	pool.SourceChainId = ctx.ChainID()
+
 	// Mint LP tokens
 	totalAmount := sdk.NewInt(0)
 	for _, asset := range msg.Liquidity {
@@ -135,22 +137,13 @@ func (k Keeper) OnMakeMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.
 	if err != nil {
 		return err
 	}
-
-	// Update pool supply and status
-	for _, poolToken := range res.PoolTokens {
-		pool.AddPoolSupply(*poolToken)
-	}
-
-	for _, deposit := range req.Deposits {
-		pool.AddAsset(*deposit.Balance)
-	}
 	// Save the updated liquidity pool
 	k.SetInterchainLiquidityPool(ctx, pool)
 	return nil
 }
 
 // OnMultiAssetDepositAcknowledged processes a double deposit acknowledgement, mints voucher tokens, and updates the liquidity pool.
-func (k Keeper) OnTakeMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.MsgTakeMultiAssetDepositRequest) error {
+func (k Keeper) OnTakeMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.MsgTakeMultiAssetDepositRequest, stateChange types.StateChange) error {
 
 	// Retrieve the liquidity pool
 	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolId)
@@ -164,25 +157,24 @@ func (k Keeper) OnTakeMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.
 	}
 
 	// Mint voucher tokens for the sender
-	err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(order.DestinationTaker), *order.PoolTokens[1])
+	err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(order.DestinationTaker), *stateChange.PoolTokens[1])
 
 	if err != nil {
 		return err
 	}
 
 	// Update pool supply and status
-	for _, poolToken := range order.PoolTokens {
+	for _, poolToken := range stateChange.PoolTokens {
 		pool.AddPoolSupply(*poolToken)
 	}
-
 	for _, deposit := range order.Deposits {
 		pool.AddAsset(*deposit)
 	}
+
 	order.Status = types.OrderStatus_COMPLETE
 
 	// Save the updated liquidity pool
 	k.SetInterchainLiquidityPool(ctx, pool)
-
 	// Update order statuse
 	k.SetMultiDepositOrder(ctx, pool.Id, order)
 	return nil
@@ -238,7 +230,7 @@ func (k Keeper) OnSwapAcknowledged(ctx sdk.Context, req *types.MsgSwapRequest, r
 	return nil
 }
 
-func (k Keeper) OnMakePoolReceived(ctx sdk.Context, msg *types.MsgMakePoolRequest, poolID string) (*string, error) {
+func (k Keeper) OnMakePoolReceived(ctx sdk.Context, msg *types.MsgMakePoolRequest, poolID, sourceChainId string) (*string, error) {
 
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
@@ -261,6 +253,7 @@ func (k Keeper) OnMakePoolReceived(ctx sdk.Context, msg *types.MsgMakePoolReques
 		msg.SourcePort,
 		msg.SourceChannel,
 	)
+	pool.SourceChainId = sourceChainId
 
 	if !k.bankKeeper.HasSupply(ctx, msg.Liquidity[1].Balance.Denom) {
 		return nil, errorsmod.Wrapf(types.ErrFailedOnDepositReceived, "due to %s", types.ErrInvalidDecimalPair)
@@ -344,11 +337,10 @@ func (k Keeper) OnMakeMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgM
 	// create order
 	order := types.MultiAssetDepositOrder{
 		PoolId:           msg.PoolId,
-		ChainId:          pool.OriginatingChainId,
+		ChainId:          pool.SourceChainId,
 		SourceMaker:      msg.Deposits[0].Sender,
 		DestinationTaker: msg.Deposits[1].Sender,
 		Deposits:         types.GetCoinsFromDepositAssets(msg.Deposits),
-		PoolTokens:       stateChange.PoolTokens,
 		Status:           types.OrderStatus_PENDING,
 		CreatedAt:        ctx.BlockHeight(),
 	}
@@ -379,14 +371,18 @@ func (k Keeper) OnTakeMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgT
 	}
 
 	order.Status = types.OrderStatus_COMPLETE
-
 	// pool status update
-	for _, supply := range order.PoolTokens {
+	for _, supply := range stateChange.PoolTokens {
 		pool.AddPoolSupply(*supply)
 	}
-
 	for _, asset := range order.Deposits {
 		pool.AddAsset(*asset)
+	}
+
+	// Mint voucher tokens for the sender
+	err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(order.SourceMaker), *stateChange.PoolTokens[0])
+	if err != nil {
+		return nil, err
 	}
 
 	k.SetInterchainLiquidityPool(ctx, pool)
@@ -423,7 +419,7 @@ func (k Keeper) OnMultiAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgMult
 
 	// escrow operation
 	err := k.UnlockTokens(ctx, pool.CounterPartyPort, pool.CounterPartyChannel, sdk.MustAccAddressFromBech32(msg.CounterPartyReceiver), sdk.NewCoins(*stateChange.Out[1]))
-	
+
 	if err != nil {
 		return nil, err
 	}

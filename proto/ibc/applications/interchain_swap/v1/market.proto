@@ -32,7 +32,7 @@ message InterchainLiquidityPool {
   cosmos.base.v1beta1.Coin supply = 6;
   PoolStatus status = 7;
   float pool_price = 8;
-  string originatingChainId = 9;
+  string sourceChainId = 9;
   string counterPartyPort = 10; 
   string counterPartyChannel = 11;
 }
@@ -70,7 +70,6 @@ message MultiAssetDepositOrder {
   string sourceMaker = 4;
   string destinationTaker = 5;
   repeated cosmos.base.v1beta1.Coin deposits = 6;
-  repeated cosmos.base.v1beta1.Coin poolTokens = 7;
   OrderStatus status = 8;
   int64 createdAt = 9;
 }

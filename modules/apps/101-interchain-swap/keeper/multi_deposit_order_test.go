@@ -1,0 +1,37 @@
+package keeper_test
+
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
+)
+
+func (suite *KeeperTestSuite) TestSetMultiDepositOrder() {
+	k := suite.chainA.GetSimApp().InterchainSwapKeeper
+	ctx := suite.chainA.GetContext()
+
+	// create order
+	order := types.MultiAssetDepositOrder{
+		PoolId:           "test",
+		ChainId:          "test-a",
+		SourceMaker:      "test",
+		DestinationTaker: "test",
+		Deposits:         []*sdk.Coin{{Denom: "test", Amount: sdk.NewInt(100)}, {Denom: "test1", Amount: sdk.NewInt(100)}},
+		Status:           types.OrderStatus_PENDING,
+		CreatedAt:        123,
+	}
+
+	orderId := k.AppendMultiDepositOrder(
+		ctx,
+		"test",
+		order,
+	)
+	suite.Require().Equal(orderId, uint64(0))
+
+	storedOrder, found := k.GetMultiDepositOrder(
+		ctx,
+		"test",
+		orderId,
+	)
+	suite.Require().Equal(found, true)
+	suite.Require().Equal(storedOrder, order)
+}

@@ -19,7 +19,7 @@ func (k msgServer) TakePool(ctx context.Context, msg *types.MsgTakePoolRequest) 
 		return nil, errorsmod.Wrapf(types.ErrFailedTakePool, "due to %", types.ErrNotFoundPool)
 	}
 
-	if pool.OriginatingChainId == sdkCtx.ChainID() {
+	if pool.SourceChainId == sdkCtx.ChainID() {
 		return nil, errorsmod.Wrapf(types.ErrFailedTakePool, "due to %", "same chain")
 	}
 

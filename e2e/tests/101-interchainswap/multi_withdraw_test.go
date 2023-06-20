@@ -256,7 +256,7 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 				txRes, err := s.BroadcastMessages(ctx, chain, &wallet, msg)
 				s.Require().NoError(err)
 				s.AssertValidTxResponse(txRes)
-				
+
 			case "take multi-deposit":
 				msg := types.NewMsgTakeMultiAssetDeposit(
 					chainBAddress,
@@ -272,8 +272,16 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 			test.WaitForBlocks(ctx, 15, chainA, chainB)
 			s.AssertPacketRelayed(ctx, chain, channel.PortID, channel.ChannelID, uint64(packetSequence))
 
+			if tc.msgType == "make multi-deposit" {
+				res, err := s.QueryInterchainMultiDepositOrders(ctx, chainA, poolId)
+				s.Require().NoError(err)
+				s.Require().Equal(len(res.Orders), 1)
+				orders := res.Orders
+				s.Require().Equal(orders[0].ChainId, chainA.Config().ChainID)
+			}
 			// pool status log.
 			if tc.msgType == "take multi-deposit" {
+
 				poolA := getFirstPool(s, ctx, chainA)
 				poolB := getFirstPool(s, ctx, chainB)
 				s.Require().NoError(err)

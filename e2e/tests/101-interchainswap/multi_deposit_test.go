@@ -281,6 +281,7 @@ func (s *InterchainswapTestSuite) TestMultiDepositStatus() {
 
 			// pool status log.
 			if tc.msgType == "take multi-deposit" {
+
 				poolA := getFirstPool(s, ctx, chainA)
 				poolB := getFirstPool(s, ctx, chainB)
 				s.Require().NoError(err)

@@ -36,12 +36,16 @@ func (k Keeper) TakeMultiAssetDeposit(ctx context.Context, msg *types.MsgTakeMul
 		return nil, errorsmod.Wrapf(types.ErrMultipleAssetDepositNotAllowed, "due to %s of other's", types.ErrFailedMultiAssetDeposit)
 	}
 
+	// estimate pool token
+	amm := types.NewInterchainMarketMaker(&pool)
+	poolTokens, err := amm.DepositMultiAsset(order.Deposits)
+
 	// check asset owned status
-	asset, err := pool.FindAssetBySide(types.PoolAssetSide_SOURCE)
+	asset := order.Deposits[1]
 	if err != nil {
 		return nil, errorsmod.Wrapf(err, "due to %s of other's", types.ErrFailedMultiAssetDeposit)
 	}
-	
+
 	balance := k.bankKeeper.GetBalance(sdkCtx, sdk.MustAccAddressFromBech32(msg.Sender), asset.Denom)
 
 	if balance.Amount.LT(asset.Amount) {
@@ -62,8 +66,9 @@ func (k Keeper) TakeMultiAssetDeposit(ctx context.Context, msg *types.MsgTakeMul
 	}
 
 	packet := types.IBCSwapPacketData{
-		Type: types.TAKE_MULTI_DEPOSIT,
-		Data: rawMsgData,
+		Type:        types.TAKE_MULTI_DEPOSIT,
+		Data:        rawMsgData,
+		StateChange: &types.StateChange{PoolTokens: poolTokens},
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)

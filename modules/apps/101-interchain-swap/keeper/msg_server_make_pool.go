@@ -59,7 +59,8 @@ func (k msgServer) MakePool(ctx context.Context, msg *types.MsgMakePoolRequest) 
 		Type: types.MAKE_POOL,
 		Data: poolData,
 		StateChange: &types.StateChange{
-			PoolId: poolId,
+			PoolId:        poolId,
+			SourceChainId: sdkCtx.ChainID(),
 		},
 	}
 

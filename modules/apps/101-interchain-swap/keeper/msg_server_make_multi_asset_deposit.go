@@ -23,11 +23,11 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 		return nil, errormod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrNotFoundPool)
 	}
 
-	// check asset owned status
-	balance := k.bankKeeper.GetBalance(sdkCtx, sdk.MustAccAddressFromBech32(msg.Deposits[0].Sender), msg.Deposits[0].Balance.Denom)
-	if balance.Amount.LT(msg.Deposits[0].Balance.Amount) {
-		return nil, errormod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrInEnoughAmount)
-	}
+	// // check asset owned status
+	// balance := k.bankKeeper.GetBalance(sdkCtx, sdk.MustAccAddressFromBech32(msg.Deposits[0].Sender), msg.Deposits[0].Balance.Denom)
+	// if balance.Amount.LT(msg.Deposits[0].Balance.Amount) {
+	// 	return nil, errormod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrInEnoughAmount)
+	// }
 
 	// Check initial deposit condition
 	if pool.Status != types.PoolStatus_ACTIVE {
@@ -71,19 +71,7 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 		return nil, err
 	}
 
-	// create order
-	order := types.MultiAssetDepositOrder{
-		PoolId:           msg.PoolId,
-		ChainId:          sdkCtx.ChainID(),
-		SourceMaker:      msg.Deposits[0].Sender,
-		DestinationTaker: msg.Deposits[1].Sender,
-		Deposits:         types.GetCoinsFromDepositAssets(msg.Deposits),
-		PoolTokens:       poolTokens,
-		Status:           types.OrderStatus_PENDING,
-		CreatedAt:        sdkCtx.BlockHeight(),
-	}
-
-	order, found = k.GetLatestMultiDepositOrder(sdkCtx, pool.Id)
+	order, found := k.GetLatestMultiDepositOrder(sdkCtx, pool.Id)
 
 	pendingHeight := sdkCtx.BlockHeight() - order.CreatedAt
 	if found && order.Status == types.OrderStatus_PENDING && pendingHeight < types.MULTI_DEPOSIT_PENDING_LIMIT {
@@ -93,6 +81,17 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 	// protect malicious deposit action. we will not refund token as a penalty.
 	if found && pendingHeight > types.MULTI_DEPOSIT_PENDING_LIMIT {
 		k.RemoveLatestMultiDepositOrder(sdkCtx, pool.Id)
+	}
+
+	// create order
+	order = types.MultiAssetDepositOrder{
+		PoolId:           msg.PoolId,
+		ChainId:          sdkCtx.ChainID(),
+		SourceMaker:      msg.Deposits[0].Sender,
+		DestinationTaker: msg.Deposits[1].Sender,
+		Deposits:         types.GetCoinsFromDepositAssets(msg.Deposits),
+		Status:           types.OrderStatus_PENDING,
+		CreatedAt:        sdkCtx.BlockHeight(),
 	}
 
 	// save order in source chain

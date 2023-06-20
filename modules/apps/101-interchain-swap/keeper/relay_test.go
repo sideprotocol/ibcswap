@@ -221,6 +221,7 @@ func (suite *KeeperTestSuite) TestOnReceived() {
 					ctx,
 					msg,
 					poolId,
+					ctx.ChainID(),
 				)
 				suite.Require().NoError(err)
 			}, true, true,
