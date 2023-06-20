@@ -76,7 +76,7 @@ func (k Keeper) GetMultiDepositOrder(ctx sdk.Context, poolId string, id uint64) 
 func (k Keeper) GetLatestMultiDepositOrder(ctx sdk.Context, poolId string) (val types.MultiAssetDepositOrder, found bool) {
 	id := k.GetMultiDepositOrderCount(ctx, poolId)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(poolId+types.MultiDepositOrderKeyPrefix))
-	b := store.Get(GetMultiDepositOrderIDBytes(id))
+	b := store.Get(GetMultiDepositOrderIDBytes(id-1))
 	if b == nil {
 		return val, false
 	}

@@ -35,3 +35,41 @@ func (suite *KeeperTestSuite) TestSetMultiDepositOrder() {
 	suite.Require().Equal(found, true)
 	suite.Require().Equal(storedOrder, order)
 }
+
+func (suite *KeeperTestSuite) TestGetLatestMultiDepositOrder() {
+	k := suite.chainA.GetSimApp().InterchainSwapKeeper
+	ctx := suite.chainA.GetContext()
+
+	const poolId = "test"
+
+	// create order
+	order := types.MultiAssetDepositOrder{
+		PoolId:           poolId,
+		ChainId:          "test-a",
+		SourceMaker:      "test",
+		DestinationTaker: "test",
+		Deposits:         []*sdk.Coin{{Denom: "test", Amount: sdk.NewInt(100)}, {Denom: "test1", Amount: sdk.NewInt(100)}},
+		Status:           types.OrderStatus_PENDING,
+		CreatedAt:        123,
+	}
+
+	orderId := k.AppendMultiDepositOrder(
+		ctx,
+		"test",
+		order,
+	)
+	suite.Require().Equal(orderId, uint64(0))
+
+	storedOrder, found := k.GetMultiDepositOrder(
+		ctx,
+		"test",
+		orderId,
+	)
+	suite.Require().Equal(found, true)
+	suite.Require().Equal(storedOrder, order)
+
+	order, found = k.GetLatestMultiDepositOrder(ctx, poolId)
+	suite.Require().Equal(found, true)
+	suite.Require().Equal(order.Status, types.OrderStatus_PENDING)
+
+}

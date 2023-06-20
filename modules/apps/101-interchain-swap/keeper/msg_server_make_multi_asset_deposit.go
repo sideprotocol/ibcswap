@@ -74,7 +74,7 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 	order, found := k.GetLatestMultiDepositOrder(sdkCtx, pool.Id)
 
 	pendingHeight := sdkCtx.BlockHeight() - order.CreatedAt
-	if found && order.Status == types.OrderStatus_PENDING && pendingHeight < types.MULTI_DEPOSIT_PENDING_LIMIT {
+	if found && (order.Status == types.OrderStatus_PENDING || pendingHeight < types.MULTI_DEPOSIT_PENDING_LIMIT) {
 		return nil, errormod.Wrapf(types.ErrPreviousOrderNotCompleted, "due to %s", types.ErrFailedMultiAssetDeposit)
 	}
 
