@@ -42,19 +42,36 @@ service Query {
   rpc InterchainMarketMakerAll (QueryAllInterchainMarketMakerRequest) returns (QueryAllInterchainMarketMakerResponse) {
     option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_market_maker";
   }
-  rpc MultiDepositOrders(QueryMultiDepositOrdersRequest) returns (QueryMultiDepositOrdersResponse) {
-    option (google.api.http).get = "/ibc/apps/interchainswap/v1/multi_deposit_orders";
+  rpc InterchainMultiDepositOrder(QueryGetInterchainMultiDepositOrderRequest) returns (QueryGetInterchainMultiDepositOrderResponse) {
+    option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_multi_deposit_orders/{poolId}/{orderId}";
+  }
+
+  rpc InterchainMultiDepositOrdersAll(QueryAllInterchainMultiDepositOrdersRequest) returns (QueryAllInterchainMultiDepositOrdersResponse) {
+    option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_multi_deposit_orders/{poolId}";
   }
 }
 
 // QueryOrdersRequest is the request type for the Query/MutliDepositOrder RPC method
-message QueryMultiDepositOrdersRequest {
+message QueryGetInterchainMultiDepositOrderRequest {
   string poolId = 1;
+  uint64 orderId = 2;
 }
-message QueryMultiDepositOrdersResponse {
+message QueryGetInterchainMultiDepositOrderResponse {
+  // params defines the parameters of the module.
+  ibc.applications.interchain_swap.v1.MultiAssetDepositOrder order = 1;
+}
+
+// QueryOrdersRequest is the request type for the Query/MutliDepositOrder RPC method
+message QueryAllInterchainMultiDepositOrdersRequest {
+  string poolId = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+message QueryAllInterchainMultiDepositOrdersResponse {
   // params defines the parameters of the module.
   repeated ibc.applications.interchain_swap.v1.MultiAssetDepositOrder orders = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination              = 2;
 }
+
 
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -88,6 +105,7 @@ message QueryGetInterchainLiquidityPoolRequest {
 message QueryGetInterchainLiquidityPoolResponse {
   ibc.applications.interchain_swap.v1.InterchainLiquidityPool interchainLiquidityPool = 1 [(gogoproto.nullable) = false];
 }
+
 
 message QueryAllInterchainLiquidityPoolRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;

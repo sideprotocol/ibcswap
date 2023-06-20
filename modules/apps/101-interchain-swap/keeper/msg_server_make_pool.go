@@ -77,7 +77,6 @@ func (k msgServer) MakePool(ctx context.Context, msg *types.MsgMakePoolRequest) 
 	if err != nil {
 		return nil, err
 	}
-
 	return &types.MsgMakePoolResponse{
 		PoolId: poolId,
 	}, nil

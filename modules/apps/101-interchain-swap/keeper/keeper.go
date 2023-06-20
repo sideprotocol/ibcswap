@@ -137,18 +137,31 @@ func (k Keeper) EscrowAddress(ctx context.Context, req *types.QueryEscrowAddress
 }
 
 // You may need to adjust the function signature, return types, and parameter types based on your module's implementation
-func (k Keeper) MultiDepositOrders(ctx context.Context, req *types.QueryMultiDepositOrdersRequest) (*types.QueryMultiDepositOrdersResponse, error) {
-    sdkCtx := sdk.UnwrapSDKContext(ctx)
-    orders := k.GetAllMultiDepositOrder(sdkCtx, req.PoolId)
-    
-    ordersPtr := make([]*types.MultiAssetDepositOrder, len(orders))
-    for i := range orders {
-        ordersPtr[i] = &orders[i]
-    }
-    
-    return &types.QueryMultiDepositOrdersResponse{
-        Orders: ordersPtr,
-    },nil
+func (k Keeper) InterchainMultiDepositOrder(ctx context.Context, req *types.QueryGetInterchainMultiDepositOrderRequest) (*types.QueryGetInterchainMultiDepositOrderResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	order, found := k.GetMultiDepositOrder(sdkCtx, req.PoolId, req.OrderId)
+
+	if !found {
+		return nil, types.ErrNotFoundMultiDepositOrder
+	}
+	return &types.QueryGetInterchainMultiDepositOrderResponse{
+		Order: &order,
+	}, nil
+}
+
+// You may need to adjust the function signature, return types, and parameter types based on your module's implementation
+func (k Keeper) InterchainMultiDepositOrdersAll(ctx context.Context, req *types.QueryAllInterchainMultiDepositOrdersRequest) (*types.QueryAllInterchainMultiDepositOrdersResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	orders := k.GetAllMultiDepositOrder(sdkCtx, req.PoolId)
+
+	ordersPtr := make([]*types.MultiAssetDepositOrder, len(orders))
+	for i := range orders {
+		ordersPtr[i] = &orders[i]
+	}
+
+	return &types.QueryAllInterchainMultiDepositOrdersResponse{
+		Orders: ordersPtr,
+	}, nil
 }
 
 func (k Keeper) validateCoins(ctx sdk.Context, pool *types.InterchainLiquidityPool, sender string, tokensIn []*sdk.Coin) ([]sdk.Coin, error) {

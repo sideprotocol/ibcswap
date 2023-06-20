@@ -176,6 +176,11 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				return err
 			}
 
+			ctx.EventManager().EmitEvent(sdk.NewEvent(types.EventTypeInterChainMakePoolSuccess, sdk.Attribute{
+				Key:   "PoolId",
+				Value: data.StateChange.PoolId,
+			}))
+
 		case types.TAKE_POOL:
 			var msg types.MsgTakePoolRequest
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
@@ -186,6 +191,10 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			if err != nil {
 				return err
 			}
+			ctx.EventManager().EmitEvent(sdk.NewEvent(types.EventTypeInterChainTakePoolSuccess, sdk.Attribute{
+				Key:   "PoolId",
+				Value: msg.PoolId,
+			}))
 			return nil
 		case types.SINGLE_DEPOSIT:
 			var msg types.MsgSingleAssetDepositRequest
@@ -204,6 +213,12 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				return err
 			}
 
+			ctx.EventManager().EmitEvent(sdk.NewEvent(types.EventTypeInterChainSingleDepositSuccess, sdk.Attribute{
+				Key:   "PoolId",
+				Value: msg.PoolId,
+			}))
+			return nil
+
 		case types.MAKE_MULTI_DEPOSIT:
 
 			var msg types.MsgMakeMultiAssetDepositRequest
@@ -221,6 +236,15 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				logger.Debug("MakeMultiDeposit:Single", err.Error())
 				return err
 			}
+			ctx.EventManager().EmitEvent(sdk.NewEvent(types.EventTypeInterChainMakeMultiDepositOrderSuccess, sdk.Attribute{
+				Key:   "PoolId",
+				Value: msg.PoolId,
+			},
+				sdk.Attribute{
+					Key:   "OrderId",
+					Value: data.StateChange.MutiDepositOrderId,
+				}))
+			return nil
 		case types.TAKE_MULTI_DEPOSIT:
 			var msg types.MsgTakeMultiAssetDepositRequest
 			var res types.MsgTakePoolResponse
@@ -234,6 +258,15 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				logger.Debug("TakeMultiDeposit:Single", err.Error())
 				return err
 			}
+
+			ctx.EventManager().EmitEvent(sdk.NewEvent(types.EventTypeInterChainTakeMultiDepositOrderSuccess, sdk.Attribute{
+				Key:   "PoolId",
+				Value: msg.PoolId,
+			},
+				sdk.Attribute{
+					Key:   "OrderId",
+					Value: data.StateChange.MutiDepositOrderId,
+				}))
 			return nil
 
 		case types.MULTI_WITHDRAW:
@@ -248,6 +281,16 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			if err := k.OnMultiWithdrawAcknowledged(ctx, &msg, &res); err != nil {
 				return err
 			}
+
+			eventAttr := []sdk.Attribute{}
+			for _, out := range data.StateChange.Out {
+				eventAttr = append(eventAttr, sdk.Attribute{
+					Key:   out.Denom,
+					Value: out.Amount.String(),
+				})
+			}
+			ctx.EventManager().EmitEvent(sdk.NewEvent(types.EventTypeInterChainTakeMultiWithdrawSuccess, eventAttr...))
+			return nil
 		case types.LEFT_SWAP, types.RIGHT_SWAP:
 			var msg types.MsgSwapRequest
 			var res types.MsgSwapResponse
@@ -261,6 +304,14 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			if err := k.OnSwapAcknowledged(ctx, &msg, &res); err != nil {
 				return err
 			}
+			ctx.EventManager().EmitEvent(sdk.NewEvent(types.EventTypeInterChainSwapSuccess, sdk.Attribute{
+				Key:   msg.TokenIn.Denom,
+				Value: msg.TokenIn.Amount.String(),
+			}, sdk.Attribute{
+				Key:   msg.TokenOut.Denom,
+				Value: msg.TokenOut.Amount.String(),
+			}))
+			return nil
 		}
 	}
 	return nil
@@ -327,5 +378,16 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 
 	escrowAccount := types.GetEscrowAddress(packet.SourcePort, packet.SourceChannel)
 	err := k.bankKeeper.SendCoins(ctx, escrowAccount, sdk.AccAddress(sender), sdk.NewCoins(token))
+	ctx.EventManager().EmitEvent(sdk.NewEvent(types.EventTypeTimeout, sdk.Attribute{
+		Key:   "sender",
+		Value: sender,
+	}, sdk.Attribute{
+		Key:   "denom",
+		Value: token.Denom,
+	},
+		sdk.Attribute{
+			Key:   "value",
+			Value: token.Amount.String(),
+		}))
 	return err
 }
