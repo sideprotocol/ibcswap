@@ -191,8 +191,12 @@ func (k Keeper) OnMultiAssetWithdrawAcknowledged(ctx sdk.Context, req *types.Msg
 		return err
 	}
 
-	// save pool
-	k.SetInterchainLiquidityPool(ctx, pool)
+	if pool.Supply.Amount.Equal(sdk.NewInt(0)) {
+		k.RemoveInterchainLiquidityPool(ctx, req.PoolId)
+	} else {
+		// Save pool
+		k.SetInterchainLiquidityPool(ctx, pool)
+	}
 	return nil
 }
 
@@ -418,8 +422,13 @@ func (k Keeper) OnMultiAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgMult
 		return nil, err
 	}
 
-	// Save pool
-	k.SetInterchainLiquidityPool(ctx, pool)
+	if pool.Supply.Amount.Equal(sdk.NewInt(0)) {
+		k.RemoveInterchainLiquidityPool(ctx, msg.PoolId)
+	} else {
+		// Save pool
+		k.SetInterchainLiquidityPool(ctx, pool)
+	}
+
 	return &types.MsgMultiAssetWithdrawResponse{
 		Tokens: stateChange.Out,
 	}, nil

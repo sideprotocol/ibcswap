@@ -357,18 +357,11 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 		test.WaitForBlocks(ctx, 10, chainA, chainB)
 		s.AssertPacketRelayed(ctx, chainB, channelB.PortID, channelB.ChannelID, 2)
 
-		// check pool info in chainA and chainB
-		poolA := getFirstPool(s, ctx, chainA)
-		poolB := getFirstPool(s, ctx, chainB)
-
-		fmt.Println(poolB)
-		logger.CleanLog("Withdraw Pool: PoolA", poolA)
-		fmt.Println("===================")
-		logger.CleanLog("Withdraw Pool: PoolB", poolB)
-
 		sourceMakerPoolToken, err = s.QueryBalance(ctx, chainA, chainAAddress, pool.Id)
-
 		s.Require().NoError(err)
 		s.Require().Equal(sourceMakerPoolToken.Balance.Amount, sdk.NewInt(0))
+
+		_, err = s.QueryInterchainswapPool(ctx, chainA, msg.PoolId)
+		s.Require().Error(err)
 	})
 }
