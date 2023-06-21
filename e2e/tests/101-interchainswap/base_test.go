@@ -275,9 +275,9 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 
 		pool = getFirstPool(s, ctx, chainA)
 		amm = types.NewInterchainMarketMaker(&pool)
-		outA, err := amm.MultiAssetWithdraw(*chainAPoolToken.Balance, chainADenom)
+		outA, err := amm.MultiAssetWithdraw(*chainAPoolToken.Balance)
 		s.Require().NoError(err)
-		outB, err := amm.MultiAssetWithdraw(*chainBPoolToken.Balance, chainBDenom)
+		outB, err := amm.MultiAssetWithdraw(*chainBPoolToken.Balance)
 		s.Require().NoError(err)
 		logger.CleanLog("====outA====", outA)
 		logger.CleanLog("====outB====", outB)

@@ -70,25 +70,6 @@ func (k Keeper) OnTakePoolAcknowledged(ctx sdk.Context, msg *types.MsgTakePoolRe
 		return types.ErrNotFoundPool
 	}
 
-	asset, err := pool.FindPoolAssetBySide(types.PoolAssetSide_SOURCE)
-	if err != nil {
-		return err
-	}
-
-	totalAmount := sdk.NewInt(0)
-	for _, asset := range pool.Assets {
-		totalAmount = totalAmount.Add(asset.Balance.Amount)
-	}
-
-	// Mint LP tokens
-	err = k.MintTokens(ctx, sdk.MustAccAddressFromBech32(msg.Creator), sdk.Coin{
-		Denom: pool.Supply.Denom, Amount: totalAmount.Mul(sdk.NewInt(int64(asset.Weight))).Quo(sdk.NewInt(100)),
-	})
-
-	if err != nil {
-		return err
-	}
-
 	// calculate pool price
 	amm := *types.NewInterchainMarketMaker(&pool)
 	pool.PoolPrice = float32(amm.LpPrice())
@@ -132,11 +113,10 @@ func (k Keeper) OnMakeMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.
 	}
 
 	// Mint voucher tokens for the sender
-	err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(req.Deposits[0].Sender), *res.PoolTokens[0])
-
-	if err != nil {
-		return err
-	}
+	//err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(req.Deposits[0].Sender), *res.PoolTokens[0])
+	// if err != nil {
+	// 	return err
+	// }
 	// Save the updated liquidity pool
 	k.SetInterchainLiquidityPool(ctx, pool)
 	return nil
@@ -157,11 +137,11 @@ func (k Keeper) OnTakeMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.
 	}
 
 	// Mint voucher tokens for the sender
-	err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(order.DestinationTaker), *stateChange.PoolTokens[1])
+	//err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(order.DestinationTaker), *stateChange.PoolTokens[1])
 
-	if err != nil {
-		return err
-	}
+	// if err != nil {
+	// 	return err
+	// }
 
 	// Update pool supply and status
 	for _, poolToken := range stateChange.PoolTokens {
@@ -180,7 +160,7 @@ func (k Keeper) OnTakeMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.
 	return nil
 }
 
-func (k Keeper) OnMultiWithdrawAcknowledged(ctx sdk.Context, req *types.MsgMultiAssetWithdrawRequest, res *types.MsgMultiAssetWithdrawResponse) error {
+func (k Keeper) OnMultiAssetWithdrawAcknowledged(ctx sdk.Context, req *types.MsgMultiAssetWithdrawRequest, res *types.MsgMultiAssetWithdrawResponse) error {
 
 	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolToken.Denom)
 	if !found {
@@ -278,8 +258,21 @@ func (k Keeper) OnTakePoolReceived(ctx sdk.Context, msg *types.MsgTakePoolReques
 	if !found {
 		return nil, types.ErrNotFoundPool
 	}
-
 	pool.Status = types.PoolStatus_ACTIVE
+
+	// mint voucher token
+	asset, err := pool.FindPoolAssetBySide(types.PoolAssetSide_DESTINATION)
+	if err != nil {
+		return nil, err
+	}
+
+	totalAmount := pool.SumOfPoolAssets()
+	if err = k.MintTokens(ctx, sdk.MustAccAddressFromBech32(pool.SourceCreator), sdk.Coin{
+		Denom: pool.Supply.Denom, Amount: totalAmount.Mul(sdk.NewInt(int64(asset.Weight))).Quo(sdk.NewInt((100))),
+	}); err != nil {
+		return nil, err
+	}
+
 	// save pool status
 	k.SetInterchainLiquidityPool(ctx, pool)
 	return &pool.Id, nil
@@ -371,6 +364,7 @@ func (k Keeper) OnTakeMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgT
 	}
 
 	order.Status = types.OrderStatus_COMPLETE
+
 	// pool status update
 	for _, supply := range stateChange.PoolTokens {
 		pool.AddPoolSupply(*supply)
@@ -380,7 +374,12 @@ func (k Keeper) OnTakeMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgT
 	}
 
 	// Mint voucher tokens for the sender
-	err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(order.SourceMaker), *stateChange.PoolTokens[0])
+	totalPoolToken := sdk.NewCoin(msg.PoolId, sdk.NewInt(0))
+	for _, poolToken := range stateChange.PoolTokens {
+		totalPoolToken = totalPoolToken.Add(*poolToken)
+	}
+	err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(order.SourceMaker), totalPoolToken)
+
 	if err != nil {
 		return nil, err
 	}
@@ -396,11 +395,6 @@ func (k Keeper) OnMultiAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgMult
 	// Validate the message
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
-	}
-
-	// Validate remote denom
-	if !k.bankKeeper.HasSupply(ctx, msg.PoolToken.Denom) {
-		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "invalid denom in local withdraw message: %s", msg.PoolToken.Denom)
 	}
 
 	// Retrieve the liquidity pool

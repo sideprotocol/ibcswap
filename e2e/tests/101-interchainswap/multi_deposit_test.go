@@ -189,7 +189,7 @@ func (s *InterchainswapTestSuite) TestMultiDepositStatus() {
 		s.Require().Equal(poolA.Supply.Amount, sdk.NewInt(initialX+initialY))
 	})
 
-	// // send swap message
+	// send swap message
 	t.Run("pool status", func(t *testing.T) {
 
 		pool := getFirstPool(s, ctx, chainA)
@@ -280,6 +280,161 @@ func (s *InterchainswapTestSuite) TestMultiDepositStatus() {
 			s.AssertPacketRelayed(ctx, chain, channel.PortID, channel.ChannelID, uint64(packetSequence))
 
 			// pool status log.
+			if tc.msgType == "take multi-deposit" {
+
+				poolA := getFirstPool(s, ctx, chainA)
+				poolB := getFirstPool(s, ctx, chainB)
+				s.Require().NoError(err)
+				amm := types.NewInterchainMarketMaker(&poolA)
+
+				priceA_B, _ := amm.MarketPrice(chainADenom, chainBDenom)
+				priceB_A, _ := amm.MarketPrice(chainBDenom, chainADenom)
+
+				logger.CleanLog("Price: A->B, B->A", *priceA_B, *priceB_A)
+				logger.CleanLog("PoolA", poolA)
+				logger.CleanLog("PoolB", poolB)
+
+				s.Require().EqualValues(poolA.Id, poolB.Id)
+
+				for i := 0; i < len(poolA.Assets); i++ {
+					s.Require().Equal(poolA.Assets[i].Balance.Amount, poolB.Assets[i].Balance.Amount)
+				}
+
+				// check balance update status
+				for _, asset := range poolA.Assets {
+					if asset.Balance.Denom == chainADenom {
+						s.Require().Equal(asset.Balance.Amount, sdk.NewInt(initialX*2))
+					}
+					if asset.Balance.Denom == chainBDenom {
+						s.Require().Equal(asset.Balance.Amount, sdk.NewInt(initialY*2))
+					}
+				}
+			}
+
+			pool := getFirstPool(s, ctx, chainA)
+			amm := types.NewInterchainMarketMaker(&pool)
+			poolTokens, err := amm.DepositMultiAsset(depositTokens)
+			s.Require().NoError(err)
+			logger.CleanLog("Pool Tokens", poolTokens)
+
+			sourceMakerPoolToken, err := s.QueryBalance(ctx, chainA, chainAAddress, pool.Id)
+			s.Require().NoError(err)
+			destinationTakerPoolToken, err := s.QueryBalance(ctx, chainB, chainBAddress, pool.Id)
+			s.Require().NoError(err)
+			logger.CleanLog("chanA user lp", sourceMakerPoolToken)
+			logger.CleanLog("chanB user lp", destinationTakerPoolToken)
+
+		}
+	})
+
+	t.Run("wait multi-deposit to complete", func(t *testing.T) {
+
+		pool := getFirstPool(s, ctx, chainA)
+		poolId := pool.Id
+
+		depositTokens := []*sdk.Coin{
+			{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
+			{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
+		}
+
+		wallet := *chainAWallet
+		chain := chainA
+		channel := channelA
+		packetSequence := 2
+
+		testCases := []struct {
+			name     string
+			malleate func()
+			msgType  string
+			expPass  bool
+		}{
+
+			{
+				"make deposit Assets (initialX,initialY)",
+				func() {
+				},
+				"make multi-deposit",
+				true,
+			},
+
+			{
+				"make deposit Assets (initialX,initialY)",
+				func() {
+					packetSequence = 3
+
+				},
+				"make second multi-deposit order",
+				false,
+			},
+
+			{
+				"take multi-deposit Assets (initialX,initialY)",
+				func() {
+					wallet = *chainBWallet
+					chain = chainB
+					channel = channelB
+					packetSequence = 2
+				},
+				"take multi-deposit",
+				true,
+			},
+		}
+
+		for _, tc := range testCases {
+			tc.malleate()
+			switch tc.msgType {
+			case "make multi-deposit", "make second multi-deposit order":
+
+				sourceAsset, err := pool.FindAssetBySide(types.PoolAssetSide_SOURCE)
+				s.Require().NoError(err)
+				destinationAsset, err := pool.FindAssetBySide(types.PoolAssetSide_DESTINATION)
+				s.Require().NoError(err)
+
+				currentRatio := sourceAsset.Amount.Mul(sdk.NewInt(types.Multiplier)).Quo(destinationAsset.Amount)
+				inputRatio := depositTokens[0].Amount.Mul(sdk.NewInt(types.Multiplier)).Quo(depositTokens[1].Amount)
+
+				logger.CleanLog("=current ratio=", currentRatio)
+				logger.CleanLog("=input ratio=", currentRatio)
+
+				err = types.CheckSlippage(currentRatio, inputRatio, 10)
+				s.NoError(err)
+
+				msg := types.NewMsgMakeMultiAssetDeposit(
+					poolId,
+					[]string{
+						chainAAddress,
+						chainBAddress,
+					},
+					depositTokens,
+				)
+
+				txRes, err := s.BroadcastMessages(ctx, chain, &wallet, msg)
+				s.Require().NoError(err)
+				if tc.expPass {
+					s.AssertValidTxResponse(txRes)
+				}
+
+			case "take multi-deposit":
+				msg := types.NewMsgTakeMultiAssetDeposit(
+					chainBAddress,
+					poolId,
+					0,
+				)
+
+				txRes, err := s.BroadcastMessages(ctx, chain, &wallet, msg)
+				s.Require().NoError(err)
+				s.AssertValidTxResponse(txRes)
+			}
+
+			test.WaitForBlocks(ctx, 15, chainA, chainB)
+			s.AssertPacketRelayed(ctx, chain, channel.PortID, channel.ChannelID, uint64(packetSequence))
+
+			// pool status log.
+			if tc.msgType == "make second multi-deposit order" {
+				orderRes, err := s.QueryInterchainMultiDepositOrders(ctx, chainA, poolId)
+				s.Require().NoError(err)
+				s.Require().Equal(len(orderRes.Orders), 1)
+			}
 			if tc.msgType == "take multi-deposit" {
 
 				poolA := getFirstPool(s, ctx, chainA)

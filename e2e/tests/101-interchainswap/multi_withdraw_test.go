@@ -73,13 +73,13 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 			types.PoolAsset{
 				Side:    types.PoolAssetSide_SOURCE,
 				Balance: &sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
-				Weight:  50,
+				Weight:  20,
 				Decimal: 6,
 			},
 			types.PoolAsset{
 				Side:    types.PoolAssetSide_DESTINATION,
 				Balance: &sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(1000)},
-				Weight:  50,
+				Weight:  80,
 				Decimal: 6,
 			},
 			300,
@@ -128,6 +128,11 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 			}
 		}
 		s.Require().Equal(poolA.Supply.Amount, sdk.NewInt(initialX+initialY))
+
+		pool := getFirstPool(s, ctx, chainA)
+		sourceMakerPoolToken, err := s.QueryBalance(ctx, chainA, chainAAddress, pool.Id)
+		s.Require().NoError(err)
+		logger.CleanLog("Make Pool: Pool Token", sourceMakerPoolToken)
 	})
 
 	t.Run("send take pool message", func(t *testing.T) {
@@ -180,6 +185,10 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 			}
 		}
 		s.Require().Equal(poolA.Supply.Amount, sdk.NewInt(initialX+initialY))
+
+		sourceMakerPoolToken, err := s.QueryBalance(ctx, chainA, chainAAddress, pool.Id)
+		s.Require().NoError(err)
+		logger.CleanLog("Take Pool: Pool Token", sourceMakerPoolToken)
 	})
 
 	// // send swap message
@@ -327,13 +336,10 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 		logger.CleanLog("targetTaker LP token amount", destinationTakerPoolToken)
 
 		amm := types.NewInterchainMarketMaker(&pool)
-		outA, err := amm.MultiAssetWithdraw(*sourceMakerPoolToken.Balance, chainADenom)
-		s.Require().NoError(err)
-		outB, err := amm.MultiAssetWithdraw(*destinationTakerPoolToken.Balance, chainBDenom)
+		outs, err := amm.MultiAssetWithdraw(*sourceMakerPoolToken.Balance)
 		s.Require().NoError(err)
 
-		logger.CleanLog("out A", outA)
-		logger.CleanLog("out B", outB)
+		logger.CleanLog("outs", outs)
 
 		msg := types.NewMsgMultiAssetWithdraw(
 			pool.Id,
@@ -356,11 +362,12 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 		poolB := getFirstPool(s, ctx, chainB)
 
 		fmt.Println(poolB)
-		logger.CleanLog("Take Pool: PoolA", poolA)
+		logger.CleanLog("Withdraw Pool: PoolA", poolA)
 		fmt.Println("===================")
-		logger.CleanLog("Take Pool: PoolB", poolB)
+		logger.CleanLog("Withdraw Pool: PoolB", poolB)
 
 		sourceMakerPoolToken, err = s.QueryBalance(ctx, chainA, chainAAddress, pool.Id)
+
 		s.Require().NoError(err)
 		s.Require().Equal(sourceMakerPoolToken.Balance.Amount, sdk.NewInt(0))
 	})

@@ -32,18 +32,7 @@ func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMulti
 		&pool,
 	)
 
-	srcDenom, _ := pool.FindDenomBySide(types.PoolAssetSide_SOURCE)
-	srcOut, err := amm.MultiAssetWithdraw(sdk.Coin{
-		Denom: pool.Id, Amount: msg.PoolToken.Amount.Quo(sdk.NewInt(2)),
-	}, *srcDenom)
-	if err != nil {
-		return nil, err
-	}
-	targetDenom, _ := pool.FindDenomBySide(types.PoolAssetSide_DESTINATION)
-	targetOut, err := amm.MultiAssetWithdraw(sdk.Coin{
-		Denom: pool.Id, Amount: msg.PoolToken.Amount.Quo(sdk.NewInt(2)),
-	}, *targetDenom)
-
+	outs, err := amm.MultiAssetWithdraw(*msg.PoolToken)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +47,7 @@ func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMulti
 		Type: types.MULTI_WITHDRAW,
 		Data: rawMsgData,
 		StateChange: &types.StateChange{
-			Out:        []*sdk.Coin{srcOut, targetOut},
+			Out:        outs,
 			PoolTokens: []*sdk.Coin{msg.PoolToken},
 		},
 	}

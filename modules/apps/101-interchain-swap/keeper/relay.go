@@ -280,7 +280,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
 				return err
 			}
-			if err := k.OnMultiWithdrawAcknowledged(ctx, &msg, &res); err != nil {
+			if err := k.OnMultiAssetWithdrawAcknowledged(ctx, &msg, &res); err != nil {
 				return err
 			}
 

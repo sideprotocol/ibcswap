@@ -71,5 +71,6 @@ var (
 	ErrMultipleAssetDepositNotAllowed = errorsmod.Register(ModuleName, 1558, "can't take other's deposit order")
 	ErrSameChain                      = errorsmod.Register(ModuleName, 1559, "can't take operation in same chain")
 	ErrPreviousOrderNotCompleted      = errorsmod.Register(ModuleName, 1560, "can't take deposit, previous order did not complete.")
-	ErrNotFoundMultiDepositOrder                  = errorsmod.Register(ModuleName, 1561, "did not find multi deposit order")
+	ErrNotFoundMultiDepositOrder      = errorsmod.Register(ModuleName, 1561, "did not find multi deposit order")
+	ErrOverflowAmount                 = errorsmod.Register(ModuleName, 1562, "over flow token amount!")
 )
