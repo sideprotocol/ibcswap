@@ -108,6 +108,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 		// check pool info in chainA and chainB
 		poolA := getFirstPool(s, ctx, chainA)
 
+
 		s.Require().EqualValues(msg.SourceChannel, poolA.CounterPartyChannel)
 		s.Require().EqualValues(msg.SourcePort, poolA.CounterPartyPort)
 		//s.Require().EqualValues(msg.Tokens[0].Amount, poolAInfo.Supply.Amount)
@@ -496,4 +497,16 @@ func getFirstPool(s *InterchainswapTestSuite, ctx context.Context, chain *cosmos
 	pools := poolsRes.InterchainLiquidityPool
 	s.Require().Greater(len(pools), 0)
 	return pools[0]
+}
+
+func getPool(s *InterchainswapTestSuite, ctx context.Context, chain *cosmos.CosmosChain, poolId string) types.InterchainLiquidityPool {
+	// check pool info in chainA and chainB
+	poolRes, err := s.QueryInterchainswapPool(ctx, chain, poolId)
+	s.Require().NoError(err)
+	return poolRes.InterchainLiquidityPool
+}
+
+func getPoolID(srcChain, targetChain *cosmos.CosmosChain, denomPair []string) string {
+	poolId := types.GetPoolId(srcChain.Config().ChainID, targetChain.Config().ChainID, denomPair)
+	return poolId
 }

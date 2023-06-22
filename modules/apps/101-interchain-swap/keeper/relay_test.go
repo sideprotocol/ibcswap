@@ -104,7 +104,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 			func() {
 				suite.coordinator.CreateChannels(path)
 				msg := types.NewMsgMultiAssetWithdraw(
-					types.GetPoolId(suite.chainA.GetContext().ChainID(), []string{sdk.DefaultBondDenom, sdk.DefaultBondDenom}),
+					types.GetPoolId(suite.chainA.GetContext().ChainID(), suite.chainB.ChainID, []string{sdk.DefaultBondDenom, sdk.DefaultBondDenom}),
 					suite.chainA.SenderAccount.GetAddress().String(),
 					suite.chainB.SenderAccount.GetAddress().String(),
 					&sdk.Coin{
@@ -214,7 +214,7 @@ func (suite *KeeperTestSuite) TestOnReceived() {
 					300,
 				)
 
-				poolId := types.GetPoolId(suite.chainA.ChainID, []string{
+				poolId := types.GetPoolId(suite.chainA.ChainID, suite.chainB.ChainID, []string{
 					sdk.DefaultBondDenom, sdk.DefaultBondDenom,
 				})
 				_, err := suite.chainA.GetSimApp().InterchainSwapKeeper.OnMakePoolReceived(

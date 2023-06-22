@@ -17,6 +17,8 @@ import (
 
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
+
+	ibctmtypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
 )
 
 type (
@@ -136,7 +138,6 @@ func (k Keeper) EscrowAddress(ctx context.Context, req *types.QueryEscrowAddress
 	}, nil
 }
 
-
 func (k Keeper) validateCoins(ctx sdk.Context, pool *types.InterchainLiquidityPool, sender string, tokensIn []*sdk.Coin) ([]sdk.Coin, error) {
 	// Deposit token to Escrow account
 	coins := []sdk.Coin{}
@@ -157,4 +158,20 @@ func (k Keeper) validateCoins(ctx sdk.Context, pool *types.InterchainLiquidityPo
 		}
 	}
 	return coins, nil
+}
+
+func (k Keeper) GetCounterPartyChainID(ctx sdk.Context, portID, channelID string) (string, bool) {
+	// Get the client
+	_, clientState, err := k.channelKeeper.GetChannelClientState(ctx, portID, channelID)
+	if err != nil {
+		return "", false
+	}
+
+	// Cast the client state to Tendermint type
+	tmClientState, ok := clientState.(*ibctmtypes.ClientState)
+	if !ok {
+		return "", false
+	}
+	// Return the chain ID
+	return tmClientState.ChainId, true
 }

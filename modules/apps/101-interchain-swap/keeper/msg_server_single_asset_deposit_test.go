@@ -40,7 +40,7 @@ func (suite *KeeperTestSuite) SetupPool() (*string, error) {
 		300,
 	)
 	ctxA := suite.chainA.GetContext()
-	poolId := types.GetPoolId(ctxA.ChainID(), msg.GetLiquidityDenoms())
+	poolId := types.GetPoolId(ctxA.ChainID(), suite.chainB.ChainID, msg.GetLiquidityDenoms())
 	ctx := suite.chainA.GetContext()
 	suite.chainA.GetSimApp().InterchainSwapKeeper.OnMakePoolAcknowledged(ctx, msg, poolId)
 
@@ -82,7 +82,7 @@ func (suite *KeeperTestSuite) SetupPoolWithDenomPair(denomPair []string) (*strin
 	)
 
 	ctxA := suite.chainA.GetContext()
-	poolId := types.GetPoolId(ctxA.ChainID(), msg.GetLiquidityDenoms())
+	poolId := types.GetPoolId(ctxA.ChainID(), suite.chainB.ChainID, msg.GetLiquidityDenoms())
 	suite.chainA.GetSimApp().InterchainSwapKeeper.OnMakePoolAcknowledged(ctxA, msg, poolId)
 	ctxB := suite.chainB.GetContext()
 	suite.chainB.GetSimApp().InterchainSwapKeeper.OnMakePoolAcknowledged(ctxB, msg, poolId)

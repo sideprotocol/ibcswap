@@ -73,4 +73,5 @@ var (
 	ErrPreviousOrderNotCompleted      = errorsmod.Register(ModuleName, 1560, "can't take deposit, previous order did not complete.")
 	ErrNotFoundMultiDepositOrder      = errorsmod.Register(ModuleName, 1561, "did not find multi deposit order")
 	ErrOverflowAmount                 = errorsmod.Register(ModuleName, 1562, "over flow token amount!")
+	ErrConnection                     = errorsmod.Register(ModuleName, 1563, "connection doesn't establish!")
 )

@@ -136,8 +136,9 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 	})
 
 	t.Run("send take pool message", func(t *testing.T) {
-
-		pool := getFirstPool(s, ctx, chainA)
+		poolId := getPoolID(chainA, chainB, []string{chainADenom, chainBDenom})
+		pool := getPool(s, ctx, chainB, poolId)
+		//pool := getFirstPool(s, ctx, chainA)
 		msg := types.NewMsgTakePool(
 			chainBAddress,
 			pool.Id,

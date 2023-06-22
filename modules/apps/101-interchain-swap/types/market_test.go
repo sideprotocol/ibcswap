@@ -12,7 +12,7 @@ func TestLeftSwap(t *testing.T) {
 
 	// create mock pool
 	denoms := []string{"a", "b"}
-	poolId := GetPoolId("test", denoms)
+	poolId := GetPoolId("test", "test1", denoms)
 	assets := []*PoolAsset{
 		{
 			Side: PoolAssetSide_SOURCE,
@@ -70,7 +70,7 @@ func TestUpdatePoolAsset(t *testing.T) {
 
 	// create mock pool
 	demons := []string{"a", "b"}
-	poolId := GetPoolId("test", demons)
+	poolId := GetPoolId("test", "test", demons)
 	assets := []*PoolAsset{
 		{
 			Side: PoolAssetSide_SOURCE,
@@ -126,7 +126,7 @@ func TestSingleDeposit(t *testing.T) {
 	const initialY = 1000_000_000      // ETH
 	// create mock pool
 	denoms := []string{"a", "b"}
-	poolId := GetPoolId("test", denoms)
+	poolId := GetPoolId("test", "test", denoms)
 	assets := []*PoolAsset{
 		{
 			Side: PoolAssetSide_SOURCE,
@@ -182,7 +182,7 @@ func TestSingleWithdraw(t *testing.T) {
 	const initialY = 1_000_000 // ETH
 	// create mock pool
 	denoms := []string{"a", "b"}
-	poolId := GetPoolId("test", denoms)
+	poolId := GetPoolId("test", "test", denoms)
 	assets := []*PoolAsset{
 		{
 			Side: PoolAssetSide_SOURCE,

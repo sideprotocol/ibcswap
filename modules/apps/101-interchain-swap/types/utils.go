@@ -28,15 +28,22 @@ func GetDefaultTimeOut(ctx *sdk.Context) (clienttypes.Height, uint64) {
 	return timeoutHeight, uint64(timeoutStamp.UTC().UnixNano())
 }
 
-func GetPoolId(chainID string, denoms []string) string {
+func GetPoolId(sourceChainId, destinationChainId string, denoms []string) string {
+	connectionId := GetConnectID(sourceChainId, destinationChainId)
 	//generate poolId
 	sort.Strings(denoms)
 	poolIdHash := sha256.New()
-	salt := GenerateRandomString(chainID, 10)
-	denoms = append(denoms, salt)
+	//salt := GenerateRandomString(chainID, 10)
+	denoms = append(denoms, connectionId)
 	poolIdHash.Write([]byte(strings.Join(denoms, "")))
 	poolId := "pool" + fmt.Sprintf("%v", hex.EncodeToString(poolIdHash.Sum(nil)))
 	return poolId
+}
+
+func GetConnectID(chainIds ...string) string {
+	//generate poolId
+	sort.Strings(chainIds)
+	return strings.Join(chainIds, "/")
 }
 
 func GetOrderId(chainID string) string {

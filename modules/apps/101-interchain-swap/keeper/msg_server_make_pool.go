@@ -53,7 +53,12 @@ func (k msgServer) MakePool(ctx context.Context, msg *types.MsgMakePoolRequest) 
 		return nil, err
 	}
 
-	poolId := types.GetPoolId(sdkCtx.ChainID(), msg.GetLiquidityDenoms())
+	// connection ID
+	counterPartyChainId, found := k.GetCounterPartyChainID(sdkCtx, msg.SourcePort, msg.SourceChannel)
+	if !found {
+		return nil, types.ErrConnection
+	}
+	poolId := types.GetPoolId(sdkCtx.ChainID(), counterPartyChainId, msg.GetLiquidityDenoms())
 	// Construct IBC data packet
 	packet := types.IBCSwapPacketData{
 		Type: types.MAKE_POOL,
