@@ -13,6 +13,22 @@ func (k msgServer) MakePool(ctx context.Context, msg *types.MsgMakePoolRequest) 
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
+	counterPartyChainId, connected := k.GetCounterPartyChainID(sdkCtx, msg.SourcePort, msg.SourceChannel)
+	if !connected {
+		return nil, errormod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrConnection)
+	}
+
+	denoms := []string{}
+	for _, liquidity := range msg.Liquidity {
+		denoms = append(denoms, liquidity.Balance.Denom)
+	}
+	poolId := types.GetPoolId(sdkCtx.ChainID(), counterPartyChainId, denoms)
+	_, found := k.GetInterchainLiquidityPool(sdkCtx, poolId)
+
+	if found {
+		return nil, errormod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrNotFoundPool)
+	}
+
 	// Validate message
 	err := host.PortIdentifierValidator(msg.SourcePort)
 	if err != nil {
@@ -53,12 +69,6 @@ func (k msgServer) MakePool(ctx context.Context, msg *types.MsgMakePoolRequest) 
 		return nil, err
 	}
 
-	// connection ID
-	counterPartyChainId, found := k.GetCounterPartyChainID(sdkCtx, msg.SourcePort, msg.SourceChannel)
-	if !found {
-		return nil, types.ErrConnection
-	}
-	poolId := types.GetPoolId(sdkCtx.ChainID(), counterPartyChainId, msg.GetLiquidityDenoms())
 	// Construct IBC data packet
 	packet := types.IBCSwapPacketData{
 		Type: types.MAKE_POOL,
