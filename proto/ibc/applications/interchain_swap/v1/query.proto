@@ -46,6 +46,10 @@ service Query {
     option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_multi_deposit_orders/{poolId}/{orderId}";
   }
 
+  rpc InterchainLatestMultiDepositOrder(QueryLatestInterchainMultiDepositOrderRequest) returns (QueryGetInterchainMultiDepositOrderResponse) {
+    option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_multi_deposit_orders/last";
+  }
+
   rpc InterchainMultiDepositOrdersAll(QueryAllInterchainMultiDepositOrdersRequest) returns (QueryAllInterchainMultiDepositOrdersResponse) {
     option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_multi_deposit_orders/{poolId}";
   }
@@ -70,6 +74,12 @@ message QueryAllInterchainMultiDepositOrdersResponse {
   // params defines the parameters of the module.
   repeated ibc.applications.interchain_swap.v1.MultiAssetDepositOrder orders = 1;
   cosmos.base.query.v1beta1.PageResponse pagination              = 2;
+}
+
+// Query latest interchain multi-deposit order 
+message QueryLatestInterchainMultiDepositOrderRequest {
+  string poolId = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 
