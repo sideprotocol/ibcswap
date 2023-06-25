@@ -25,7 +25,7 @@ func (k Keeper) TakeMultiAssetDeposit(ctx context.Context, msg *types.MsgTakeMul
 
 	order, found := k.GetMultiDepositOrder(sdkCtx, msg.PoolId, msg.OrderId)
 	if !found {
-		return nil, errorsmod.Wrapf(types.ErrNotFoundPool, "%s", types.ErrFailedMultiAssetDeposit)
+		return nil, errorsmod.Wrapf(types.ErrNotFoundMultiDepositOrder, "%s", types.ErrFailedMultiAssetDeposit)
 	}
 
 	if order.ChainId == sdkCtx.ChainID() {
@@ -34,6 +34,10 @@ func (k Keeper) TakeMultiAssetDeposit(ctx context.Context, msg *types.MsgTakeMul
 
 	if msg.Sender != order.DestinationTaker {
 		return nil, errorsmod.Wrapf(types.ErrMultipleAssetDepositNotAllowed, "due to %s of other's", types.ErrFailedMultiAssetDeposit)
+	}
+
+	if order.Status == types.OrderStatus_COMPLETE {
+		return nil, errorsmod.Wrapf(types.ErrAlreadyCompletedOrder, "due to %s of other's", types.ErrFailedMultiAssetDeposit)
 	}
 
 	// estimate pool token

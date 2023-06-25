@@ -71,20 +71,8 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 		return nil, err
 	}
 
-	order, found := k.GetLatestMultiDepositOrder(sdkCtx, pool.Id)
-
-	pendingHeight := sdkCtx.BlockHeight() - order.CreatedAt
-	if found && (order.Status == types.OrderStatus_PENDING || pendingHeight < types.MULTI_DEPOSIT_PENDING_LIMIT) {
-		return nil, errormod.Wrapf(types.ErrPreviousOrderNotCompleted, "due to %s", types.ErrFailedMultiAssetDeposit)
-	}
-
-	// protect malicious deposit action. we will not refund token as a penalty.
-	if found && pendingHeight > types.MULTI_DEPOSIT_PENDING_LIMIT {
-		k.RemoveLatestMultiDepositOrder(sdkCtx, pool.Id)
-	}
-
 	// create order
-	order = types.MultiAssetDepositOrder{
+	order := types.MultiAssetDepositOrder{
 		PoolId:           msg.PoolId,
 		ChainId:          sdkCtx.ChainID(),
 		SourceMaker:      msg.Deposits[0].Sender,

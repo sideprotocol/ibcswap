@@ -218,16 +218,18 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 	if err != nil {
 		return nil, err
 	}
+	decToken := types.NewDecCoinFromCoin(token)
+	decAsset := types.NewDecCoinFromCoin(*asset.Balance)
 
 	var issueAmount types.Int
 	if imm.Pool.Status != PoolStatus_ACTIVE {
 		return nil, err
 	} else {
-
-		weight := float64(asset.Weight) / 100
-		ratio := 1 + float64(token.Amount.Int64())/float64(asset.Balance.Amount.Int64())
-		factor := (math.Pow(ratio, float64(weight)) - 1) * Multiplier
-		issueAmount = imm.Pool.Supply.Amount.Mul(types.NewInt(int64(factor))).Quo(types.NewInt(Multiplier))
+		weight := types.NewDec(int64(asset.Weight)).Quo(types.NewDec(100)) // divide by 100
+		ratio := decToken.Amount.Quo(decAsset.Amount).Add(types.NewDec(1))
+		exponent := Ln(ratio).Mul(weight)
+		factor := Exp(exponent).Sub(types.NewDec(1)).Mul(types.NewDec(Multiplier))
+		issueAmount = imm.Pool.Supply.Amount.Mul(factor.RoundInt()).Quo(types.NewInt(Multiplier))
 	}
 
 	outputToken := &types.Coin{
@@ -253,8 +255,13 @@ func (imm *InterchainMarketMaker) DepositMultiAsset(tokens []*types.Coin) ([]*ty
 			}
 			issueAmount = totalAssetAmount.Mul(types.NewInt(int64(asset.Weight))).Quo(types.NewInt(100))
 		} else {
-			ratio := float64(token.Amount.Int64()) / float64(asset.Balance.Amount.Int64()) * Multiplier
-			issueAmount = imm.Pool.Supply.Amount.Mul(types.NewInt(int64(asset.Weight))).Mul(types.NewInt(int64(ratio))).Quo(types.NewInt(100)).Quo(types.NewInt(Multiplier))
+
+			decToken := types.NewDecCoinFromCoin(*token)
+			decAsset := types.NewDecCoinFromCoin(*asset.Balance)
+			decSupply := types.NewDecCoinFromCoin(*imm.Pool.Supply)
+
+			ratio := decToken.Amount.Quo(decAsset.Amount).Mul(types.NewDec(Multiplier))
+			issueAmount = (decSupply.Amount.Mul(types.NewDec(int64(asset.Weight))).Mul(ratio).Quo(types.NewDec(100)).Quo(types.NewDec(Multiplier))).RoundInt()
 		}
 
 		outputToken := &types.Coin{
@@ -287,15 +294,18 @@ func (imm *InterchainMarketMaker) SingleWithdraw(redeem types.Coin, denomOut str
 		return nil, fmt.Errorf("invalid denom pair")
 	}
 
-	w := float64(asset.Weight) / 100
-	ratio := imm.Pool.Supply.Amount.Sub(redeem.Amount).Mul(types.NewInt(Multiplier)).Quo(imm.Pool.Supply.Amount)
-	ratioFloat := float64(ratio.Int64()) / Multiplier
+	w := types.NewDec(int64(asset.Weight)).Quo(types.NewDec(100)) // divide by 100
+	decSupply := types.NewDecCoinFromCoin(*imm.Pool.Supply)
+	decRedeem := types.NewDecCoinFromCoin(redeem)
+	decAsset := types.NewDecCoinFromCoin(*asset.Balance)
+	ratio := decSupply.Amount.Sub(decRedeem.Amount).Mul(types.NewDec(Multiplier)).Quo(decSupply.Amount)
 
-	exponent := 1 / w
-	factor := (1 - math.Pow(ratioFloat, exponent)) * Multiplier
-	amountOut := asset.Balance.Amount.Mul(types.NewInt(int64(factor))).Quo(types.NewInt(Multiplier))
+	exponent := types.NewDec(1).Quo(w)
+	factor := types.NewDec(1).Sub(Exp(Ln(ratio).Mul(exponent))).Mul(types.NewDec(Multiplier))
+
+	amountOut := decAsset.Amount.Mul(factor).Quo(types.NewDec(Multiplier))
 	return &types.Coin{
-		Amount: amountOut,
+		Amount: amountOut.RoundInt(),
 		Denom:  denomOut,
 	}, nil
 }
@@ -342,10 +352,11 @@ func (imm *InterchainMarketMaker) LeftSwap(amountIn types.Coin, denomOut string)
 	ratio := balanceIn.Quo(balanceInPlusAmount)
 	oneMinusRatio := types.NewDec(1).Sub(ratio)
 	power := weightIn.Quo(weightOut)
-	factor := math.Pow(oneMinusRatio.MustFloat64(), power.MustFloat64()) * Multiplier
-	amountOut := balanceOut.Mul(types.NewDec(int64(factor))).Quo(types.NewDec(Multiplier))
+	factor := Exp(Ln(oneMinusRatio).Mul(power)).Mul(types.NewDec(Multiplier))
+	amountOut := balanceOut.Mul(factor).Quo(types.NewDec(Multiplier))
+
 	return &types.Coin{
-		Amount: amountOut.TruncateInt(),
+		Amount: amountOut.RoundInt(),
 		Denom:  denomOut,
 	}, nil
 }
@@ -360,21 +371,26 @@ func (imm *InterchainMarketMaker) RightSwap(amountIn types.Coin, amountOut types
 	}
 
 	assetOut, err := imm.Pool.FindAssetByDenom(amountOut.Denom)
+
+	decAmountOut := types.NewDecCoinFromCoin(amountOut)
+	decAssetIn := types.NewDecCoinFromCoin(*assetIn.Balance)
+	decAssetOut := types.NewDecCoinFromCoin(*assetOut.Balance)
+
 	if err != nil {
 		return nil, fmt.Errorf("right swap failed: could not find asset out by denom")
 	}
 
 	// Ai = Bi * ((Bo/(Bo - Ao)) ** Wo/Wi -1)
-	balanceIn := types.NewDecFromBigInt(assetIn.Balance.Amount.BigInt())
+	balanceIn := decAssetIn.Amount
 	weightIn := types.NewDec(int64(assetIn.Weight)).Quo(types.NewDec(100))
 	weightOut := types.NewDec(int64(assetOut.Weight)).Quo(types.NewDec(100))
 
-	numerator := types.NewDecFromBigInt(assetOut.Balance.Amount.BigInt())
+	numerator := decAssetOut.Amount
 	power := weightOut.Quo(weightIn)
-	denominator := types.NewDecFromBigInt(assetOut.Balance.Amount.Sub(amountOut.Amount).BigInt())
+	denominator := decAssetOut.Amount.Sub(decAmountOut.Amount)
 	base := numerator.Quo(denominator)
-	factor := math.Pow(base.MustFloat64(), power.MustFloat64()) * Multiplier
-	amountRequired := balanceIn.Mul(types.NewDec(int64(factor))).Quo(types.NewDec(Multiplier)).RoundInt()
+	factor := Exp(Ln(base).Mul(power)).Sub(types.NewDec(1)).Mul(types.NewDec(Multiplier))
+	amountRequired := balanceIn.Mul(factor).Quo(types.NewDec(Multiplier)).RoundInt()
 
 	if amountIn.Amount.LT(amountRequired) {
 		return nil, fmt.Errorf("right swap failed: insufficient amount")
@@ -394,34 +410,65 @@ func (imm *InterchainMarketMaker) MinusFees(amount types.Int) types.Dec {
 }
 
 // Worth Function V=M)
-func (imm *InterchainMarketMaker) Invariant() float64 {
-	v := 1.0
+func (imm *InterchainMarketMaker) Invariant() types.Dec {
+	v := types.NewDec(1)
 	totalBalance := types.NewDec(0)
 	for _, asset := range imm.Pool.Assets {
 		decimal := types.NewInt(int64(math.Pow10(int(asset.Decimal))))
 		totalBalance = totalBalance.Add(types.NewDecFromBigInt(asset.Balance.Amount.Quo(decimal).BigInt()))
 	}
 	for _, asset := range imm.Pool.Assets {
-		w := float64(asset.Weight) / 100.0
+		w := types.NewDec(int64(asset.Weight)).Quo(types.NewDec(100)) // divide by 100
 		decimal := types.NewInt(int64(math.Pow10(int(asset.Decimal))))
 		balance := types.NewDecFromBigInt(asset.Balance.Amount.Quo(decimal).BigInt())
-		v *= math.Pow(balance.MustFloat64(), w)
+
+		// Raise balance to the power of w using logarithm and exponential functions
+		exponent := Ln(balance).Mul(w)
+		v = v.Mul(Exp(exponent))
 	}
 	return v
 }
 
-func (imm *InterchainMarketMaker) InvariantWithInput(tokenIn types.Coin) float64 {
-	v := 1.0
+// Natural logarithm with the Newton-Raphson method
+func Ln(dec types.Dec) types.Dec {
+	// You can adjust the precision and initial guess based on your requirements
+	const maxIterations = 500
+	guess, _ := types.NewDecFromStr("1.0")
+
+	two := types.NewDec(2)
+	for i := 0; i < maxIterations; i++ {
+		guessSquared := guess.Mul(guess)
+		guess = guess.Add((dec.Quo(guess).Sub(guessSquared)).Quo(two))
+	}
+	return guess
+}
+
+// Exponential function
+func Exp(dec types.Dec) types.Dec {
+	// Again, adjust the precision and the number of terms in the series based on your needs
+	const maxIterations = 50
+	result, _ := types.NewDecFromStr("1.0")
+	term := result
+
+	for i := 1; i < maxIterations; i++ {
+		term = term.Mul(dec).QuoInt64(int64(i))
+		result = result.Add(term)
+	}
+	return result
+}
+
+func (imm *InterchainMarketMaker) InvariantWithInput(tokenIn types.Coin) types.Dec {
+	v := types.NewDec(1)
 	totalBalance := types.NewDec(0)
 	for _, asset := range imm.Pool.Assets {
 		decimal := types.NewInt(int64(math.Pow10(int(asset.Decimal))))
 		totalBalance = totalBalance.Add(types.NewDecFromBigInt(asset.Balance.Amount.Quo(decimal).BigInt()))
 		if asset.Balance.Denom == tokenIn.Denom {
-			totalBalance.Add(types.NewDecFromBigInt(tokenIn.Amount.BigInt()))
+			totalBalance = totalBalance.Add(types.NewDecFromBigInt(tokenIn.Amount.BigInt()))
 		}
 	}
 	for _, asset := range imm.Pool.Assets {
-		w := float64(asset.Weight) / 100.0
+		w := types.NewDec(int64(asset.Weight)).Quo(types.NewDec(100)) // divide by 100
 		decimal := types.NewInt(int64(math.Pow10(int(asset.Decimal))))
 		var balance types.Dec
 		if tokenIn.Denom != asset.Balance.Denom {
@@ -429,12 +476,16 @@ func (imm *InterchainMarketMaker) InvariantWithInput(tokenIn types.Coin) float64
 		} else {
 			balance = types.NewDecFromBigInt(asset.Balance.Amount.Add(tokenIn.Amount).Quo(decimal).BigInt())
 		}
-		v *= math.Pow(balance.MustFloat64(), w)
+
+		// Raise balance to the power of w using logarithm and exponential functions
+		exponent := Ln(balance).Mul(w)
+		v = v.Mul(Exp(exponent))
 	}
 	return v
 }
 
-func (imm *InterchainMarketMaker) LpPrice() float64 {
-	lpPrice := imm.Invariant() / float64(imm.Pool.Supply.Amount.Int64())
-	return lpPrice
+func (imm *InterchainMarketMaker) LpPrice() uint64 {
+	decSupply := types.NewDecCoinFromCoin(*imm.Pool.Supply)
+	lpPrice := imm.Invariant().Quo(decSupply.Amount).Mul(types.NewDec(Multiplier))
+	return lpPrice.BigInt().Uint64()
 }

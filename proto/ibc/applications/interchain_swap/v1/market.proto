@@ -31,7 +31,7 @@ message InterchainLiquidityPool {
   uint32 swapFee = 5;
   cosmos.base.v1beta1.Coin supply = 6;
   PoolStatus status = 7;
-  float pool_price = 8;
+  uint64 pool_price = 8;
   string sourceChainId = 9;
   string counterPartyPort = 10; 
   string counterPartyChannel = 11;

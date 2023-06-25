@@ -18,7 +18,7 @@ func (suit *KeeperTestSuite) TestMakeMultiAssetDeposit() {
 	k := suit.chainA.GetSimApp().InterchainSwapKeeper
 	k.SetInterchainLiquidityPool(ctx, types.InterchainLiquidityPool{
 		Id:                  poolId,
-		PoolPrice:           0.2,
+		PoolPrice:           0,
 		SourceCreator:       suit.chainA.SenderAccount.GetAddress().String(),
 		DestinationCreator:  suit.chainB.SenderAccount.GetAddress().String(),
 		CounterPartyPort:    types.ModuleName,
