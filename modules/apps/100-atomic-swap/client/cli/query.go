@@ -81,7 +81,7 @@ func GetCmdOrderList() *cobra.Command {
 			//addr := types.GetEscrowAddress(port, channel)
 
 			queryClient := types.NewQueryClient(clientCtx)
-			resposne, err := queryClient.Orders(cmd.Context(), &types.QueryOrdersRequest{})
+			resposne, err := queryClient.GetAllOrders(cmd.Context(), &types.QueryOrdersRequest{})
 
 			return clientCtx.PrintProto(resposne)
 		},

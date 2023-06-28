@@ -19,7 +19,7 @@ func (suite *KeeperTestSuite) TestQueryOrders() {
 	ctx := sdk.WrapSDKContext(suite.chainA.GetContext())
 	expParams := types.DefaultParams()
 
-	res, _ := suite.queryClient.Orders(ctx, &types.QueryOrdersRequest{})
+	res, _ := suite.queryClient.GetAllOrders(ctx, &types.QueryOrdersRequest{})
 	suite.Require().Equal(&expParams, len(res.Orders))
 }
 

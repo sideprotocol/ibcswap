@@ -39,9 +39,9 @@ func (q Keeper) GetAllOrdersByType(ctx context.Context, request *types.QueryOrde
 	var orders []*types.Order
 
 	q.IterateAtomicOrders(clientCtx, func(order types.Order) bool {
-		_, err := q.authKeeper.GetAccount(clientCtx, sdk.MustAccAddressFromBech32(order.Maker.MakerAddress))
-		if (err == nil && request.OrderType == types.OrderType_SellToBuy) ||
-			(err != nil && request.OrderType == types.OrderType_BuyToSell) {
+		acc := q.authKeeper.GetAccount(clientCtx, sdk.MustAccAddressFromBech32(order.Maker.MakerAddress))
+		if (acc != nil && request.OrderType == types.OrderType_SellToBuy) ||
+			(acc == nil && request.OrderType == types.OrderType_BuyToSell) {
 			orders = append(orders, &order)
 		}
 		return false
