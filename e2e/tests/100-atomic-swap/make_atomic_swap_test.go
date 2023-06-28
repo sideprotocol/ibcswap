@@ -46,6 +46,7 @@ func (s *MakeAtomicSwapTestSuite) TestMakeAtomicSwap_EdgeCases() {
 		timeoutHeight := clienttypes.NewHeight(0, 110)
 		msg := types.NewMsgMakeSwap(channelA.PortID, channelA.ChannelID, sellToken, buyToken, makerAddressOnChainA, makerReceivingAddressOnChainB, "", timeoutHeight, 0, time.Now().UTC().Unix())
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAMakerWallet, msg)
+		
 		s.Require().NoError(err)
 		s.Equal("failed to execute message; message index: 0: insufficient balance", resp.RawLog)
 	})

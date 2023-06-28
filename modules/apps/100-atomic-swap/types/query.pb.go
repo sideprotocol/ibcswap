@@ -25,6 +25,31 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+type OrderType int32
+
+const (
+	OrderType_BuyToSell OrderType = 0
+	OrderType_SellToBuy OrderType = 1
+)
+
+var OrderType_name = map[int32]string{
+	0: "BuyToSell",
+	1: "SellToBuy",
+}
+
+var OrderType_value = map[string]int32{
+	"BuyToSell": 0,
+	"SellToBuy": 1,
+}
+
+func (x OrderType) String() string {
+	return proto.EnumName(OrderType_name, int32(x))
+}
+
+func (OrderType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_fcd3ffdce48e373f, []int{0}
+}
+
 type QueryOrdersRequest struct {
 }
 
@@ -105,6 +130,183 @@ func (m *QueryOrdersResponse) GetOrders() []*Order {
 	return nil
 }
 
+type QueryOrdersByRequest struct {
+	OrderType OrderType `protobuf:"varint,1,opt,name=order_type,json=orderType,proto3,enum=ibc.applications.atomic_swap.v1.OrderType" json:"order_type,omitempty"`
+}
+
+func (m *QueryOrdersByRequest) Reset()         { *m = QueryOrdersByRequest{} }
+func (m *QueryOrdersByRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryOrdersByRequest) ProtoMessage()    {}
+func (*QueryOrdersByRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fcd3ffdce48e373f, []int{2}
+}
+func (m *QueryOrdersByRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryOrdersByRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryOrdersByRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryOrdersByRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryOrdersByRequest.Merge(m, src)
+}
+func (m *QueryOrdersByRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryOrdersByRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryOrdersByRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryOrdersByRequest proto.InternalMessageInfo
+
+func (m *QueryOrdersByRequest) GetOrderType() OrderType {
+	if m != nil {
+		return m.OrderType
+	}
+	return OrderType_BuyToSell
+}
+
+// submitted orders
+type QuerySubmittedOrdersRequest struct {
+	MakerAddress string `protobuf:"bytes,1,opt,name=makerAddress,proto3" json:"makerAddress,omitempty"`
+}
+
+func (m *QuerySubmittedOrdersRequest) Reset()         { *m = QuerySubmittedOrdersRequest{} }
+func (m *QuerySubmittedOrdersRequest) String() string { return proto.CompactTextString(m) }
+func (*QuerySubmittedOrdersRequest) ProtoMessage()    {}
+func (*QuerySubmittedOrdersRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fcd3ffdce48e373f, []int{3}
+}
+func (m *QuerySubmittedOrdersRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QuerySubmittedOrdersRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QuerySubmittedOrdersRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QuerySubmittedOrdersRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySubmittedOrdersRequest.Merge(m, src)
+}
+func (m *QuerySubmittedOrdersRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QuerySubmittedOrdersRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySubmittedOrdersRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QuerySubmittedOrdersRequest proto.InternalMessageInfo
+
+func (m *QuerySubmittedOrdersRequest) GetMakerAddress() string {
+	if m != nil {
+		return m.MakerAddress
+	}
+	return ""
+}
+
+type QueryTookOrdersRequest struct {
+	TakerAddress string `protobuf:"bytes,1,opt,name=takerAddress,proto3" json:"takerAddress,omitempty"`
+}
+
+func (m *QueryTookOrdersRequest) Reset()         { *m = QueryTookOrdersRequest{} }
+func (m *QueryTookOrdersRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryTookOrdersRequest) ProtoMessage()    {}
+func (*QueryTookOrdersRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fcd3ffdce48e373f, []int{4}
+}
+func (m *QueryTookOrdersRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryTookOrdersRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryTookOrdersRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryTookOrdersRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTookOrdersRequest.Merge(m, src)
+}
+func (m *QueryTookOrdersRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryTookOrdersRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTookOrdersRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryTookOrdersRequest proto.InternalMessageInfo
+
+func (m *QueryTookOrdersRequest) GetTakerAddress() string {
+	if m != nil {
+		return m.TakerAddress
+	}
+	return ""
+}
+
+type QueryPrivateOrdersRequest struct {
+	DesireAddress string `protobuf:"bytes,1,opt,name=desireAddress,proto3" json:"desireAddress,omitempty"`
+}
+
+func (m *QueryPrivateOrdersRequest) Reset()         { *m = QueryPrivateOrdersRequest{} }
+func (m *QueryPrivateOrdersRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryPrivateOrdersRequest) ProtoMessage()    {}
+func (*QueryPrivateOrdersRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fcd3ffdce48e373f, []int{5}
+}
+func (m *QueryPrivateOrdersRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryPrivateOrdersRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryPrivateOrdersRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryPrivateOrdersRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryPrivateOrdersRequest.Merge(m, src)
+}
+func (m *QueryPrivateOrdersRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryPrivateOrdersRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryPrivateOrdersRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryPrivateOrdersRequest proto.InternalMessageInfo
+
+func (m *QueryPrivateOrdersRequest) GetDesireAddress() string {
+	if m != nil {
+		return m.DesireAddress
+	}
+	return ""
+}
+
 // QueryParamsRequest is the request type for the Query/Params RPC method.
 type QueryParamsRequest struct {
 }
@@ -113,7 +315,7 @@ func (m *QueryParamsRequest) Reset()         { *m = QueryParamsRequest{} }
 func (m *QueryParamsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryParamsRequest) ProtoMessage()    {}
 func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fcd3ffdce48e373f, []int{2}
+	return fileDescriptor_fcd3ffdce48e373f, []int{6}
 }
 func (m *QueryParamsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -152,7 +354,7 @@ func (m *QueryParamsResponse) Reset()         { *m = QueryParamsResponse{} }
 func (m *QueryParamsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryParamsResponse) ProtoMessage()    {}
 func (*QueryParamsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fcd3ffdce48e373f, []int{3}
+	return fileDescriptor_fcd3ffdce48e373f, []int{7}
 }
 func (m *QueryParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -200,7 +402,7 @@ func (m *QueryEscrowAddressRequest) Reset()         { *m = QueryEscrowAddressReq
 func (m *QueryEscrowAddressRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryEscrowAddressRequest) ProtoMessage()    {}
 func (*QueryEscrowAddressRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fcd3ffdce48e373f, []int{4}
+	return fileDescriptor_fcd3ffdce48e373f, []int{8}
 }
 func (m *QueryEscrowAddressRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -253,7 +455,7 @@ func (m *QueryEscrowAddressResponse) Reset()         { *m = QueryEscrowAddressRe
 func (m *QueryEscrowAddressResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryEscrowAddressResponse) ProtoMessage()    {}
 func (*QueryEscrowAddressResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fcd3ffdce48e373f, []int{5}
+	return fileDescriptor_fcd3ffdce48e373f, []int{9}
 }
 func (m *QueryEscrowAddressResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -290,8 +492,13 @@ func (m *QueryEscrowAddressResponse) GetEscrowAddress() string {
 }
 
 func init() {
+	proto.RegisterEnum("ibc.applications.atomic_swap.v1.OrderType", OrderType_name, OrderType_value)
 	proto.RegisterType((*QueryOrdersRequest)(nil), "ibc.applications.atomic_swap.v1.QueryOrdersRequest")
 	proto.RegisterType((*QueryOrdersResponse)(nil), "ibc.applications.atomic_swap.v1.QueryOrdersResponse")
+	proto.RegisterType((*QueryOrdersByRequest)(nil), "ibc.applications.atomic_swap.v1.QueryOrdersByRequest")
+	proto.RegisterType((*QuerySubmittedOrdersRequest)(nil), "ibc.applications.atomic_swap.v1.QuerySubmittedOrdersRequest")
+	proto.RegisterType((*QueryTookOrdersRequest)(nil), "ibc.applications.atomic_swap.v1.QueryTookOrdersRequest")
+	proto.RegisterType((*QueryPrivateOrdersRequest)(nil), "ibc.applications.atomic_swap.v1.QueryPrivateOrdersRequest")
 	proto.RegisterType((*QueryParamsRequest)(nil), "ibc.applications.atomic_swap.v1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "ibc.applications.atomic_swap.v1.QueryParamsResponse")
 	proto.RegisterType((*QueryEscrowAddressRequest)(nil), "ibc.applications.atomic_swap.v1.QueryEscrowAddressRequest")
@@ -303,40 +510,56 @@ func init() {
 }
 
 var fileDescriptor_fcd3ffdce48e373f = []byte{
-	// 522 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x53, 0x4d, 0x6b, 0xd4, 0x40,
-	0x18, 0xde, 0x54, 0x5d, 0xe9, 0x94, 0x7a, 0x18, 0x0b, 0xd6, 0xa0, 0x71, 0x09, 0x58, 0x8b, 0xd2,
-	0x4c, 0xb3, 0x15, 0x0f, 0x0a, 0x8a, 0x4a, 0x0f, 0x05, 0xf1, 0x63, 0xfd, 0x38, 0x78, 0x59, 0x26,
-	0xc9, 0x90, 0x0e, 0x24, 0x79, 0xa7, 0x99, 0xd9, 0x2d, 0xa5, 0xf4, 0xe2, 0x2f, 0x10, 0x3c, 0x7a,
-	0xf5, 0xc7, 0x78, 0x2c, 0x78, 0xf1, 0x24, 0xb2, 0xeb, 0x0f, 0x91, 0xcc, 0x4c, 0xea, 0x06, 0x2b,
-	0x59, 0x7b, 0x4b, 0xde, 0x8f, 0xe7, 0x79, 0xe6, 0x79, 0xdf, 0x17, 0xdd, 0xe1, 0x51, 0x4c, 0xa8,
-	0x10, 0x19, 0x8f, 0xa9, 0xe2, 0x50, 0x48, 0x42, 0x15, 0xe4, 0x3c, 0x1e, 0xca, 0x7d, 0x2a, 0xc8,
-	0x38, 0x24, 0x7b, 0x23, 0x56, 0x1e, 0x04, 0xa2, 0x04, 0x05, 0xf8, 0x06, 0x8f, 0xe2, 0x60, 0xb6,
-	0x38, 0x98, 0x29, 0x0e, 0xc6, 0xa1, 0xbb, 0x92, 0x42, 0x0a, 0xba, 0x96, 0x54, 0x5f, 0xa6, 0xcd,
-	0xbd, 0x1d, 0x83, 0xcc, 0x41, 0x92, 0x88, 0x4a, 0x66, 0xf0, 0xc8, 0x38, 0x8c, 0x98, 0xa2, 0x21,
-	0x11, 0x34, 0xe5, 0x85, 0xc6, 0xaa, 0x6b, 0xdb, 0xf4, 0x68, 0x2a, 0x53, 0x7b, 0x2d, 0x05, 0x48,
-	0x33, 0x46, 0xa8, 0xe0, 0x84, 0x16, 0x05, 0x28, 0x2b, 0x4a, 0x67, 0xfd, 0x15, 0x84, 0x5f, 0x55,
-	0x5c, 0x2f, 0xca, 0x84, 0x95, 0x72, 0xc0, 0xf6, 0x46, 0x4c, 0x2a, 0xff, 0x2d, 0xba, 0xdc, 0x88,
-	0x4a, 0x01, 0x85, 0x64, 0xf8, 0x21, 0xea, 0x82, 0x8e, 0xac, 0x3a, 0xbd, 0x73, 0xeb, 0x4b, 0xfd,
-	0xb5, 0xa0, 0xe5, 0xa9, 0x81, 0x06, 0x18, 0xd8, 0xae, 0x13, 0xb2, 0x97, 0xb4, 0xa4, 0xf9, 0x09,
-	0xd9, 0x3b, 0x4b, 0x56, 0x47, 0x2d, 0xd9, 0x23, 0xd4, 0x15, 0x3a, 0xb2, 0xea, 0xf4, 0x9c, 0xf5,
-	0xa5, 0xfe, 0xad, 0x56, 0x32, 0x0b, 0x60, 0xdb, 0xfc, 0xd7, 0xe8, 0xaa, 0xc6, 0xdd, 0x96, 0x71,
-	0x09, 0xfb, 0x8f, 0x93, 0xa4, 0x64, 0xb2, 0x26, 0xc5, 0x57, 0xd0, 0x45, 0x01, 0xa5, 0x1a, 0xf2,
-	0x44, 0xc3, 0x2f, 0x0e, 0xba, 0xd5, 0xef, 0x4e, 0x82, 0xaf, 0x23, 0x14, 0xef, 0xd2, 0xa2, 0x60,
-	0x59, 0x95, 0x5b, 0xd0, 0xb9, 0x45, 0x1b, 0xd9, 0x49, 0xfc, 0xa7, 0xc8, 0x3d, 0x0d, 0xd4, 0x6a,
-	0xbe, 0x89, 0x2e, 0x31, 0x9d, 0x18, 0x52, 0x93, 0xb1, 0xe0, 0xcb, 0x6c, 0xb6, 0xbc, 0xff, 0xe5,
-	0x3c, 0xba, 0xa0, 0x51, 0xf0, 0x67, 0x07, 0x75, 0x8d, 0x6c, 0xbc, 0xd5, 0xfa, 0xbe, 0xbf, 0xbd,
-	0x73, 0xef, 0xfe, 0x5f, 0x93, 0x91, 0xe9, 0xaf, 0x7d, 0xf8, 0xf6, 0xeb, 0xd3, 0x42, 0x0f, 0x7b,
-	0xc4, 0xee, 0x51, 0xbd, 0x3f, 0xf5, 0xfa, 0x18, 0x07, 0xf1, 0x0f, 0x07, 0x2d, 0x37, 0x1e, 0x8a,
-	0xef, 0xcf, 0xc7, 0x77, 0x9a, 0xe5, 0xee, 0x83, 0x33, 0xf5, 0x5a, 0xc9, 0x6f, 0xb4, 0xe4, 0xe7,
-	0xf8, 0xd9, 0xbf, 0x24, 0xdb, 0x11, 0x49, 0x72, 0xf8, 0x67, 0x7c, 0x47, 0xa4, 0x1a, 0xaa, 0x24,
-	0x87, 0x76, 0xd4, 0x47, 0xa4, 0x39, 0x1d, 0x6d, 0xbf, 0xd9, 0xf1, 0x79, 0xed, 0x6f, 0xdc, 0xc9,
-	0xbc, 0xf6, 0x37, 0xcf, 0xa8, 0xdd, 0x7e, 0x73, 0x2e, 0x4f, 0x86, 0x5f, 0x27, 0x9e, 0x73, 0x3c,
-	0xf1, 0x9c, 0x9f, 0x13, 0xcf, 0xf9, 0x38, 0xf5, 0x3a, 0xc7, 0x53, 0xaf, 0xf3, 0x7d, 0xea, 0x75,
-	0xde, 0x6f, 0xa7, 0x5c, 0xed, 0x8e, 0xa2, 0x20, 0x86, 0x9c, 0x48, 0x9e, 0x30, 0x7d, 0xcb, 0x31,
-	0x64, 0x15, 0xa0, 0x01, 0xb9, 0x47, 0x72, 0x48, 0x46, 0x19, 0x93, 0x06, 0x3f, 0xdc, 0xdc, 0xdc,
-	0x30, 0x1c, 0x1b, 0x3a, 0xaf, 0x0e, 0x04, 0x93, 0x51, 0x57, 0xf7, 0x6d, 0xfd, 0x0e, 0x00, 0x00,
-	0xff, 0xff, 0x4c, 0xa8, 0x40, 0x37, 0xdf, 0x04, 0x00, 0x00,
+	// 775 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x95, 0x4f, 0x4f, 0x13, 0x4f,
+	0x18, 0xc7, 0xbb, 0xfc, 0xf2, 0xab, 0xe9, 0x03, 0x25, 0x64, 0x24, 0x8a, 0x55, 0x2b, 0x59, 0x05,
+	0x4a, 0x09, 0x3b, 0xb4, 0xf8, 0x27, 0x51, 0xa2, 0x69, 0x0d, 0x21, 0x24, 0x46, 0xb1, 0x54, 0x0f,
+	0x5e, 0x9a, 0xe9, 0xee, 0xa4, 0x6c, 0xd8, 0x76, 0x96, 0x9d, 0x69, 0x49, 0x43, 0x38, 0xe8, 0x2b,
+	0x30, 0xf1, 0xe8, 0xc9, 0x37, 0xa0, 0x17, 0x4f, 0xbe, 0x02, 0x8f, 0x24, 0x5e, 0x3c, 0x19, 0x03,
+	0xbe, 0x10, 0xb3, 0xb3, 0xd3, 0xd2, 0x95, 0xea, 0x2e, 0xbd, 0x6d, 0x9f, 0x79, 0x9e, 0xe7, 0xfb,
+	0x99, 0xf9, 0xce, 0x3c, 0x85, 0x25, 0xbb, 0x6e, 0x62, 0xe2, 0xba, 0x8e, 0x6d, 0x12, 0x61, 0xb3,
+	0x16, 0xc7, 0x44, 0xb0, 0xa6, 0x6d, 0xd6, 0xf8, 0x3e, 0x71, 0x71, 0xa7, 0x80, 0xf7, 0xda, 0xd4,
+	0xeb, 0x1a, 0xae, 0xc7, 0x04, 0x43, 0x37, 0xec, 0xba, 0x69, 0x0c, 0x26, 0x1b, 0x03, 0xc9, 0x46,
+	0xa7, 0x90, 0x99, 0x6e, 0xb0, 0x06, 0x93, 0xb9, 0xd8, 0xff, 0x0a, 0xca, 0x32, 0x79, 0x93, 0xf1,
+	0x26, 0xe3, 0xb8, 0x4e, 0x38, 0x0d, 0xfa, 0xe1, 0x4e, 0xa1, 0x4e, 0x05, 0x29, 0x60, 0x97, 0x34,
+	0xec, 0x96, 0xec, 0xd5, 0xcb, 0x8d, 0xe2, 0x91, 0x52, 0x41, 0xee, 0xb5, 0x06, 0x63, 0x0d, 0x87,
+	0x62, 0xe2, 0xda, 0x98, 0xb4, 0x5a, 0x4c, 0x28, 0x28, 0xb9, 0xaa, 0x4f, 0x03, 0x7a, 0xee, 0x6b,
+	0x3d, 0xf3, 0x2c, 0xea, 0xf1, 0x0a, 0xdd, 0x6b, 0x53, 0x2e, 0xf4, 0x17, 0x70, 0x31, 0x14, 0xe5,
+	0x2e, 0x6b, 0x71, 0x8a, 0x1e, 0x42, 0x92, 0xc9, 0xc8, 0x8c, 0x36, 0xfb, 0x5f, 0x6e, 0xbc, 0x38,
+	0x6f, 0x44, 0x6c, 0xd5, 0x90, 0x0d, 0x2a, 0xaa, 0x4a, 0x27, 0x30, 0x3d, 0xd0, 0xb6, 0xdc, 0x55,
+	0x72, 0x68, 0x13, 0x40, 0x66, 0xd4, 0x44, 0xd7, 0xa5, 0x33, 0xda, 0xac, 0x96, 0x9b, 0x2c, 0xe6,
+	0xe3, 0xf5, 0xae, 0x76, 0x5d, 0x5a, 0x49, 0xb1, 0xde, 0xa7, 0x5e, 0x82, 0xab, 0x52, 0x62, 0xbb,
+	0x5d, 0x6f, 0xda, 0x42, 0x50, 0x2b, 0xb4, 0x31, 0xa4, 0xc3, 0x44, 0x93, 0xec, 0x52, 0xaf, 0x64,
+	0x59, 0x1e, 0xe5, 0x5c, 0x6a, 0xa5, 0x2a, 0xa1, 0x98, 0xbe, 0x06, 0x97, 0x64, 0x8b, 0x2a, 0x63,
+	0xbb, 0x67, 0xaa, 0xc5, 0x90, 0xea, 0xc1, 0x98, 0x5e, 0x82, 0x2b, 0xb2, 0x7a, 0xcb, 0xb3, 0x3b,
+	0x44, 0xd0, 0x70, 0x83, 0x5b, 0x90, 0xb6, 0x28, 0xb7, 0x3d, 0x1a, 0xee, 0x10, 0x0e, 0xf6, 0x3d,
+	0xd9, 0x22, 0x1e, 0x69, 0xf6, 0x3d, 0x79, 0xa9, 0x3c, 0xe9, 0x45, 0x95, 0x27, 0x8f, 0x20, 0xe9,
+	0xca, 0x88, 0xec, 0x35, 0x5e, 0x5c, 0x88, 0x3c, 0x37, 0xd5, 0x40, 0x95, 0xe9, 0xdb, 0x0a, 0x78,
+	0x9d, 0x9b, 0x1e, 0xdb, 0x57, 0x0c, 0x3d, 0xe0, 0xcb, 0x70, 0xc1, 0x65, 0x9e, 0xa8, 0xd9, 0x96,
+	0x42, 0x4d, 0xfa, 0x3f, 0x37, 0x2d, 0x74, 0x1d, 0xc0, 0xdc, 0x21, 0xad, 0x16, 0x75, 0xfc, 0xb5,
+	0x31, 0xb9, 0x96, 0x52, 0x91, 0x4d, 0x4b, 0x7f, 0x0c, 0x99, 0x61, 0x4d, 0x15, 0xf3, 0x1c, 0x4c,
+	0x52, 0xb9, 0x50, 0x23, 0xe1, 0x73, 0xa0, 0x83, 0xe9, 0xf9, 0x45, 0x48, 0xf5, 0x3d, 0x46, 0x69,
+	0x48, 0x95, 0xdb, 0xdd, 0x2a, 0xdb, 0xa6, 0x8e, 0x33, 0x95, 0xf0, 0x7f, 0xfa, 0x5f, 0x55, 0x56,
+	0x6e, 0x77, 0xa7, 0xb4, 0xe2, 0x6b, 0x80, 0xff, 0xa5, 0x20, 0x7a, 0xaf, 0x41, 0x32, 0xd8, 0x21,
+	0x5a, 0x8d, 0x3c, 0x8a, 0xb3, 0xc7, 0x9c, 0xb9, 0x7d, 0xbe, 0xa2, 0x60, 0x47, 0xfa, 0xfc, 0x9b,
+	0x6f, 0xbf, 0xde, 0x8d, 0xcd, 0xa2, 0x2c, 0x56, 0x2f, 0xb3, 0xf7, 0x22, 0x7b, 0x0f, 0x32, 0x38,
+	0x6c, 0xf4, 0x43, 0x83, 0x74, 0xe8, 0x4c, 0xd0, 0xfd, 0x78, 0x7a, 0xc3, 0xdc, 0xc9, 0x3c, 0x18,
+	0xa9, 0x56, 0x21, 0x57, 0x25, 0xf2, 0x53, 0xf4, 0xe4, 0x6f, 0xc8, 0xca, 0x4d, 0x8e, 0x0f, 0x4e,
+	0x9d, 0x3e, 0xc4, 0xbe, 0xff, 0x1c, 0x1f, 0xa8, 0x5b, 0x71, 0x88, 0xc3, 0x46, 0xa2, 0x0f, 0x1a,
+	0x4c, 0x6c, 0x50, 0x51, 0x72, 0x9c, 0xe0, 0xe6, 0xc7, 0x35, 0x21, 0xf4, 0x4e, 0xe2, 0x9a, 0x10,
+	0x1e, 0x4f, 0xd1, 0x26, 0x04, 0x63, 0x08, 0x7d, 0xd4, 0x00, 0x0d, 0x32, 0x96, 0xbb, 0xf2, 0x86,
+	0xdd, 0x39, 0x8f, 0x68, 0x7f, 0x78, 0x8d, 0xc8, 0xba, 0x24, 0x59, 0xe7, 0xd0, 0xcd, 0x7f, 0xb3,
+	0x62, 0x7f, 0x22, 0xa2, 0x2f, 0x01, 0xf0, 0x1f, 0x33, 0x0d, 0xad, 0xc5, 0x53, 0x1e, 0x3e, 0x0a,
+	0x47, 0xe4, 0x5e, 0x91, 0xdc, 0x79, 0x94, 0x8b, 0xe0, 0xe6, 0x3d, 0x51, 0xf4, 0x49, 0x83, 0xf4,
+	0x06, 0x15, 0xa7, 0xd3, 0x14, 0xdd, 0x8b, 0xa7, 0x7c, 0x66, 0xfe, 0x8e, 0x88, 0x8c, 0x25, 0xf2,
+	0x22, 0x5a, 0x88, 0x40, 0x26, 0xa6, 0x49, 0x5d, 0x9f, 0xf8, 0xb3, 0x06, 0x53, 0x1b, 0x54, 0x84,
+	0x26, 0x78, 0xdc, 0x77, 0x3a, 0x6c, 0xec, 0x8f, 0xc8, 0x6d, 0x48, 0xee, 0x1c, 0x9a, 0x8f, 0xe0,
+	0x76, 0x03, 0xc9, 0x72, 0xed, 0xeb, 0x71, 0x56, 0x3b, 0x3a, 0xce, 0x6a, 0x3f, 0x8f, 0xb3, 0xda,
+	0xdb, 0x93, 0x6c, 0xe2, 0xe8, 0x24, 0x9b, 0xf8, 0x7e, 0x92, 0x4d, 0xbc, 0x5a, 0x6f, 0xd8, 0x62,
+	0xa7, 0x5d, 0x37, 0x4c, 0xd6, 0xc4, 0xdc, 0xb6, 0xa8, 0xfc, 0xeb, 0x37, 0x99, 0xe3, 0x37, 0x0e,
+	0x9a, 0xdd, 0xc5, 0x4d, 0x66, 0xb5, 0x1d, 0xca, 0x03, 0x9d, 0xc2, 0xca, 0xca, 0x72, 0xa0, 0xb5,
+	0x2c, 0xd7, 0xfd, 0x5b, 0xc8, 0xeb, 0x49, 0x59, 0xb7, 0xfa, 0x3b, 0x00, 0x00, 0xff, 0xff, 0x77,
+	0x7e, 0x25, 0x65, 0x0e, 0x09, 0x00, 0x00,
 }
 
 func (m *QueryOrdersRequest) Marshal() (dAtA []byte, err error) {
@@ -395,6 +618,124 @@ func (m *QueryOrdersResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0xa
 		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryOrdersByRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryOrdersByRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryOrdersByRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.OrderType != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.OrderType))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QuerySubmittedOrdersRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QuerySubmittedOrdersRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QuerySubmittedOrdersRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.MakerAddress) > 0 {
+		i -= len(m.MakerAddress)
+		copy(dAtA[i:], m.MakerAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.MakerAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryTookOrdersRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryTookOrdersRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryTookOrdersRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.TakerAddress) > 0 {
+		i -= len(m.TakerAddress)
+		copy(dAtA[i:], m.TakerAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.TakerAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryPrivateOrdersRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryPrivateOrdersRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryPrivateOrdersRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.DesireAddress) > 0 {
+		i -= len(m.DesireAddress)
+		copy(dAtA[i:], m.DesireAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.DesireAddress)))
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -555,6 +896,57 @@ func (m *QueryOrdersResponse) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *QueryOrdersByRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.OrderType != 0 {
+		n += 1 + sovQuery(uint64(m.OrderType))
+	}
+	return n
+}
+
+func (m *QuerySubmittedOrdersRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.MakerAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryTookOrdersRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.TakerAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryPrivateOrdersRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.DesireAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
 }
@@ -729,6 +1121,321 @@ func (m *QueryOrdersResponse) Unmarshal(dAtA []byte) error {
 			if err := m.Orders[len(m.Orders)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryOrdersByRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryOrdersByRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryOrdersByRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OrderType", wireType)
+			}
+			m.OrderType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.OrderType |= OrderType(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QuerySubmittedOrdersRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QuerySubmittedOrdersRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QuerySubmittedOrdersRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MakerAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MakerAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryTookOrdersRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryTookOrdersRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryTookOrdersRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TakerAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TakerAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryPrivateOrdersRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryPrivateOrdersRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryPrivateOrdersRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DesireAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DesireAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
