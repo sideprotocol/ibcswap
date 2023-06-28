@@ -22,8 +22,24 @@ service Query {
     option (google.api.http).get = "/ibc/apps/atomicswap/v1/channels/{channel_id}/ports/{port_id}/escrow_address";
   }
 
-  rpc Orders(QueryOrdersRequest) returns (QueryOrdersResponse) {
+  rpc GetAllOrders(QueryOrdersRequest) returns (QueryOrdersResponse) {
     option (google.api.http).get = "/ibc/apps/atomicswap/v1/orders";
+  }
+
+  rpc GetAllOrdersByType(QueryOrdersByRequest) returns (QueryOrdersResponse) {
+    option (google.api.http).get = "/ibc/apps/atomicswap/v1/orders/type";
+  }
+
+  rpc GetSubmittedOrders(QuerySubmittedOrdersRequest) returns (QueryOrdersResponse) {
+    option (google.api.http).get = "/ibc/apps/atomicswap/v1/orders/submitted";
+  }
+
+  rpc GetTookOrders(QueryTookOrdersRequest) returns (QueryOrdersResponse) {
+    option (google.api.http).get = "/ibc/apps/atomicswap/v1/orders/accepted";
+  }
+
+  rpc GetPrivateOrders(QueryPrivateOrdersRequest) returns (QueryOrdersResponse) {
+    option (google.api.http).get = "/ibc/apps/atomicswap/v1/orders/private";
   }
 }
 
@@ -32,6 +48,32 @@ message QueryOrdersRequest {}
 message QueryOrdersResponse {
     repeated Order orders = 1;
 }
+
+enum OrderType {
+  BuyToSell = 0;
+  SellToBuy = 1;
+}
+
+message QueryOrdersByRequest {
+  OrderType order_type = 1;
+}
+
+// submitted orders
+message QuerySubmittedOrdersRequest {
+  string makerAddress = 1; 
+}
+
+message QueryTookOrdersRequest {
+  string takerAddress = 1; 
+}
+
+message QueryPrivateOrdersRequest {
+  string desireAddress = 1; 
+}
+
+
+
+
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
 message QueryParamsRequest {}

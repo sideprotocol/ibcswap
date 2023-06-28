@@ -22,7 +22,11 @@ type QueryClient interface {
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// EscrowAddress returns the escrow address for a particular port and channel id.
 	EscrowAddress(ctx context.Context, in *QueryEscrowAddressRequest, opts ...grpc.CallOption) (*QueryEscrowAddressResponse, error)
-	Orders(ctx context.Context, in *QueryOrdersRequest, opts ...grpc.CallOption) (*QueryOrdersResponse, error)
+	GetAllOrders(ctx context.Context, in *QueryOrdersRequest, opts ...grpc.CallOption) (*QueryOrdersResponse, error)
+	GetAllOrdersByType(ctx context.Context, in *QueryOrdersByRequest, opts ...grpc.CallOption) (*QueryOrdersResponse, error)
+	GetSubmittedOrders(ctx context.Context, in *QuerySubmittedOrdersRequest, opts ...grpc.CallOption) (*QueryOrdersResponse, error)
+	GetTookOrders(ctx context.Context, in *QueryTookOrdersRequest, opts ...grpc.CallOption) (*QueryOrdersResponse, error)
+	GetPrivateOrders(ctx context.Context, in *QueryPrivateOrdersRequest, opts ...grpc.CallOption) (*QueryOrdersResponse, error)
 }
 
 type queryClient struct {
@@ -51,9 +55,45 @@ func (c *queryClient) EscrowAddress(ctx context.Context, in *QueryEscrowAddressR
 	return out, nil
 }
 
-func (c *queryClient) Orders(ctx context.Context, in *QueryOrdersRequest, opts ...grpc.CallOption) (*QueryOrdersResponse, error) {
+func (c *queryClient) GetAllOrders(ctx context.Context, in *QueryOrdersRequest, opts ...grpc.CallOption) (*QueryOrdersResponse, error) {
 	out := new(QueryOrdersResponse)
-	err := c.cc.Invoke(ctx, "/ibc.applications.atomic_swap.v1.Query/Orders", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ibc.applications.atomic_swap.v1.Query/GetAllOrders", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetAllOrdersByType(ctx context.Context, in *QueryOrdersByRequest, opts ...grpc.CallOption) (*QueryOrdersResponse, error) {
+	out := new(QueryOrdersResponse)
+	err := c.cc.Invoke(ctx, "/ibc.applications.atomic_swap.v1.Query/GetAllOrdersByType", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetSubmittedOrders(ctx context.Context, in *QuerySubmittedOrdersRequest, opts ...grpc.CallOption) (*QueryOrdersResponse, error) {
+	out := new(QueryOrdersResponse)
+	err := c.cc.Invoke(ctx, "/ibc.applications.atomic_swap.v1.Query/GetSubmittedOrders", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetTookOrders(ctx context.Context, in *QueryTookOrdersRequest, opts ...grpc.CallOption) (*QueryOrdersResponse, error) {
+	out := new(QueryOrdersResponse)
+	err := c.cc.Invoke(ctx, "/ibc.applications.atomic_swap.v1.Query/GetTookOrders", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetPrivateOrders(ctx context.Context, in *QueryPrivateOrdersRequest, opts ...grpc.CallOption) (*QueryOrdersResponse, error) {
+	out := new(QueryOrdersResponse)
+	err := c.cc.Invoke(ctx, "/ibc.applications.atomic_swap.v1.Query/GetPrivateOrders", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +108,11 @@ type QueryServer interface {
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// EscrowAddress returns the escrow address for a particular port and channel id.
 	EscrowAddress(context.Context, *QueryEscrowAddressRequest) (*QueryEscrowAddressResponse, error)
-	Orders(context.Context, *QueryOrdersRequest) (*QueryOrdersResponse, error)
+	GetAllOrders(context.Context, *QueryOrdersRequest) (*QueryOrdersResponse, error)
+	GetAllOrdersByType(context.Context, *QueryOrdersByRequest) (*QueryOrdersResponse, error)
+	GetSubmittedOrders(context.Context, *QuerySubmittedOrdersRequest) (*QueryOrdersResponse, error)
+	GetTookOrders(context.Context, *QueryTookOrdersRequest) (*QueryOrdersResponse, error)
+	GetPrivateOrders(context.Context, *QueryPrivateOrdersRequest) (*QueryOrdersResponse, error)
 }
 
 // UnimplementedQueryServer should be embedded to have forward compatible implementations.
@@ -81,8 +125,20 @@ func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*Q
 func (UnimplementedQueryServer) EscrowAddress(context.Context, *QueryEscrowAddressRequest) (*QueryEscrowAddressResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EscrowAddress not implemented")
 }
-func (UnimplementedQueryServer) Orders(context.Context, *QueryOrdersRequest) (*QueryOrdersResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Orders not implemented")
+func (UnimplementedQueryServer) GetAllOrders(context.Context, *QueryOrdersRequest) (*QueryOrdersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllOrders not implemented")
+}
+func (UnimplementedQueryServer) GetAllOrdersByType(context.Context, *QueryOrdersByRequest) (*QueryOrdersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllOrdersByType not implemented")
+}
+func (UnimplementedQueryServer) GetSubmittedOrders(context.Context, *QuerySubmittedOrdersRequest) (*QueryOrdersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSubmittedOrders not implemented")
+}
+func (UnimplementedQueryServer) GetTookOrders(context.Context, *QueryTookOrdersRequest) (*QueryOrdersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTookOrders not implemented")
+}
+func (UnimplementedQueryServer) GetPrivateOrders(context.Context, *QueryPrivateOrdersRequest) (*QueryOrdersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPrivateOrders not implemented")
 }
 
 // UnsafeQueryServer may be embedded to opt out of forward compatibility for this service.
@@ -132,20 +188,92 @@ func _Query_EscrowAddress_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_Orders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_GetAllOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryOrdersRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).Orders(ctx, in)
+		return srv.(QueryServer).GetAllOrders(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ibc.applications.atomic_swap.v1.Query/Orders",
+		FullMethod: "/ibc.applications.atomic_swap.v1.Query/GetAllOrders",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Orders(ctx, req.(*QueryOrdersRequest))
+		return srv.(QueryServer).GetAllOrders(ctx, req.(*QueryOrdersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetAllOrdersByType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryOrdersByRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetAllOrdersByType(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ibc.applications.atomic_swap.v1.Query/GetAllOrdersByType",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetAllOrdersByType(ctx, req.(*QueryOrdersByRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetSubmittedOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySubmittedOrdersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetSubmittedOrders(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ibc.applications.atomic_swap.v1.Query/GetSubmittedOrders",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetSubmittedOrders(ctx, req.(*QuerySubmittedOrdersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetTookOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTookOrdersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetTookOrders(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ibc.applications.atomic_swap.v1.Query/GetTookOrders",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetTookOrders(ctx, req.(*QueryTookOrdersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetPrivateOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryPrivateOrdersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetPrivateOrders(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ibc.applications.atomic_swap.v1.Query/GetPrivateOrders",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetPrivateOrders(ctx, req.(*QueryPrivateOrdersRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -166,8 +294,24 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Query_EscrowAddress_Handler,
 		},
 		{
-			MethodName: "Orders",
-			Handler:    _Query_Orders_Handler,
+			MethodName: "GetAllOrders",
+			Handler:    _Query_GetAllOrders_Handler,
+		},
+		{
+			MethodName: "GetAllOrdersByType",
+			Handler:    _Query_GetAllOrdersByType_Handler,
+		},
+		{
+			MethodName: "GetSubmittedOrders",
+			Handler:    _Query_GetSubmittedOrders_Handler,
+		},
+		{
+			MethodName: "GetTookOrders",
+			Handler:    _Query_GetTookOrders_Handler,
+		},
+		{
+			MethodName: "GetPrivateOrders",
+			Handler:    _Query_GetPrivateOrders_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
