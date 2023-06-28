@@ -43,10 +43,13 @@ service Query {
   }
 }
 
-message QueryOrdersRequest {}
+message QueryOrdersRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
 
 message QueryOrdersResponse {
     repeated Order orders = 1;
+    cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 enum OrderType {
@@ -56,24 +59,24 @@ enum OrderType {
 
 message QueryOrdersByRequest {
   OrderType order_type = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // submitted orders
 message QuerySubmittedOrdersRequest {
-  string makerAddress = 1; 
+  string makerAddress = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 message QueryTookOrdersRequest {
   string takerAddress = 1; 
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 message QueryPrivateOrdersRequest {
-  string desireAddress = 1; 
+  string desireAddress = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
-
-
-
-
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
 message QueryParamsRequest {}
