@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -12,81 +13,109 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-func (q Keeper) Orders(ctx context.Context, request *types.QueryOrdersRequest) (*types.QueryOrdersResponse, error) {
-	clientCtx := sdk.UnwrapSDKContext(ctx)
-
-	var orders []*types.Order
-	q.IterateAtomicOrders(clientCtx, func(order types.Order) bool {
-		orders = append(orders, &order)
-		return false
-	})
-	return &types.QueryOrdersResponse{Orders: orders}, nil
-}
-
 func (q Keeper) GetAllOrders(ctx context.Context, request *types.QueryOrdersRequest) (*types.QueryOrdersResponse, error) {
 	clientCtx := sdk.UnwrapSDKContext(ctx)
+	orderStore := clientCtx.KVStore(q.storeKey)
+	iterator := sdk.KVStorePrefixIterator(orderStore, types.OTCOrderBookKey)
 
 	var orders []*types.Order
-	q.IterateAtomicOrders(clientCtx, func(order types.Order) bool {
+	pageRes, err := query.Paginate(orderStore, request.Pagination, func(key, value []byte) error {
+		order := q.MustUnmarshalOrder(iterator.Value())
 		orders = append(orders, &order)
-		return false
+		return nil
 	})
-	return &types.QueryOrdersResponse{Orders: orders}, nil
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "paginate: %v", err)
+	}
+	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, err
 }
 
 func (q Keeper) GetAllOrdersByType(ctx context.Context, request *types.QueryOrdersByRequest) (*types.QueryOrdersResponse, error) {
 	clientCtx := sdk.UnwrapSDKContext(ctx)
-	var orders []*types.Order
+	orderStore := clientCtx.KVStore(q.storeKey)
+	iterator := sdk.KVStorePrefixIterator(orderStore, types.OTCOrderBookKey)
 
-	q.IterateAtomicOrders(clientCtx, func(order types.Order) bool {
+	var orders []*types.Order
+	pageRes, err := query.Paginate(orderStore, request.Pagination, func(key, value []byte) error {
+		order := q.MustUnmarshalOrder(iterator.Value())
 		acc := q.authKeeper.GetAccount(clientCtx, sdk.MustAccAddressFromBech32(order.Maker.MakerAddress))
 		if (acc != nil && request.OrderType == types.OrderType_SellToBuy) ||
 			(acc == nil && request.OrderType == types.OrderType_BuyToSell) {
 			orders = append(orders, &order)
+		} else {
+			return types.ErrInvalidCodec
 		}
-		return false
+		return nil
 	})
-
-	return &types.QueryOrdersResponse{Orders: orders}, nil
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "paginate: %v", err)
+	}
+	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, err
 }
 
 func (q Keeper) GetSubmittedOrders(ctx context.Context, request *types.QuerySubmittedOrdersRequest) (*types.QueryOrdersResponse, error) {
+
 	clientCtx := sdk.UnwrapSDKContext(ctx)
+	orderStore := clientCtx.KVStore(q.storeKey)
+	iterator := sdk.KVStorePrefixIterator(orderStore, types.OTCOrderBookKey)
 
 	var orders []*types.Order
-	q.IterateAtomicOrders(clientCtx, func(order types.Order) bool {
+	pageRes, err := query.Paginate(orderStore, request.Pagination, func(key, value []byte) error {
+		order := q.MustUnmarshalOrder(iterator.Value())
 		if order.Maker.MakerAddress == request.MakerAddress {
 			orders = append(orders, &order)
+		} else {
+			return types.ErrInvalidCodec
 		}
-		return false
+		return nil
 	})
-	return &types.QueryOrdersResponse{Orders: orders}, nil
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "paginate: %v", err)
+	}
+	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, err
 }
 
 func (q Keeper) GetTookOrders(ctx context.Context, request *types.QueryTookOrdersRequest) (*types.QueryOrdersResponse, error) {
 	clientCtx := sdk.UnwrapSDKContext(ctx)
+	orderStore := clientCtx.KVStore(q.storeKey)
+	iterator := sdk.KVStorePrefixIterator(orderStore, types.OTCOrderBookKey)
 
 	var orders []*types.Order
-	q.IterateAtomicOrders(clientCtx, func(order types.Order) bool {
+	pageRes, err := query.Paginate(orderStore, request.Pagination, func(key, value []byte) error {
+		order := q.MustUnmarshalOrder(iterator.Value())
 		if order.Takers.TakerAddress == request.TakerAddress {
 			orders = append(orders, &order)
+		} else {
+			return types.ErrInvalidCodec
 		}
-		return false
+		return nil
 	})
-	return &types.QueryOrdersResponse{Orders: orders}, nil
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "paginate: %v", err)
+	}
+	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, err
 }
 
 func (q Keeper) GetPrivateOrders(ctx context.Context, request *types.QueryPrivateOrdersRequest) (*types.QueryOrdersResponse, error) {
+
 	clientCtx := sdk.UnwrapSDKContext(ctx)
+	orderStore := clientCtx.KVStore(q.storeKey)
+	iterator := sdk.KVStorePrefixIterator(orderStore, types.OTCOrderBookKey)
 
 	var orders []*types.Order
-	q.IterateAtomicOrders(clientCtx, func(order types.Order) bool {
+	pageRes, err := query.Paginate(orderStore, request.Pagination, func(key, value []byte) error {
+		order := q.MustUnmarshalOrder(iterator.Value())
 		if order.Maker.DesiredTaker == request.DesireAddress {
 			orders = append(orders, &order)
+		} else {
+			return types.ErrInvalidCodec
 		}
-		return false
+		return nil
 	})
-	return &types.QueryOrdersResponse{Orders: orders}, nil
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "paginate: %v", err)
+	}
+	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, err
 }
 
 // Params implements the Query/Params gRPC method
