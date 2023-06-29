@@ -94,6 +94,14 @@ func (s *AtomicSwapTestSuite) TestAtomicSwap_HappyPath() {
 
 		s.AssertPacketRelayed(ctx, chainA, channelA.PortID, channelA.ChannelID, 1)
 
+		res, err := s.QueryAtomicswapOrders(ctx, chainA)
+		s.Require().NoError(err)
+		s.Require().Equal(len(res.Orders), 1)
+
+		res, err = s.QuerySubmittedAtomicswap(ctx, chainA, makerAddressOnChainA)
+		s.Require().NoError(err)
+		s.Require().Equal(len(res.Orders), 1)
+
 		// broadcast TAKE SWAP transaction
 		sellToken2 := sdk.NewCoin(chainB.Config().Denom, sdk.NewInt(50))
 		timeoutHeight2 := clienttypes.NewHeight(0, 110)

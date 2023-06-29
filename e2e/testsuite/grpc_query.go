@@ -208,9 +208,41 @@ func (s *E2ETestSuite) QueryInterchainMultiDepositOrders(ctx context.Context, ch
 // QueryClientStatus queries the status of the client by clientID
 func (s *E2ETestSuite) QueryAtomicswapOrders(ctx context.Context, chain ibc.Chain) (*atomicswaptypes.QueryOrdersResponse, error) {
 	queryClient := s.GetChainGRCPClients(chain).AtomicQueryClient
-	res, err := queryClient.Orders(
+	res, err := queryClient.GetAllOrders(
 		ctx,
 		&atomicswaptypes.QueryOrdersRequest{},
+	)
+
+	if err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
+// QueryClientStatus queries the status of the client by clientID
+func (s *E2ETestSuite) QueryAtomicswapByOrders(ctx context.Context, chain ibc.Chain, orderType atomicswaptypes.OrderType) (*atomicswaptypes.QueryOrdersResponse, error) {
+	queryClient := s.GetChainGRCPClients(chain).AtomicQueryClient
+	res, err := queryClient.GetAllOrdersByType(
+		ctx,
+		&atomicswaptypes.QueryOrdersByRequest{
+			OrderType: orderType,
+		},
+	)
+
+	if err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
+// QueryClientStatus queries the status of the client by clientID
+func (s *E2ETestSuite) QuerySubmittedAtomicswap(ctx context.Context, chain ibc.Chain, makeAddress string) (*atomicswaptypes.QueryOrdersResponse, error) {
+	queryClient := s.GetChainGRCPClients(chain).AtomicQueryClient
+	res, err := queryClient.GetSubmittedOrders(
+		ctx,
+		&atomicswaptypes.QuerySubmittedOrdersRequest{
+			MakerAddress: makeAddress,
+		},
 	)
 
 	if err != nil {

@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
@@ -15,12 +16,11 @@ var _ types.QueryServer = Keeper{}
 
 func (q Keeper) GetAllOrders(ctx context.Context, request *types.QueryOrdersRequest) (*types.QueryOrdersResponse, error) {
 	clientCtx := sdk.UnwrapSDKContext(ctx)
-	orderStore := clientCtx.KVStore(q.storeKey)
-	iterator := sdk.KVStorePrefixIterator(orderStore, types.OTCOrderBookKey)
-
+	store := clientCtx.KVStore(q.storeKey)
+	orderStore := prefix.NewStore(store, types.OTCOrderBookKey)
 	var orders []*types.Order
 	pageRes, err := query.Paginate(orderStore, request.Pagination, func(key, value []byte) error {
-		order := q.MustUnmarshalOrder(iterator.Value())
+		order := q.MustUnmarshalOrder(value)
 		orders = append(orders, &order)
 		return nil
 	})
@@ -32,12 +32,12 @@ func (q Keeper) GetAllOrders(ctx context.Context, request *types.QueryOrdersRequ
 
 func (q Keeper) GetAllOrdersByType(ctx context.Context, request *types.QueryOrdersByRequest) (*types.QueryOrdersResponse, error) {
 	clientCtx := sdk.UnwrapSDKContext(ctx)
-	orderStore := clientCtx.KVStore(q.storeKey)
-	iterator := sdk.KVStorePrefixIterator(orderStore, types.OTCOrderBookKey)
-
+	store := clientCtx.KVStore(q.storeKey)
+	orderStore := prefix.NewStore(store, types.OTCOrderBookKey)
 	var orders []*types.Order
+
 	pageRes, err := query.Paginate(orderStore, request.Pagination, func(key, value []byte) error {
-		order := q.MustUnmarshalOrder(iterator.Value())
+		order := q.MustUnmarshalOrder(value)
 		acc := q.authKeeper.GetAccount(clientCtx, sdk.MustAccAddressFromBech32(order.Maker.MakerAddress))
 		if (acc != nil && request.OrderType == types.OrderType_SellToBuy) ||
 			(acc == nil && request.OrderType == types.OrderType_BuyToSell) {
@@ -56,12 +56,12 @@ func (q Keeper) GetAllOrdersByType(ctx context.Context, request *types.QueryOrde
 func (q Keeper) GetSubmittedOrders(ctx context.Context, request *types.QuerySubmittedOrdersRequest) (*types.QueryOrdersResponse, error) {
 
 	clientCtx := sdk.UnwrapSDKContext(ctx)
-	orderStore := clientCtx.KVStore(q.storeKey)
-	iterator := sdk.KVStorePrefixIterator(orderStore, types.OTCOrderBookKey)
-
+	store := clientCtx.KVStore(q.storeKey)
+	orderStore := prefix.NewStore(store, types.OTCOrderBookKey)
 	var orders []*types.Order
+
 	pageRes, err := query.Paginate(orderStore, request.Pagination, func(key, value []byte) error {
-		order := q.MustUnmarshalOrder(iterator.Value())
+		order := q.MustUnmarshalOrder(value)
 		if order.Maker.MakerAddress == request.MakerAddress {
 			orders = append(orders, &order)
 		} else {
@@ -77,12 +77,11 @@ func (q Keeper) GetSubmittedOrders(ctx context.Context, request *types.QuerySubm
 
 func (q Keeper) GetTookOrders(ctx context.Context, request *types.QueryTookOrdersRequest) (*types.QueryOrdersResponse, error) {
 	clientCtx := sdk.UnwrapSDKContext(ctx)
-	orderStore := clientCtx.KVStore(q.storeKey)
-	iterator := sdk.KVStorePrefixIterator(orderStore, types.OTCOrderBookKey)
-
+	store := clientCtx.KVStore(q.storeKey)
+	orderStore := prefix.NewStore(store, types.OTCOrderBookKey)
 	var orders []*types.Order
 	pageRes, err := query.Paginate(orderStore, request.Pagination, func(key, value []byte) error {
-		order := q.MustUnmarshalOrder(iterator.Value())
+		order := q.MustUnmarshalOrder(value)
 		if order.Takers.TakerAddress == request.TakerAddress {
 			orders = append(orders, &order)
 		} else {
@@ -99,12 +98,11 @@ func (q Keeper) GetTookOrders(ctx context.Context, request *types.QueryTookOrder
 func (q Keeper) GetPrivateOrders(ctx context.Context, request *types.QueryPrivateOrdersRequest) (*types.QueryOrdersResponse, error) {
 
 	clientCtx := sdk.UnwrapSDKContext(ctx)
-	orderStore := clientCtx.KVStore(q.storeKey)
-	iterator := sdk.KVStorePrefixIterator(orderStore, types.OTCOrderBookKey)
-
+	store := clientCtx.KVStore(q.storeKey)
+	orderStore := prefix.NewStore(store, types.OTCOrderBookKey)
 	var orders []*types.Order
 	pageRes, err := query.Paginate(orderStore, request.Pagination, func(key, value []byte) error {
-		order := q.MustUnmarshalOrder(iterator.Value())
+		order := q.MustUnmarshalOrder(value)
 		if order.Maker.DesiredTaker == request.DesireAddress {
 			orders = append(orders, &order)
 		} else {

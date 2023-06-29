@@ -11,7 +11,6 @@ import (
 func (k msgServer) TakePool(ctx context.Context, msg *types.MsgTakePoolRequest) (*types.MsgTakePoolResponse, error) {
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	_ = sdkCtx
 
 	pool, found := k.GetInterchainLiquidityPool(sdkCtx, msg.PoolId)
 
@@ -21,6 +20,10 @@ func (k msgServer) TakePool(ctx context.Context, msg *types.MsgTakePoolRequest) 
 
 	if pool.SourceChainId == sdkCtx.ChainID() {
 		return nil, errorsmod.Wrapf(types.ErrFailedTakePool, "due to %", "same chain")
+	}
+
+	if pool.DestinationCreator != msg.Creator {
+		return nil, errorsmod.Wrapf(types.ErrFailedTakePool, "due to %", types.ErrNotEnoughPermission)
 	}
 
 	creatorAddr := sdk.MustAccAddressFromBech32(msg.Creator)
