@@ -42,8 +42,6 @@ func (q Keeper) GetAllOrdersByType(ctx context.Context, request *types.QueryOrde
 		if (acc != nil && request.OrderType == types.OrderType_SellToBuy) ||
 			(acc == nil && request.OrderType == types.OrderType_BuyToSell) {
 			orders = append(orders, &order)
-		} else {
-			return types.ErrInvalidCodec
 		}
 		return nil
 	})
@@ -84,8 +82,6 @@ func (q Keeper) GetTookOrders(ctx context.Context, request *types.QueryTookOrder
 		order := q.MustUnmarshalOrder(value)
 		if order.Takers.TakerAddress == request.TakerAddress {
 			orders = append(orders, &order)
-		} else {
-			return types.ErrInvalidCodec
 		}
 		return nil
 	})
@@ -105,8 +101,6 @@ func (q Keeper) GetPrivateOrders(ctx context.Context, request *types.QueryPrivat
 		order := q.MustUnmarshalOrder(value)
 		if order.Maker.DesiredTaker == request.DesireAddress {
 			orders = append(orders, &order)
-		} else {
-			return types.ErrInvalidCodec
 		}
 		return nil
 	})
