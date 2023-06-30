@@ -98,6 +98,14 @@ func (s *AtomicSwapTestSuite) TestAtomicSwap_HappyPath() {
 		s.Require().NoError(err)
 		s.Require().Equal(len(res.Orders), 1)
 
+		res, err = s.QueryAtomicswapByOrders(ctx, chainA, types.OrderType_SellToBuy)
+		s.Require().NoError(err)
+		s.Require().Equal(len(res.Orders), 1)
+
+		res, err = s.QueryAtomicswapByOrders(ctx, chainB, types.OrderType_BuyToSell)
+		s.Require().NoError(err)
+		s.Require().Equal(len(res.Orders), 1)
+
 		res, err = s.QuerySubmittedAtomicswap(ctx, chainA, makerAddressOnChainA)
 		s.Require().NoError(err)
 		s.Require().Equal(len(res.Orders), 1)

@@ -42,8 +42,6 @@ func (q Keeper) GetAllOrdersByType(ctx context.Context, request *types.QueryOrde
 		if (acc != nil && request.OrderType == types.OrderType_SellToBuy) ||
 			(acc == nil && request.OrderType == types.OrderType_BuyToSell) {
 			orders = append(orders, &order)
-		} else {
-			return types.ErrInvalidCodec
 		}
 		return nil
 	})
