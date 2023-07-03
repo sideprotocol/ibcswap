@@ -60,7 +60,7 @@ func (q Keeper) GetSubmittedOrders(ctx context.Context, request *types.QuerySubm
 
 	pageRes, err := query.Paginate(orderStore, request.Pagination, func(key, value []byte) error {
 		order := q.MustUnmarshalOrder(value)
-		if order.Maker.MakerAddress == request.MakerAddress {
+		if order.Maker != nil && order.Maker.MakerAddress == request.MakerAddress {
 			orders = append(orders, &order)
 		} else {
 			return types.ErrInvalidCodec
@@ -80,7 +80,8 @@ func (q Keeper) GetTookOrders(ctx context.Context, request *types.QueryTookOrder
 	var orders []*types.Order
 	pageRes, err := query.Paginate(orderStore, request.Pagination, func(key, value []byte) error {
 		order := q.MustUnmarshalOrder(value)
-		if order.Takers.TakerAddress == request.TakerAddress {
+		// Check if order.Takers is not nil before accessing TakerAddress
+		if order.Takers != nil && order.Takers.TakerAddress == request.TakerAddress {
 			orders = append(orders, &order)
 		}
 		return nil
