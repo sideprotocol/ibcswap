@@ -41,6 +41,5 @@ func (msg *MsgTakePoolRequest) ValidateBasic() error {
 	if err != nil {
 		return ErrInvalidAddress
 	}
-
 	return nil
 }

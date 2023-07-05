@@ -76,4 +76,5 @@ var (
 	ErrConnection                     = errorsmod.Register(ModuleName, 1563, "connection doesn't establish")
 	ErrAlreadyCompletedOrder          = errorsmod.Register(ModuleName, 1564, "already completed order")
 	ErrNotEnoughPermission            = errorsmod.Register(ModuleName, 1565, "not enough permission.")
+	ErrInvalidLiquidityPair           = errorsmod.Register(ModuleName, 1566, "invalid liquidity pair")
 )

@@ -65,10 +65,6 @@ func (msg *MsgMakePoolRequest) ValidateBasic() error {
 	if err != nil {
 		return ErrInvalidAddress
 	}
-	_, err = sdk.AccAddressFromBech32(msg.CounterPartyCreator)
-	if err != nil {
-		return ErrInvalidAddress
-	}
 
 	tokenCount := len(msg.Liquidity)
 	// Validation message

@@ -2,10 +2,8 @@ package keeper
 
 import (
 	"github.com/btcsuite/btcutil/bech32"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
@@ -112,12 +110,6 @@ func (k Keeper) OnMakeMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.
 		return types.ErrNotFoundPool
 	}
 
-	// Mint voucher tokens for the sender
-	//err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(req.Deposits[0].Sender), *res.PoolTokens[0])
-	// if err != nil {
-	// 	return err
-	// }
-	// Save the updated liquidity pool
 	k.SetInterchainLiquidityPool(ctx, pool)
 	return nil
 }
@@ -135,14 +127,6 @@ func (k Keeper) OnTakeMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.
 	if !found {
 		return types.ErrNotFoundMultiDepositOrder
 	}
-
-	// Mint voucher tokens for the sender
-	//err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(order.DestinationTaker), *stateChange.PoolTokens[1])
-
-	// if err != nil {
-	// 	return err
-	// }
-
 	// Update pool supply and status
 	for _, poolToken := range stateChange.PoolTokens {
 		pool.AddPoolSupply(*poolToken)
@@ -214,11 +198,9 @@ func (k Keeper) OnSwapAcknowledged(ctx sdk.Context, req *types.MsgSwapRequest, r
 	return nil
 }
 
+// onReceive
 func (k Keeper) OnMakePoolReceived(ctx sdk.Context, msg *types.MsgMakePoolRequest, poolID, sourceChainId string) (*string, error) {
 
-	if err := msg.ValidateBasic(); err != nil {
-		return nil, err
-	}
 	_, found := k.GetInterchainLiquidityPool(ctx, poolID)
 
 	if found {
@@ -254,11 +236,8 @@ func (k Keeper) OnMakePoolReceived(ctx sdk.Context, msg *types.MsgMakePoolReques
 }
 
 func (k Keeper) OnTakePoolReceived(ctx sdk.Context, msg *types.MsgTakePoolRequest) (*string, error) {
-	if err := msg.ValidateBasic(); err != nil {
-		return nil, err
-	}
-	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
 
+	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
 	if !found {
 		return nil, types.ErrNotFoundPool
 	}
@@ -284,10 +263,6 @@ func (k Keeper) OnTakePoolReceived(ctx sdk.Context, msg *types.MsgTakePoolReques
 
 func (k Keeper) OnSingleAssetDepositReceived(ctx sdk.Context, msg *types.MsgSingleAssetDepositRequest, stateChange *types.StateChange) (*types.MsgSingleAssetDepositResponse, error) {
 
-	if err := msg.ValidateBasic(); err != nil {
-		return nil, err
-	}
-
 	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
 	if !found {
 		return nil, types.ErrNotFoundPool
@@ -305,11 +280,6 @@ func (k Keeper) OnSingleAssetDepositReceived(ctx sdk.Context, msg *types.MsgSing
 
 // OnMultiAssetDepositReceived processes a double deposit request and returns a response or an error.
 func (k Keeper) OnMakeMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgMakeMultiAssetDepositRequest, stateChange *types.StateChange) (*types.MsgMultiAssetDepositResponse, error) {
-
-	// Validate the message
-	if err := msg.ValidateBasic(); err != nil {
-		return nil, err
-	}
 
 	// Verify the sender's address
 	senderAcc := k.authKeeper.GetAccount(ctx, sdk.MustAccAddressFromBech32(msg.Deposits[1].Sender))
@@ -396,11 +366,6 @@ func (k Keeper) OnTakeMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgT
 // OnMultiAssetWithdrawReceived processes a withdrawal request and returns a response or an error.
 func (k Keeper) OnMultiAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgMultiAssetWithdrawRequest, stateChange *types.StateChange) (*types.MsgMultiAssetWithdrawResponse, error) {
 
-	// Validate the message
-	if err := msg.ValidateBasic(); err != nil {
-		return nil, err
-	}
-
 	// Retrieve the liquidity pool
 	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolToken.Denom)
 	if !found {
@@ -437,11 +402,6 @@ func (k Keeper) OnMultiAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgMult
 // OnSwapReceived processes a swap request and returns a response or an error.
 func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest, stateChange *types.StateChange) (*types.MsgSwapResponse, error) {
 
-	// Validate the message
-	if err := msg.ValidateBasic(); err != nil {
-		return nil, err
-	}
-
 	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
 	if !found {
 		return nil, types.ErrNotFoundPool
@@ -461,57 +421,4 @@ func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest, state
 	return &types.MsgSwapResponse{
 		Tokens: stateChange.Out,
 	}, nil
-}
-
-func (k Keeper) executeDepositTx(ctx sdk.Context, msg sdk.Msg) ([]byte, error) {
-
-	txMsgData := &sdk.TxMsgData{
-		MsgResponses: make([]*codectypes.Any, 1),
-	}
-
-	// CacheContext returns a new context with the multi-store branched into a cached storage object
-	// writeCache is called only if all msgs succeed, performing state transitions atomically
-	cacheCtx, writeCache := ctx.CacheContext()
-	if err := msg.ValidateBasic(); err != nil {
-		return nil, err
-	}
-
-	any, err := k.executeMsg(cacheCtx, msg)
-	if err != nil {
-		return nil, err
-	}
-	writeCache()
-
-	txMsgData.MsgResponses[0] = any
-	txResponse, err := k.cdc.Marshal(txMsgData)
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "failed to marshal tx data")
-	}
-
-	return txResponse, nil
-}
-
-// Attempts to get the message handler from the router and if found will then execute the message.
-// If the message execution is successful, the proto marshaled message response will be returned.
-func (k Keeper) executeMsg(ctx sdk.Context, msg sdk.Msg) (*codectypes.Any, error) {
-	handler := k.msgRouter.Handler(msg)
-	if handler == nil {
-		return nil, types.ErrInvalidMsgRouter
-	}
-
-	res, err := handler(ctx, msg)
-	if err != nil {
-		return nil, err
-	}
-
-	// NOTE: The sdk msg handler creates a new EventManager, so events must be correctly propagated back to the current context
-	ctx.EventManager().EmitEvents(res.GetEvents())
-
-	// Each individual sdk.Result has exactly one Msg response. We aggregate here.
-	msgResponse := res.MsgResponses[0]
-	if msgResponse == nil {
-		return nil, errorsmod.Wrapf(types.ErrInvalidMsg, "got nil Msg response for msg %s", sdk.MsgTypeURL(msg))
-	}
-
-	return msgResponse, nil
 }

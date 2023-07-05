@@ -23,12 +23,6 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 		return nil, errormod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrNotFoundPool)
 	}
 
-	// // check asset owned status
-	// balance := k.bankKeeper.GetBalance(sdkCtx, sdk.MustAccAddressFromBech32(msg.Deposits[0].Sender), msg.Deposits[0].Balance.Denom)
-	// if balance.Amount.LT(msg.Deposits[0].Balance.Amount) {
-	// 	return nil, errormod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrInEnoughAmount)
-	// }
-
 	// Check initial deposit condition
 	if pool.Status != types.PoolStatus_ACTIVE {
 		return nil, errormod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrNotReadyForSwap)

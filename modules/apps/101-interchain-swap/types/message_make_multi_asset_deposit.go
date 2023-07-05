@@ -49,12 +49,15 @@ func (msg *MsgMakeMultiAssetDepositRequest) GetSignBytes() []byte {
 }
 
 func (msg *MsgMakeMultiAssetDepositRequest) ValidateBasic() error {
+	if len(msg.Deposits) != 2 {
+		return ErrInvalidLiquidityPair
+	}
+	_, err := sdk.AccAddressFromBech32(msg.Deposits[0].Sender)
+	if err != nil {
+		return ErrInvalidAddress
+	}
 	// Check address
 	for _, deposit := range msg.Deposits {
-		_, err := sdk.AccAddressFromBech32(deposit.Sender)
-		if err != nil {
-			return ErrInvalidAddress
-		}
 		if deposit.Balance.Amount.Equal(sdk.NewInt(0)) {
 			return ErrInvalidAmount
 		}

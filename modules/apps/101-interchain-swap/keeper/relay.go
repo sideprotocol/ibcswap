@@ -358,8 +358,12 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return err
 		}
-		//token = *msg.
-		//sender = msg.Sender
+		order, found := k.GetMultiDepositOrder(ctx, msg.PoolId, msg.OrderId)
+		if !found {
+			return types.ErrNotFoundMultiDepositOrder
+		}
+		token = *order.Deposits[1]
+		sender = msg.Sender
 	case types.MULTI_WITHDRAW:
 		var msg types.MsgMultiAssetWithdrawRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {

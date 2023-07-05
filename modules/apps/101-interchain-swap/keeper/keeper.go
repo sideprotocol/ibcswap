@@ -166,7 +166,6 @@ func (k Keeper) GetCounterPartyChainID(ctx sdk.Context, portID, channelID string
 	if err != nil {
 		return "", false
 	}
-
 	// Cast the client state to Tendermint type
 	tmClientState, ok := clientState.(*ibctmtypes.ClientState)
 	if !ok {

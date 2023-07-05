@@ -100,12 +100,6 @@ message MsgMultiAssetWithdrawRequest {
   uint64 timeoutTimeStamp  = 6;  
 }
 
-message WithdrawAsset {
-  string receiver = 1;
-  cosmos.base.v1beta1.Coin balance = 2;
-}
-
-
 message MsgMultiAssetWithdrawResponse {
   repeated cosmos.base.v1beta1.Coin tokens = 1;
 }
