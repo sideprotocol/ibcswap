@@ -71,7 +71,7 @@ func (k Keeper) SingleAssetDeposit(ctx context.Context, msg *types.MsgSingleAsse
 		timeoutStamp = msg.TimeoutTimeStamp
 	}
 
-	err = k.SendIBCSwapPacket(sdkCtx, pool.CounterPartyPort, pool.CounterPartyChannel, timeoutHeight, timeoutStamp, packet)
+	err = k.SendIBCSwapPacket(sdkCtx, msg.Port, msg.Channel, timeoutHeight, timeoutStamp, packet)
 	if err != nil {
 		return nil, err
 	}

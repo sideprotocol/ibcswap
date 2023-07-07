@@ -142,6 +142,8 @@ func (s *InterchainswapTestSuite) TestMakePoolMsgPacket() {
 		msg := types.NewMsgTakePool(
 			chainBAddress,
 			pool.Id,
+			channelB.PortID,
+			channelB.ChannelID,
 		)
 
 		resp, err := s.BroadcastMessages(ctx, chainB, chainBWallet, msg)

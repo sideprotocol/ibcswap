@@ -57,7 +57,6 @@ func (k Keeper) SendIBCSwapPacket(
 	if _, err := k.ics4Wrapper.SendPacket(ctx, channelCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, swapPacket.GetBytes()); err != nil {
 		return err
 	}
-
 	return nil
 }
 

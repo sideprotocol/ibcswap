@@ -106,6 +106,8 @@ func (suite *KeeperTestSuite) TestMsgDoubleDeposit() {
 		*pooId,
 		[]string{suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String()},
 		[]*sdk.Coin{{Denom: denomPair[0], Amount: sdk.NewInt(1000)}, {Denom: denomPair[1], Amount: sdk.NewInt(1000)}},
+		"interchainswap",
+		"channel-0",
 	)
 
 	res, err := suite.chainB.GetSimApp().InterchainSwapKeeper.OnMakeMultiAssetDepositReceived(

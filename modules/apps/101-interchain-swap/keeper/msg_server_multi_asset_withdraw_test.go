@@ -30,6 +30,8 @@ func (suite *KeeperTestSuite) TestMsgWithdraw() {
 					*poolId,
 					suite.chainA.SenderAccount.GetAddress().String(),
 					&sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(1000)},
+					"interchainswap",
+					"channel-0",
 				)
 
 				err := suite.chainA.GetSimApp().InterchainSwapKeeper.OnSingleAssetDepositAcknowledged(
@@ -75,6 +77,8 @@ func (suite *KeeperTestSuite) TestMsgWithdraw() {
 			suite.chainA.SenderAccount.GetAddress().String(),
 			suite.chainB.SenderAccount.GetAddress().String(),
 			&coin,
+			"interchainswap",
+			"channel-0",
 		)
 
 		tc.malleate()

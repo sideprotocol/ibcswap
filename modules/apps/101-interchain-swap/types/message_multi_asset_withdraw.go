@@ -8,12 +8,14 @@ const TypeMsgWithdraw = "withdraw"
 
 var _ sdk.Msg = &MsgMultiAssetWithdrawRequest{}
 
-func NewMsgMultiAssetWithdraw(poolId string, sourceReceiver, destinationReceiver string, poolToken *sdk.Coin) *MsgMultiAssetWithdrawRequest {
+func NewMsgMultiAssetWithdraw(poolId string, sourceReceiver, destinationReceiver string, poolToken *sdk.Coin, port, channel string) *MsgMultiAssetWithdrawRequest {
 	return &MsgMultiAssetWithdrawRequest{
 		PoolId:               poolId,
 		Receiver:             sourceReceiver,
 		CounterPartyReceiver: destinationReceiver,
 		PoolToken:            poolToken,
+		Port:                 port,
+		Channel:              channel,
 	}
 }
 
@@ -45,6 +47,12 @@ func (msg *MsgMultiAssetWithdrawRequest) ValidateBasic() error {
 	}
 	if msg.PoolToken.Amount.LTE(sdk.NewInt(0)) {
 		return ErrInvalidAmount
+	}
+	if msg.Channel == "" {
+		return ErrMissedIBCParams
+	}
+	if msg.Port == "" {
+		msg.Port = PortID
 	}
 	return nil
 }

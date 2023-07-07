@@ -14,13 +14,15 @@ var _ = strconv.Itoa(0)
 
 func CmdSingleAssetDeposit() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "single_asset_deposit [pool-id] [sender] [pool-token]",
+		Use:   "single_asset_deposit [pool-id] [sender] [pool-token] [port] [channel]",
 		Short: "Broadcast message Deposit",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argPoolId := args[0]
 			argSender := args[1]
 			argTokens := args[2]
+			argPort := args[3]
+			argChannel := args[4]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -36,6 +38,8 @@ func CmdSingleAssetDeposit() *cobra.Command {
 				argPoolId,
 				argSender,
 				tokens[0],
+				argPort,
+				argChannel,
 			)
 
 			packetTimeoutHeight, err1 := cmd.Flags().GetString("packet-timeout-height")

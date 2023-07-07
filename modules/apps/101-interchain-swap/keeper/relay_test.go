@@ -93,6 +93,8 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 					"test pool id",
 					suite.chainA.SenderAccount.GetAddress().String(),
 					&sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(1000)},
+					"interchainswap",
+					"channel-0",
 				)
 
 				msgbyte, err = types.ModuleCdc.Marshal(msg)
@@ -111,6 +113,8 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 						Denom:  sdk.DefaultBondDenom,
 						Amount: sdk.NewInt(10),
 					},
+					"interchainswap",
+					"channel-0",
 				)
 
 				msgbyte, err = types.ModuleCdc.Marshal(msg)

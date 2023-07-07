@@ -8,7 +8,7 @@ const TypeMsgMakeMultiAssetDeposit = "make_multi_asset_deposit"
 
 var _ sdk.Msg = &MsgMakeMultiAssetDepositRequest{}
 
-func NewMsgMakeMultiAssetDeposit(poolId string, senders []string, tokens []*sdk.Coin) *MsgMakeMultiAssetDepositRequest {
+func NewMsgMakeMultiAssetDeposit(poolId string, senders []string, tokens []*sdk.Coin, port, channel string) *MsgMakeMultiAssetDepositRequest {
 	return &MsgMakeMultiAssetDepositRequest{
 		PoolId: poolId,
 		Deposits: []*DepositAsset{
@@ -21,6 +21,8 @@ func NewMsgMakeMultiAssetDeposit(poolId string, senders []string, tokens []*sdk.
 				Balance: tokens[1],
 			},
 		},
+		Port:    port,
+		Channel: channel,
 	}
 }
 
@@ -61,6 +63,9 @@ func (msg *MsgMakeMultiAssetDepositRequest) ValidateBasic() error {
 		if deposit.Balance.Amount.Equal(sdk.NewInt(0)) {
 			return ErrInvalidAmount
 		}
+	}
+	if msg.Port == "" || msg.Channel == "" {
+		return ErrMissedIBCParams
 	}
 	return nil
 }

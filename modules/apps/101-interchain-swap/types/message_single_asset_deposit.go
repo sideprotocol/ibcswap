@@ -9,11 +9,13 @@ const TypeMsgDeposit = "deposit"
 
 var _ sdk.Msg = &MsgSingleAssetDepositRequest{}
 
-func NewMsgSingleAssetDeposit(poolId string, sender string, token *sdk.Coin) *MsgSingleAssetDepositRequest {
+func NewMsgSingleAssetDeposit(poolId string, sender string, token *sdk.Coin, port, channel string) *MsgSingleAssetDepositRequest {
 	return &MsgSingleAssetDepositRequest{
-		PoolId: poolId,
-		Sender: sender,
-		Token:  token,
+		PoolId:  poolId,
+		Sender:  sender,
+		Token:   token,
+		Port:    port,
+		Channel: channel,
 	}
 }
 
@@ -39,7 +41,7 @@ func (msg *MsgSingleAssetDepositRequest) GetSignBytes() []byte {
 }
 
 func (msg *MsgSingleAssetDepositRequest) ValidateBasic() error {
-	
+
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)
@@ -50,6 +52,13 @@ func (msg *MsgSingleAssetDepositRequest) ValidateBasic() error {
 
 	if msg.Token.Amount.Equal(sdk.NewInt(0)) {
 		return errorsmod.Wrapf(ErrFailedDeposit, "because of %s", ErrInvalidAmount)
+	}
+
+	if msg.Channel == "" {
+		return ErrMissedIBCParams
+	}
+	if msg.Port == "" {
+		msg.Port = PortID
 	}
 	return nil
 }

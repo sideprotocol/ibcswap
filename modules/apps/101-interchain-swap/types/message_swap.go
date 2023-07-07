@@ -11,7 +11,7 @@ const TypeMsgSwap = "swap"
 
 var _ sdk.Msg = &MsgSwapRequest{}
 
-func NewMsgSwap(swapType SwapMsgType, sender, poolId string, slippage uint64, recipient string, tokenIn, tokenOut *sdk.Coin) *MsgSwapRequest {
+func NewMsgSwap(swapType SwapMsgType, sender, poolId string, slippage uint64, recipient string, tokenIn, tokenOut *sdk.Coin, port, channel string) *MsgSwapRequest {
 	return &MsgSwapRequest{
 		PoolId:    poolId,
 		Sender:    sender,
@@ -19,6 +19,8 @@ func NewMsgSwap(swapType SwapMsgType, sender, poolId string, slippage uint64, re
 		Recipient: recipient,
 		TokenIn:   tokenIn,
 		TokenOut:  tokenOut,
+		Port:      port,
+		Channel:   channel,
 	}
 }
 
@@ -66,6 +68,12 @@ func (msg *MsgSwapRequest) ValidateBasic() error {
 	if msg.Slippage == 0 {
 		return ErrInvalidSlippage
 	}
+	if msg.Channel == "" {
+		return ErrMissedIBCParams
+	}
 
+	if msg.Port == "" {
+		msg.Port = PortID
+	}
 	return nil
 }

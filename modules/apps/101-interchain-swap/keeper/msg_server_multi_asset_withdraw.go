@@ -61,7 +61,7 @@ func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMulti
 		timeoutStamp = msg.TimeoutTimeStamp
 	}
 
-	err = k.SendIBCSwapPacket(ctx, pool.CounterPartyPort, pool.CounterPartyChannel, timeoutHeight, uint64(timeoutStamp), packet)
+	err = k.SendIBCSwapPacket(ctx, msg.Port, msg.Channel, timeoutHeight, uint64(timeoutStamp), packet)
 	if err != nil {
 		return nil, types.ErrFailedWithdraw
 	}

@@ -65,18 +65,17 @@ func (msg *MsgMakePoolRequest) ValidateBasic() error {
 	if err != nil {
 		return ErrInvalidAddress
 	}
-
-	tokenCount := len(msg.Liquidity)
-	// Validation message
-	if tokenCount != 2 {
-		return ErrInvalidDenomPair
-	}
-
 	if err := ValidateLiquidityBasic(msg.Liquidity); err != nil {
 		return err
 	}
 	if msg.SwapFee < 0 || msg.SwapFee > 10000 {
 		return ErrInvalidSwapFee
+	}
+	if msg.SourceChannel == "" {
+		return ErrMissedIBCParams
+	}
+	if msg.SourcePort == "" {
+		msg.SourcePort = PortID
 	}
 	return nil
 }

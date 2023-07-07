@@ -17,9 +17,9 @@ var _ = strconv.Itoa(0)
 
 func CmdSwap() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "swap [swap_type] [sender] [poolId] [slippage] [recipient] [tokenIn] [tokenOut]",
+		Use:   "swap [swap_type] [sender] [poolId] [slippage] [recipient] [tokenIn] [tokenOut] [port] [channel]",
 		Short: "Broadcast message Swap",
-		Args:  cobra.ExactArgs(7),
+		Args:  cobra.ExactArgs(9),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			swapTypeArg := args[0]
 
@@ -54,6 +54,8 @@ func CmdSwap() *cobra.Command {
 			fmt.Println(argSender)
 			argTokenIn := args[5]
 			argTokenOut := args[6]
+			argPort := args[7]
+			argChannel := args[8]
 
 			tokenIn, err := GetTokens(argTokenIn)
 			if err != nil {
@@ -73,12 +75,13 @@ func CmdSwap() *cobra.Command {
 				argRecipient,
 				tokenIn[0],
 				tokenOut[0],
+				argPort,
+				argChannel,
 			)
 
 			packetTimeoutHeight, err1 := cmd.Flags().GetString("packet-timeout-height")
 			packetTimeoutTimestamp, err2 := cmd.Flags().GetUint("packet-timeout-timestamp")
 
-		
 			pool, err := QueryPool(clientCtx, poolId)
 			if err != nil {
 				return err

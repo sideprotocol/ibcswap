@@ -69,7 +69,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 
 	const initialX = 2_000_000 // USDT
 	const initialY = 1000      // ETH
-
+	const channel = "channel-0"
 	t.Run("start relayer", func(t *testing.T) {
 		s.StartRelayer(relayer)
 	})
@@ -108,7 +108,6 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 		// check pool info in chainA and chainB
 		poolA := getFirstPool(s, ctx, chainA)
 
-
 		s.Require().EqualValues(msg.SourceChannel, poolA.CounterPartyChannel)
 		s.Require().EqualValues(msg.SourcePort, poolA.CounterPartyPort)
 		//s.Require().EqualValues(msg.Tokens[0].Amount, poolAInfo.Supply.Amount)
@@ -140,7 +139,7 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 		//poolId := types.GetPoolId([]string{chainADenom, chainBDenom})
 		depositCoin := sdk.Coin{Denom: chainBDenom, Amount: sdk.NewInt(1000)}
 
-		msg := types.NewMsgTakePool(chainBAddress, pool.Id)
+		msg := types.NewMsgTakePool(chainBAddress, pool.Id, channelB.PortID, channelB.ChannelID)
 		resp, err := s.BroadcastMessages(ctx, chainB, chainBWallet, msg)
 		s.AssertValidTxResponse(resp)
 		s.Require().NoError(err)
@@ -213,6 +212,8 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 			recipient,
 			&tokenIn,
 			tokenOut,
+			channelB.PortID,
+			channelB.ChannelID,
 		)
 
 		resp, err := s.BroadcastMessages(ctx, chainB, chainBWallet, msg)
@@ -269,6 +270,8 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 			chainAAddress,
 			chainBAddress,
 			chainAPoolToken.Balance,
+			channelA.PortID,
+			channelA.ChannelID,
 		)
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
 		s.AssertValidTxResponse(resp)
@@ -288,6 +291,8 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacket() {
 			chainAAddress,
 			chainBAddress,
 			chainAPoolToken.Balance,
+			channelA.PortID,
+			channelA.ChannelID,
 		)
 
 		resp, err = s.BroadcastMessages(ctx, chainA, chainAWallet, withdrawMsg)
@@ -379,6 +384,8 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacketErrors() {
 			pool.Id,
 			chainAInvalidAddress,
 			&depositCoin,
+			channelA.PortID,
+			channelA.ChannelID,
 		)
 
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
@@ -399,6 +406,8 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacketErrors() {
 			chainAInvalidAddress,
 			chainBInvalidAddress,
 			poolCoin,
+			channelA.PortID,
+			channelA.ChannelID,
 		)
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
 		s.Require().Equal("invalid address", resp.RawLog)
@@ -418,6 +427,8 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacketErrors() {
 			sender,
 			&tokenIn,
 			&tokenOut,
+			channelA.PortID,
+			channelA.ChannelID,
 		)
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
 		s.Require().Equal("invalid address", resp.RawLog)
@@ -432,6 +443,8 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacketErrors() {
 			pool.Id,
 			chainAAddress,
 			&depositCoin,
+			channelA.PortID,
+			channelA.ChannelID,
 		)
 
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
@@ -452,6 +465,8 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacketErrors() {
 			chainAInvalidAddress,
 			chainBInvalidAddress,
 			poolCoin,
+			channelA.PortID,
+			channelA.ChannelID,
 		)
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
 		s.Require().Equal("failed to execute message; message index: 0: Invalid token amount", resp.RawLog)
@@ -472,6 +487,8 @@ func (s *InterchainswapTestSuite) TestBasicMsgPacketErrors() {
 			sender,
 			&tokenIn,
 			&tokenOut,
+			channelA.PortID,
+			channelA.ChannelID,
 		)
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)
 		s.Require().Equal("failed to execute message; message index: 0: 99998000atoma is smaller than 1000000000000atoma: insufficient funds", resp.RawLog)

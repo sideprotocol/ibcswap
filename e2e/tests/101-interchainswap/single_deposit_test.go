@@ -139,6 +139,8 @@ func (s *InterchainswapTestSuite) TestSingleDepositStatus() {
 		msg := types.NewMsgTakePool(
 			chainBAddress,
 			pool.Id,
+			channelB.PortID,
+			channelB.ChannelID,
 		)
 
 		resp, err := s.BroadcastMessages(ctx, chainB, chainBWallet, msg)
@@ -254,6 +256,8 @@ func (s *InterchainswapTestSuite) TestSingleDepositStatus() {
 						chainBAddress,
 					},
 					depositTokens,
+					channel.PortID,
+					channel.ChannelID,
 				)
 
 				txRes, err := s.BroadcastMessages(ctx, chain, &wallet, msg)
@@ -264,6 +268,8 @@ func (s *InterchainswapTestSuite) TestSingleDepositStatus() {
 					chainBAddress,
 					poolId,
 					0,
+					channel.PortID,
+					channel.ChannelID,
 				)
 
 				txRes, err := s.BroadcastMessages(ctx, chain, &wallet, msg)
@@ -322,6 +328,8 @@ func (s *InterchainswapTestSuite) TestSingleDepositStatus() {
 			chainAAddress,
 			chainBAddress,
 			sourceMakerPoolToken.Balance,
+			channelA.PortID,
+			channelA.ChannelID,
 		)
 
 		resp, err := s.BroadcastMessages(ctx, chainA, chainAWallet, msg)

@@ -44,8 +44,10 @@ message MsgMakePoolResponse {
 message MsgTakePoolRequest {
   string creator = 1;
   string poolId  = 2;
-  ibc.core.client.v1.Height timeoutHeight = 3 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
-  uint64 timeoutTimeStamp  = 4;           
+  string port     = 3;
+  string channel  = 4;
+  ibc.core.client.v1.Height timeoutHeight = 5 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
+  uint64 timeoutTimeStamp  = 6;           
 }
 
 message MsgTakePoolResponse {
@@ -57,8 +59,10 @@ message MsgSingleAssetDepositRequest {
            string                         poolId = 1 ;
            string                         sender = 2 ;
            cosmos.base.v1beta1.Coin       token = 3;
-           ibc.core.client.v1.Height timeoutHeight = 4;
-           uint64 timeoutTimeStamp  = 5;  
+           string port     = 4;
+           string channel  = 5;
+           ibc.core.client.v1.Height timeoutHeight = 6;
+           uint64 timeoutTimeStamp  = 7;  
 }
 
 message MsgSingleAssetDepositResponse {
@@ -69,8 +73,10 @@ message MsgSingleAssetDepositResponse {
 message MsgMakeMultiAssetDepositRequest {
   string        poolId = 1;
   repeated DepositAsset deposits = 2;
-  ibc.core.client.v1.Height timeoutHeight = 3;
-  uint64 timeoutTimeStamp  = 4; 
+  string port     = 3;
+  string channel  = 4;
+  ibc.core.client.v1.Height timeoutHeight = 5;
+  uint64 timeoutTimeStamp  = 6; 
 }
 
 // make multi-asset deposit order
@@ -78,8 +84,10 @@ message MsgTakeMultiAssetDepositRequest {
   string        sender = 1;
   string        poolId = 2;
   uint64        orderId = 3;
-  ibc.core.client.v1.Height timeoutHeight = 4;
-  uint64 timeoutTimeStamp  = 5; 
+  string port     = 4;
+  string channel  = 5;
+  ibc.core.client.v1.Height timeoutHeight = 6;
+  uint64 timeoutTimeStamp  = 7; 
 }
 
 message DepositAsset {
@@ -96,8 +104,10 @@ message MsgMultiAssetWithdrawRequest {
   string receiver = 2;
   string counterPartyReceiver = 3;
   cosmos.base.v1beta1.Coin poolToken = 4;
-  ibc.core.client.v1.Height timeoutHeight = 5;
-  uint64 timeoutTimeStamp  = 6;  
+  string port     = 5;
+  string channel  = 6;
+  ibc.core.client.v1.Height timeoutHeight = 7;
+  uint64 timeoutTimeStamp  = 8;  
 }
 
 message MsgMultiAssetWithdrawResponse {
@@ -116,8 +126,10 @@ message MsgSwapRequest {
   cosmos.base.v1beta1.Coin tokenOut = 5;
   uint64 slippage  = 6;
   string recipient = 7;
-  ibc.core.client.v1.Height timeoutHeight = 8;
-  uint64 timeoutTimeStamp  = 9;   
+  string port     = 8;
+  string channel  = 9;
+  ibc.core.client.v1.Height timeoutHeight = 10;
+  uint64 timeoutTimeStamp  = 11;   
 }
 
 message MsgSwapResponse {

@@ -129,6 +129,8 @@ func (suite *KeeperTestSuite) TestMsgDeposit() {
 			*pooId,
 			suite.chainA.SenderAccount.GetAddress().String(),
 			&sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(1000)},
+			"interchainswap",
+			"channel-0",
 		)
 
 		tc.malleate()

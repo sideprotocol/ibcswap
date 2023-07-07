@@ -11,22 +11,25 @@ import (
 
 func CmdTakePool() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "take-pool [pool-id] [creator]",
+		Use:   "take-pool [pool-id] [creator] [port] [channel]",
 		Short: "Broadcast message TakePool",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
+
 			poolId := args[0]
 			creator := args[1]
+			port := args[2]
+			channel := args[3]
 
 			if _, err = sdk.AccAddressFromBech32(creator); err != nil {
 				return err
 			}
 
-			msg := types.NewMsgTakePool(poolId, creator)
+			msg := types.NewMsgTakePool(poolId, creator, port, channel)
 
 			packetTimeoutHeight, err1 := cmd.Flags().GetString("packet-timeout-height")
 			packetTimeoutTimestamp, err2 := cmd.Flags().GetUint("packet-timeout-timestamp")

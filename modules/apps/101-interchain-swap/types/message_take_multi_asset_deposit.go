@@ -8,11 +8,13 @@ const TypeMsgTakeMultiAssetDeposit = "take_multi_asset_deposit"
 
 var _ sdk.Msg = &MsgTakeMultiAssetDepositRequest{}
 
-func NewMsgTakeMultiAssetDeposit(sender, poolId string, orderId uint64) *MsgTakeMultiAssetDepositRequest {
+func NewMsgTakeMultiAssetDeposit(sender, poolId string, orderId uint64, port, channel string) *MsgTakeMultiAssetDepositRequest {
 	return &MsgTakeMultiAssetDepositRequest{
 		Sender:  sender,
 		PoolId:  poolId,
 		OrderId: orderId,
+		Port: port,
+		Channel: channel,
 	}
 }
 
@@ -41,5 +43,11 @@ func (msg *MsgTakeMultiAssetDepositRequest) GetSignBytes() []byte {
 }
 
 func (msg *MsgTakeMultiAssetDepositRequest) ValidateBasic() error {
+	if msg.Channel == "" {
+		return ErrMissedIBCParams
+	}
+	if msg.Port == "" {
+		msg.Port = PortID
+	}
 	return nil
 }

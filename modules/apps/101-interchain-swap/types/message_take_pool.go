@@ -8,10 +8,12 @@ const TypeMsgTakePool = "take_pool"
 
 var _ sdk.Msg = &MsgTakePoolRequest{}
 
-func NewMsgTakePool(creator, poolId string) *MsgTakePoolRequest {
+func NewMsgTakePool(creator, poolId, port, channel string) *MsgTakePoolRequest {
 	return &MsgTakePoolRequest{
 		Creator: creator,
 		PoolId:  poolId,
+		Port:    port,
+		Channel: channel,
 	}
 }
 
@@ -40,6 +42,12 @@ func (msg *MsgTakePoolRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return ErrInvalidAddress
+	}
+	if msg.Channel == "" {
+		return ErrMissedIBCParams
+	}
+	if msg.Port == "" {
+		msg.Port = PortID
 	}
 	return nil
 }

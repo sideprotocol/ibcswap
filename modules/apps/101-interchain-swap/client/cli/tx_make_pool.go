@@ -14,31 +14,31 @@ import (
 
 func CmdMakePool() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "make-pool [source-port] [source-channel] [creator] [counterPartyCreator] [weight] [tokens] [decimals] [swap-fee]",
+		Use:   "make-pool [creator] [counterPartyCreator] [weight] [tokens] [decimals] [swap-fee] [channel]",
 		Short: "Broadcast message MakePool",
-		Args:  cobra.ExactArgs(9),
+		Args:  cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			weights, err := parseWeights(args[5])
+			weights, err := parseWeights(args[2])
 			if err != nil {
 				return err
 			}
 
-			tokens, err := GetTokens(args[6])
+			tokens, err := GetTokens(args[3])
 			if err != nil {
 				return err
 			}
 
-			decimals, err := parseDecimals(args[7])
+			decimals, err := parseDecimals(args[4])
 			if err != nil {
 				return err
 			}
 
-			swapFee, err := strconv.Atoi(args[8])
+			swapFee, err := strconv.Atoi(args[5])
 			if err != nil {
 				return err
 			}
@@ -48,10 +48,10 @@ func CmdMakePool() *cobra.Command {
 			}
 
 			msg := types.NewMsgMakePool(
-				args[0], // argSourcePort
-				args[1], // argSourceChannel
-				args[2], // argSender
-				args[3], // argCounterPartySender
+				args[6], // argSourcePort
+				args[7], // argSourceChannel
+				args[0], // argSender
+				args[1], // argCounterPartySender
 				types.PoolAsset{
 					Side:    types.PoolAssetSide_SOURCE,
 					Balance: tokens[0],

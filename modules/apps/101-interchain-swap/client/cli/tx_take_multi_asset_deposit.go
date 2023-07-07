@@ -16,13 +16,15 @@ var _ = strconv.Itoa(0)
 
 func CmdTakeMultiAssetDeposit() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "take_multi_asset_deposit [sender] [pool-id] [order-id]",
+		Use:   "take_multi_asset_deposit [sender] [pool-id] [order-id] [port] [channel]",
 		Short: "Broadcast message TakeMultiAssetDeposit",
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argSender := args[0]
 			argPoolId := args[1]
 			argOrderId := args[2]
+			argPort := args[3]
+			argChannel := args[4]
 
 			orderId, err := strconv.Atoi(argOrderId)
 			if err != nil {
@@ -41,6 +43,8 @@ func CmdTakeMultiAssetDeposit() *cobra.Command {
 				argSender,
 				argPoolId,
 				uint64(orderId),
+				argPort,
+				argChannel,
 			)
 
 			packetTimeoutHeight, err1 := cmd.Flags().GetString("packet-timeout-height")
