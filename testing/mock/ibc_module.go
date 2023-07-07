@@ -34,6 +34,7 @@ func (im IBCModule) OnChanOpenInit(
 	ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID string,
 	channelID string, chanCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, version string,
 ) (string, error) {
+
 	if strings.TrimSpace(version) == "" {
 		version = Version
 	}

@@ -15,7 +15,7 @@ func (k msgServer) MakePool(ctx context.Context, msg *types.MsgMakePoolRequest) 
 
 	counterPartyChainId, connected := k.GetCounterPartyChainID(sdkCtx, msg.SourcePort, msg.SourceChannel)
 	if !connected {
-		return nil, errormod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrConnection)
+		return nil, errormod.Wrapf(types.ErrFailedMakePool, "%s", types.ErrConnection)
 	}
 
 	denoms := []string{}
@@ -26,7 +26,7 @@ func (k msgServer) MakePool(ctx context.Context, msg *types.MsgMakePoolRequest) 
 	_, found := k.GetInterchainLiquidityPool(sdkCtx, poolId)
 
 	if found {
-		return nil, errormod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrNotFoundPool)
+		return nil, errormod.Wrapf(types.ErrFailedMakePool, "%s", types.ErrAlreadyExistPool)
 	}
 
 	// Validate message

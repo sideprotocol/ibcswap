@@ -62,8 +62,6 @@ func (q Keeper) GetSubmittedOrders(ctx context.Context, request *types.QuerySubm
 		order := q.MustUnmarshalOrder(value)
 		if order.Maker != nil && order.Maker.MakerAddress == request.MakerAddress {
 			orders = append(orders, &order)
-		} else {
-			return types.ErrInvalidCodec
 		}
 		return nil
 	})
