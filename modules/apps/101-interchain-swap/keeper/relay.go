@@ -62,10 +62,10 @@ func (k Keeper) SendIBCSwapPacket(
 func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.IBCSwapPacketData) ([]byte, error) {
 	switch data.Type {
 	case types.MAKE_POOL:
-		var msg types.MsgMakePoolRequest
-		if err := types.ModuleCdc.UnmarshalJSON(data.Data, &msg); err != nil {
-			return nil, err
-		}
+		// var msg types.MsgMakePoolRequest
+		// if err := types.ModuleCdc.UnmarshalJSON(data.Data, &msg); err != nil {
+		// 	return nil, err
+		// }
 
 		// if strings.TrimSpace(data.StateChange.PoolId) == "" {
 		// 	return nil, types.ErrEmptyPoolId
