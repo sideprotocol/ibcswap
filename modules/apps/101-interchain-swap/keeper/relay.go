@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
@@ -64,19 +63,19 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	switch data.Type {
 	case types.MAKE_POOL:
 		var msg types.MsgMakePoolRequest
-		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+		if err := types.ModuleCdc.UnmarshalJSON(data.Data, &msg); err != nil {
 			return nil, err
 		}
 
-		if strings.TrimSpace(data.StateChange.PoolId) == "" {
-			return nil, types.ErrEmptyPoolId
-		}
+		// if strings.TrimSpace(data.StateChange.PoolId) == "" {
+		// 	return nil, types.ErrEmptyPoolId
+		// }
 
-		poolId, err := k.OnMakePoolReceived(ctx, &msg, data.StateChange.PoolId, data.StateChange.SourceChainId)
-		if err != nil {
-			return nil, err
-		}
-		resData, err := types.ModuleCdc.Marshal(&types.MsgMakePoolResponse{PoolId: *poolId})
+		// poolId, err := k.OnMakePoolReceived(ctx, &msg, data.StateChange.PoolId, data.StateChange.SourceChainId)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		resData, err := types.ModuleCdc.Marshal(&types.MsgMakePoolResponse{PoolId: " *poolId"})
 		return resData, err
 
 	case types.TAKE_POOL:
