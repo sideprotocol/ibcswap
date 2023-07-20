@@ -73,11 +73,14 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 	if tokenOut.Amount.LT(expected) {
 		return nil, errorsmod.Wrapf(types.ErrFailedOnSwapReceived, "slippage check failed! expected: %v, output: %v, factor: %d", expected, tokenOut, factor)
 	}
-
+	stateData, err := types.ModuleCdc.Marshal(&types.StateChange{Out: []*sdk.Coin{tokenOut}})
+	if err != nil {
+		return nil, err
+	}
 	packet := types.IBCSwapPacketData{
 		Type:        msgType,
 		Data:        swapData,
-		StateChange: &types.StateChange{Out: []*sdk.Coin{tokenOut}},
+		StateChange: stateData,
 	}
 
 	timeoutHeight, timeoutTimestamp := types.GetDefaultTimeOut(&sdkCtx)

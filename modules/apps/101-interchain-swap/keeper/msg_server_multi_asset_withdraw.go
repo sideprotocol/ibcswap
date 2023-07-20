@@ -42,14 +42,18 @@ func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMulti
 	if err != nil {
 		return nil, err
 	}
+	stateData, err := types.ModuleCdc.Marshal(&types.StateChange{
+		Out:        outs,
+		PoolTokens: []*sdk.Coin{msg.PoolToken},
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	packet := types.IBCSwapPacketData{
-		Type: types.MULTI_WITHDRAW,
-		Data: rawMsgData,
-		StateChange: &types.StateChange{
-			Out:        outs,
-			PoolTokens: []*sdk.Coin{msg.PoolToken},
-		},
+		Type:        types.MULTI_WITHDRAW,
+		Data:        rawMsgData,
+		StateChange: stateData,
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&ctx)

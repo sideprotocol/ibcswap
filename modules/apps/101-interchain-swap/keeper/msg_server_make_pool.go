@@ -68,15 +68,19 @@ func (k msgServer) MakePool(ctx context.Context, msg *types.MsgMakePoolRequest) 
 	if err != nil {
 		return nil, err
 	}
+	stateData, err := types.ModuleCdc.Marshal(&types.StateChange{
+		PoolId:        poolId,
+		SourceChainId: sdkCtx.ChainID(),
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	// Construct IBC data packet
 	packet := types.IBCSwapPacketData{
-		Type: types.MAKE_POOL,
-		Data: poolData,
-		StateChange: &types.StateChange{
-			PoolId:        poolId,
-			SourceChainId: sdkCtx.ChainID(),
-		},
+		Type:        types.MAKE_POOL,
+		Data:        poolData,
+		StateChange: stateData,
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)

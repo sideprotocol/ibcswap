@@ -60,6 +60,10 @@ func (k Keeper) SendIBCSwapPacket(
 }
 
 func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.IBCSwapPacketData) ([]byte, error) {
+	var stateChange types.StateChange
+	if err := types.ModuleCdc.Unmarshal(data.StateChange, &stateChange); err != nil {
+		return nil, err
+	}
 	switch data.Type {
 	case types.MAKE_POOL:
 		// var msg types.MsgMakePoolRequest
@@ -95,7 +99,8 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		res, err := k.OnSingleAssetDepositReceived(ctx, &msg, data.StateChange)
+
+		res, err := k.OnSingleAssetDepositReceived(ctx, &msg, &stateChange)
 		if err != nil {
 			return nil, err
 		}
@@ -107,7 +112,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		res, err := k.OnMakeMultiAssetDepositReceived(ctx, &msg, data.StateChange)
+		res, err := k.OnMakeMultiAssetDepositReceived(ctx, &msg, &stateChange)
 		if err != nil {
 			return nil, err
 		}
@@ -119,7 +124,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		res, err := k.OnTakeMultiAssetDepositReceived(ctx, &msg, data.StateChange)
+		res, err := k.OnTakeMultiAssetDepositReceived(ctx, &msg, &stateChange)
 		if err != nil {
 			return nil, err
 		}
@@ -131,7 +136,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		res, err := k.OnMultiAssetWithdrawReceived(ctx, &msg, data.StateChange)
+		res, err := k.OnMultiAssetWithdrawReceived(ctx, &msg, &stateChange)
 		if err != nil {
 			return nil, err
 		}
@@ -143,7 +148,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		res, err := k.OnSwapReceived(ctx, &msg, data.StateChange)
+		res, err := k.OnSwapReceived(ctx, &msg, &stateChange)
 		if err != nil {
 			return nil, err
 		}
@@ -158,7 +163,10 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 // OnAcknowledgementPacket processes the packet acknowledgement and performs actions based on the acknowledgement type
 func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, data *types.IBCSwapPacketData, ack channeltypes.Acknowledgement) error {
 	logger := k.Logger(ctx)
-
+	var stateChange types.StateChange
+	if err := types.ModuleCdc.Unmarshal(data.StateChange, &stateChange); err != nil {
+		return err
+	}
 	switch ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Error:
 		return k.refundPacketToken(ctx, packet, data)
@@ -170,14 +178,14 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				logger.Debug(err.Error())
 				return err
 			}
-			err := k.OnMakePoolAcknowledged(ctx, &msg, data.StateChange.PoolId)
+			err := k.OnMakePoolAcknowledged(ctx, &msg, stateChange.PoolId)
 			if err != nil {
 				return err
 			}
 
 			ctx.EventManager().EmitEvent(sdk.NewEvent(types.EventTypeInterChainMakePoolSuccess, sdk.Attribute{
 				Key:   "PoolId",
-				Value: data.StateChange.PoolId,
+				Value: stateChange.PoolId,
 			}))
 
 		case types.TAKE_POOL:
@@ -241,7 +249,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			},
 				sdk.Attribute{
 					Key:   "OrderId",
-					Value: data.StateChange.MutiDepositOrderId,
+					Value: stateChange.MutiDepositOrderId,
 				}))
 			return nil
 		case types.TAKE_MULTI_DEPOSIT:
@@ -254,7 +262,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				return err
 			}
 
-			if err := k.OnTakeMultiAssetDepositAcknowledged(ctx, &msg, *data.StateChange); err != nil {
+			if err := k.OnTakeMultiAssetDepositAcknowledged(ctx, &msg, stateChange); err != nil {
 				logger.Debug("TakeMultiDeposit:Single", err.Error())
 				return err
 			}
@@ -283,7 +291,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			}
 
 			eventAttr := []sdk.Attribute{}
-			for _, out := range data.StateChange.Out {
+			for _, out := range stateChange.Out {
 				eventAttr = append(eventAttr, sdk.Attribute{
 					Key:   out.Denom,
 					Value: out.Amount.String(),

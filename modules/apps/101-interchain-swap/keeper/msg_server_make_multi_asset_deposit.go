@@ -84,11 +84,15 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 	if err != nil {
 		return nil, err
 	}
+	stateData, err := types.ModuleCdc.Marshal(&types.StateChange{PoolTokens: poolTokens})
+	if err != nil {
+		return nil, err
+	}
 
 	packet := types.IBCSwapPacketData{
 		Type:        types.MAKE_MULTI_DEPOSIT,
 		Data:        rawMsgData,
-		StateChange: &types.StateChange{PoolTokens: poolTokens},
+		StateChange: stateData,
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)
