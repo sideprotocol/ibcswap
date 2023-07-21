@@ -166,7 +166,7 @@ func TestSingleDeposit(t *testing.T) {
 		&pool,
 	)
 
-	pool.PoolPrice = amm.LpPrice()
+	//pool.PoolPrice = amm.LpPrice()
 
 	newDeposit := &types.Coin{
 		Amount: types.NewInt(initialY),

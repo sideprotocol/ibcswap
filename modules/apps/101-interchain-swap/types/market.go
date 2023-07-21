@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	math "math"
 
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -416,13 +415,13 @@ func (imm *InterchainMarketMaker) Invariant() types.Dec {
 	v := types.NewDec(1)
 	totalBalance := types.NewDec(0)
 	for _, asset := range imm.Pool.Assets {
-		decimal := types.NewInt(int64(math.Pow10(int(asset.Decimal))))
-		totalBalance = totalBalance.Add(types.NewDecFromBigInt(asset.Balance.Amount.Quo(decimal).BigInt()))
+		decAssetAmount := types.NewDecFromBigIntWithPrec(asset.Balance.Amount.BigInt(), int64(asset.Decimal)) // Convert the amount considering decimal places
+		totalBalance = totalBalance.Add(decAssetAmount)
 	}
+
 	for _, asset := range imm.Pool.Assets {
-		w := types.NewDec(int64(asset.Weight)).Quo(types.NewDec(100)) // divide by 100
-		decimal := types.NewInt(int64(math.Pow10(int(asset.Decimal))))
-		balance := types.NewDecFromBigInt(asset.Balance.Amount.Quo(decimal).BigInt())
+		w := types.NewDec(int64(asset.Weight)).Quo(types.NewDec(100))                                  // divide by 100
+		balance := types.NewDecFromBigIntWithPrec(asset.Balance.Amount.BigInt(), int64(asset.Decimal)) //types.NewDecFromBigInt(asset.Balance.Amount.Quo(decimal).BigInt())
 
 		// Raise balance to the power of w using logarithm and exponential functions
 		exponent := Ln(balance).Mul(w)
@@ -459,35 +458,35 @@ func Exp(dec types.Dec) types.Dec {
 	return result
 }
 
-func (imm *InterchainMarketMaker) InvariantWithInput(tokenIn types.Coin) types.Dec {
-	v := types.NewDec(1)
-	totalBalance := types.NewDec(0)
-	for _, asset := range imm.Pool.Assets {
-		decimal := types.NewInt(int64(math.Pow10(int(asset.Decimal))))
-		totalBalance = totalBalance.Add(types.NewDecFromBigInt(asset.Balance.Amount.Quo(decimal).BigInt()))
-		if asset.Balance.Denom == tokenIn.Denom {
-			totalBalance = totalBalance.Add(types.NewDecFromBigInt(tokenIn.Amount.BigInt()))
-		}
-	}
-	for _, asset := range imm.Pool.Assets {
-		w := types.NewDec(int64(asset.Weight)).Quo(types.NewDec(100)) // divide by 100
-		decimal := types.NewInt(int64(math.Pow10(int(asset.Decimal))))
-		var balance types.Dec
-		if tokenIn.Denom != asset.Balance.Denom {
-			balance = types.NewDecFromBigInt(asset.Balance.Amount.Quo(decimal).BigInt())
-		} else {
-			balance = types.NewDecFromBigInt(asset.Balance.Amount.Add(tokenIn.Amount).Quo(decimal).BigInt())
-		}
+// func (imm *InterchainMarketMaker) InvariantWithInput(tokenIn types.Coin) types.Dec {
+// 	v := types.NewDec(1)
+// 	totalBalance := types.NewDec(0)
+// 	for _, asset := range imm.Pool.Assets {
+// 		decimal := types.NewInt(int64(math.Pow10(int(asset.Decimal))))
+// 		totalBalance = totalBalance.Add(types.NewDecFromBigInt(asset.Balance.Amount.Quo(decimal).BigInt()))
+// 		if asset.Balance.Denom == tokenIn.Denom {
+// 			totalBalance = totalBalance.Add(types.NewDecFromBigInt(tokenIn.Amount.BigInt()))
+// 		}
+// 	}
+// 	for _, asset := range imm.Pool.Assets {
+// 		w := types.NewDec(int64(asset.Weight)).Quo(types.NewDec(100)) // divide by 100
+// 		decimal := types.NewInt(int64(math.Pow10(int(asset.Decimal))))
+// 		var balance types.Dec
+// 		if tokenIn.Denom != asset.Balance.Denom {
+// 			balance = types.NewDecFromBigInt(asset.Balance.Amount.Quo(decimal).BigInt())
+// 		} else {
+// 			balance = types.NewDecFromBigInt(asset.Balance.Amount.Add(tokenIn.Amount).Quo(decimal).BigInt())
+// 		}
 
-		// Raise balance to the power of w using logarithm and exponential functions
-		exponent := Ln(balance).Mul(w)
-		v = v.Mul(Exp(exponent))
-	}
-	return v
-}
+// 		// Raise balance to the power of w using logarithm and exponential functions
+// 		exponent := Ln(balance).Mul(w)
+// 		v = v.Mul(Exp(exponent))
+// 	}
+// 	return v
+// }
 
-func (imm *InterchainMarketMaker) LpPrice() uint64 {
-	decSupply := types.NewDecCoinFromCoin(*imm.Pool.Supply)
-	lpPrice := imm.Invariant().Quo(decSupply.Amount)
-	return lpPrice.BigInt().Uint64()
-}
+// func (imm *InterchainMarketMaker) LpPrice() uint64 {
+// 	decSupply := types.NewDecCoinFromCoin(*imm.Pool.Supply)
+// 	lpPrice := imm.Invariant().Quo(decSupply.Amount)
+// 	return lpPrice.BigInt().Uint64()
+// }

@@ -50,10 +50,6 @@ func (k Keeper) OnMakePoolAcknowledged(ctx sdk.Context, msg *types.MsgMakePoolRe
 		return err
 	}
 
-	// calculate pool price
-	// Instantiate an interchain market maker with the default fee rate
-	amm := *types.NewInterchainMarketMaker(pool)
-	pool.PoolPrice = amm.LpPrice()
 	k.SetInterchainLiquidityPool(ctx, *pool)
 	return nil
 }
@@ -68,9 +64,6 @@ func (k Keeper) OnTakePoolAcknowledged(ctx sdk.Context, msg *types.MsgTakePoolRe
 		return types.ErrNotFoundPool
 	}
 
-	// calculate pool price
-	amm := *types.NewInterchainMarketMaker(&pool)
-	pool.PoolPrice = amm.LpPrice()
 	pool.Status = types.PoolStatus_ACTIVE
 
 	k.SetInterchainLiquidityPool(ctx, pool)
@@ -219,19 +212,13 @@ func (k Keeper) OnMakePoolReceived(ctx sdk.Context, msg *types.MsgMakePoolReques
 		msg.SourcePort,
 		msg.SourceChannel,
 	)
-	
+
 	pool.SourceChainId = sourceChainId
 
 	if !k.bankKeeper.HasSupply(ctx, msg.Liquidity[1].Balance.Denom) {
 		return nil, errorsmod.Wrapf(types.ErrFailedOnDepositReceived, "due to %s", types.ErrInvalidDecimalPair)
 	}
 
-	// Instantiate an interchain market maker with the default fee rate
-	amm := *types.NewInterchainMarketMaker(&pool)
-
-	// calculate
-	pool.PoolPrice = amm.LpPrice()
-	// save pool status
 	k.SetInterchainLiquidityPool(ctx, pool)
 	return &poolID, nil
 }
@@ -404,7 +391,7 @@ func (k Keeper) OnMultiAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgMult
 func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest, stateChange *types.StateChange) (*types.MsgSwapResponse, error) {
 
 	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
-	
+
 	if !found {
 		return nil, types.ErrNotFoundPool
 	}
