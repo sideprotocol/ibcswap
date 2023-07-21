@@ -74,7 +74,7 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 				Side:    types.PoolAssetSide_SOURCE,
 				Balance: &sdk.Coin{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
 				Weight:  20,
-				Decimal: 6,
+				Decimal: 18,
 			},
 			types.PoolAsset{
 				Side:    types.PoolAssetSide_DESTINATION,
