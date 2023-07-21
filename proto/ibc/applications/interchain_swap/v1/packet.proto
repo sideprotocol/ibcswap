@@ -41,7 +41,7 @@ message IBCSwapPacketData {
   // marshall data of transactions
   bytes  data = 2;
   // current pool states on source chain, could be empty.
-  StateChange  stateChange = 3;
+  bytes  stateChange = 3;
 }
 
 
