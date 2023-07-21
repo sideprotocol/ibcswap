@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	"github.com/spf13/cobra"
 )
@@ -28,7 +29,7 @@ func CmdMakePool() *cobra.Command {
 				return err
 			}
 
-			tokens, err := GetTokens(args[3])
+			tokens, err := sdk.ParseCoinsNormalized(args[3])
 			if err != nil {
 				return err
 			}
@@ -54,13 +55,13 @@ func CmdMakePool() *cobra.Command {
 				args[1], // argCounterPartySender
 				types.PoolAsset{
 					Side:    types.PoolAssetSide_SOURCE,
-					Balance: tokens[0],
+					Balance: &tokens[0],
 					Weight:  weights[0],
 					Decimal: decimals[0],
 				},
 				types.PoolAsset{
 					Side:    types.PoolAssetSide_DESTINATION,
-					Balance: tokens[1],
+					Balance: &tokens[1],
 					Weight:  weights[1],
 					Decimal: decimals[1],
 				},

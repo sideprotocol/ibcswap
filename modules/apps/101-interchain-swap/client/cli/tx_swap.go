@@ -57,12 +57,12 @@ func CmdSwap() *cobra.Command {
 			argPort := args[7]
 			argChannel := args[8]
 
-			tokenIn, err := GetTokens(argTokenIn)
+			tokenIn, err := sdk.ParseCoinNormalized(argTokenIn)
 			if err != nil {
 				return err
 			}
 
-			tokenOut, err := GetTokens(argTokenOut)
+			tokenOut, err := sdk.ParseCoinNormalized(argTokenOut)
 			if err != nil {
 				return err
 			}
@@ -73,8 +73,8 @@ func CmdSwap() *cobra.Command {
 				poolId,
 				argSlippage,
 				argRecipient,
-				tokenIn[0],
-				tokenOut[0],
+				&tokenIn,
+				&tokenOut,
 				argPort,
 				argChannel,
 			)

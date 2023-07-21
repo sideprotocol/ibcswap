@@ -527,3 +527,12 @@ func getPoolID(srcChain, targetChain *cosmos.CosmosChain, denomPair []string) st
 	poolId := types.GetPoolId(srcChain.Config().ChainID, targetChain.Config().ChainID, denomPair)
 	return poolId
 }
+
+func AsArray(coins sdk.Coins) []*sdk.Coin {
+	coinArray := make([]*sdk.Coin, 0)
+	for _, coin := range coins {
+		coinArray = append(coinArray, &coin)
+	}
+	return coinArray
+}
+

@@ -42,7 +42,7 @@ func (suit *KeeperTestSuite) TestMakeMultiAssetDeposit() {
 	})
 
 	// send multi deposit message
-	deposits := []*sdk.Coin{
+	deposits := sdk.Coins{
 		{
 			Denom:  aDenom,
 			Amount: sdk.NewInt(100),

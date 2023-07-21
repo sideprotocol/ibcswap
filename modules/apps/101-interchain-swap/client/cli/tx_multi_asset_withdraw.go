@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -35,26 +34,23 @@ func CmdMultiAssetWithdraw() *cobra.Command {
 				return err
 			}
 
-			coins, err := GetTokens(argCoin)
+			token, err := sdk.ParseCoinNormalized(argCoin) //GetTokens(argCoin)
 			if err != nil {
 				return nil
-			}
-			if len(coins) != 0 {
-				return fmt.Errorf("invalid token length! : %d", len(coins))
 			}
 
 			msg := types.NewMsgMultiAssetWithdraw(
 				poolId,
 				argSender,
 				argRemoteSender,
-				coins[0],
+				&token,
 				argPort,
 				argChannel,
 			)
 			packetTimeoutHeight, err1 := cmd.Flags().GetString("packet-timeout-height")
 			packetTimeoutTimestamp, err2 := cmd.Flags().GetUint("packet-timeout-timestamp")
 
-			pool, err := QueryPool(clientCtx, coins[0].Denom)
+			pool, err := QueryPool(clientCtx, token.Denom)
 			if err != nil {
 				return err
 			}

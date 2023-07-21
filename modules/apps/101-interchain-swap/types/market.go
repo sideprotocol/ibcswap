@@ -218,7 +218,8 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 	if err != nil {
 		return nil, err
 	}
-	decToken := types.NewDecCoinFromCoin(token)
+
+	decToken := (types.NewDecCoinFromCoin(token))
 	decAsset := types.NewDecCoinFromCoin(*asset.Balance)
 
 	var issueAmount types.Int
@@ -240,32 +241,33 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 }
 
 // P_issued = P_supply * Wt * Dt/Bt
-func (imm *InterchainMarketMaker) DepositMultiAsset(tokens []*types.Coin) ([]*types.Coin, error) {
+func (imm *InterchainMarketMaker) DepositMultiAsset(coins types.Coins) ([]*types.Coin, error) {
 	outTokens := []*types.Coin{}
-	for _, token := range tokens {
-		asset, err := imm.Pool.FindAssetByDenom(token.Denom)
+	for _, coin := range coins {
+		asset, err := imm.Pool.FindAssetByDenom(coin.Denom)
 		if err != nil {
 			return nil, err
 		}
-		var issueAmount types.Int
+		var issueAmount types.Dec
 		if imm.Pool.Status == PoolStatus_INITIALIZED {
-			totalAssetAmount := types.NewInt(0)
+			totalAssetAmount := types.NewDec(0)
 			for _, asset := range imm.Pool.Assets {
-				totalAssetAmount = totalAssetAmount.Add(asset.Balance.Amount)
+				decAssetAmount := types.NewDecFromBigIntWithPrec(asset.Balance.Amount.BigInt(), int64(asset.Decimal)) // Convert the amount considering decimal places
+				totalAssetAmount = totalAssetAmount.Add(decAssetAmount)
 			}
-			issueAmount = totalAssetAmount.Mul(types.NewInt(int64(asset.Weight))).Quo(types.NewInt(100))
+			issueAmount = totalAssetAmount.Mul(types.NewDec(int64(asset.Weight))).Quo(types.NewDec(100))
 		} else {
 
-			decToken := types.NewDecCoinFromCoin(*token)
+			decToken := types.NewDecCoinFromCoin(coin)
 			decAsset := types.NewDecCoinFromCoin(*asset.Balance)
 			decSupply := types.NewDecCoinFromCoin(*imm.Pool.Supply)
 
 			ratio := decToken.Amount.Quo(decAsset.Amount).Mul(types.NewDec(Multiplier))
-			issueAmount = (decSupply.Amount.Mul(types.NewDec(int64(asset.Weight))).Mul(ratio).Quo(types.NewDec(100)).Quo(types.NewDec(Multiplier))).RoundInt()
+			issueAmount = (decSupply.Amount.Mul(types.NewDec(int64(asset.Weight))).Mul(ratio).Quo(types.NewDec(100)).Quo(types.NewDec(Multiplier)))
 		}
 
 		outputToken := &types.Coin{
-			Amount: issueAmount,
+			Amount: issueAmount.RoundInt(),
 			Denom:  imm.Pool.Supply.Denom,
 		}
 		outTokens = append(outTokens, outputToken)
@@ -486,6 +488,6 @@ func (imm *InterchainMarketMaker) InvariantWithInput(tokenIn types.Coin) types.D
 
 func (imm *InterchainMarketMaker) LpPrice() uint64 {
 	decSupply := types.NewDecCoinFromCoin(*imm.Pool.Supply)
-	lpPrice := imm.Invariant().Quo(decSupply.Amount).Mul(types.NewDec(Multiplier))
+	lpPrice := imm.Invariant().Quo(decSupply.Amount)
 	return lpPrice.BigInt().Uint64()
 }

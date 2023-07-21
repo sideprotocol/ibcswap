@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	"github.com/spf13/cobra"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ = strconv.Itoa(0)
@@ -30,7 +31,7 @@ func CmdMakeMultiAssetDeposit() *cobra.Command {
 				return err
 			}
 
-			tokens, err := GetTokens(argTokens)
+			tokens, err := sdk.ParseCoinsNormalized(argTokens) 
 			if err != nil {
 				return err
 			}

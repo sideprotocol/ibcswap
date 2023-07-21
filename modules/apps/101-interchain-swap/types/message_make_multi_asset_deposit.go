@@ -8,17 +8,17 @@ const TypeMsgMakeMultiAssetDeposit = "make_multi_asset_deposit"
 
 var _ sdk.Msg = &MsgMakeMultiAssetDepositRequest{}
 
-func NewMsgMakeMultiAssetDeposit(poolId string, senders []string, tokens []*sdk.Coin, port, channel string) *MsgMakeMultiAssetDepositRequest {
+func NewMsgMakeMultiAssetDeposit(poolId string, senders []string, tokens sdk.Coins, port, channel string) *MsgMakeMultiAssetDepositRequest {
 	return &MsgMakeMultiAssetDepositRequest{
 		PoolId: poolId,
 		Deposits: []*DepositAsset{
 			{
 				Sender:  senders[0],
-				Balance: tokens[0],
+				Balance: &tokens[0],
 			},
 			{
 				Sender:  senders[1],
-				Balance: tokens[1],
+				Balance: &tokens[1],
 			},
 		},
 		Port:    port,

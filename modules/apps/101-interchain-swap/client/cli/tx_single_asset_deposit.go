@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 	"github.com/spf13/cobra"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ = strconv.Itoa(0)
@@ -29,7 +30,7 @@ func CmdSingleAssetDeposit() *cobra.Command {
 				return err
 			}
 
-			tokens, err := GetTokens(argTokens)
+			token, err := sdk.ParseCoinNormalized(argTokens) 
 			if err != nil {
 				return err
 			}
@@ -37,7 +38,7 @@ func CmdSingleAssetDeposit() *cobra.Command {
 			msg := types.NewMsgSingleAssetDeposit(
 				argPoolId,
 				argSender,
-				tokens[0],
+				&token,
 				argPort,
 				argChannel,
 			)

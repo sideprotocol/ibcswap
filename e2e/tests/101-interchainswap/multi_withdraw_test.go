@@ -200,7 +200,7 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 		pool := getFirstPool(s, ctx, chainA)
 		poolId := pool.Id
 
-		depositTokens := []*sdk.Coin{
+		depositTokens := sdk.Coins{
 			{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
 			{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
 		}
@@ -256,6 +256,7 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 
 				err = types.CheckSlippage(currentRatio, inputRatio, 10)
 				s.NoError(err)
+
 				msg := types.NewMsgMakeMultiAssetDeposit(
 					poolId,
 					[]string{

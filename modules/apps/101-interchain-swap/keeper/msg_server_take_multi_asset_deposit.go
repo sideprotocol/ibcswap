@@ -42,7 +42,10 @@ func (k Keeper) TakeMultiAssetDeposit(ctx context.Context, msg *types.MsgTakeMul
 
 	// estimate pool token
 	amm := types.NewInterchainMarketMaker(&pool)
-	poolTokens, err := amm.DepositMultiAsset(order.Deposits)
+	poolTokens, err := amm.DepositMultiAsset(sdk.Coins{
+		*order.Deposits[0],
+		*order.Deposits[1],
+	})
 
 	// check asset owned status
 	asset := order.Deposits[1]

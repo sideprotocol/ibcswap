@@ -38,8 +38,8 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 		return nil, errormod.Wrapf(types.ErrNotFoundDenomInPool, "%s:", types.ErrFailedMultiAssetDeposit)
 	}
 
-	currentRatio := sourceAsset.Amount.Mul(sdk.NewInt(types.Multiplier)).Quo(destinationAsset.Amount)
-	inputRatio := msg.Deposits[0].Balance.Amount.Mul(sdk.NewInt(types.Multiplier)).Quo(msg.Deposits[1].Balance.Amount)
+	currentRatio := sourceAsset.Amount.Quo(destinationAsset.Amount)
+	inputRatio := msg.Deposits[0].Balance.Amount.Quo(msg.Deposits[1].Balance.Amount)
 
 	if err := types.CheckSlippage(currentRatio, inputRatio, 10); err != nil {
 		return nil, errormod.Wrapf(types.ErrInvalidPairRatio, "%s", types.ErrFailedMultiAssetDeposit)
@@ -56,9 +56,9 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 		&pool,
 	)
 
-	poolTokens, err := amm.DepositMultiAsset([]*sdk.Coin{
-		msg.Deposits[0].Balance,
-		msg.Deposits[1].Balance,
+	poolTokens, err := amm.DepositMultiAsset(sdk.Coins{
+		*msg.Deposits[0].Balance,
+		*msg.Deposits[1].Balance,
 	})
 
 	if err != nil {

@@ -197,7 +197,7 @@ func (s *InterchainswapTestSuite) TestMultiDepositStatus() {
 		pool := getFirstPool(s, ctx, chainA)
 		poolId := pool.Id
 
-		depositTokens := []*sdk.Coin{
+		depositTokens := sdk.Coins{
 			{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
 			{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
 		}
@@ -338,7 +338,7 @@ func (s *InterchainswapTestSuite) TestMultiDepositStatus() {
 		pool := getFirstPool(s, ctx, chainA)
 		poolId := pool.Id
 
-		depositTokens := []*sdk.Coin{
+		depositTokens := sdk.Coins{
 			{Denom: chainADenom, Amount: sdk.NewInt(initialX)},
 			{Denom: chainBDenom, Amount: sdk.NewInt(initialY)},
 		}

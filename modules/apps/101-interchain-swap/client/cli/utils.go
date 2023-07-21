@@ -4,41 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channelutils "github.com/cosmos/ibc-go/v6/modules/core/04-channel/client/utils"
 	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
-
-func GetTokens(argTokens string) ([]*sdk.Coin, error) {
-	tokens := strings.Split(argTokens, ",")
-	fmt.Println("Tokens", tokens)
-	var tokenReg = regexp.MustCompile(`^(\d+)([a-zA-Z]+)$`)
-	if len(tokens) == 0 {
-		return nil, fmt.Errorf("invalid token input %s. Please follow this style `1marscoin,2venuscoin`", argTokens)
-	}
-	coins := []*sdk.Coin{}
-	for _, token := range tokens {
-		matches := tokenReg.FindStringSubmatch(token)
-		fmt.Println("token", matches)
-		amount, err := strconv.Atoi(matches[1])
-		if err != nil {
-			return nil, err
-		}
-		denom := matches[2]
-		coins = append(coins, &sdk.Coin{
-			Amount: sdk.NewInt(int64(amount)),
-			Denom:  denom,
-		})
-	}
-	return coins, nil
-}
 
 func GetTimeOuts(clientCtx client.Context, srcPort, scrChannel, timeoutHeightStr string, timeoutTimestamp uint64, absoluteTimeouts bool) (*clienttypes.Height, *uint64, error) {
 	// if the timeouts are not absolute, retrieve latest block height and block timestamp

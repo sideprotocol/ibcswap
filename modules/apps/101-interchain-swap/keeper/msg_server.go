@@ -219,6 +219,7 @@ func (k Keeper) OnMakePoolReceived(ctx sdk.Context, msg *types.MsgMakePoolReques
 		msg.SourcePort,
 		msg.SourceChannel,
 	)
+	
 	pool.SourceChainId = sourceChainId
 
 	if !k.bankKeeper.HasSupply(ctx, msg.Liquidity[1].Balance.Denom) {
@@ -403,6 +404,7 @@ func (k Keeper) OnMultiAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgMult
 func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest, stateChange *types.StateChange) (*types.MsgSwapResponse, error) {
 
 	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
+	
 	if !found {
 		return nil, types.ErrNotFoundPool
 	}
