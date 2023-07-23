@@ -135,16 +135,16 @@ func (im IBCModule) OnRecvPacket(
 	relayer sdk.AccAddress,
 ) ibcexported.Acknowledgement {
 
-	//logger := im.keeper.Logger(ctx)
+	logger := im.keeper.Logger(ctx)
 	ack := channeltypes.NewResultAcknowledgement([]byte{byte(1)})
 
-	// var data types.IBCSwapPacketData
-	// var ackErr error
-	// if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-	// 	ackErr = errorsmod.Wrapf(types.ErrInvalidType, "cannot unmarshal ICS-101 packet data")
-	// 	logger.Error(fmt.Sprintf("%s sequence %d", ackErr.Error(), packet.Sequence))
-	// 	ack = channeltypes.NewErrorAcknowledgement(ackErr)
-	// }
+	var data types.IBCSwapPacketData
+	var ackErr error
+	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
+		ackErr = errorsmod.Wrapf(types.ErrInvalidType, "cannot unmarshal ICS-101 packet data")
+		logger.Error(fmt.Sprintf("%s sequence %d", ackErr.Error(), packet.Sequence))
+		ack = channeltypes.NewErrorAcknowledgement(ackErr)
+	}
 
 	// only attempt the application logic if the packet data
 	// was successfully decoded
