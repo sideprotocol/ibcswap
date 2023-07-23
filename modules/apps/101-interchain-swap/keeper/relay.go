@@ -61,7 +61,7 @@ func (k Keeper) SendIBCSwapPacket(
 
 func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.IBCSwapPacketData) ([]byte, error) {
 	var stateChange types.StateChange
-	if err := types.ModuleCdc.Unmarshal(data.StateChange, &stateChange); err != nil {
+	if err := types.ModuleCdc.UnmarshalJSON(data.StateChange, &stateChange); err != nil {
 		return nil, err
 	}
 	switch data.Type {

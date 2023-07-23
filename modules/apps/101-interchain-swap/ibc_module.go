@@ -135,39 +135,39 @@ func (im IBCModule) OnRecvPacket(
 	relayer sdk.AccAddress,
 ) ibcexported.Acknowledgement {
 
-	logger := im.keeper.Logger(ctx)
+	//logger := im.keeper.Logger(ctx)
 	ack := channeltypes.NewResultAcknowledgement([]byte{byte(1)})
 
-	var data types.IBCSwapPacketData
-	var ackErr error
-	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
-		ackErr = errorsmod.Wrapf(types.ErrInvalidType, "cannot unmarshal ICS-101 packet data")
-		logger.Error(fmt.Sprintf("%s sequence %d", ackErr.Error(), packet.Sequence))
-		ack = channeltypes.NewErrorAcknowledgement(ackErr)
-	}
+	// var data types.IBCSwapPacketData
+	// var ackErr error
+	// if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
+	// 	ackErr = errorsmod.Wrapf(types.ErrInvalidType, "cannot unmarshal ICS-101 packet data")
+	// 	logger.Error(fmt.Sprintf("%s sequence %d", ackErr.Error(), packet.Sequence))
+	// 	ack = channeltypes.NewErrorAcknowledgement(ackErr)
+	// }
 
 	// only attempt the application logic if the packet data
 	// was successfully decoded
-	if ack.Success() {
-		res, err := im.keeper.OnRecvPacket(ctx, packet, data)
-		if err != nil {
-			ack = channeltypes.NewErrorAcknowledgement(err)
-			ackErr = err
-			logger.Error(fmt.Sprintf("%s sequence %d", ackErr.Error(), packet.Sequence))
-		} else {
-			ack = channeltypes.NewResultAcknowledgement(res)
-			logger.Info("successfully handled ICS-101 packet sequence: %d", packet.Sequence)
-		}
-	}
+	// if ack.Success() {
+	// 	res, err := im.keeper.OnRecvPacket(ctx, packet, data)
+	// 	if err != nil {
+	// 		ack = channeltypes.NewErrorAcknowledgement(err)
+	// 		ackErr = err
+	// 		logger.Error(fmt.Sprintf("%s sequence %d", ackErr.Error(), packet.Sequence))
+	// 	} else {
+	// 		ack = channeltypes.NewResultAcknowledgement(res)
+	// 		logger.Info("successfully handled ICS-101 packet sequence: %d", packet.Sequence)
+	// 	}
+	// }
 
 	eventAttributes := []sdk.Attribute{
 		sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		sdk.NewAttribute(types.AttributeKeyAckSuccess, fmt.Sprintf("%t", ack.Success())),
 	}
 
-	if ackErr != nil {
-		eventAttributes = append(eventAttributes, sdk.NewAttribute(types.AttributeKeyAckError, ackErr.Error()))
-	}
+	// if ackErr != nil {
+	// 	eventAttributes = append(eventAttributes, sdk.NewAttribute(types.AttributeKeyAckError, ackErr.Error()))
+	// }
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
