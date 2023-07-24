@@ -229,8 +229,8 @@ func TestSingleDeposit(t *testing.T) {
 // }
 
 func TestSwap(t *testing.T) {
-	const initialX = 4000000 // USDT
-	const initialY = 2000    // ETH
+	const initialX = 550000000000 // USDT
+	const initialY = 550000000000 // ETH
 	// create mock pool
 	denoms := []string{"a", "b"}
 	poolId := GetPoolId("test", "test", denoms)
@@ -274,7 +274,7 @@ func TestSwap(t *testing.T) {
 	)
 	out, err := amm.LeftSwap(types.Coin{
 		Denom:  denoms[0],
-		Amount: types.NewInt(100),
+		Amount: types.NewInt(5000),
 	},
 		denoms[1])
 
