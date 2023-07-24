@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -227,9 +228,12 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 	} else {
 		weight := types.NewDec(int64(asset.Weight)).Quo(types.NewDec(100)) // divide by 100
 		ratio := decToken.Amount.Quo(decAsset.Amount).Add(types.NewDec(1))
-		exponent := Ln(ratio).Mul(weight)
-		factor := Exp(exponent).Sub(types.NewDec(1)).Mul(types.NewDec(Multiplier))
-		issueAmount = imm.Pool.Supply.Amount.Mul(factor.RoundInt()).Quo(types.NewInt(Multiplier))
+		exponent := 1 - math.Pow(ratio.MustFloat64(), weight.MustFloat64())*Multiplier //Ln(ratio).Mul(weight)
+		factor, err := types.NewDecFromStr(fmt.Sprintf("%f", exponent/1e8))
+		if err != nil {
+			return nil, err
+		}
+		issueAmount = imm.Pool.Supply.Amount.Mul(factor.RoundInt()).Quo(types.NewInt(1e8))
 	}
 
 	outputToken := &types.Coin{
@@ -277,39 +281,39 @@ func (imm *InterchainMarketMaker) DepositMultiAsset(coins types.Coins) ([]*types
 
 // input the supply token, output the expected token.
 // At = Bt * (1 - (1 - P_redeemed / P_supply) ** 1/Wt)
-func (imm *InterchainMarketMaker) SingleWithdraw(redeem types.Coin, denomOut string) (*types.Coin, error) {
-	asset, err := imm.Pool.FindAssetByDenom(denomOut)
-	if err != nil {
-		return nil, err
-	}
-	err = asset.Balance.Validate()
-	if err != nil {
-		return nil, err
-	}
+// func (imm *InterchainMarketMaker) SingleWithdraw(redeem types.Coin, denomOut string) (*types.Coin, error) {
+// 	asset, err := imm.Pool.FindAssetByDenom(denomOut)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	err = asset.Balance.Validate()
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	if redeem.Amount.GT(imm.Pool.Supply.Amount) {
-		return nil, fmt.Errorf("bigger than balance")
-	}
+// 	if redeem.Amount.GT(imm.Pool.Supply.Amount) {
+// 		return nil, fmt.Errorf("bigger than balance")
+// 	}
 
-	if redeem.Denom != imm.Pool.Supply.Denom {
-		return nil, fmt.Errorf("invalid denom pair")
-	}
+// 	if redeem.Denom != imm.Pool.Supply.Denom {
+// 		return nil, fmt.Errorf("invalid denom pair")
+// 	}
 
-	w := types.NewDec(int64(asset.Weight)).Quo(types.NewDec(100)) // divide by 100
-	decSupply := types.NewDecCoinFromCoin(*imm.Pool.Supply)
-	decRedeem := types.NewDecCoinFromCoin(redeem)
-	decAsset := types.NewDecCoinFromCoin(*asset.Balance)
-	ratio := decSupply.Amount.Sub(decRedeem.Amount).Mul(types.NewDec(Multiplier)).Quo(decSupply.Amount)
+// 	w := types.NewDec(int64(asset.Weight)).Quo(types.NewDec(100)) // divide by 100
+// 	decSupply := types.NewDecCoinFromCoin(*imm.Pool.Supply)
+// 	decRedeem := types.NewDecCoinFromCoin(redeem)
+// 	decAsset := types.NewDecCoinFromCoin(*asset.Balance)
+// 	ratio := decSupply.Amount.Sub(decRedeem.Amount).Mul(types.NewDec(Multiplier)).Quo(decSupply.Amount)
 
-	exponent := types.NewDec(1).Quo(w)
-	factor := types.NewDec(1).Sub(Exp(Ln(ratio).Mul(exponent))).Mul(types.NewDec(Multiplier))
+// 	exponent := types.NewDec(1).Quo(w)
+// 	factor := types.NewDec(1).Sub(Exp(Ln(ratio).Mul(exponent))).Mul(types.NewDec(Multiplier))
 
-	amountOut := decAsset.Amount.Mul(factor).Quo(types.NewDec(Multiplier))
-	return &types.Coin{
-		Amount: amountOut.RoundInt(),
-		Denom:  denomOut,
-	}, nil
-}
+// 	amountOut := decAsset.Amount.Mul(factor).Quo(types.NewDec(Multiplier))
+// 	return &types.Coin{
+// 		Amount: amountOut.RoundInt(),
+// 		Denom:  denomOut,
+// 	}, nil
+// }
 
 // input the supply token, output the expected token.
 // At = Bt * (P_redeemed / P_supply)/Wt
@@ -352,10 +356,12 @@ func (imm *InterchainMarketMaker) LeftSwap(amountIn types.Coin, denomOut string)
 	balanceInPlusAmount := balanceIn.Add(amount)
 	ratio := balanceIn.Quo(balanceInPlusAmount)
 	oneMinusRatio := types.NewDec(1).Sub(ratio)
-	power := weightIn.Quo(weightOut)
-	factor := Exp(Ln(oneMinusRatio).Mul(power)).Mul(types.NewDec(Multiplier))
-	amountOut := balanceOut.Mul(factor).Quo(types.NewDec(Multiplier))
 
+	power := weightIn.Quo(weightOut)
+	factor := math.Pow(oneMinusRatio.MustFloat64(), power.MustFloat64()) * Multiplier
+	finalFactor := factor / 1e8
+
+	amountOut := balanceOut.Mul(types.MustNewDecFromStr(fmt.Sprintf("%f", finalFactor))).Quo(types.NewDec(1e10))
 	return &types.Coin{
 		Amount: amountOut.RoundInt(),
 		Denom:  denomOut,
@@ -447,7 +453,7 @@ func Ln(dec types.Dec) types.Dec {
 // Exponential function
 func Exp(dec types.Dec) types.Dec {
 	// Again, adjust the precision and the number of terms in the series based on your needs
-	const maxIterations = 50
+	const maxIterations = 500
 	result, _ := types.NewDecFromStr("1.0")
 	term := result
 

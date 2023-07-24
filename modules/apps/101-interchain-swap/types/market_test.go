@@ -177,9 +177,60 @@ func TestSingleDeposit(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestSingleWithdraw(t *testing.T) {
-	const initialX = 1_000_000 // USDT
-	const initialY = 1_000_000 // ETH
+// func TestSingleWithdraw(t *testing.T) {
+// 	const initialX = 1_000_000 // USDT
+// 	const initialY = 1_000_000 // ETH
+// 	// create mock pool
+// 	denoms := []string{"a", "b"}
+// 	poolId := GetPoolId("test", "test", denoms)
+// 	assets := []*PoolAsset{
+// 		{
+// 			Side: PoolAssetSide_SOURCE,
+// 			Balance: &types.Coin{
+// 				Amount: types.NewInt(initialX),
+// 				Denom:  denoms[0],
+// 			},
+// 			Weight:  50,
+// 			Decimal: 6,
+// 		},
+// 		{
+// 			Side: PoolAssetSide_DESTINATION,
+// 			Balance: &types.Coin{
+// 				Amount: types.NewInt(initialY),
+// 				Denom:  denoms[1],
+// 			},
+// 			Weight:  50,
+// 			Decimal: 6,
+// 		},
+// 	}
+
+// 	pool := InterchainLiquidityPool{
+// 		Id:     poolId,
+// 		Assets: assets,
+// 		Supply: &types.Coin{
+// 			Amount: types.NewInt(initialX + initialY),
+// 			Denom:  poolId,
+// 		},
+// 		SwapFee:             300,
+// 		Status:              PoolStatus_INITIALIZED,
+// 		CounterPartyPort:    "test",
+// 		CounterPartyChannel: "test",
+// 	}
+
+// 	// create mock liquidity pool.
+// 	amm := NewInterchainMarketMaker(
+// 		&pool,
+// 	)
+
+// 	redeem := types.NewCoin(poolId, types.NewInt(initialX))
+// 	outToken, err := amm.SingleWithdraw(redeem, denoms[0])
+// 	fmt.Println(outToken.Amount.Uint64())
+// 	require.NoError(t, err)
+// }
+
+func TestSwap(t *testing.T) {
+	const initialX = 4000000 // USDT
+	const initialY = 2000    // ETH
 	// create mock pool
 	denoms := []string{"a", "b"}
 	poolId := GetPoolId("test", "test", denoms)
@@ -190,7 +241,7 @@ func TestSingleWithdraw(t *testing.T) {
 				Amount: types.NewInt(initialX),
 				Denom:  denoms[0],
 			},
-			Weight:  50,
+			Weight:  20,
 			Decimal: 6,
 		},
 		{
@@ -199,7 +250,7 @@ func TestSingleWithdraw(t *testing.T) {
 				Amount: types.NewInt(initialY),
 				Denom:  denoms[1],
 			},
-			Weight:  50,
+			Weight:  80,
 			Decimal: 6,
 		},
 	}
@@ -221,9 +272,12 @@ func TestSingleWithdraw(t *testing.T) {
 	amm := NewInterchainMarketMaker(
 		&pool,
 	)
+	out, err := amm.LeftSwap(types.Coin{
+		Denom:  denoms[0],
+		Amount: types.NewInt(100),
+	},
+		denoms[1])
 
-	redeem := types.NewCoin(poolId, types.NewInt(initialX))
-	outToken, err := amm.SingleWithdraw(redeem, denoms[0])
-	fmt.Println(outToken.Amount.Uint64())
 	require.NoError(t, err)
+	fmt.Println(out)
 }

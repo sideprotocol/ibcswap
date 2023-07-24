@@ -294,10 +294,15 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			return nil
 		case types.LEFT_SWAP, types.RIGHT_SWAP:
 			var msg types.MsgSwapRequest
+			var res types.MsgSwapResponse
+
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				return err
 			}
-			if err := k.OnSwapAcknowledged(ctx, &msg, *data.StateChange); err != nil {
+			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
+				return err
+			}
+			if err := k.OnSwapAcknowledged(ctx, &msg, &res); err != nil {
 				return err
 			}
 			ctx.EventManager().EmitEvent(sdk.NewEvent(types.EventTypeInterChainSwapSuccess, sdk.Attribute{

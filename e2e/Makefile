@@ -37,6 +37,9 @@ e2e-test-interchainswap-timeout: cleanup-ibc-test-containers
 
 e2e-test-interchainswap-overflow: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh TestInterchainswapTestSuite TestOverflow
+
+e2e-test-interchainswap-swap: cleanup-ibc-test-containers
+	./scripts/run-e2e.sh TestInterchainswapTestSuite TestSwapStatus
 	
 e2e-test-atomic-swap-base: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh TestAtomicSwapTestSuite TestAtomicSwap_HappyPath

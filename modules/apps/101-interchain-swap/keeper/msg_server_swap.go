@@ -68,8 +68,8 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 		return nil, errorsmod.Wrapf(types.ErrFailedOnSwapReceived, "slippage check failed! expected: %v, output: %v, factor: %d", expected, tokenOut, factor)
 	}
 
+	msg.TokenOut = tokenOut
 	// Construct the IBC data packet
-
 	swapData, err := types.ModuleCdc.Marshal(msg)
 	if err != nil {
 		return nil, err
@@ -104,6 +104,6 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 	}
 	return &types.MsgSwapResponse{
 		SwapType: msg.SwapType,
-		Tokens:   []*sdk.Coin{msg.TokenIn, msg.TokenOut},
+		Tokens:   []*sdk.Coin{msg.TokenIn, tokenOut},
 	}, nil
 }
