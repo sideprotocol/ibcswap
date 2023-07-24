@@ -28,10 +28,6 @@ func (k Keeper) TakeMultiAssetDeposit(ctx context.Context, msg *types.MsgTakeMul
 		return nil, errorsmod.Wrapf(types.ErrNotFoundMultiDepositOrder, "%s", types.ErrFailedMultiAssetDeposit)
 	}
 
-	if order.ChainId == sdkCtx.ChainID() {
-		return nil, errorsmod.Wrapf(types.ErrSameChain, "due to %s of other's", types.ErrFailedMultiAssetDeposit)
-	}
-
 	if msg.Sender != order.DestinationTaker {
 		return nil, errorsmod.Wrapf(types.ErrMultipleAssetDepositNotAllowed, "due to %s of other's", types.ErrFailedMultiAssetDeposit)
 	}
