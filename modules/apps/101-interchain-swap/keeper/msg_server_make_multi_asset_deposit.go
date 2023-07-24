@@ -33,6 +33,7 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 	if err != nil {
 		return nil, errormod.Wrapf(types.ErrNotFoundDenomInPool, "%s", types.ErrFailedMultiAssetDeposit)
 	}
+
 	destinationAsset, err := pool.FindAssetBySide(types.PoolAssetSide_DESTINATION)
 	if err != nil {
 		return nil, errormod.Wrapf(types.ErrNotFoundDenomInPool, "%s:", types.ErrFailedMultiAssetDeposit)
@@ -86,9 +87,8 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 	}
 
 	packet := types.IBCSwapPacketData{
-		Type:        types.MAKE_MULTI_DEPOSIT,
-		Data:        rawMsgData,
-		StateChange: &types.StateChange{PoolTokens: poolTokens},
+		Type: types.MAKE_MULTI_DEPOSIT,
+		Data: rawMsgData,
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)

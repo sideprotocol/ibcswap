@@ -281,3 +281,65 @@ func TestSwap(t *testing.T) {
 	require.NoError(t, err)
 	fmt.Println(out)
 }
+
+func TestMultiDeposit(t *testing.T) {
+	const initialXS = "55000000000000000000" // USDT
+	const initialYS = "55000000000000000000" // ETH
+
+	initialX, _ := types.NewIntFromString(initialXS) // USDT
+
+	initialY, _ := types.NewIntFromString(initialYS) // ETH
+
+	// create mock pool
+	denoms := []string{"a", "b"}
+	poolId := GetPoolId("test", "test", denoms)
+	assets := []*PoolAsset{
+		{
+			Side: PoolAssetSide_SOURCE,
+			Balance: &types.Coin{
+				Amount: initialX,
+				Denom:  denoms[0],
+			},
+			Weight:  50,
+			Decimal: 6,
+		},
+		{
+			Side: PoolAssetSide_DESTINATION,
+			Balance: &types.Coin{
+				Amount: initialY,
+				Denom:  denoms[1],
+			},
+			Weight:  50,
+			Decimal: 6,
+		},
+	}
+
+	pool := InterchainLiquidityPool{
+		Id:     poolId,
+		Assets: assets,
+		Supply: &types.Coin{
+			Amount: initialX.Add(initialY),
+			Denom:  poolId,
+		},
+		SwapFee:             300,
+		Status:              PoolStatus_INITIALIZED,
+		CounterPartyPort:    "test",
+		CounterPartyChannel: "test",
+	}
+
+	// create mock liquidity pool.
+	amm := NewInterchainMarketMaker(
+		&pool,
+	)
+
+	token1, _ := types.NewIntFromString("6000000000000000000")
+
+	deposits := []types.Coin{
+		{Denom: denoms[0], Amount: token1},
+		{Denom: denoms[1], Amount: token1},
+	}
+
+	outToken, err := amm.DepositMultiAsset(deposits)
+	fmt.Println(outToken)
+	require.NoError(t, err)
+}

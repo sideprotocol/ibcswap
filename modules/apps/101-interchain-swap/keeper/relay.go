@@ -245,6 +245,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 					Value: data.StateChange.MutiDepositOrderId,
 				}))
 			return nil
+			
 		case types.TAKE_MULTI_DEPOSIT:
 			var msg types.MsgTakeMultiAssetDepositRequest
 			var res types.MsgTakePoolResponse

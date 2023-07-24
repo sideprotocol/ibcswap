@@ -302,7 +302,7 @@ func (k Keeper) OnMakeMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgM
 
 	k.AppendMultiDepositOrder(ctx, msg.PoolId, order)
 	return &types.MsgMultiAssetDepositResponse{
-		PoolTokens: stateChange.PoolTokens,
+		PoolTokens: []*sdk.Coin{},
 	}, nil
 }
 
@@ -375,7 +375,7 @@ func (k Keeper) OnMultiAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgMult
 		return nil, err
 	}
 
-	if pool.Supply.Amount.Equal(sdk.NewInt(0)) {
+	if pool.Supply.Amount.LTE(sdk.NewInt(0)) {
 		k.RemoveInterchainLiquidityPool(ctx, msg.PoolId)
 	} else {
 		// Save pool
