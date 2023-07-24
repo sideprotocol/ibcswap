@@ -20,7 +20,6 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 
 	//poolID := types.GetPoolId([]string{msg.TokenIn.Denom, msg.TokenOut.Denom})
 	pool, found := k.GetInterchainLiquidityPool(sdkCtx, msg.PoolId)
-	
 
 	if !found {
 		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "pool not found: %s", types.ErrNotFoundPool)
@@ -32,12 +31,6 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 
 	// Lock swap-in token to the swap module
 	err = k.LockTokens(sdkCtx, pool.CounterPartyPort, pool.CounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Sender), sdk.NewCoins(*msg.TokenIn))
-	if err != nil {
-		return nil, err
-	}
-
-	// Construct the IBC data packet
-	swapData, err := types.ModuleCdc.Marshal(msg)
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +66,13 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 	expected := msg.TokenOut.Amount.Mul(sdk.NewIntFromUint64(uint64(factor))).Quo(sdk.NewIntFromUint64(types.MaximumSlippage))
 	if tokenOut.Amount.LT(expected) {
 		return nil, errorsmod.Wrapf(types.ErrFailedOnSwapReceived, "slippage check failed! expected: %v, output: %v, factor: %d", expected, tokenOut, factor)
+	}
+
+	// Construct the IBC data packet
+
+	swapData, err := types.ModuleCdc.Marshal(msg)
+	if err != nil {
+		return nil, err
 	}
 
 	packet := types.IBCSwapPacketData{

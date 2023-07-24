@@ -177,7 +177,7 @@ func (k Keeper) OnMultiAssetWithdrawAcknowledged(ctx sdk.Context, req *types.Msg
 	return nil
 }
 
-func (k Keeper) OnSwapAcknowledged(ctx sdk.Context, req *types.MsgSwapRequest, res *types.MsgSwapResponse) error {
+func (k Keeper) OnSwapAcknowledged(ctx sdk.Context, req *types.MsgSwapRequest, stateChange types.StateChange) error {
 
 	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolId)
 	if !found {
@@ -186,7 +186,7 @@ func (k Keeper) OnSwapAcknowledged(ctx sdk.Context, req *types.MsgSwapRequest, r
 
 	// pool status update
 	pool.AddAsset(*req.TokenIn)
-	pool.SubtractAsset(*res.Tokens[0])
+	pool.SubtractAsset(*stateChange.Out[0])
 	k.SetInterchainLiquidityPool(ctx, pool)
 	return nil
 }
