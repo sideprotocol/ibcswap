@@ -144,7 +144,7 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, orde
 	order := types.Order{
 		Id:     orderId,
 		Side:   types.REMOTE,
-		Status: types.Status_INITIAL,
+		Status: types.Status_SYNC,
 		Path:   path,
 		Maker:  msg,
 	}
