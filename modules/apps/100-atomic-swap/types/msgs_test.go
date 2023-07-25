@@ -60,7 +60,7 @@ func TestMsgSwapRoute(t *testing.T) {
 		//},
 		{
 			"new msg cancel swap route",
-			NewMsgCancelSwap(validPort, validChannel, addr1, "", timeoutHeight, 0).Route(),
+			NewMsgCancelSwap(addr1, "", timeoutHeight, 0).Route(),
 			RouterKey,
 		},
 	}
@@ -105,7 +105,7 @@ func TestMsgSwapValidation(t *testing.T) {
 		//},
 		{
 			"new msg cancel swap message type",
-			NewMsgCancelSwap(validPort, validChannel, addr1, "", timeoutHeight, 0).Type(),
+			NewMsgCancelSwap(addr1, "", timeoutHeight, 0).Type(),
 			"cancel_swap",
 		},
 	}
@@ -135,7 +135,7 @@ func TestMsgSwapGetSigners(t *testing.T) {
 		//},
 		{
 			"new msg cancel swap get signers",
-			NewMsgCancelSwap(validPort, validChannel, addr.String(), "", timeoutHeight, 0).GetSigners(),
+			NewMsgCancelSwap(addr.String(), "", timeoutHeight, 0).GetSigners(),
 			[]sdk.AccAddress{addr},
 		},
 	}

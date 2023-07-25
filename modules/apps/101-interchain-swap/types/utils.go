@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
@@ -121,21 +120,21 @@ func UintToBytes(num uint) ([]byte, error) {
 }
 
 // slippage value have to be in 0~10000
-func CheckSlippage(expect, result math.Int, desireSlippage int64) error {
+func CheckSlippage(expect, result sdk.Dec, desireSlippage int64) error {
 	if desireSlippage > 10000 {
 		return ErrInvalidSlippage
 	}
 	// Define the slippage tolerance (1% in this example)
-	slippageTolerance := sdk.NewInt(desireSlippage)
+	slippageTolerance := sdk.NewDec(desireSlippage)
 
 	// Calculate the absolute difference between the ratios
 	ratioDiff := expect.Sub(result).Abs()
 
-	// Calculate slippage percentage (slippage = ratioDiff/expect * 100)
-	slippage := ratioDiff.Mul(sdk.NewInt(10000)).Quo(expect)
+	// Calculate slippage percentage (slippage = ratioDiff/expect * 10000)
+	slippage := ratioDiff.Mul(sdk.NewDec(10000)).Quo(expect)
 
 	// Check if the slippage is within the tolerance
-	if slippage.GTE(slippageTolerance) {
+	if slippage.GT(slippageTolerance) {
 		return ErrInvalidPairRatio
 	}
 	return nil

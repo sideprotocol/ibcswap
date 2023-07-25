@@ -24,4 +24,5 @@ var (
 	ErrOrderPermissionIsNotAllowed = sdkerrors.Register(ModuleName, 17, "sender is not the owner of the order")
 	ErrNotFoundChannel             = sdkerrors.Register(ModuleName, 18, "did not find channel")
 	ErrFailedMakeSwap              = sdkerrors.Register(ModuleName, 19, "Failed to make swap")
+	ErrInvalidTakerReceiverAddress = sdkerrors.Register(ModuleName, 20, "Taker Address has counter party chain address")
 )

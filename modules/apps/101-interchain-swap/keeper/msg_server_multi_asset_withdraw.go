@@ -18,12 +18,12 @@ func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMulti
 
 	// check out denom
 	if !k.bankKeeper.HasSupply(ctx, msg.PoolToken.Denom) {
-		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "invalid denom in local withdraw message:%s", msg.PoolToken.Denom)
+		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "invalid denom in local withdraw message:%s", msg.PoolToken.Denom)
 	}
 
-	tokenBalance := k.bankKeeper.GetBalance(ctx, sdk.AccAddress(msg.Receiver), msg.PoolId)
+	tokenBalance := k.bankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(msg.Receiver), msg.PoolId)
 	if tokenBalance.Amount.LT(msg.PoolToken.Amount) {
-		return nil, errorsmod.Wrapf(types.ErrFailedDeposit, "sender don't have enough pool token amount:%s", msg.PoolToken.Amount)
+		return nil, errorsmod.Wrapf(types.ErrFailedWithdraw, "sender don't have enough pool token amount:%s", msg.PoolToken.Amount)
 	}
 
 	// PoolCoin.Denom is just poolID.

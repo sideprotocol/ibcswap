@@ -160,6 +160,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 
 			order, _ := k.GetAtomicOrder(ctx, takeMsg.OrderId)
 			escrowAddr := types.GetEscrowAddress(types.PortID, packet.SourceChannel)
+
 			makerReceivingAddr, err := sdk.AccAddressFromBech32(order.Maker.MakerReceivingAddress)
 			if err != nil {
 				return err

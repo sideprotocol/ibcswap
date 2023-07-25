@@ -56,6 +56,11 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.TakeSwapMsg) (*types.
 		return &types.MsgTakeSwapResponse{}, err
 	}
 
+	_, err = sdk.AccAddressFromBech32(msg.TakerReceivingAddress)
+	if err == nil {
+		return &types.MsgTakeSwapResponse{}, types.ErrFailedMakeSwap
+	}
+
 	balance := k.bankKeeper.GetBalance(ctx, takerAddr, msg.SellToken.Denom)
 	if balance.Amount.LT(msg.SellToken.Amount) {
 		return &types.MsgTakeSwapResponse{}, errors.New("insufficient balance")

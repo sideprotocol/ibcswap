@@ -29,21 +29,21 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 	}
 
 	// Check input ration of tokens
-	sourceAsset, err := pool.FindAssetBySide(types.PoolAssetSide_SOURCE)
+	sourceAsset, err := pool.FindAssetByDenom(msg.Deposits[0].Balance.Denom)
 	if err != nil {
 		return nil, errormod.Wrapf(types.ErrNotFoundDenomInPool, "%s", types.ErrFailedMultiAssetDeposit)
 	}
 
-	destinationAsset, err := pool.FindAssetBySide(types.PoolAssetSide_DESTINATION)
+	destinationAsset, err := pool.FindAssetByDenom(msg.Deposits[1].Balance.Denom)
 	if err != nil {
 		return nil, errormod.Wrapf(types.ErrNotFoundDenomInPool, "%s:", types.ErrFailedMultiAssetDeposit)
 	}
 
-	currentRatio := sourceAsset.Amount.Quo(destinationAsset.Amount)
-	inputRatio := msg.Deposits[0].Balance.Amount.Quo(msg.Deposits[1].Balance.Amount)
+	currentRatio := sdk.NewDecFromInt(sourceAsset.Balance.Amount).Quo(sdk.NewDecFromInt(destinationAsset.Balance.Amount))
+	inputRatio := sdk.NewDecFromInt(msg.Deposits[0].Balance.Amount).Quo(sdk.NewDecFromInt(msg.Deposits[1].Balance.Amount))
 
 	if err := types.CheckSlippage(currentRatio, inputRatio, 10); err != nil {
-		return nil, errormod.Wrapf(types.ErrInvalidPairRatio, "%s", types.ErrFailedMultiAssetDeposit)
+		return nil, errormod.Wrapf(types.ErrInvalidPairRatio, "%d:%d:%s", currentRatio, inputRatio, types.ErrFailedMultiAssetDeposit)
 	}
 
 	// Create escrow module account here
@@ -89,6 +89,9 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 	packet := types.IBCSwapPacketData{
 		Type: types.MAKE_MULTI_DEPOSIT,
 		Data: rawMsgData,
+		StateChange: &types.StateChange{
+			MultiDepositOrderId: order.Id,
+		},
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)

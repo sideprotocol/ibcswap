@@ -30,6 +30,7 @@ type QueryClient interface {
 	InterchainMarketMakerAll(ctx context.Context, in *QueryAllInterchainMarketMakerRequest, opts ...grpc.CallOption) (*QueryAllInterchainMarketMakerResponse, error)
 	InterchainMultiDepositOrder(ctx context.Context, in *QueryGetInterchainMultiDepositOrderRequest, opts ...grpc.CallOption) (*QueryGetInterchainMultiDepositOrderResponse, error)
 	InterchainLatestMultiDepositOrder(ctx context.Context, in *QueryLatestInterchainMultiDepositOrderRequest, opts ...grpc.CallOption) (*QueryGetInterchainMultiDepositOrderResponse, error)
+	InterchainLatestMultiDepositOrderByCreators(ctx context.Context, in *QueryLatestInterchainMultiDepositOrderByCreatorsRequest, opts ...grpc.CallOption) (*QueryGetInterchainMultiDepositOrderResponse, error)
 	InterchainMultiDepositOrdersAll(ctx context.Context, in *QueryAllInterchainMultiDepositOrdersRequest, opts ...grpc.CallOption) (*QueryAllInterchainMultiDepositOrdersResponse, error)
 }
 
@@ -113,6 +114,15 @@ func (c *queryClient) InterchainLatestMultiDepositOrder(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *queryClient) InterchainLatestMultiDepositOrderByCreators(ctx context.Context, in *QueryLatestInterchainMultiDepositOrderByCreatorsRequest, opts ...grpc.CallOption) (*QueryGetInterchainMultiDepositOrderResponse, error) {
+	out := new(QueryGetInterchainMultiDepositOrderResponse)
+	err := c.cc.Invoke(ctx, "/ibc.applications.interchain_swap.v1.Query/InterchainLatestMultiDepositOrderByCreators", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) InterchainMultiDepositOrdersAll(ctx context.Context, in *QueryAllInterchainMultiDepositOrdersRequest, opts ...grpc.CallOption) (*QueryAllInterchainMultiDepositOrdersResponse, error) {
 	out := new(QueryAllInterchainMultiDepositOrdersResponse)
 	err := c.cc.Invoke(ctx, "/ibc.applications.interchain_swap.v1.Query/InterchainMultiDepositOrdersAll", in, out, opts...)
@@ -138,6 +148,7 @@ type QueryServer interface {
 	InterchainMarketMakerAll(context.Context, *QueryAllInterchainMarketMakerRequest) (*QueryAllInterchainMarketMakerResponse, error)
 	InterchainMultiDepositOrder(context.Context, *QueryGetInterchainMultiDepositOrderRequest) (*QueryGetInterchainMultiDepositOrderResponse, error)
 	InterchainLatestMultiDepositOrder(context.Context, *QueryLatestInterchainMultiDepositOrderRequest) (*QueryGetInterchainMultiDepositOrderResponse, error)
+	InterchainLatestMultiDepositOrderByCreators(context.Context, *QueryLatestInterchainMultiDepositOrderByCreatorsRequest) (*QueryGetInterchainMultiDepositOrderResponse, error)
 	InterchainMultiDepositOrdersAll(context.Context, *QueryAllInterchainMultiDepositOrdersRequest) (*QueryAllInterchainMultiDepositOrdersResponse, error)
 }
 
@@ -168,6 +179,9 @@ func (UnimplementedQueryServer) InterchainMultiDepositOrder(context.Context, *Qu
 }
 func (UnimplementedQueryServer) InterchainLatestMultiDepositOrder(context.Context, *QueryLatestInterchainMultiDepositOrderRequest) (*QueryGetInterchainMultiDepositOrderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InterchainLatestMultiDepositOrder not implemented")
+}
+func (UnimplementedQueryServer) InterchainLatestMultiDepositOrderByCreators(context.Context, *QueryLatestInterchainMultiDepositOrderByCreatorsRequest) (*QueryGetInterchainMultiDepositOrderResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InterchainLatestMultiDepositOrderByCreators not implemented")
 }
 func (UnimplementedQueryServer) InterchainMultiDepositOrdersAll(context.Context, *QueryAllInterchainMultiDepositOrdersRequest) (*QueryAllInterchainMultiDepositOrdersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InterchainMultiDepositOrdersAll not implemented")
@@ -328,6 +342,24 @@ func _Query_InterchainLatestMultiDepositOrder_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_InterchainLatestMultiDepositOrderByCreators_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryLatestInterchainMultiDepositOrderByCreatorsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).InterchainLatestMultiDepositOrderByCreators(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ibc.applications.interchain_swap.v1.Query/InterchainLatestMultiDepositOrderByCreators",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).InterchainLatestMultiDepositOrderByCreators(ctx, req.(*QueryLatestInterchainMultiDepositOrderByCreatorsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Query_InterchainMultiDepositOrdersAll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryAllInterchainMultiDepositOrdersRequest)
 	if err := dec(in); err != nil {
@@ -384,6 +416,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "InterchainLatestMultiDepositOrder",
 			Handler:    _Query_InterchainLatestMultiDepositOrder_Handler,
+		},
+		{
+			MethodName: "InterchainLatestMultiDepositOrderByCreators",
+			Handler:    _Query_InterchainLatestMultiDepositOrderByCreators_Handler,
 		},
 		{
 			MethodName: "InterchainMultiDepositOrdersAll",

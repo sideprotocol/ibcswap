@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"github.com/btcsuite/btcutil/bech32"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
@@ -95,7 +94,7 @@ func (k Keeper) OnSingleAssetDepositAcknowledged(ctx sdk.Context, req *types.Msg
 }
 
 // OnMultiAssetDepositAcknowledged processes a double deposit acknowledgement, mints voucher tokens, and updates the liquidity pool.
-func (k Keeper) OnMakeMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.MsgMakeMultiAssetDepositRequest, res *types.MsgMultiAssetDepositResponse) error {
+func (k Keeper) OnMakeMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.MsgMakeMultiAssetDepositRequest) error {
 
 	// Retrieve the liquidity pool
 	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolId)
@@ -270,23 +269,15 @@ func (k Keeper) OnSingleAssetDepositReceived(ctx sdk.Context, msg *types.MsgSing
 func (k Keeper) OnMakeMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgMakeMultiAssetDepositRequest, stateChange *types.StateChange) (*types.MsgMultiAssetDepositResponse, error) {
 
 	// Verify the sender's address
-	senderAcc := k.authKeeper.GetAccount(ctx, sdk.MustAccAddressFromBech32(msg.Deposits[1].Sender))
-	senderPrefix, _, err := bech32.Decode(senderAcc.GetAddress().String())
+	_, err := sdk.AccAddressFromBech32(msg.Deposits[1].Sender)
 	if err != nil {
 		return nil, err
-	}
-	if sdk.GetConfig().GetBech32AccountAddrPrefix() != senderPrefix {
-		return nil, errorsmod.Wrapf(types.ErrFailedMultiAssetDeposit, "first address has to be this chain address (%s)", err)
 	}
 
 	// Retrieve the liquidity pool
 	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
 	if !found {
 		return nil, errorsmod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrNotFoundPool)
-	}
-
-	if err != nil {
-		return nil, errorsmod.Wrapf(types.ErrFailedMultiAssetDeposit, ":%s", err)
 	}
 
 	// create order

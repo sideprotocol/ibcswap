@@ -32,6 +32,28 @@ func (k Keeper) SetMultiDepositOrderCount(ctx sdk.Context, poolId string, count 
 	store.Set(byteKey, bz)
 }
 
+// SetMultiDepositOrderCount set the total number of multiDepositOrder
+func (k Keeper) SetMultiDepositOrderLatestOrderByCreators(ctx sdk.Context, poolId, sourceMaker, destinationMaker string, count uint64) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{})
+	byteKey := types.KeyPrefix(poolId + sourceMaker + destinationMaker + types.MultiDepositOrderIDByCreatorsKeyPrefix)
+	bz := make([]byte, 8)
+	binary.BigEndian.PutUint64(bz, count)
+	store.Set(byteKey, bz)
+}
+
+// SetMultiDepositOrderCount set the total number of multiDepositOrder
+func (k Keeper) GetMultiDepositOrderLatestOrderByCreators(ctx sdk.Context, poolId, sourceMaker, destinationMaker string) uint64 {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{})
+	byteKey := types.KeyPrefix(poolId + sourceMaker + destinationMaker + types.MultiDepositOrderIDByCreatorsKeyPrefix)
+	bz := store.Get(byteKey)
+	// Count doesn't exist: no element
+	if bz == nil {
+		return 0
+	}
+	// Parse bytes
+	return binary.BigEndian.Uint64(bz)
+}
+
 // AppendMultiDepositOrder appends a multiDepositOrder in the store with a new id and update the count
 func (k Keeper) AppendMultiDepositOrder(
 	ctx sdk.Context,
@@ -40,7 +62,6 @@ func (k Keeper) AppendMultiDepositOrder(
 ) uint64 {
 	// Create the multiDepositOrder
 	count := k.GetMultiDepositOrderCount(ctx, poolId)
-
 	// Set the ID of the appended value
 	multiDepositOrder.Id = count
 
@@ -50,7 +71,7 @@ func (k Keeper) AppendMultiDepositOrder(
 
 	// Update multiDepositOrder count
 	k.SetMultiDepositOrderCount(ctx, poolId, count+1)
-
+	k.SetMultiDepositOrderLatestOrderByCreators(ctx, poolId, multiDepositOrder.SourceMaker, multiDepositOrder.DestinationTaker, count)
 	return count
 }
 
@@ -76,19 +97,24 @@ func (k Keeper) GetMultiDepositOrder(ctx sdk.Context, poolId string, id uint64) 
 func (k Keeper) GetLatestMultiDepositOrder(ctx sdk.Context, poolId string) (val types.MultiAssetDepositOrder, found bool) {
 	id := k.GetMultiDepositOrderCount(ctx, poolId)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(poolId+types.MultiDepositOrderKeyPrefix))
-	b := store.Get(GetMultiDepositOrderIDBytes(id-1))
+	b := store.Get(GetMultiDepositOrderIDBytes(id - 1))
 	if b == nil {
 		return val, false
 	}
 	k.cdc.MustUnmarshal(b, &val)
+
 	return val, true
 }
 
 // GetMultiDepositOrder returns a multiDepositOrder from its id
 func (k Keeper) RemoveLatestMultiDepositOrder(ctx sdk.Context, poolId string) {
 	id := k.GetMultiDepositOrderCount(ctx, poolId)
-	k.RemoveMultiDepositOrder(ctx, poolId, id)
-	k.SetMultiDepositOrderCount(ctx, poolId, id-1)
+	order, found := k.GetMultiDepositOrder(ctx, poolId, id)
+	if found {
+		k.SetMultiDepositOrderLatestOrderByCreators(ctx, poolId, order.SourceMaker, order.DestinationTaker, id-1)
+		k.RemoveMultiDepositOrder(ctx, poolId, id)
+		k.SetMultiDepositOrderCount(ctx, poolId, id-1)
+	}
 }
 
 // RemoveMultiDepositOrder removes a multiDepositOrder from the store

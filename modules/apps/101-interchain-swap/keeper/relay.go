@@ -220,19 +220,13 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			return nil
 
 		case types.MAKE_MULTI_DEPOSIT:
-
 			var msg types.MsgMakeMultiAssetDepositRequest
-			var res types.MsgMultiAssetDepositResponse
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				logger.Debug("MakeMultiDeposit:packet:", err.Error())
 				return err
 			}
 
-			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
-				logger.Debug("MakeMultiDeposit:ack:", err.Error())
-				return err
-			}
-			if err := k.OnMakeMultiAssetDepositAcknowledged(ctx, &msg, &res); err != nil {
+			if err := k.OnMakeMultiAssetDepositAcknowledged(ctx, &msg); err != nil {
 				logger.Debug("MakeMultiDeposit:Single", err.Error())
 				return err
 			}
@@ -242,10 +236,10 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			},
 				sdk.Attribute{
 					Key:   "OrderId",
-					Value: data.StateChange.MutiDepositOrderId,
+					Value: fmt.Sprintf("%d", data.StateChange.MultiDepositOrderId),
 				}))
 			return nil
-			
+
 		case types.TAKE_MULTI_DEPOSIT:
 			var msg types.MsgTakeMultiAssetDepositRequest
 			var res types.MsgTakePoolResponse
