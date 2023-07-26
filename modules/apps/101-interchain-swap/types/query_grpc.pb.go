@@ -25,6 +25,7 @@ type QueryClient interface {
 	// Queries a list of InterchainLiquidityPool items.
 	InterchainLiquidityPool(ctx context.Context, in *QueryGetInterchainLiquidityPoolRequest, opts ...grpc.CallOption) (*QueryGetInterchainLiquidityPoolResponse, error)
 	InterchainLiquidityPoolAll(ctx context.Context, in *QueryAllInterchainLiquidityPoolRequest, opts ...grpc.CallOption) (*QueryAllInterchainLiquidityPoolResponse, error)
+	InterchainLiquidityMyPoolAll(ctx context.Context, in *QueryAllInterchainLiquidityMyPoolRequest, opts ...grpc.CallOption) (*QueryAllInterchainLiquidityPoolResponse, error)
 	// Queries a list of InterchainMarketMaker items.
 	InterchainMarketMaker(ctx context.Context, in *QueryGetInterchainMarketMakerRequest, opts ...grpc.CallOption) (*QueryGetInterchainMarketMakerResponse, error)
 	InterchainMarketMakerAll(ctx context.Context, in *QueryAllInterchainMarketMakerRequest, opts ...grpc.CallOption) (*QueryAllInterchainMarketMakerResponse, error)
@@ -72,6 +73,15 @@ func (c *queryClient) InterchainLiquidityPool(ctx context.Context, in *QueryGetI
 func (c *queryClient) InterchainLiquidityPoolAll(ctx context.Context, in *QueryAllInterchainLiquidityPoolRequest, opts ...grpc.CallOption) (*QueryAllInterchainLiquidityPoolResponse, error) {
 	out := new(QueryAllInterchainLiquidityPoolResponse)
 	err := c.cc.Invoke(ctx, "/ibc.applications.interchain_swap.v1.Query/InterchainLiquidityPoolAll", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) InterchainLiquidityMyPoolAll(ctx context.Context, in *QueryAllInterchainLiquidityMyPoolRequest, opts ...grpc.CallOption) (*QueryAllInterchainLiquidityPoolResponse, error) {
+	out := new(QueryAllInterchainLiquidityPoolResponse)
+	err := c.cc.Invoke(ctx, "/ibc.applications.interchain_swap.v1.Query/InterchainLiquidityMyPoolAll", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -143,6 +153,7 @@ type QueryServer interface {
 	// Queries a list of InterchainLiquidityPool items.
 	InterchainLiquidityPool(context.Context, *QueryGetInterchainLiquidityPoolRequest) (*QueryGetInterchainLiquidityPoolResponse, error)
 	InterchainLiquidityPoolAll(context.Context, *QueryAllInterchainLiquidityPoolRequest) (*QueryAllInterchainLiquidityPoolResponse, error)
+	InterchainLiquidityMyPoolAll(context.Context, *QueryAllInterchainLiquidityMyPoolRequest) (*QueryAllInterchainLiquidityPoolResponse, error)
 	// Queries a list of InterchainMarketMaker items.
 	InterchainMarketMaker(context.Context, *QueryGetInterchainMarketMakerRequest) (*QueryGetInterchainMarketMakerResponse, error)
 	InterchainMarketMakerAll(context.Context, *QueryAllInterchainMarketMakerRequest) (*QueryAllInterchainMarketMakerResponse, error)
@@ -167,6 +178,9 @@ func (UnimplementedQueryServer) InterchainLiquidityPool(context.Context, *QueryG
 }
 func (UnimplementedQueryServer) InterchainLiquidityPoolAll(context.Context, *QueryAllInterchainLiquidityPoolRequest) (*QueryAllInterchainLiquidityPoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InterchainLiquidityPoolAll not implemented")
+}
+func (UnimplementedQueryServer) InterchainLiquidityMyPoolAll(context.Context, *QueryAllInterchainLiquidityMyPoolRequest) (*QueryAllInterchainLiquidityPoolResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InterchainLiquidityMyPoolAll not implemented")
 }
 func (UnimplementedQueryServer) InterchainMarketMaker(context.Context, *QueryGetInterchainMarketMakerRequest) (*QueryGetInterchainMarketMakerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InterchainMarketMaker not implemented")
@@ -266,6 +280,24 @@ func _Query_InterchainLiquidityPoolAll_Handler(srv interface{}, ctx context.Cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).InterchainLiquidityPoolAll(ctx, req.(*QueryAllInterchainLiquidityPoolRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_InterchainLiquidityMyPoolAll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllInterchainLiquidityMyPoolRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).InterchainLiquidityMyPoolAll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ibc.applications.interchain_swap.v1.Query/InterchainLiquidityMyPoolAll",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).InterchainLiquidityMyPoolAll(ctx, req.(*QueryAllInterchainLiquidityMyPoolRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -400,6 +432,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "InterchainLiquidityPoolAll",
 			Handler:    _Query_InterchainLiquidityPoolAll_Handler,
+		},
+		{
+			MethodName: "InterchainLiquidityMyPoolAll",
+			Handler:    _Query_InterchainLiquidityMyPoolAll_Handler,
 		},
 		{
 			MethodName: "InterchainMarketMaker",

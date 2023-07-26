@@ -39,6 +39,34 @@ func (k Keeper) InterchainLiquidityPoolAll(goCtx context.Context, req *types.Que
 	return &types.QueryAllInterchainLiquidityPoolResponse{InterchainLiquidityPool: interchainLiquidityPools, Pagination: pageRes}, nil
 }
 
+func (k Keeper) InterchainLiquidityMyPoolAll(goCtx context.Context, req *types.QueryAllInterchainLiquidityMyPoolRequest) (*types.QueryAllInterchainLiquidityPoolResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	var interchainLiquidityPools []types.InterchainLiquidityPool
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	store := ctx.KVStore(k.storeKey)
+	interchainLiquidityPoolStore := prefix.NewStore(store, types.KeyPrefix(types.InterchainLiquidityPoolKeyPrefix))
+
+	pageRes, err := query.Paginate(interchainLiquidityPoolStore, req.Pagination, func(key []byte, value []byte) error {
+		var interchainLiquidityPool types.InterchainLiquidityPool
+		if err := k.cdc.Unmarshal(value, &interchainLiquidityPool); err != nil {
+			return err
+		}
+		if interchainLiquidityPool.SourceCreator == req.Creator || interchainLiquidityPool.DestinationCreator == req.Creator {
+			interchainLiquidityPools = append(interchainLiquidityPools, interchainLiquidityPool)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QueryAllInterchainLiquidityPoolResponse{InterchainLiquidityPool: interchainLiquidityPools, Pagination: pageRes}, nil
+}
+
 func (k Keeper) InterchainLiquidityPool(goCtx context.Context, req *types.QueryGetInterchainLiquidityPoolRequest) (*types.QueryGetInterchainLiquidityPoolResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
