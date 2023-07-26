@@ -148,26 +148,26 @@ func (im IBCModule) OnRecvPacket(
 
 	// only attempt the application logic if the packet data
 	// was successfully decoded
-	// if ack.Success() {
-	// 	res, err := im.keeper.OnRecvPacket(ctx, packet, data)
-	// 	if err != nil {
-	// 		ack = channeltypes.NewErrorAcknowledgement(err)
-	// 		ackErr = err
-	// 		logger.Error(fmt.Sprintf("%s sequence %d", ackErr.Error(), packet.Sequence))
-	// 	} else {
-	// 		ack = channeltypes.NewResultAcknowledgement(res)
-	// 		logger.Info("successfully handled ICS-101 packet sequence: %d", packet.Sequence)
-	// 	}
-	// }
+	if ack.Success() {
+		res, err := im.keeper.OnRecvPacket(ctx, packet, data)
+		if err != nil {
+			ack = channeltypes.NewErrorAcknowledgement(err)
+			ackErr = err
+			logger.Error(fmt.Sprintf("%s sequence %d", ackErr.Error(), packet.Sequence))
+		} else {
+			ack = channeltypes.NewResultAcknowledgement(res)
+			logger.Info("successfully handled ICS-101 packet sequence: %d", packet.Sequence)
+		}
+	}
 
 	eventAttributes := []sdk.Attribute{
 		sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 		sdk.NewAttribute(types.AttributeKeyAckSuccess, fmt.Sprintf("%t", ack.Success())),
 	}
 
-	// if ackErr != nil {
-	// 	eventAttributes = append(eventAttributes, sdk.NewAttribute(types.AttributeKeyAckError, ackErr.Error()))
-	// }
+	if ackErr != nil {
+		eventAttributes = append(eventAttributes, sdk.NewAttribute(types.AttributeKeyAckError, ackErr.Error()))
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
