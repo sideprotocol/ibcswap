@@ -23,9 +23,9 @@ func NewInterchainLiquidityPool(
 
 	initialLiquidity := types.NewInt(0)
 	liquidity := []*PoolAsset{}
-	
+
 	for _, asset := range assets {
-		
+
 		initialLiquidity = initialLiquidity.Add(asset.Balance.Amount)
 		if store.HasSupply(ctx, asset.Balance.Denom) {
 			asset.Side = PoolAssetSide_SOURCE
@@ -230,12 +230,12 @@ func (imm *InterchainMarketMaker) DepositSingleAsset(token types.Coin) (*types.C
 	} else {
 		weight := types.NewDec(int64(asset.Weight)).Quo(types.NewDec(100)) // divide by 100
 		ratio := decToken.Amount.Quo(decAsset.Amount).Add(types.NewDec(1))
-		exponent := 1 - math.Pow(ratio.MustFloat64(), weight.MustFloat64())*Multiplier //Ln(ratio).Mul(weight)
+		exponent := (math.Pow(ratio.MustFloat64(), weight.MustFloat64()) - 1) * Multiplier //Ln(ratio).Mul(weight)
 		factor, err := types.NewDecFromStr(fmt.Sprintf("%f", exponent/1e8))
 		if err != nil {
 			return nil, err
 		}
-		issueAmount = imm.Pool.Supply.Amount.Mul(factor.RoundInt()).Quo(types.NewInt(1e8))
+		issueAmount = imm.Pool.Supply.Amount.Mul(factor.RoundInt()).Quo(types.NewInt(1e10))
 	}
 
 	outputToken := &types.Coin{
