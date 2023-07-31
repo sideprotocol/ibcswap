@@ -34,7 +34,6 @@ message StateChange {
   string sourceChainId = 6;
 }
 
-
 // IBCSwapPacketData is comprised of a raw transaction, type of transaction and optional memo field.
 message IBCSwapPacketData {
   SwapMessageType   type = 1;
@@ -42,6 +41,7 @@ message IBCSwapPacketData {
   bytes  data = 2;
   // current pool states on source chain, could be empty.
   StateChange  stateChange = 3;
+  string memo = 4; 
 }
 
 
