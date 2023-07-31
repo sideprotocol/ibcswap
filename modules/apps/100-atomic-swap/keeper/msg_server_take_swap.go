@@ -77,7 +77,7 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.TakeSwapMsg) (*types.
 		Memo: "",
 	}
 
-	if err := k.SendSwapPacket(ctx, sourcePort, sourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
+	if _,err := k.SendSwapPacket(ctx, sourcePort, sourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
 		return nil, err
 	}
 

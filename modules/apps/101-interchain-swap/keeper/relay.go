@@ -19,29 +19,29 @@ func (k Keeper) SendIBCSwapPacket(
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64,
 	swapPacket types.IBCSwapPacketData,
-) error {
+) (*uint64, error) {
 
 	if err := swapPacket.ValidateBasic(); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := swapPacket.ValidateBasic(); err != nil {
-		return err
+		return nil, err
 	}
 
 	if !k.GetSwapEnabled(ctx) {
-		return types.ErrSwapEnabled
+		return nil, types.ErrSwapEnabled
 	}
 
 	_, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
-		return errorsmod.Wrapf(channeltypes.ErrChannelNotFound, "port ID (%s) channel ID (%s)", sourcePort, sourceChannel)
+		return nil, errorsmod.Wrapf(channeltypes.ErrChannelNotFound, "port ID (%s) channel ID (%s)", sourcePort, sourceChannel)
 	}
 
 	// get the next sequence
 	_, found = k.channelKeeper.GetNextSequenceSend(ctx, sourcePort, sourceChannel)
 	if !found {
-		return errorsmod.Wrapf(
+		return nil, errorsmod.Wrapf(
 			channeltypes.ErrSequenceSendNotFound,
 			"source port: %s, source channel: %s", sourcePort, sourceChannel,
 		)
@@ -51,13 +51,11 @@ func (k Keeper) SendIBCSwapPacket(
 	// See spec for this logic: https://github.com/cosmos/ibc/tree/master/spec/app/ics-020-fungible-token-transfer#packet-relay
 	channelCap, ok := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(sourcePort, sourceChannel))
 	if !ok {
-		return errorsmod.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
+		return nil, errorsmod.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 
-	if _, err := k.ics4Wrapper.SendPacket(ctx, channelCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, swapPacket.GetBytes()); err != nil {
-		return err
-	}
-	return nil
+	sequence, err := k.ics4Wrapper.SendPacket(ctx, channelCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, swapPacket.GetBytes())
+	return &sequence, err
 }
 
 func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.IBCSwapPacketData) ([]byte, error) {

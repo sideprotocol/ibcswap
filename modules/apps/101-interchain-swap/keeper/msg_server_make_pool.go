@@ -89,7 +89,7 @@ func (k msgServer) MakePool(ctx context.Context, msg *types.MsgMakePoolRequest) 
 		timeoutStamp = msg.TimeoutTimeStamp
 	}
 
-	err = k.SendIBCSwapPacket(sdkCtx, msg.SourcePort, msg.SourceChannel, timeoutHeight, timeoutStamp, packet)
+	_,err = k.SendIBCSwapPacket(sdkCtx, msg.SourcePort, msg.SourceChannel, timeoutHeight, timeoutStamp, packet)
 	if err != nil {
 		return nil, err
 	}

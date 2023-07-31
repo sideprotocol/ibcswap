@@ -137,7 +137,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 				Data: msgbyte,
 			}
 
-			err = suite.chainA.GetSimApp().InterchainSwapKeeper.SendIBCSwapPacket(
+			_, err = suite.chainA.GetSimApp().InterchainSwapKeeper.SendIBCSwapPacket(
 				suite.chainA.GetContext(),
 				path.EndpointA.ChannelConfig.PortID,
 				path.EndpointA.ChannelID,

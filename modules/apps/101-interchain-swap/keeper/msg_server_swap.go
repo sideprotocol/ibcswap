@@ -91,7 +91,7 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 		timeoutTimestamp = msg.TimeoutTimeStamp
 	}
 
-	err = k.SendIBCSwapPacket(
+	_,err = k.SendIBCSwapPacket(
 		ctx,
 		msg.Port,
 		msg.Channel,

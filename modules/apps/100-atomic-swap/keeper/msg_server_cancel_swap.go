@@ -42,7 +42,7 @@ func (k Keeper) CancelSwap(goCtx context.Context, msg *types.CancelSwapMsg) (*ty
 		Memo: "",
 	}
 
-	if err := k.SendSwapPacket(ctx, order.Maker.SourcePort, order.Maker.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
+	if _,err := k.SendSwapPacket(ctx, order.Maker.SourcePort, order.Maker.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
 		return nil, err
 	}
 

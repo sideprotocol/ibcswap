@@ -114,7 +114,7 @@ func (suite *KeeperTestSuite) TestSendSwap() {
 
 			packet := types.NewAtomicSwapPacketData(types.MAKE_SWAP, msgbyte, "")
 
-			err = suite.chainA.GetSimApp().AtomicSwapKeeper.SendSwapPacket(
+			_, err = suite.chainA.GetSimApp().AtomicSwapKeeper.SendSwapPacket(
 				suite.chainA.GetContext(), path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID,
 				clienttypes.NewHeight(0, 110), 0,
 				packet,

@@ -19,19 +19,19 @@ func (k Keeper) SendSwapPacket(
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64,
 	swapPacket types.AtomicSwapPacketData,
-) error {
+) (*uint64,error) {
 
 	if err := swapPacket.ValidateBasic(); err != nil {
-		return err
+		return nil, err
 	}
 
 	if !k.GetSwapEnabled(ctx) {
-		return types.ErrSendDisabled
+		return nil, types.ErrSendDisabled
 	}
 
 	_, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
-		return sdkerrors.Wrapf(channeltypes.ErrChannelNotFound, "port ID (%s) channel ID (%s)", sourcePort, sourceChannel)
+		return nil, sdkerrors.Wrapf(channeltypes.ErrChannelNotFound, "port ID (%s) channel ID (%s)", sourcePort, sourceChannel)
 	}
 
 	//destinationPort := sourceChannelEnd.GetCounterparty().GetPortID()
@@ -40,7 +40,7 @@ func (k Keeper) SendSwapPacket(
 	// get the next sequence
 	_, found2 := k.channelKeeper.GetNextSequenceSend(ctx, sourcePort, sourceChannel)
 	if !found2 {
-		return sdkerrors.Wrapf(
+		return nil, sdkerrors.Wrapf(
 			channeltypes.ErrSequenceSendNotFound,
 			"source port: %s, source channel: %s", sourcePort, sourceChannel,
 		)
@@ -50,7 +50,7 @@ func (k Keeper) SendSwapPacket(
 	// See spec for this logic: https://github.com/cosmos/ibc/tree/master/spec/app/ics-020-fungible-token-transfer#packet-relay
 	channelCap, ok := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(sourcePort, sourceChannel))
 	if !ok {
-		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
+		return nil, sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 
 	//packet := channeltypes.NewPacket(
@@ -64,9 +64,9 @@ func (k Keeper) SendSwapPacket(
 	//	timeoutTimestamp,
 	//)
 
-	_, err := k.ics4Wrapper.SendPacket(ctx, channelCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, swapPacket.GetBytes())
+	sequence, err := k.ics4Wrapper.SendPacket(ctx, channelCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, swapPacket.GetBytes())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer func() {
@@ -79,7 +79,7 @@ func (k Keeper) SendSwapPacket(
 		//}
 	}()
 
-	return nil
+	return &sequence,nil
 }
 
 func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.AtomicSwapPacketData) ([]byte, error) {

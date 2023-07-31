@@ -67,7 +67,7 @@ func (k msgServer) TakePool(ctx context.Context, msg *types.MsgTakePoolRequest) 
 	}
 
 	
-	err = k.SendIBCSwapPacket(sdkCtx, msg.Port, msg.Channel, timeoutHeight, timeoutStamp, packet)
+	_,err = k.SendIBCSwapPacket(sdkCtx, msg.Port, msg.Channel, timeoutHeight, timeoutStamp, packet)
 	if err != nil {
 		return nil, err
 	}
