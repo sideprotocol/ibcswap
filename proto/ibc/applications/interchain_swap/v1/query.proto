@@ -54,9 +54,9 @@ service Query {
   //   option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_multi_deposit_orders/last";
   // }
 
-  // rpc InterchainLatestMultiDepositOrderByCreators(QueryLatestInterchainMultiDepositOrderByCreatorsRequest) returns (QueryGetInterchainMultiDepositOrderResponse) {
-  //   option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_multi_deposit_orders/{poolId}/{sourceMaker}/{destinationMaker}/last";
-  // }
+  rpc InterchainLatestMultiDepositOrderByCreator(QueryLatestInterchainMultiDepositOrderBySourceMakerRequest) returns (QueryGetInterchainMultiDepositOrderResponse) {
+    option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_multi_deposit_orders/{poolId}/{sourceMaker}/last";
+  }
 
 
   rpc InterchainMultiDepositOrdersAll(QueryAllInterchainMultiDepositOrdersRequest) returns (QueryAllInterchainMultiDepositOrdersResponse) {
@@ -90,12 +90,11 @@ message QueryAllInterchainMultiDepositOrdersResponse {
 //   string poolId = 1;
 //   cosmos.base.query.v1beta1.PageRequest pagination = 3;
 // }
-// // Query latest interchain multi-deposit order by creators 
-// message QueryLatestInterchainMultiDepositOrderByCreatorsRequest {
-//   string poolId = 1;
-//   string sourceMaker = 2;
-//   string destinationMaker = 3;
-// }
+// Query latest interchain multi-deposit order by creators 
+message QueryLatestInterchainMultiDepositOrderBySourceMakerRequest {
+  string poolId = 1;
+  string sourceMaker = 2;
+}
 
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.

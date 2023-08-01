@@ -78,4 +78,5 @@ var (
 	ErrNotEnoughPermission            = errorsmod.Register(ModuleName, 1565, "not enough permission.")
 	ErrInvalidLiquidityPair           = errorsmod.Register(ModuleName, 1566, "invalid liquidity pair")
 	ErrMissedIBCParams                = errorsmod.Register(ModuleName, 1567, "port, channel have to point to broadcast ibc message!")
+	ErrNotFoundOrder                  = errorsmod.Register(ModuleName, 1568, "did not find order")
 )
