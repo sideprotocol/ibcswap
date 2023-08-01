@@ -93,6 +93,16 @@ func (k msgServer) MakePool(ctx context.Context, msg *types.MsgMakePoolRequest) 
 	if err != nil {
 		return nil, err
 	}
+
+	sdkCtx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeMakePool,
+			sdk.Attribute{
+				Key:   types.AttributeKeyPoolId,
+				Value: poolId,
+			},
+		))
+
 	return &types.MsgMakePoolResponse{
 		PoolId: poolId,
 	}, nil

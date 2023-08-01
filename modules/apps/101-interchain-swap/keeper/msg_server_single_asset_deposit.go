@@ -71,10 +71,28 @@ func (k Keeper) SingleAssetDeposit(ctx context.Context, msg *types.MsgSingleAsse
 		timeoutStamp = msg.TimeoutTimeStamp
 	}
 
-	_,err = k.SendIBCSwapPacket(sdkCtx, msg.Port, msg.Channel, timeoutHeight, timeoutStamp, packet)
+	_, err = k.SendIBCSwapPacket(sdkCtx, msg.Port, msg.Channel, timeoutHeight, timeoutStamp, packet)
 	if err != nil {
 		return nil, err
 	}
+
+	sdkCtx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeSingleDepositOrder,
+			sdk.Attribute{
+				Key:   types.AttributeKeyPoolId,
+				Value: msg.PoolId,
+			},
+			sdk.Attribute{
+				Key:   types.AttributeKeyTokenIn,
+				Value: msg.Token.String(),
+			},
+
+			sdk.Attribute{
+				Key:   types.AttributeKeyLpToken,
+				Value: poolToken.String(),
+			},
+		))
 
 	return &types.MsgSingleAssetDepositResponse{
 		PoolToken: pool.Supply,

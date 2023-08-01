@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
@@ -88,6 +89,29 @@ func (k Keeper) TakeMultiAssetDeposit(ctx context.Context, msg *types.MsgTakeMul
 	if err != nil {
 		return nil, err
 	}
+
+	// Emit events
+	poolTokenEventValues := []string{}
+	for _, poolToken := range poolTokens {
+		poolTokenEventValues = append(poolTokenEventValues, poolToken.String())
+	}
+	mintedPoolTokens := strings.Join(poolTokenEventValues, ":")
+	sdkCtx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeTakeMultiDepositOrder,
+			sdk.Attribute{
+				Key:   types.AttributeKeyPoolId,
+				Value: msg.PoolId,
+			},
+			sdk.Attribute{
+				Key:   types.AttributeKeyMultiDepositOrderId,
+				Value: order.Id,
+			},
+			sdk.Attribute{
+				Key:   types.AttributeKeyLpToken,
+				Value: mintedPoolTokens,
+			},
+		))
 
 	return &types.MsgMultiAssetDepositResponse{}, nil
 }

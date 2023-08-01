@@ -66,11 +66,19 @@ func (k msgServer) TakePool(ctx context.Context, msg *types.MsgTakePoolRequest) 
 		timeoutStamp = msg.TimeoutTimeStamp
 	}
 
-	
-	_,err = k.SendIBCSwapPacket(sdkCtx, msg.Port, msg.Channel, timeoutHeight, timeoutStamp, packet)
+	_, err = k.SendIBCSwapPacket(sdkCtx, msg.Port, msg.Channel, timeoutHeight, timeoutStamp, packet)
 	if err != nil {
 		return nil, err
 	}
+
+	sdkCtx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeTakePool,
+			sdk.Attribute{
+				Key:   types.AttributeKeyPoolId,
+				Value: msg.PoolId,
+			},
+		))
 
 	return &types.MsgTakePoolResponse{
 		PoolId: msg.PoolId,
