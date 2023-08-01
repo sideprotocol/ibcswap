@@ -26,11 +26,6 @@ func CmdTakeMultiAssetDeposit() *cobra.Command {
 			argPort := args[3]
 			argChannel := args[4]
 
-			orderId, err := strconv.Atoi(argOrderId)
-			if err != nil {
-				return err
-			}
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -42,7 +37,7 @@ func CmdTakeMultiAssetDeposit() *cobra.Command {
 			msg := types.NewMsgTakeMultiAssetDeposit(
 				argSender,
 				argPoolId,
-				uint64(orderId),
+				argOrderId,
 				argPort,
 				argChannel,
 			)

@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -22,14 +21,10 @@ func CmdShowInterchainMultiDepositOrders() *cobra.Command {
 
 			argPoolId := args[0]
 			argOrderId := args[1]
-			orderId, err := strconv.Atoi(argOrderId)
-			if err != nil {
-				return err
-			}
 
 			params := &types.QueryGetInterchainMultiDepositOrderRequest{
 				PoolId:  argPoolId,
-				OrderId: uint64(orderId),
+				OrderId: argOrderId,
 			}
 
 			res, err := queryClient.InterchainMultiDepositOrder(context.Background(), params)

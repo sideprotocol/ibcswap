@@ -50,24 +50,24 @@ service Query {
     option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_multi_deposit_orders/{poolId}/{orderId}";
   }
 
-  rpc InterchainLatestMultiDepositOrder(QueryLatestInterchainMultiDepositOrderRequest) returns (QueryGetInterchainMultiDepositOrderResponse) {
-    option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_multi_deposit_orders/last";
-  }
+  // rpc InterchainLatestMultiDepositOrder(QueryLatestInterchainMultiDepositOrderRequest) returns (QueryGetInterchainMultiDepositOrderResponse) {
+  //   option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_multi_deposit_orders/last";
+  // }
 
-  rpc InterchainLatestMultiDepositOrderByCreators(QueryLatestInterchainMultiDepositOrderByCreatorsRequest) returns (QueryGetInterchainMultiDepositOrderResponse) {
-    option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_multi_deposit_orders/{poolId}/{sourceMaker}/{destinationMaker}/last";
-  }
+  // rpc InterchainLatestMultiDepositOrderByCreators(QueryLatestInterchainMultiDepositOrderByCreatorsRequest) returns (QueryGetInterchainMultiDepositOrderResponse) {
+  //   option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_multi_deposit_orders/{poolId}/{sourceMaker}/{destinationMaker}/last";
+  // }
 
 
   rpc InterchainMultiDepositOrdersAll(QueryAllInterchainMultiDepositOrdersRequest) returns (QueryAllInterchainMultiDepositOrdersResponse) {
-    option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_multi_deposit_orders/{poolId}";
+    option (google.api.http).get = "/ibc/apps/interchainswap/v1/interchain_multi_deposit_orders";
   }
 }
 
 // QueryOrdersRequest is the request type for the Query/MutliDepositOrder RPC method
 message QueryGetInterchainMultiDepositOrderRequest {
   string poolId = 1;
-  uint64 orderId = 2;
+  string orderId = 2;
 }
 message QueryGetInterchainMultiDepositOrderResponse {
   // params defines the parameters of the module.
@@ -85,17 +85,17 @@ message QueryAllInterchainMultiDepositOrdersResponse {
   cosmos.base.query.v1beta1.PageResponse pagination              = 2;
 }
 
-// Query latest interchain multi-deposit order 
-message QueryLatestInterchainMultiDepositOrderRequest {
-  string poolId = 1;
-  cosmos.base.query.v1beta1.PageRequest pagination = 3;
-}
-// Query latest interchain multi-deposit order by creators 
-message QueryLatestInterchainMultiDepositOrderByCreatorsRequest {
-  string poolId = 1;
-  string sourceMaker = 2;
-  string destinationMaker = 3;
-}
+// // Query latest interchain multi-deposit order 
+// message QueryLatestInterchainMultiDepositOrderRequest {
+//   string poolId = 1;
+//   cosmos.base.query.v1beta1.PageRequest pagination = 3;
+// }
+// // Query latest interchain multi-deposit order by creators 
+// message QueryLatestInterchainMultiDepositOrderByCreatorsRequest {
+//   string poolId = 1;
+//   string sourceMaker = 2;
+//   string destinationMaker = 3;
+// }
 
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.

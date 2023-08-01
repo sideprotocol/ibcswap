@@ -11,7 +11,7 @@ import (
 func (k Keeper) TakeMultiAssetDeposit(ctx context.Context, msg *types.MsgTakeMultiAssetDepositRequest) (*types.MsgMultiAssetDepositResponse, error) {
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	
+
 	// Validate message
 	err := msg.ValidateBasic()
 	if err != nil {
@@ -84,7 +84,7 @@ func (k Keeper) TakeMultiAssetDeposit(ctx context.Context, msg *types.MsgTakeMul
 		timeoutStamp = msg.TimeoutTimeStamp
 	}
 
-	_,err = k.SendIBCSwapPacket(sdkCtx, msg.Port, msg.Channel, timeoutHeight, timeoutStamp, packet)
+	_, err = k.SendIBCSwapPacket(sdkCtx, msg.Port, msg.Channel, timeoutHeight, timeoutStamp, packet)
 	if err != nil {
 		return nil, err
 	}

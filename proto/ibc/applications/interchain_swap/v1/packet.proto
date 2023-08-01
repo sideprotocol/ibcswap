@@ -30,7 +30,7 @@ message StateChange {
   repeated cosmos.base.v1beta1.Coin out = 2;
   repeated cosmos.base.v1beta1.Coin poolTokens = 3;
   string poolId = 4;
-  uint64 multiDepositOrderId = 5;
+  string multiDepositOrderId = 5;
   string sourceChainId = 6;
 }
 

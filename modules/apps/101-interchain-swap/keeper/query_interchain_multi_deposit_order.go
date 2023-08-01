@@ -33,40 +33,40 @@ func (k Keeper) InterchainMultiDepositOrdersAll(ctx context.Context, req *types.
 	}, nil
 }
 
-// You may need to adjust the function signature, return types, and parameter types based on your module's implementation
-func (k Keeper) InterchainLatestMultiDepositOrder(ctx context.Context, req *types.QueryLatestInterchainMultiDepositOrderRequest) (*types.QueryGetInterchainMultiDepositOrderResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	order, found := k.GetLatestMultiDepositOrder(sdkCtx, req.PoolId)
-	if !found {
-		return nil, types.ErrNotFoundMultiDepositOrder
-	}
-	return &types.QueryGetInterchainMultiDepositOrderResponse{
-		Order: &order,
-	}, nil
-}
+// // You may need to adjust the function signature, return types, and parameter types based on your module's implementation
+// func (k Keeper) InterchainLatestMultiDepositOrder(ctx context.Context, req *types.QueryLatestInterchainMultiDepositOrderRequest) (*types.QueryGetInterchainMultiDepositOrderResponse, error) {
+// 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+// 	order, found := k.GetLatestMultiDepositOrder(sdkCtx, req.PoolId)
+// 	if !found {
+// 		return nil, types.ErrNotFoundMultiDepositOrder
+// 	}
+// 	return &types.QueryGetInterchainMultiDepositOrderResponse{
+// 		Order: &order,
+// 	}, nil
+// }
 
-// You may need to adjust the function signature, return types, and parameter types based on your module's implementation
-func (k Keeper) InterchainMyLatestMultiDepositOrder(ctx context.Context, req *types.QueryLatestInterchainMultiDepositOrderRequest) (*types.QueryGetInterchainMultiDepositOrderResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	order, found := k.GetLatestMultiDepositOrder(sdkCtx, req.PoolId)
-	if !found {
-		return nil, types.ErrNotFoundMultiDepositOrder
-	}
+// // You may need to adjust the function signature, return types, and parameter types based on your module's implementation
+// func (k Keeper) InterchainMyLatestMultiDepositOrder(ctx context.Context, req *types.QueryLatestInterchainMultiDepositOrderRequest) (*types.QueryGetInterchainMultiDepositOrderResponse, error) {
+// 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+// 	order, found := k.GetLatestMultiDepositOrder(sdkCtx, req.PoolId)
+// 	if !found {
+// 		return nil, types.ErrNotFoundMultiDepositOrder
+// 	}
 
-	return &types.QueryGetInterchainMultiDepositOrderResponse{
-		Order: &order,
-	}, nil
-}
+// 	return &types.QueryGetInterchainMultiDepositOrderResponse{
+// 		Order: &order,
+// 	}, nil
+// }
 
-// You may need to adjust the function signature, return types, and parameter types based on your module's implementation
-func (k Keeper) InterchainLatestMultiDepositOrderByCreators(ctx context.Context, req *types.QueryLatestInterchainMultiDepositOrderByCreatorsRequest) (*types.QueryGetInterchainMultiDepositOrderResponse, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	id := k.GetMultiDepositOrderLatestOrderByCreators(sdkCtx, req.PoolId, req.SourceMaker, req.DestinationMaker)
-	order, found := k.GetMultiDepositOrder(sdkCtx, req.PoolId, id)
-	if !found {
-		return nil, types.ErrNotFoundMultiDepositOrder
-	}
-	return &types.QueryGetInterchainMultiDepositOrderResponse{
-		Order: &order,
-	}, nil
-}
+// // You may need to adjust the function signature, return types, and parameter types based on your module's implementation
+// func (k Keeper) InterchainLatestMultiDepositOrderByCreators(ctx context.Context, req *types.QueryLatestInterchainMultiDepositOrderByCreatorsRequest) (*types.QueryGetInterchainMultiDepositOrderResponse, error) {
+// 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+// 	id := k.GetMultiDepositOrderLatestOrderByCreators(sdkCtx, req.PoolId, req.SourceMaker, req.DestinationMaker)
+// 	order, found := k.GetMultiDepositOrder(sdkCtx, req.PoolId, id)
+// 	if !found {
+// 		return nil, types.ErrNotFoundMultiDepositOrder
+// 	}
+// 	return &types.QueryGetInterchainMultiDepositOrderResponse{
+// 		Order: &order,
+// 	}, nil
+// }

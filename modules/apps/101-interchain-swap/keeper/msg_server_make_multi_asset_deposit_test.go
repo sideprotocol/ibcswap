@@ -64,7 +64,8 @@ func (suit *KeeperTestSuite) TestMakeMultiAssetDeposit() {
 				"interchainswap",
 				"channel-0",
 			))
-	order, found := k.GetMultiDepositOrder(ctx, poolId, 0)
+	orderId := types.GetOrderId(suit.chainA.SenderAccount.GetAddress().String(), 0)
+	order, found := k.GetMultiDepositOrder(ctx, poolId, orderId)
 	suit.Require().Equal(ctx.ChainID(), order.ChainId)
 	suit.Require().Equal(found, true)
 	orders := k.GetAllMultiDepositOrder(ctx, poolId)

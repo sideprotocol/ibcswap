@@ -528,6 +528,13 @@ func getPoolID(srcChain, targetChain *cosmos.CosmosChain, denomPair []string) st
 	return poolId
 }
 
+func GetFirstOrderId(s *InterchainswapTestSuite, ctx context.Context, chain *cosmos.CosmosChain, poolId string) types.MultiAssetDepositOrder {
+	// check pool info in chainA and chainB
+	orderRes, err := s.QueryInterchainMultiDepositOrders(ctx, chain, poolId)
+	s.Require().NoError(err)
+	return *orderRes.Orders[0]
+}
+
 func AsArray(coins sdk.Coins) []*sdk.Coin {
 	coinArray := make([]*sdk.Coin, 0)
 	for _, coin := range coins {
@@ -535,4 +542,3 @@ func AsArray(coins sdk.Coins) []*sdk.Coin {
 	}
 	return coinArray
 }
-

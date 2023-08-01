@@ -39,19 +39,17 @@ func GetPoolId(sourceChainId, destinationChainId string, denoms []string) string
 	return poolId
 }
 
+func GetOrderId(maker string, sequence uint64) string {
+	orderIdHash := sha256.New()
+	orderIdHash.Write([]byte(strings.Join([]string{maker, fmt.Sprintf("%s", sequence)}, "-")))
+	orderId := "multi_deposit_order" + fmt.Sprintf("%v", hex.EncodeToString(orderIdHash.Sum(nil)))
+	return orderId
+}
+
 func GetConnectID(chainIds ...string) string {
 	//generate poolId
 	sort.Strings(chainIds)
 	return strings.Join(chainIds, "/")
-}
-
-func GetOrderId(chainID string) string {
-	//generate poolId
-	orderIdHash := sha256.New()
-	salt := GenerateRandomString(chainID, 10)
-	orderIdHash.Write([]byte(salt))
-	orderId := "order" + fmt.Sprintf("%v", hex.EncodeToString(orderIdHash.Sum(nil)))
-	return orderId
 }
 
 func GetEscrowAddress(portID, channelID string) sdk.AccAddress {

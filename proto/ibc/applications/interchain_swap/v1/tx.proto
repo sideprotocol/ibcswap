@@ -83,7 +83,7 @@ message MsgMakeMultiAssetDepositRequest {
 message MsgTakeMultiAssetDepositRequest {
   string        sender = 1;
   string        poolId = 2;
-  uint64        orderId = 3;
+  string        orderId = 3;
   string port     = 4;
   string channel  = 5;
   ibc.core.client.v1.Height timeoutHeight = 6;

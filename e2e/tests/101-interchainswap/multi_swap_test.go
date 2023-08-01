@@ -254,7 +254,7 @@ func (s *InterchainswapTestSuite) TestSwapStatus() {
 				logger.CleanLog("=current ratio=", currentRatio)
 				logger.CleanLog("=input ratio=", currentRatio)
 
-				err = types.CheckSlippage(currentRatio, inputRatio, 10)
+				err = types.CheckSlippage(sdk.NewDecFromInt(currentRatio), sdk.NewDecFromInt(inputRatio), 10)
 				s.NoError(err)
 
 				msg := types.NewMsgMakeMultiAssetDeposit(
@@ -273,10 +273,11 @@ func (s *InterchainswapTestSuite) TestSwapStatus() {
 				s.AssertValidTxResponse(txRes)
 
 			case "take multi-deposit":
+				order := GetFirstOrderId(s,ctx, chainA, poolId)
 				msg := types.NewMsgTakeMultiAssetDeposit(
 					chainBAddress,
 					poolId,
-					0,
+					order.Id,
 					channel.PortID,
 					channel.ChannelID,
 				)
@@ -371,7 +372,7 @@ func (s *InterchainswapTestSuite) TestSwapStatus() {
 		s.Require().NoError(err)
 
 		logger.CleanLog("[amount]", tokenBAmountAfterSwap, tokenBAmount)
-		s.Require().Greater(tokenBAmountAfterSwap.Balance.Amount, tokenBAmount.Balance.Amount)
+		s.Require().True(tokenBAmountAfterSwap.Balance.Amount.GT(tokenBAmount.Balance.Amount))
 	})
 
 }

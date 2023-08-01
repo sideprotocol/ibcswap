@@ -64,7 +64,7 @@ enum OrderStatus {
 
 // multi asset deposit order
 message MultiAssetDepositOrder {
-  uint64 id = 1;
+  string id = 1;
   string poolId = 2;
   string chainId = 3;
   string sourceMaker = 4;

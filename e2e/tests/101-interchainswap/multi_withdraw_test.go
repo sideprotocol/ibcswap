@@ -254,7 +254,7 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 				logger.CleanLog("=current ratio=", currentRatio)
 				logger.CleanLog("=input ratio=", currentRatio)
 
-				err = types.CheckSlippage(currentRatio, inputRatio, 10)
+				err = types.CheckSlippage(sdk.NewDecFromInt(currentRatio), sdk.NewDecFromInt(inputRatio), 10)
 				s.NoError(err)
 
 				msg := types.NewMsgMakeMultiAssetDeposit(
@@ -273,10 +273,11 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 				s.AssertValidTxResponse(txRes)
 
 			case "take multi-deposit":
+				order := GetFirstOrderId(s,ctx, chainA, poolId)
 				msg := types.NewMsgTakeMultiAssetDeposit(
 					chainBAddress,
 					poolId,
-					0,
+					order.Id,
 					channel.PortID,
 					channel.ChannelID,
 				)

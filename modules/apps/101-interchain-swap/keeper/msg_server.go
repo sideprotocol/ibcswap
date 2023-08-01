@@ -132,7 +132,7 @@ func (k Keeper) OnTakeMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.
 	// Save the updated liquidity pool
 	k.SetInterchainLiquidityPool(ctx, pool)
 	// Update order statuse
-	k.SetMultiDepositOrder(ctx, pool.Id, order)
+	k.SetMultiDepositOrder(ctx, order)
 	return nil
 }
 
@@ -282,6 +282,7 @@ func (k Keeper) OnMakeMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgM
 
 	// create order
 	order := types.MultiAssetDepositOrder{
+		Id:               stateChange.MultiDepositOrderId,
 		PoolId:           msg.PoolId,
 		ChainId:          pool.SourceChainId,
 		SourceMaker:      msg.Deposits[0].Sender,
@@ -291,7 +292,7 @@ func (k Keeper) OnMakeMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgM
 		CreatedAt:        ctx.BlockHeight(),
 	}
 
-	k.AppendMultiDepositOrder(ctx, msg.PoolId, order)
+	k.SetMultiDepositOrder(ctx, order)
 	return &types.MsgMultiAssetDepositResponse{
 		PoolTokens: []*sdk.Coin{},
 	}, nil
@@ -338,7 +339,7 @@ func (k Keeper) OnTakeMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgT
 	}
 
 	k.SetInterchainLiquidityPool(ctx, pool)
-	k.SetMultiDepositOrder(ctx, pool.Id, order)
+	k.SetMultiDepositOrder(ctx, order)
 	return &types.MsgMultiAssetDepositResponse{}, nil
 }
 

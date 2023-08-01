@@ -78,8 +78,13 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 	}
 
 	// save order in source chain
-	k.AppendMultiDepositOrder(sdkCtx, pool.Id, order)
+	//set orderId
+	creator := sdk.MustAccAddressFromBech32(msg.Deposits[0].Sender)
+	acc := k.authKeeper.GetAccount(sdkCtx, creator)
+	orderId := types.GetOrderId(order.SourceMaker, acc.GetSequence())
+	order.Id = orderId
 
+	k.SetMultiDepositOrder(sdkCtx, order)
 	// Construct IBC packet
 	rawMsgData, err := types.ModuleCdc.Marshal(msg)
 	if err != nil {

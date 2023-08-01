@@ -251,7 +251,7 @@ func (s *InterchainswapTestSuite) TestMultiDepositStatus() {
 				logger.CleanLog("=current ratio=", currentRatio)
 				logger.CleanLog("=input ratio=", currentRatio)
 
-				err = types.CheckSlippage(currentRatio, inputRatio, 10)
+				err = types.CheckSlippage(sdk.NewDecFromInt(currentRatio), sdk.NewDecFromInt(inputRatio), 10)
 				s.NoError(err)
 
 				msg := types.NewMsgMakeMultiAssetDeposit(
@@ -269,10 +269,11 @@ func (s *InterchainswapTestSuite) TestMultiDepositStatus() {
 				s.Require().NoError(err)
 				s.AssertValidTxResponse(txRes)
 			case "take multi-deposit":
+				order := GetFirstOrderId(s, ctx, chainA, poolId)
 				msg := types.NewMsgTakeMultiAssetDeposit(
 					chainBAddress,
 					poolId,
-					0,
+					order.Id,
 					channel.PortID,
 					channel.ChannelID,
 				)
@@ -402,7 +403,7 @@ func (s *InterchainswapTestSuite) TestMultiDepositStatus() {
 				logger.CleanLog("=current ratio=", currentRatio)
 				logger.CleanLog("=input ratio=", currentRatio)
 
-				err = types.CheckSlippage(currentRatio, inputRatio, 10)
+				err = types.CheckSlippage(sdk.NewDecFromInt(currentRatio), sdk.NewDecFromInt(inputRatio), 10)
 				s.NoError(err)
 
 				msg := types.NewMsgMakeMultiAssetDeposit(
@@ -423,10 +424,11 @@ func (s *InterchainswapTestSuite) TestMultiDepositStatus() {
 				}
 
 			case "take multi-deposit":
+				order := GetFirstOrderId(s, ctx, chainA, poolId)
 				msg := types.NewMsgTakeMultiAssetDeposit(
 					chainBAddress,
 					poolId,
-					0,
+					order.Id,
 					channel.PortID,
 					channel.ChannelID,
 				)
@@ -443,7 +445,8 @@ func (s *InterchainswapTestSuite) TestMultiDepositStatus() {
 			if tc.msgType == "make second multi-deposit order" {
 				orderRes, err := s.QueryInterchainMultiDepositOrders(ctx, chainA, poolId)
 				s.Require().NoError(err)
-				s.Require().Equal(len(orderRes.Orders), 1)
+				logger.CleanLog("Orders", orderRes.Orders)
+				s.Require().Equal(len(orderRes.Orders), 3)
 			}
 			if tc.msgType == "take multi-deposit" {
 

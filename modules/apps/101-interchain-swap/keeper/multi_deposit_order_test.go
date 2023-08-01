@@ -20,16 +20,18 @@ func (suite *KeeperTestSuite) TestSetMultiDepositOrder() {
 		CreatedAt:        123,
 	}
 
-	orderId := k.AppendMultiDepositOrder(
+	orderId := types.GetOrderId(order.SourceMaker, 0)
+	order.Id = orderId
+
+	k.SetMultiDepositOrder(
 		ctx,
-		"test",
 		order,
 	)
 	suite.Require().Equal(orderId, uint64(0))
 
 	storedOrder, found := k.GetMultiDepositOrder(
 		ctx,
-		"test",
+		order.PoolId,
 		orderId,
 	)
 	suite.Require().Equal(found, true)
@@ -53,23 +55,22 @@ func (suite *KeeperTestSuite) TestGetLatestMultiDepositOrder() {
 		CreatedAt:        123,
 	}
 
-	orderId := k.AppendMultiDepositOrder(
+	orderId := types.GetOrderId(order.SourceMaker, 0)
+	order.Id = orderId
+
+	k.SetMultiDepositOrder(
 		ctx,
-		"test",
 		order,
 	)
 	suite.Require().Equal(orderId, uint64(0))
 
 	storedOrder, found := k.GetMultiDepositOrder(
 		ctx,
-		"test",
+		order.PoolId,
 		orderId,
 	)
 	suite.Require().Equal(found, true)
 	suite.Require().Equal(storedOrder, order)
-
-	order, found = k.GetLatestMultiDepositOrder(ctx, poolId)
-	suite.Require().Equal(found, true)
 	suite.Require().Equal(order.Status, types.OrderStatus_PENDING)
 
 }
