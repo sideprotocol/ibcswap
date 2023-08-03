@@ -17,10 +17,12 @@ import "ibc/applications/interchain_swap/v1/market.proto";
 // Msg defines the Msg service.
 service Msg {
   rpc MakePool (MsgMakePoolRequest) returns (MsgMakePoolResponse);
+  rpc CancelPool (MsgTakePoolRequest) returns (MsgTakePoolResponse);
   rpc TakePool (MsgTakePoolRequest) returns (MsgTakePoolResponse);
 
   rpc SingleAssetDeposit    (MsgSingleAssetDepositRequest   ) returns (MsgSingleAssetDepositResponse   );
   rpc MakeMultiAssetDeposit    (MsgMakeMultiAssetDepositRequest   ) returns (MsgMultiAssetDepositResponse   );
+  rpc CancelMultiAssetDeposit    (MsgCancelMultiAssetDepositRequest   ) returns (MsgCancelMultiAssetDepositResponse   );
   rpc TakeMultiAssetDeposit    (MsgTakeMultiAssetDepositRequest   ) returns (MsgMultiAssetDepositResponse   );
   rpc MultiAssetWithdraw   (MsgMultiAssetWithdrawRequest  ) returns (MsgMultiAssetWithdrawResponse  );
   rpc Swap       (MsgSwapRequest             ) returns (MsgSwapResponse      );
@@ -40,6 +42,16 @@ message MsgMakePoolResponse {
   string poolId = 1;
 }
 
+// cancel pool
+message MsgCancelPoolRequest {
+  string creator = 1;
+  string poolId  = 2;
+  ibc.core.client.v1.Height timeoutHeight = 3 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
+  uint64 timeoutTimeStamp  = 4;           
+}
+message MsgCancelPoolResponse {
+  string poolId  = 1;        
+}
 
 message MsgTakePoolRequest {
   string creator = 1;
@@ -78,6 +90,22 @@ message MsgMakeMultiAssetDepositRequest {
   ibc.core.client.v1.Height timeoutHeight = 5;
   uint64 timeoutTimeStamp  = 6; 
 }
+
+// cancel multi-asset deposit order
+
+// make multi-asset deposit order
+message MsgCancelMultiAssetDepositRequest {
+  string        sender = 1;
+  string        poolId = 2;
+  uint64        orderId = 3;
+  ibc.core.client.v1.Height timeoutHeight = 4;
+  uint64 timeoutTimeStamp  = 5; 
+}
+
+message MsgCancelMultiAssetDepositResponse {
+  string poolId = 1;
+}
+
 
 // make multi-asset deposit order
 message MsgTakeMultiAssetDepositRequest {

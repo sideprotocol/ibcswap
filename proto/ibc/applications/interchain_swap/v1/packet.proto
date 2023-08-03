@@ -16,13 +16,15 @@ enum SwapMessageType {
   TYPE_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "UNSPECIFIED"];
 
   TYPE_MAKE_POOL = 1 [(gogoproto.enumvalue_customname) = "MAKE_POOL"];
-  TYPE_TAKE_POOL = 2 [(gogoproto.enumvalue_customname) = "TAKE_POOL"];
-  TYPE_SINGLE_DEPOSIT = 3 [(gogoproto.enumvalue_customname) = "SINGLE_DEPOSIT"];
-  TYPE_MAKE_MULTI_DEPOSIT = 4 [(gogoproto.enumvalue_customname) = "MAKE_MULTI_DEPOSIT"];
-  TYPE_TAKE_MULTI_DEPOSIT = 5 [(gogoproto.enumvalue_customname) = "TAKE_MULTI_DEPOSIT"];
-  TYPE_MULTI_WITHDRAW = 7 [(gogoproto.enumvalue_customname) = "MULTI_WITHDRAW"];
-  TYPE_LEFT_SWAP = 8 [(gogoproto.enumvalue_customname) = "LEFT_SWAP"];
-  TYPE_RIGHT_SWAP = 9 [(gogoproto.enumvalue_customname) = "RIGHT_SWAP"];
+  TYPE_CANCEL_POOL = 2 [(gogoproto.enumvalue_customname) = "CANCEL_POOL"];
+  TYPE_TAKE_POOL = 3 [(gogoproto.enumvalue_customname) = "TAKE_POOL"];
+  TYPE_SINGLE_DEPOSIT = 4 [(gogoproto.enumvalue_customname) = "SINGLE_DEPOSIT"];
+  TYPE_MAKE_MULTI_DEPOSIT = 5 [(gogoproto.enumvalue_customname) = "MAKE_MULTI_DEPOSIT"];
+  TYPE_CANCEL_MULTI_DEPOSIT = 6 [(gogoproto.enumvalue_customname) = "CANCEL__MULTI_DEPOSIT"];
+  TYPE_TAKE_MULTI_DEPOSIT = 7 [(gogoproto.enumvalue_customname) = "TAKE_MULTI_DEPOSIT"];
+  TYPE_MULTI_WITHDRAW = 8 [(gogoproto.enumvalue_customname) = "MULTI_WITHDRAW"];
+  TYPE_LEFT_SWAP = 9 [(gogoproto.enumvalue_customname) = "LEFT_SWAP"];
+  TYPE_RIGHT_SWAP = 10 [(gogoproto.enumvalue_customname) = "RIGHT_SWAP"];
 }
 
 message StateChange {
