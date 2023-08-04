@@ -154,7 +154,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		res, err := k.OnMultiAssetWithdrawReceived(ctx, &msg, data.StateChange)
+		res, err := k.OnMultiAssetWithdrawReceived(ctx, &msg, *data.StateChange)
 		if err != nil {
 			return nil, err
 		}
@@ -181,7 +181,6 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 // OnAcknowledgementPacket processes the packet acknowledgement and performs actions based on the acknowledgement type
 func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, data *types.IBCSwapPacketData, ack channeltypes.Acknowledgement) error {
 	logger := k.Logger(ctx)
-
 	switch ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Error:
 		return k.refundPacketToken(ctx, packet, data)
@@ -322,17 +321,13 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 
 		case types.MULTI_WITHDRAW:
 			var msg types.MsgMultiAssetWithdrawRequest
-			var res types.MsgMultiAssetWithdrawResponse
+			//var res types.MsgMultiAssetWithdrawResponse
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 				return err
 			}
-			if err := types.ModuleCdc.Unmarshal(ack.GetResult(), &res); err != nil {
+			if err := k.OnMultiAssetWithdrawAcknowledged(ctx, &msg, *data.StateChange); err != nil {
 				return err
 			}
-			if err := k.OnMultiAssetWithdrawAcknowledged(ctx, &msg, &res); err != nil {
-				return err
-			}
-
 			eventAttr := []sdk.Attribute{}
 			for _, out := range data.StateChange.Out {
 				eventAttr = append(eventAttr, sdk.Attribute{
@@ -422,6 +417,11 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		}
 		token = *msg.PoolToken
 		sender = msg.Receiver
+		//burn voucher token.
+		err := k.MintTokens(ctx, sdk.MustAccAddressFromBech32(msg.Receiver), *msg.PoolToken)
+		if err != nil {
+			return err
+		}
 	case types.RIGHT_SWAP:
 		var msg types.MsgSwapRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {

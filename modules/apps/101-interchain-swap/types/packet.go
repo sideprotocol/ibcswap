@@ -31,3 +31,12 @@ type AckData[T any, U any] struct {
 	Req T
 	Res U
 }
+
+func (s *StateChange) FindOutByDenom(denom string) (*sdk.Coin, error) {
+	for _, out := range s.Out {
+		if out.Denom == denom {
+			return out, nil
+		}
+	}
+	return nil, ErrInvalidDenom
+}

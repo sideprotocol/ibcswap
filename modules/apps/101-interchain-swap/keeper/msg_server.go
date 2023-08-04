@@ -170,21 +170,27 @@ func (k Keeper) OnTakeMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.
 	return nil
 }
 
-func (k Keeper) OnMultiAssetWithdrawAcknowledged(ctx sdk.Context, req *types.MsgMultiAssetWithdrawRequest, res *types.MsgMultiAssetWithdrawResponse) error {
+func (k Keeper) OnMultiAssetWithdrawAcknowledged(ctx sdk.Context, req *types.MsgMultiAssetWithdrawRequest, stateChange types.StateChange) error {
 
-	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolToken.Denom)
+	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolId)
 	if !found {
 		return types.ErrNotFoundPool
 	}
 
 	// update pool status
-	for _, poolAsset := range res.Tokens {
+	for _, poolAsset := range stateChange.Out {
 		pool.SubtractAsset(*poolAsset)
 	}
 	pool.SubtractPoolSupply(*req.PoolToken)
 
-	//burn voucher token.
-	err := k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(req.Receiver), *req.PoolToken)
+	
+
+	nativeToken, err := pool.FindDenomBySide(types.PoolAssetSide_SOURCE)
+	if err != nil {
+		return err
+	}
+
+	out, err := stateChange.FindOutByDenom(*nativeToken)
 	if err != nil {
 		return err
 	}
@@ -194,7 +200,7 @@ func (k Keeper) OnMultiAssetWithdrawAcknowledged(ctx sdk.Context, req *types.Msg
 		pool.CounterPartyPort,
 		pool.CounterPartyChannel,
 		sdk.MustAccAddressFromBech32(req.Receiver),
-		sdk.NewCoins(*res.Tokens[0]),
+		sdk.NewCoins(*out),
 	)
 
 	if err != nil {
@@ -411,10 +417,10 @@ func (k Keeper) OnTakeMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgT
 }
 
 // OnMultiAssetWithdrawReceived processes a withdrawal request and returns a response or an error.
-func (k Keeper) OnMultiAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgMultiAssetWithdrawRequest, stateChange *types.StateChange) (*types.MsgMultiAssetWithdrawResponse, error) {
+func (k Keeper) OnMultiAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgMultiAssetWithdrawRequest, stateChange types.StateChange) (*types.MsgMultiAssetWithdrawResponse, error) {
 
 	// Retrieve the liquidity pool
-	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolToken.Denom)
+	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
 	if !found {
 		return nil, types.ErrNotFoundPool
 	}
@@ -423,12 +429,19 @@ func (k Keeper) OnMultiAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgMult
 	for _, poolAsset := range stateChange.Out {
 		pool.SubtractAsset(*poolAsset)
 	}
-	for _, poolToken := range stateChange.PoolTokens {
-		pool.SubtractPoolSupply(*poolToken)
+	pool.SubtractPoolSupply(*msg.PoolToken)
+
+	nativeDenom, err := pool.FindDenomBySide(types.PoolAssetSide_SOURCE)
+	if err != nil {
+		return nil, err
 	}
 
+	out, err := stateChange.FindOutByDenom(*nativeDenom)
+	if err != nil {
+		return nil, err
+	}
 	// escrow operation
-	err := k.UnlockTokens(ctx, pool.CounterPartyPort, pool.CounterPartyChannel, sdk.MustAccAddressFromBech32(msg.CounterPartyReceiver), sdk.NewCoins(*stateChange.Out[1]))
+	err = k.UnlockTokens(ctx, pool.CounterPartyPort, pool.CounterPartyChannel, sdk.MustAccAddressFromBech32(msg.CounterPartyReceiver), sdk.NewCoins(*out))
 
 	if err != nil {
 		return nil, err
@@ -440,7 +453,6 @@ func (k Keeper) OnMultiAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgMult
 		// Save pool
 		k.SetInterchainLiquidityPool(ctx, pool)
 	}
-
 	return &types.MsgMultiAssetWithdrawResponse{
 		Tokens: stateChange.Out,
 	}, nil

@@ -48,6 +48,12 @@ func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMulti
 		return nil, err
 	}
 
+	//burn voucher token.
+	err = k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(msg.Receiver), *msg.PoolToken)
+	if err != nil {
+		return nil, err
+	}
+
 	packet := types.IBCSwapPacketData{
 		Type: types.MULTI_WITHDRAW,
 		Data: rawMsgData,
@@ -66,7 +72,7 @@ func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMulti
 		timeoutStamp = msg.TimeoutTimeStamp
 	}
 
-	_,err = k.SendIBCSwapPacket(ctx, msg.Port, msg.Channel, timeoutHeight, uint64(timeoutStamp), packet)
+	_, err = k.SendIBCSwapPacket(ctx, msg.Port, msg.Channel, timeoutHeight, uint64(timeoutStamp), packet)
 	if err != nil {
 		return nil, types.ErrFailedWithdraw
 	}
