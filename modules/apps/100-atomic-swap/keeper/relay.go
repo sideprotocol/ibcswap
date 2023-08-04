@@ -19,7 +19,7 @@ func (k Keeper) SendSwapPacket(
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64,
 	swapPacket types.AtomicSwapPacketData,
-) (*uint64,error) {
+) (*uint64, error) {
 
 	if err := swapPacket.ValidateBasic(); err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func (k Keeper) SendSwapPacket(
 		//}
 	}()
 
-	return &sequence,nil
+	return &sequence, nil
 }
 
 func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data types.AtomicSwapPacketData) ([]byte, error) {
@@ -209,21 +209,15 @@ func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, dat
 }
 
 func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, data *types.AtomicSwapPacketData) error {
-
-	swapPacket := &types.AtomicSwapPacketData{}
-	if err := swapPacket.Unmarshal(packet.GetData()); err != nil {
-		return err
-	}
 	escrowAddr := types.GetEscrowAddress(packet.SourcePort, packet.SourceChannel)
-
-	switch swapPacket.Type {
+	switch data.Type {
 	case types.MAKE_SWAP:
 		// This is the step 3.2 (Refund) of the atomic swap: https://github.com/liangping/ibc/blob/atomic-swap/spec/app/ics-100-atomic-swap/ibcswap.png
 		// This logic will be executed when Relayer sends make swap packet to the taker chain, but the request timeout
 		// and locked tokens form the first step (see the picture on the link above) MUST be returned to the account of
 		// the maker on the maker chain.
 		makeMsg := &types.MakeSwapMsg{}
-		if err := types.ModuleCdc.Unmarshal(swapPacket.Data, makeMsg); err != nil {
+		if err := types.ModuleCdc.Unmarshal(data.Data, makeMsg); err != nil {
 			return err
 		}
 
@@ -248,7 +242,7 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		// This is the step 7.2 (Unlock order and refund) of the atomic swap: https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap
 		// This step is executed on the Taker chain when Take Swap request timeout.
 		takeMsg := &types.TakeSwapMsg{}
-		if err := types.ModuleCdc.Unmarshal(swapPacket.Data, takeMsg); err != nil {
+		if err := types.ModuleCdc.Unmarshal(data.Data, takeMsg); err != nil {
 			return err
 		}
 
