@@ -14,7 +14,6 @@ import (
 func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.MsgMakeSwapResponse, error) {
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
 	}
@@ -52,11 +51,11 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.
 		Type:    types.MAKE_SWAP,
 		Data:    msgByte,
 		OrderId: order.Id,
-		Path: order.Path,
+		Path:    order.Path,
 		Memo:    "",
 	}
 
-	if _,err := k.SendSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
+	if _, err := k.SendSwapPacket(ctx, msg.SourcePort, msg.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
 		return nil, err
 	}
 

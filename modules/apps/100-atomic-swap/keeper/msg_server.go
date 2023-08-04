@@ -3,7 +3,6 @@ package keeper
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -174,16 +173,16 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	}
 
 	if order.Status != types.Status_SYNC {
-		return "", errors.New("invalid order status")
+		return "", types.ErrInvalidOrderStatus
 	}
 
 	if msg.SellToken.Denom != order.Maker.BuyToken.Denom || !msg.SellToken.Amount.Equal(order.Maker.BuyToken.Amount) {
-		return "", errors.New("invalid sell token")
+		return "", types.ErrInvalidSellToken
 	}
 
 	// If `desiredTaker` is set, only the desiredTaker can accept the order.
 	if order.Maker.DesiredTaker != "" && order.Maker.DesiredTaker != msg.TakerAddress {
-		return "", errors.New("invalid taker address")
+		return "", types.ErrInvalidTakerAddress
 	}
 
 	takerReceivingAddr, err := sdk.AccAddressFromBech32(msg.TakerReceivingAddress)
@@ -193,7 +192,7 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 
 	// Send maker.sellToken to taker's receiving address
 	if err = k.bankKeeper.SendCoins(ctx, escrowAddr, takerReceivingAddr, sdk.NewCoins(order.Maker.SellToken)); err != nil {
-		return "", errors.New("transfer coins failed")
+		return "", err
 	}
 
 	// Update status of order
@@ -216,15 +215,15 @@ func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, ms
 
 	order, ok := k.GetAtomicOrder(ctx, msg.OrderId)
 	if !ok {
-		return "", errors.New("order not found")
+		return "", types.ErrOrderDoesNotExists
 	}
 
 	if order.Status != types.Status_SYNC && order.Status != types.Status_INITIAL {
-		return "", errors.New("invalid order status")
+		return "", types.ErrInvalidOrderStatus
 	}
 
 	if order.Takers != nil {
-		return "", errors.New("the maker order has already been occupied")
+		return "", types.ErrAlreadyOrderTook
 	}
 
 	// Update status of order

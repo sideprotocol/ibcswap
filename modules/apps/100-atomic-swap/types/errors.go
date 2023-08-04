@@ -25,4 +25,8 @@ var (
 	ErrNotFoundChannel             = sdkerrors.Register(ModuleName, 18, "did not find channel")
 	ErrFailedMakeSwap              = sdkerrors.Register(ModuleName, 19, "Failed to make swap")
 	ErrInvalidTakerReceiverAddress = sdkerrors.Register(ModuleName, 20, "Taker Address has counter party chain address")
+	ErrInvalidOrderStatus          = sdkerrors.Register(ModuleName, 21, "invalid order status")
+	ErrInvalidSellToken            = sdkerrors.Register(ModuleName, 22, "invalid sell token")
+	ErrInvalidTakerAddress         = sdkerrors.Register(ModuleName, 23, "invalid taker address")
+	ErrAlreadyOrderTook            = sdkerrors.Register(ModuleName, 24, "already order took")
 )

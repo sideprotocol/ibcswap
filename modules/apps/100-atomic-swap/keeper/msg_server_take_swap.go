@@ -85,8 +85,6 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.TakeSwapMsg) (*types.
 	// Mark that the order has been occupied
 	order.Takers = msg
 	k.SetAtomicOrder(ctx, order)
-
 	ctx.EventManager().EmitTypedEvents(msg)
-
 	return &types.MsgTakeSwapResponse{}, nil
 }
