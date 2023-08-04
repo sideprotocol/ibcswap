@@ -2,15 +2,17 @@ package types
 
 // IBC events
 const (
-	EventTypeTimeout               = "timeout"
-	EventTypePacket                = "interchain_ibc_packet"
-	EventTypeMakePool              = "make_pool"
-	EventTypeTakePool              = "take_pool"
-	EventTypeMakeMultiDepositOrder = "make_multi_asset_deposit"
-	EventTypeTakeMultiDepositOrder = "take_multi_asset_deposit"
-	EventTypeSingleDepositOrder    = "single_deposit"
-	EventTypeLiquidityWithdraw     = "liquidity_withdraw"
-	EventTypeSwap                  = "swap_assets"
+	EventTypeTimeout                 = "timeout"
+	EventTypePacket                  = "interchain_ibc_packet"
+	EventTypeMakePool                = "make_pool"
+	EventTypeCancelPool              = "cancel_pool"
+	EventTypeTakePool                = "take_pool"
+	EventTypeMakeMultiDepositOrder   = "make_multi_asset_deposit"
+	EventTypeCancelMultiDepositOrder = "cancel_multi_deposit_order"
+	EventTypeTakeMultiDepositOrder   = "take_multi_asset_deposit"
+	EventTypeSingleDepositOrder      = "single_deposit"
+	EventTypeLiquidityWithdraw       = "liquidity_withdraw"
+	EventTypeSwap                    = "swap_assets"
 
 	// this line is used by starport scaffolding # ibc/packet/event
 

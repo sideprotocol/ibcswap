@@ -193,6 +193,20 @@ func (s *E2ETestSuite) QueryInterchainswapPools(ctx context.Context, chain ibc.C
 }
 
 // QueryClientStatus queries the status of the client by clientID
+func (s *E2ETestSuite) QueryLatestMultiDepositOrder(ctx context.Context, chain ibc.Chain, poolId, srcMaker string) (*types.QueryGetInterchainMultiDepositOrderResponse, error) {
+	queryClient := s.GetChainGRCPClients(chain).InterchainQueryClient
+	res, err := queryClient.InterchainLatestMultiDepositOrderByCreator(ctx, &types.QueryLatestInterchainMultiDepositOrderBySourceMakerRequest{
+		PoolId:      poolId,
+		SourceMaker: srcMaker,
+	})
+
+	if err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
+// QueryClientStatus queries the status of the client by clientID
 func (s *E2ETestSuite) QueryInterchainMultiDepositOrders(ctx context.Context, chain ibc.Chain, poolId string) (*types.QueryAllInterchainMultiDepositOrdersResponse, error) {
 	queryClient := s.GetChainGRCPClients(chain).InterchainQueryClient
 	res, err := queryClient.InterchainMultiDepositOrdersAll(ctx, &types.QueryAllInterchainMultiDepositOrdersRequest{

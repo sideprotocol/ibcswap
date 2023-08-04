@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/btcsuite/btcutil/bech32"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -60,6 +61,9 @@ func (msg *MsgMakeMultiAssetDepositRequest) ValidateBasic() error {
 	}
 	// Check address
 	for _, deposit := range msg.Deposits {
+		if _, _, err := bech32.Decode(deposit.Sender); err != nil {
+			return err
+		}
 		if deposit.Balance.Amount.Equal(sdk.NewInt(0)) {
 			return ErrInvalidAmount
 		}

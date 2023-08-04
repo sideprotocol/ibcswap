@@ -17,7 +17,10 @@ e2e-test-interchainswap-make-pool: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh TestInterchainswapTestSuite TestMakePoolMsgPacket
 
 e2e-test-interchainswap-pool: cleanup-ibc-test-containers
-	./scripts/run-e2e.sh TestInterchainswapTestSuite TestPoolStatus
+	./scripts/run-e2e.sh TestInterchainswapTestSuite TestSwapStatus
+
+e2e-test-interchainswap-cancel-pool: cleanup-ibc-test-containers
+	./scripts/run-e2e.sh TestInterchainswapTestSuite TestCancelPoolMsgPacket
 	
 
 e2e-test-interchainswap-single-deposit: cleanup-ibc-test-containers
@@ -25,6 +28,10 @@ e2e-test-interchainswap-single-deposit: cleanup-ibc-test-containers
 
 e2e-test-interchainswap-multi-deposit: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh TestInterchainswapTestSuite TestMultiDepositStatus
+
+e2e-test-interchainswap-multi-deposit-cancel: cleanup-ibc-test-containers
+	./scripts/run-e2e.sh TestInterchainswapTestSuite TestCancelMultiDepositStatus
+	
 
 e2e-test-interchainswap-single-withdraw: cleanup-ibc-test-containers
 	./scripts/run-e2e.sh TestInterchainswapTestSuite TestSingleWithdrawStatus

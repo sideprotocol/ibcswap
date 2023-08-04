@@ -10,7 +10,6 @@ import (
 
 func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*types.MsgSwapResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// Validate msg
 	err := msg.ValidateBasic()
@@ -19,7 +18,7 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 	}
 
 	//poolID := types.GetPoolId([]string{msg.TokenIn.Denom, msg.TokenOut.Denom})
-	pool, found := k.GetInterchainLiquidityPool(sdkCtx, msg.PoolId)
+	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
 
 	if !found {
 		return nil, errorsmod.Wrapf(types.ErrFailedSwap, "pool not found: %s", types.ErrNotFoundPool)
@@ -30,7 +29,7 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 	}
 
 	// Lock swap-in token to the swap module
-	err = k.LockTokens(sdkCtx, pool.CounterPartyPort, pool.CounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Sender), sdk.NewCoins(*msg.TokenIn))
+	err = k.LockTokens(ctx, pool.CounterPartyPort, pool.CounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Sender), sdk.NewCoins(*msg.TokenIn))
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +80,7 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 		StateChange: &types.StateChange{Out: []*sdk.Coin{tokenOut}},
 	}
 
-	timeoutHeight, timeoutTimestamp := types.GetDefaultTimeOut(&sdkCtx)
+	timeoutHeight, timeoutTimestamp := types.GetDefaultTimeOut(&ctx)
 
 	// Use input timeoutHeight, timeoutStamp
 	if msg.TimeoutHeight != nil {
@@ -91,7 +90,7 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 		timeoutTimestamp = msg.TimeoutTimeStamp
 	}
 
-	_,err = k.SendIBCSwapPacket(
+	_, err = k.SendIBCSwapPacket(
 		ctx,
 		msg.Port,
 		msg.Channel,

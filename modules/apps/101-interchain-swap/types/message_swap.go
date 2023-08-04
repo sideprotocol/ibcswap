@@ -3,6 +3,7 @@ package types
 import (
 	"strings"
 
+	"github.com/btcsuite/btcutil/bech32"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -52,6 +53,10 @@ func (msg *MsgSwapRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address (%s)", err)
+	}
+
+	if _, _, err := bech32.Decode(msg.Recipient); err != nil {
+		return errorsmod.Wrapf(ErrInvalidAddress, "invalid recipient address (%s)", err)
 	}
 
 	if msg.TokenIn == nil || msg.TokenOut == nil || strings.TrimSpace(msg.TokenIn.Denom) == "" || strings.TrimSpace(msg.TokenOut.Denom) == "" {

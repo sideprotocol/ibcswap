@@ -53,7 +53,7 @@ func (k Keeper) InterchainLiquidityMyPoolAll(goCtx context.Context, req *types.Q
 	pageRes, err := query.Paginate(interchainLiquidityPoolStore, req.Pagination, func(key []byte, value []byte) error {
 		var interchainLiquidityPool types.InterchainLiquidityPool
 		if err := k.cdc.Unmarshal(value, &interchainLiquidityPool); err != nil {
-			return err
+			return nil
 		}
 		if interchainLiquidityPool.SourceCreator == req.Creator || interchainLiquidityPool.DestinationCreator == req.Creator {
 			interchainLiquidityPools = append(interchainLiquidityPools, interchainLiquidityPool)

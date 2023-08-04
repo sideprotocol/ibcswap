@@ -69,6 +69,26 @@ func (k Keeper) OnTakePoolAcknowledged(ctx sdk.Context, msg *types.MsgTakePoolRe
 	return nil
 }
 
+// OnCreatePoolAcknowledged processes the create pool acknowledgement, mints LP tokens, and saves the liquidity pool.
+func (k Keeper) OnCancelPoolAcknowledged(ctx sdk.Context, msg *types.MsgCancelPoolRequest) error {
+	// Save pool after completing the create operation in the counterparty chain
+
+	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
+	if !found {
+		return types.ErrNotFoundPool
+	}
+	sourceAsset, err := pool.FindAssetBySide(types.PoolAssetSide_SOURCE)
+	if err != nil {
+		return err
+	}
+	if err = k.UnlockTokens(ctx, msg.SourcePort, msg.SourceChannel, sdk.MustAccAddressFromBech32(msg.Creator), sdk.NewCoins(*sourceAsset)); err != nil {
+		return err
+	}
+
+	k.RemoveInterchainLiquidityPool(ctx, msg.PoolId)
+	return nil
+}
+
 // OnSingleAssetDepositAcknowledged processes a single deposit acknowledgement, mints voucher tokens, and updates the liquidity pool.
 func (k Keeper) OnSingleAssetDepositAcknowledged(ctx sdk.Context, req *types.MsgSingleAssetDepositRequest, res *types.MsgSingleAssetDepositResponse) error {
 
@@ -94,15 +114,29 @@ func (k Keeper) OnSingleAssetDepositAcknowledged(ctx sdk.Context, req *types.Msg
 }
 
 // OnMultiAssetDepositAcknowledged processes a double deposit acknowledgement, mints voucher tokens, and updates the liquidity pool.
-func (k Keeper) OnMakeMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.MsgMakeMultiAssetDepositRequest) error {
+// func (k Keeper) OnMakeMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.MsgMakeMultiAssetDepositRequest) error {
+// 	return nil
+// }
 
-	// Retrieve the liquidity pool
+// OnMultiAssetDepositAcknowledged processes a double deposit acknowledgement, mints voucher tokens, and updates the liquidity pool.
+func (k Keeper) OnCancelMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.MsgCancelMultiAssetDepositRequest) error {
+
 	pool, found := k.GetInterchainLiquidityPool(ctx, req.PoolId)
 	if !found {
 		return types.ErrNotFoundPool
 	}
 
-	k.SetInterchainLiquidityPool(ctx, pool)
+	order, found := k.GetMultiDepositOrder(ctx, req.PoolId, req.OrderId)
+	if !found {
+		return types.ErrCancelOrder
+	}
+
+	// Create escrow module account here
+
+	if err := k.UnlockTokens(ctx, pool.CounterPartyPort, pool.CounterPartyChannel, sdk.MustAccAddressFromBech32(req.Creator), sdk.NewCoins(*order.Deposits[0])); err != nil {
+		return types.ErrCancelOrder
+	}
+	k.RemoveMultiDepositOrder(ctx, req.PoolId, req.OrderId)
 	return nil
 }
 
@@ -222,7 +256,7 @@ func (k Keeper) OnMakePoolReceived(ctx sdk.Context, msg *types.MsgMakePoolReques
 	return &poolID, nil
 }
 
-func (k Keeper) OnTakePoolReceived(ctx sdk.Context, msg *types.MsgTakePoolRequest) (*string, error) {
+func (k Keeper) OnTakePoolReceived(ctx sdk.Context, msg *types.MsgTakePoolRequest) (*types.MsgTakePoolResponse, error) {
 
 	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
 	if !found {
@@ -245,7 +279,21 @@ func (k Keeper) OnTakePoolReceived(ctx sdk.Context, msg *types.MsgTakePoolReques
 
 	// save pool status
 	k.SetInterchainLiquidityPool(ctx, pool)
-	return &pool.Id, nil
+	return &types.MsgTakePoolResponse{
+		PoolId: pool.Id,
+	}, nil
+}
+
+func (k Keeper) OnCancelPoolReceived(ctx sdk.Context, msg *types.MsgCancelPoolRequest) (*types.MsgCancelPoolResponse, error) {
+
+	if _, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId); !found {
+		return nil, types.ErrNotFoundPool
+	}
+	// remove pool status
+	k.RemoveInterchainLiquidityPool(ctx, msg.PoolId)
+	return &types.MsgCancelPoolResponse{
+		PoolId: msg.PoolId,
+	}, nil
 }
 
 func (k Keeper) OnSingleAssetDepositReceived(ctx sdk.Context, msg *types.MsgSingleAssetDepositRequest, stateChange *types.StateChange) (*types.MsgSingleAssetDepositResponse, error) {
@@ -295,6 +343,25 @@ func (k Keeper) OnMakeMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgM
 	k.SetMultiDepositOrder(ctx, order)
 	return &types.MsgMultiAssetDepositResponse{
 		PoolTokens: []*sdk.Coin{},
+	}, nil
+}
+
+// OnMultiAssetDepositReceived processes a double deposit request and returns a response or an error.
+func (k Keeper) OnCancelMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgCancelMultiAssetDepositRequest) (*types.MsgCancelMultiAssetDepositResponse, error) {
+
+	// Retrieve the liquidity pool
+	if _, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId); !found {
+		return nil, errorsmod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrNotFoundPool)
+	}
+
+	if _, found := k.GetMultiDepositOrder(ctx, msg.PoolId, msg.OrderId); !found {
+		return nil, errorsmod.Wrapf(types.ErrNotFoundPool, "%s", types.ErrFailedMultiAssetDeposit)
+	}
+
+	k.RemoveMultiDepositOrder(ctx, msg.PoolId, msg.OrderId)
+	return &types.MsgCancelMultiAssetDepositResponse{
+		PoolId:  msg.PoolId,
+		OrderId: msg.PoolId,
 	}, nil
 }
 

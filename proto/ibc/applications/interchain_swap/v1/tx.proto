@@ -18,10 +18,12 @@ import "ibc/applications/interchain_swap/v1/market.proto";
 service Msg {
   rpc MakePool (MsgMakePoolRequest) returns (MsgMakePoolResponse);
   rpc TakePool (MsgTakePoolRequest) returns (MsgTakePoolResponse);
+  rpc CancelPool (MsgCancelPoolRequest) returns (MsgCancelPoolResponse);
 
   rpc SingleAssetDeposit    (MsgSingleAssetDepositRequest   ) returns (MsgSingleAssetDepositResponse   );
   rpc MakeMultiAssetDeposit    (MsgMakeMultiAssetDepositRequest   ) returns (MsgMultiAssetDepositResponse   );
   rpc TakeMultiAssetDeposit    (MsgTakeMultiAssetDepositRequest   ) returns (MsgMultiAssetDepositResponse   );
+  rpc CancelMultiAssetDeposit    (MsgCancelMultiAssetDepositRequest   ) returns (MsgCancelMultiAssetDepositResponse   );
   rpc MultiAssetWithdraw   (MsgMultiAssetWithdrawRequest  ) returns (MsgMultiAssetWithdrawResponse  );
   rpc Swap       (MsgSwapRequest             ) returns (MsgSwapResponse      );
 }
@@ -40,6 +42,18 @@ message MsgMakePoolResponse {
   string poolId = 1;
 }
 
+message MsgCancelPoolRequest {
+  string sourcePort     = 1;
+  string sourceChannel  = 2;
+  string creator        = 3;
+  string poolId = 4;  
+  ibc.core.client.v1.Height timeoutHeight = 5 [(gogoproto.moretags) = "yaml:\"timeout_height\""];
+  uint64 timeoutTimeStamp  = 6;         
+}
+
+message MsgCancelPoolResponse {
+  string poolId = 1;
+}
 
 message MsgTakePoolRequest {
   string creator = 1;
@@ -79,6 +93,8 @@ message MsgMakeMultiAssetDepositRequest {
   uint64 timeoutTimeStamp  = 6; 
 }
 
+
+
 // make multi-asset deposit order
 message MsgTakeMultiAssetDepositRequest {
   string        sender = 1;
@@ -98,6 +114,23 @@ message DepositAsset {
 message MsgMultiAssetDepositResponse {
   repeated cosmos.base.v1beta1.Coin poolTokens = 1;
 }
+
+
+message MsgCancelMultiAssetDepositRequest {
+  string        poolId = 1;
+  string        orderId = 2;
+  string        creator = 3;
+  string        sourcePort     = 4;
+  string        sourceChannel  = 5;
+  ibc.core.client.v1.Height timeoutHeight = 6;
+  uint64 timeoutTimeStamp  = 7; 
+}
+
+message MsgCancelMultiAssetDepositResponse {
+  string        poolId = 1;
+  string        orderId = 2;
+}
+
 
 message MsgMultiAssetWithdrawRequest {
   string poolId = 1;

@@ -20,9 +20,11 @@ const _ = grpc.SupportPackageIsVersion7
 type MsgClient interface {
 	MakePool(ctx context.Context, in *MsgMakePoolRequest, opts ...grpc.CallOption) (*MsgMakePoolResponse, error)
 	TakePool(ctx context.Context, in *MsgTakePoolRequest, opts ...grpc.CallOption) (*MsgTakePoolResponse, error)
+	CancelPool(ctx context.Context, in *MsgCancelPoolRequest, opts ...grpc.CallOption) (*MsgCancelPoolResponse, error)
 	SingleAssetDeposit(ctx context.Context, in *MsgSingleAssetDepositRequest, opts ...grpc.CallOption) (*MsgSingleAssetDepositResponse, error)
 	MakeMultiAssetDeposit(ctx context.Context, in *MsgMakeMultiAssetDepositRequest, opts ...grpc.CallOption) (*MsgMultiAssetDepositResponse, error)
 	TakeMultiAssetDeposit(ctx context.Context, in *MsgTakeMultiAssetDepositRequest, opts ...grpc.CallOption) (*MsgMultiAssetDepositResponse, error)
+	CancelMultiAssetDeposit(ctx context.Context, in *MsgCancelMultiAssetDepositRequest, opts ...grpc.CallOption) (*MsgCancelMultiAssetDepositResponse, error)
 	MultiAssetWithdraw(ctx context.Context, in *MsgMultiAssetWithdrawRequest, opts ...grpc.CallOption) (*MsgMultiAssetWithdrawResponse, error)
 	Swap(ctx context.Context, in *MsgSwapRequest, opts ...grpc.CallOption) (*MsgSwapResponse, error)
 }
@@ -47,6 +49,15 @@ func (c *msgClient) MakePool(ctx context.Context, in *MsgMakePoolRequest, opts .
 func (c *msgClient) TakePool(ctx context.Context, in *MsgTakePoolRequest, opts ...grpc.CallOption) (*MsgTakePoolResponse, error) {
 	out := new(MsgTakePoolResponse)
 	err := c.cc.Invoke(ctx, "/ibc.applications.interchain_swap.v1.Msg/TakePool", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) CancelPool(ctx context.Context, in *MsgCancelPoolRequest, opts ...grpc.CallOption) (*MsgCancelPoolResponse, error) {
+	out := new(MsgCancelPoolResponse)
+	err := c.cc.Invoke(ctx, "/ibc.applications.interchain_swap.v1.Msg/CancelPool", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -80,6 +91,15 @@ func (c *msgClient) TakeMultiAssetDeposit(ctx context.Context, in *MsgTakeMultiA
 	return out, nil
 }
 
+func (c *msgClient) CancelMultiAssetDeposit(ctx context.Context, in *MsgCancelMultiAssetDepositRequest, opts ...grpc.CallOption) (*MsgCancelMultiAssetDepositResponse, error) {
+	out := new(MsgCancelMultiAssetDepositResponse)
+	err := c.cc.Invoke(ctx, "/ibc.applications.interchain_swap.v1.Msg/CancelMultiAssetDeposit", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) MultiAssetWithdraw(ctx context.Context, in *MsgMultiAssetWithdrawRequest, opts ...grpc.CallOption) (*MsgMultiAssetWithdrawResponse, error) {
 	out := new(MsgMultiAssetWithdrawResponse)
 	err := c.cc.Invoke(ctx, "/ibc.applications.interchain_swap.v1.Msg/MultiAssetWithdraw", in, out, opts...)
@@ -104,9 +124,11 @@ func (c *msgClient) Swap(ctx context.Context, in *MsgSwapRequest, opts ...grpc.C
 type MsgServer interface {
 	MakePool(context.Context, *MsgMakePoolRequest) (*MsgMakePoolResponse, error)
 	TakePool(context.Context, *MsgTakePoolRequest) (*MsgTakePoolResponse, error)
+	CancelPool(context.Context, *MsgCancelPoolRequest) (*MsgCancelPoolResponse, error)
 	SingleAssetDeposit(context.Context, *MsgSingleAssetDepositRequest) (*MsgSingleAssetDepositResponse, error)
 	MakeMultiAssetDeposit(context.Context, *MsgMakeMultiAssetDepositRequest) (*MsgMultiAssetDepositResponse, error)
 	TakeMultiAssetDeposit(context.Context, *MsgTakeMultiAssetDepositRequest) (*MsgMultiAssetDepositResponse, error)
+	CancelMultiAssetDeposit(context.Context, *MsgCancelMultiAssetDepositRequest) (*MsgCancelMultiAssetDepositResponse, error)
 	MultiAssetWithdraw(context.Context, *MsgMultiAssetWithdrawRequest) (*MsgMultiAssetWithdrawResponse, error)
 	Swap(context.Context, *MsgSwapRequest) (*MsgSwapResponse, error)
 }
@@ -121,6 +143,9 @@ func (UnimplementedMsgServer) MakePool(context.Context, *MsgMakePoolRequest) (*M
 func (UnimplementedMsgServer) TakePool(context.Context, *MsgTakePoolRequest) (*MsgTakePoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TakePool not implemented")
 }
+func (UnimplementedMsgServer) CancelPool(context.Context, *MsgCancelPoolRequest) (*MsgCancelPoolResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CancelPool not implemented")
+}
 func (UnimplementedMsgServer) SingleAssetDeposit(context.Context, *MsgSingleAssetDepositRequest) (*MsgSingleAssetDepositResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SingleAssetDeposit not implemented")
 }
@@ -129,6 +154,9 @@ func (UnimplementedMsgServer) MakeMultiAssetDeposit(context.Context, *MsgMakeMul
 }
 func (UnimplementedMsgServer) TakeMultiAssetDeposit(context.Context, *MsgTakeMultiAssetDepositRequest) (*MsgMultiAssetDepositResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TakeMultiAssetDeposit not implemented")
+}
+func (UnimplementedMsgServer) CancelMultiAssetDeposit(context.Context, *MsgCancelMultiAssetDepositRequest) (*MsgCancelMultiAssetDepositResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CancelMultiAssetDeposit not implemented")
 }
 func (UnimplementedMsgServer) MultiAssetWithdraw(context.Context, *MsgMultiAssetWithdrawRequest) (*MsgMultiAssetWithdrawResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MultiAssetWithdraw not implemented")
@@ -180,6 +208,24 @@ func _Msg_TakePool_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).TakePool(ctx, req.(*MsgTakePoolRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_CancelPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCancelPoolRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CancelPool(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ibc.applications.interchain_swap.v1.Msg/CancelPool",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CancelPool(ctx, req.(*MsgCancelPoolRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -238,6 +284,24 @@ func _Msg_TakeMultiAssetDeposit_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CancelMultiAssetDeposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCancelMultiAssetDepositRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CancelMultiAssetDeposit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ibc.applications.interchain_swap.v1.Msg/CancelMultiAssetDeposit",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CancelMultiAssetDeposit(ctx, req.(*MsgCancelMultiAssetDepositRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_MultiAssetWithdraw_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgMultiAssetWithdrawRequest)
 	if err := dec(in); err != nil {
@@ -290,6 +354,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_TakePool_Handler,
 		},
 		{
+			MethodName: "CancelPool",
+			Handler:    _Msg_CancelPool_Handler,
+		},
+		{
 			MethodName: "SingleAssetDeposit",
 			Handler:    _Msg_SingleAssetDeposit_Handler,
 		},
@@ -300,6 +368,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TakeMultiAssetDeposit",
 			Handler:    _Msg_TakeMultiAssetDeposit_Handler,
+		},
+		{
+			MethodName: "CancelMultiAssetDeposit",
+			Handler:    _Msg_CancelMultiAssetDeposit_Handler,
 		},
 		{
 			MethodName: "MultiAssetWithdraw",

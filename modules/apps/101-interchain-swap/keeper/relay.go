@@ -82,11 +82,23 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
 			return nil, err
 		}
-		poolId, err := k.OnTakePoolReceived(ctx, &msg)
+		ackRes, err := k.OnTakePoolReceived(ctx, &msg)
 		if err != nil {
 			return nil, err
 		}
-		resData, err := types.ModuleCdc.Marshal(&types.MsgMakePoolResponse{PoolId: *poolId})
+		resData, err := types.ModuleCdc.Marshal(ackRes)
+		return resData, err
+
+	case types.CANCEL_POOL:
+		var msg types.MsgCancelPoolRequest
+		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+			return nil, err
+		}
+		ackRes, err := k.OnCancelPoolReceived(ctx, &msg)
+		if err != nil {
+			return nil, err
+		}
+		resData, err := types.ModuleCdc.Marshal(ackRes)
 		return resData, err
 
 	case types.SINGLE_DEPOSIT:
@@ -119,6 +131,18 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 			return nil, err
 		}
 		res, err := k.OnTakeMultiAssetDepositReceived(ctx, &msg, data.StateChange)
+		if err != nil {
+			return nil, err
+		}
+		resData, err := types.ModuleCdc.Marshal(res)
+		return resData, err
+
+	case types.CANCEL_MULTI_DEPOSIT:
+		var msg types.MsgCancelMultiAssetDepositRequest
+		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+			return nil, err
+		}
+		res, err := k.OnCancelMultiAssetDepositReceived(ctx, &msg)
 		if err != nil {
 			return nil, err
 		}
@@ -194,6 +218,23 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 				Value: msg.PoolId,
 			}))
 			return nil
+
+		case types.CANCEL_POOL:
+			var msg types.MsgCancelPoolRequest
+			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+				logger.Debug(err.Error())
+				return err
+			}
+			err := k.OnCancelPoolAcknowledged(ctx, &msg)
+			if err != nil {
+				return err
+			}
+			ctx.EventManager().EmitEvent(sdk.NewEvent(types.EventTypeInterChainTakePoolSuccess, sdk.Attribute{
+				Key:   "PoolId",
+				Value: msg.PoolId,
+			}))
+			return nil
+
 		case types.SINGLE_DEPOSIT:
 			var msg types.MsgSingleAssetDepositRequest
 			var res types.MsgSingleAssetDepositResponse
@@ -220,12 +261,6 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 		case types.MAKE_MULTI_DEPOSIT:
 			var msg types.MsgMakeMultiAssetDepositRequest
 			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
-				logger.Debug("MakeMultiDeposit:packet:", err.Error())
-				return err
-			}
-
-			if err := k.OnMakeMultiAssetDepositAcknowledged(ctx, &msg); err != nil {
-				logger.Debug("MakeMultiDeposit:Single", err.Error())
 				return err
 			}
 			ctx.EventManager().EmitEvent(sdk.NewEvent(types.EventTypeInterChainMakeMultiDepositOrderSuccess, sdk.Attribute{
@@ -259,7 +294,29 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			},
 				sdk.Attribute{
 					Key:   "OrderId",
-					Value: fmt.Sprintf("%d", msg.OrderId),
+					Value: msg.OrderId,
+				}))
+			return nil
+
+		case types.CANCEL_MULTI_DEPOSIT:
+			var msg types.MsgCancelMultiAssetDepositRequest
+
+			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+				return err
+			}
+
+			if err := k.OnCancelMultiAssetDepositAcknowledged(ctx, &msg); err != nil {
+				logger.Debug("CancelMultiDepositAsset:Single", err.Error())
+				return err
+			}
+
+			ctx.EventManager().EmitEvent(sdk.NewEvent(types.EventTypeInterChainTakeMultiDepositOrderSuccess, sdk.Attribute{
+				Key:   "PoolId",
+				Value: msg.PoolId,
+			},
+				sdk.Attribute{
+					Key:   "OrderId",
+					Value: msg.OrderId,
 				}))
 			return nil
 
@@ -345,6 +402,8 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 		}
 		token = *msg.Deposits[0].Balance
 		sender = msg.Deposits[0].Sender
+		// remove if I encounter timeout
+		k.RemoveMultiDepositOrder(ctx, msg.PoolId, data.StateChange.MultiDepositOrderId)
 	case types.TAKE_MULTI_DEPOSIT:
 		var msg types.MsgTakeMultiAssetDepositRequest
 		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {

@@ -10,8 +10,12 @@ import (
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgMakePoolRequest{}, "interchainswap/MakePool", nil)
 	cdc.RegisterConcrete(&MsgTakePoolRequest{}, "interchainswap/TakePool", nil)
+	cdc.RegisterConcrete(&MsgCancelPoolRequest{}, "interchainswap/CancelPoolRequest", nil)
+	cdc.RegisterConcrete(&MsgCancelPoolResponse{}, "interchainswap/CancelPoolResponse", nil)
 	cdc.RegisterConcrete(&MsgSingleAssetDepositRequest{}, "interchainswap/Deposit", nil)
 	cdc.RegisterConcrete(&MsgMakeMultiAssetDepositRequest{}, "interchainswap/MakeMultiAssetDeposit", nil)
+	cdc.RegisterConcrete(&MsgCancelMultiAssetDepositRequest{}, "interchainswap/CancelMultiAssetDepositRequest", nil)
+	cdc.RegisterConcrete(&MsgCancelMultiAssetDepositResponse{}, "interchainswap/CancelMultiAssetDepositResponse", nil)
 	cdc.RegisterConcrete(&MsgTakeMultiAssetDepositRequest{}, "interchainswap/TakeMultiAssetDeposit", nil)
 	cdc.RegisterConcrete(&MsgMultiAssetWithdrawRequest{}, "interchainswap/MultiWithdraw", nil)
 	cdc.RegisterConcrete(&MsgSwapRequest{}, "interchainswap/Swap", nil)
@@ -37,6 +41,13 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgMultiAssetWithdrawRequest{},
 	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgCancelPoolRequest{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgCancelMultiAssetDepositRequest{},
+	)
+
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSwapRequest{},
 	)

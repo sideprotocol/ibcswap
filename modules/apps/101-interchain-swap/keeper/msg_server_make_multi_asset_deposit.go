@@ -28,23 +28,23 @@ func (k Keeper) MakeMultiAssetDeposit(ctx context.Context, msg *types.MsgMakeMul
 		return nil, errormod.Wrapf(types.ErrFailedMultiAssetDeposit, "%s", types.ErrNotReadyForSwap)
 	}
 
-	// Check input ration of tokens
-	sourceAsset, err := pool.FindAssetByDenom(msg.Deposits[0].Balance.Denom)
-	if err != nil {
-		return nil, errormod.Wrapf(types.ErrNotFoundDenomInPool, "%s", types.ErrFailedMultiAssetDeposit)
-	}
+	// Check input ration of tokens (temporary disable because it require external oracle data)
+	// sourceAsset, err := pool.FindAssetByDenom(msg.Deposits[0].Balance.Denom)
+	// if err != nil {
+	// 	return nil, errormod.Wrapf(types.ErrNotFoundDenomInPool, "%s", types.ErrFailedMultiAssetDeposit)
+	// }
 
-	destinationAsset, err := pool.FindAssetByDenom(msg.Deposits[1].Balance.Denom)
-	if err != nil {
-		return nil, errormod.Wrapf(types.ErrNotFoundDenomInPool, "%s:", types.ErrFailedMultiAssetDeposit)
-	}
+	// destinationAsset, err := pool.FindAssetByDenom(msg.Deposits[1].Balance.Denom)
+	// if err != nil {
+	// 	return nil, errormod.Wrapf(types.ErrNotFoundDenomInPool, "%s:", types.ErrFailedMultiAssetDeposit)
+	// }
 
-	currentRatio := sdk.NewDecFromInt(sourceAsset.Balance.Amount).Quo(sdk.NewDecFromInt(destinationAsset.Balance.Amount))
-	inputRatio := sdk.NewDecFromInt(msg.Deposits[0].Balance.Amount).Quo(sdk.NewDecFromInt(msg.Deposits[1].Balance.Amount))
+	// currentRatio := sdk.NewDecFromInt(sourceAsset.Balance.Amount).Quo(sdk.NewDecFromInt(destinationAsset.Balance.Amount))
+	// inputRatio := sdk.NewDecFromInt(msg.Deposits[0].Balance.Amount).Quo(sdk.NewDecFromInt(msg.Deposits[1].Balance.Amount))
 
-	if err := types.CheckSlippage(currentRatio, inputRatio, 10); err != nil {
-		return nil, errormod.Wrapf(types.ErrInvalidPairRatio, "%d:%d:%s", currentRatio, inputRatio, types.ErrFailedMultiAssetDeposit)
-	}
+	// if err := types.CheckSlippage(currentRatio, inputRatio, 10); err != nil {
+	// 	return nil, errormod.Wrapf(types.ErrInvalidPairRatio, "%d:%d:%s", currentRatio, inputRatio, types.ErrFailedMultiAssetDeposit)
+	// }
 
 	// Create escrow module account here
 	err = k.LockTokens(sdkCtx, pool.CounterPartyPort, pool.CounterPartyChannel, sdk.MustAccAddressFromBech32(msg.Deposits[0].Sender), sdk.NewCoins(*msg.Deposits[0].Balance))

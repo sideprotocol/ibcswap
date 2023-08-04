@@ -79,4 +79,7 @@ var (
 	ErrInvalidLiquidityPair           = errorsmod.Register(ModuleName, 1566, "invalid liquidity pair")
 	ErrMissedIBCParams                = errorsmod.Register(ModuleName, 1567, "port, channel have to point to broadcast ibc message!")
 	ErrNotFoundOrder                  = errorsmod.Register(ModuleName, 1568, "did not find order")
+	ErrCancelPool                     = errorsmod.Register(ModuleName, 1569, "failed to cancel pool")
+	ErrCancelOrder                    = errorsmod.Register(ModuleName, 1570, "failed to cancel order")
+	ErrInvalidPoolId                  = errorsmod.Register(ModuleName, 1571, "invalid poolID")
 )
