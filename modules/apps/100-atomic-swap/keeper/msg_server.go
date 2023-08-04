@@ -141,6 +141,12 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, orde
 	//if supply.Amount.Int64() <= 0 {
 	//	return errors.New("buy token does not exist on the taker chain")
 	//}
+	if msg.DesiredTaker != "" {
+		if _, err := sdk.AccAddressFromBech32(msg.DesiredTaker); err != nil {
+			return "", err
+		}
+	}
+
 	order := types.Order{
 		Id:     orderId,
 		Side:   types.REMOTE,
@@ -158,8 +164,7 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, orde
 // OnReceivedTake is step 7.1 (Transfer Make Token) of the atomic swap: https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap
 // The step is executed on the Maker chain.
 func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg *types.TakeSwapMsg) (string, error) {
-	
-	
+
 	escrowAddr := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
 
 	// check order status
@@ -168,9 +173,9 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 		return "", types.ErrOrderDoesNotExists
 	}
 
-	//if order.Status != types.Status_SYNC {
-	//	return errors.New("invalid order status")
-	//}
+	if order.Status != types.Status_SYNC {
+		return "", errors.New("invalid order status")
+	}
 
 	if msg.SellToken.Denom != order.Maker.BuyToken.Denom || !msg.SellToken.Amount.Equal(order.Maker.BuyToken.Amount) {
 		return "", errors.New("invalid sell token")
