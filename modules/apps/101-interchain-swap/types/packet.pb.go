@@ -5,13 +5,14 @@ package types
 
 import (
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	_ "google.golang.org/protobuf/types/known/anypb"
-	io "io"
-	math "math"
-	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -222,7 +223,9 @@ func (m *IBCSwapPacketData) GetData() []byte {
 
 func (m *IBCSwapPacketData) GetStateChange() *StateChange {
 	if m != nil {
-		return m.StateChange
+		var data StateChange
+		ModuleCdc.UnmarshalJSON(m.StateChange, &data);
+		return &data
 	}
 	return nil
 }
@@ -406,7 +409,9 @@ func (m *IBCSwapPacketData) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	if m.StateChange != nil {
 		{
-			size, err := m.StateChange.MarshalToSizedBuffer(dAtA[:i])
+			var data StateChange
+			ModuleCdc.UnmarshalJSON(m.StateChange, &data);
+			size, err := data.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -495,7 +500,9 @@ func (m *IBCSwapPacketData) Size() (n int) {
 		n += 1 + l + sovPacket(uint64(l))
 	}
 	if m.StateChange != nil {
-		l = m.StateChange.Size()
+		var data StateChange
+		ModuleCdc.UnmarshalJSON(m.StateChange, &data);
+		l = data.Size()
 		n += 1 + l + sovPacket(uint64(l))
 	}
 	l = len(m.Memo)
@@ -871,9 +878,11 @@ func (m *IBCSwapPacketData) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.StateChange == nil {
-				m.StateChange = &StateChange{}
+				m.StateChange = []byte{}
 			}
-			if err := m.StateChange.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			var data StateChange
+			ModuleCdc.UnmarshalJSON(m.StateChange, &data);
+			if err := data.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
