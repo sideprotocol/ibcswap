@@ -42,11 +42,18 @@ func (k Keeper) CancelSwap(goCtx context.Context, msg *types.CancelSwapMsg) (*ty
 		Memo: "",
 	}
 
-	if _,err := k.SendSwapPacket(ctx, order.Maker.SourcePort, order.Maker.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
+	if _, err := k.SendSwapPacket(ctx, order.Maker.SourcePort, order.Maker.SourceChannel, msg.TimeoutHeight, msg.TimeoutTimestamp, packet); err != nil {
 		return nil, err
 	}
 
 	ctx.EventManager().EmitTypedEvents(msg)
 
+	sdk.NewEvent(
+		types.EventTypeCancelSwap,
+		sdk.Attribute{
+			Key:   types.AttributeOrderId,
+			Value: order.Id,
+		},
+	)
 	return &types.MsgCancelSwapResponse{}, nil
 }

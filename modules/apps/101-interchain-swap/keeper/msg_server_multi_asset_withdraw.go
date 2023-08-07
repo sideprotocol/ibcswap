@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
@@ -76,5 +77,27 @@ func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMulti
 	if err != nil {
 		return nil, types.ErrFailedWithdraw
 	}
+
+	rawOuts := []string{}
+	for _, out := range outs {
+		rawOuts = append(rawOuts, out.String())
+	}
+
+	sdk.NewEvent(
+		types.EventTypeLiquidityWithdraw,
+		sdk.Attribute{
+			Key:   types.AttributeKeyPoolId,
+			Value: msg.PoolId,
+		},
+		sdk.Attribute{
+			Key:   types.AttributeKeyLpToken,
+			Value: msg.PoolToken.String(),
+		},
+		sdk.Attribute{
+			Key:   types.AttributeKeyTokenOut,
+			Value: strings.Join(rawOuts, ":"),
+		},
+	)
+
 	return &types.MsgMultiAssetWithdrawResponse{}, nil
 }

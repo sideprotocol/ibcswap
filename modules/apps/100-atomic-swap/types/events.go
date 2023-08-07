@@ -6,6 +6,9 @@ const (
 	EventTypePacket       = "fungible_token_packet"
 	EventTypeSwap         = "ibc_swap"
 	EventTypeChannelClose = "channel_closed"
+	EventTypeMakeSwap     = "make_swap"
+	EventTypeTakeSwap     = "take_swap"
+	EventTypeCancelSwap   = "cancel_swap"
 
 	AttributeType          = "type"
 	AttributeData          = "data"
@@ -14,6 +17,7 @@ const (
 	AttributeKeyAckSuccess = "success"
 	AttributeKeyAck        = "acknowledgement"
 	AttributeKeyAckError   = "error"
+	AttributeOrderId       = "orderId"
 	//AttributeKeyTraceHash       = "trace_hash"
 	//AttributeKeySendingDenom    = "sending_token_denom"
 	//AttributeKeySendingAmount   = "sending_token_amount"
