@@ -29,4 +29,5 @@ var (
 	ErrInvalidSellToken            = sdkerrors.Register(ModuleName, 22, "invalid sell token")
 	ErrInvalidTakerAddress         = sdkerrors.Register(ModuleName, 23, "invalid taker address")
 	ErrAlreadyOrderTook            = sdkerrors.Register(ModuleName, 24, "already order took")
+	ErrNotFoundOrder               = sdkerrors.Register(ModuleName, 25, "did not find order")
 )

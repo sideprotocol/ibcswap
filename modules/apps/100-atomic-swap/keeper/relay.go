@@ -174,6 +174,8 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			order.Takers = takeMsg
 			order.CompleteTimestamp = takeMsg.CreateTimestamp
 			k.SetAtomicOrder(ctx, order)
+			// Move Completed assets to bottom
+			k.MoveOrderToBottom(ctx, order.Id)
 			return nil
 		case types.CANCEL_SWAP:
 			// This is the step 14 (Cancel & refund) of the atomic swap: https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap

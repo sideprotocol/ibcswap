@@ -8,46 +8,6 @@ import (
 	"github.com/sideprotocol/ibcswap/v6/modules/apps/100-atomic-swap/types"
 )
 
-// // / Atomic orders
-// // GetAtomicOrder returns the OTCOrder for the swap module.
-// func (k Keeper) GetAtomicOrder(ctx sdk.Context, orderId string) (types.Order, bool) {
-// 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKey)
-
-// 	// Retrieve the full key from the secondary index
-// 	indexStore := prefix.NewStore(store, []byte(types.OrderBookIndexKey))
-// 	fullKey := indexStore.Get([]byte(orderId))
-// 	if fullKey == nil {
-// 		return types.Order{}, false
-// 	}
-
-// 	bz := store.Get(fullKey)
-// 	if bz == nil {
-// 		return types.Order{}, false
-// 	}
-
-// 	order := k.MustUnmarshalOrder(bz)
-// 	return order, true
-// }
-
-// // HasAtomicOrder checks if a the key with the given id exists on the store.
-// func (k Keeper) HasAtomicOrder(ctx sdk.Context, orderId string) bool {
-// 	key, err := hex.DecodeString(orderId)
-// 	if err != nil {
-// 		return false
-// 	}
-// 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKey)
-// 	return store.Has(key)
-// }
-
-// // SetAtomicOrder sets a new OTCOrder to the store.
-// func (k Keeper) SetAtomicOrder(ctx sdk.Context, order types.Order) {
-// 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKey)
-// 	// Use the creation timestamp as a prefix to the order ID.
-// 	key := fmt.Sprintf(order.Id)
-// 	bz := k.MustMarshalOrder(order)
-// 	store.Set([]byte(key), bz)
-// }
-
 // GetAuctionCount get the total number of auction
 func (k Keeper) GetAtomicOrderCount(ctx sdk.Context) uint64 {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKeyCountKey)
@@ -160,4 +120,40 @@ func GetOrderIDBytes(id uint64) []byte {
 // GetAuctionIDFromBytes returns ID in uint64 format from a byte array
 func GetBidIDFromBytes(bz []byte) uint64 {
 	return binary.BigEndian.Uint64(bz)
+}
+
+// MoveOrderToBottom moves the atomic order with the given ID to the bottom of the list.
+func (k Keeper) MoveOrderToBottom(ctx sdk.Context, orderId string) error {
+	// Step 1: Retrieve the item based on the given ID.
+	order, found := k.GetAtomicOrder(ctx, orderId)
+	if !found {
+		return types.ErrNotFoundOrder
+	}
+	// Step 2: Remove the item from its current position.
+	k.RemoveOrder(ctx, orderId)
+	// Step 3: Append the item to the end.
+	count := k.GetAtomicOrderCount(ctx)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKey)
+	bz := k.cdc.MustMarshal(&order)
+	store.Set(GetOrderIDBytes(count), bz)
+	k.SetAtomicOrderCount(ctx, count+1)
+	return nil
+}
+
+func (k Keeper) TrimExcessOrders(ctx sdk.Context) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKey)
+
+	totalCount := k.GetAtomicOrderCount(ctx)
+	if totalCount <= types.MaxOrderCount {
+		return
+	}
+	// Calculate number of items to be removed
+	excess := totalCount - types.MaxOrderCount
+	for i := uint64(0); i < excess; i++ {
+		// As items are appended, to remove from the bottom, we need to remove the items
+		// starting from totalCount - i (i.e., the last item in the list, then the second last, etc.)
+		idToRemove := totalCount - i - 1
+		store.Delete(GetOrderIDBytes(idToRemove))
+		k.SetAtomicOrderCount(ctx, totalCount-i-1)
+	}
 }

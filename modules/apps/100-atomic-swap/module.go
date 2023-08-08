@@ -149,6 +149,7 @@ func (AppModule) ConsensusVersion() uint64 { return 2 }
 
 // BeginBlock implements the AppModule interface
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
+	am.keeper.TrimExcessOrders(ctx)
 }
 
 // EndBlock implements the AppModule interface

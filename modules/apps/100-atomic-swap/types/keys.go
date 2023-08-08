@@ -26,6 +26,8 @@ const (
 
 	// QuerierRoute is the querier route for IBC swap
 	QuerierRoute = ModuleName
+
+	MaxOrderCount = 10000000000000
 )
 
 var (

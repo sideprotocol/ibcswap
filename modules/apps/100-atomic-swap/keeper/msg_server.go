@@ -201,6 +201,8 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	order.CompleteTimestamp = msg.CreateTimestamp
 	k.SetAtomicOrder(ctx, order)
 
+	// Move Completed assets to bottom
+	k.MoveOrderToBottom(ctx, order.Id)
 	ctx.EventManager().EmitTypedEvents(msg)
 	return order.Id, nil
 }
