@@ -23,7 +23,7 @@ const (
 	Multiplier      = 1e18
 	MaximumSlippage = 10000
 
-	
+	MaxPoolCount = 100000000
 
 	MULTI_DEPOSIT_PENDING_LIMIT = 10
 )

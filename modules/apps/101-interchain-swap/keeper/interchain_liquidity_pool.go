@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"encoding/binary"
+	"fmt"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -8,14 +10,14 @@ import (
 	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
 )
 
-// SetInterchainLiquidityPool set a specific interchainLiquidityPool in the store from its index
-func (k Keeper) SetInterchainLiquidityPool(ctx sdk.Context, interchainLiquidityPool types.InterchainLiquidityPool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InterchainLiquidityPoolKeyPrefix))
-	b := k.cdc.MustMarshal(&interchainLiquidityPool)
-	store.Set(types.InterchainLiquidityPoolKey(
-		interchainLiquidityPool.Id,
-	), b)
-}
+// // SetInterchainLiquidityPool set a specific interchainLiquidityPool in the store from its index
+// func (k Keeper) SetInterchainLiquidityPool(ctx sdk.Context, interchainLiquidityPool types.InterchainLiquidityPool) {
+// 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InterchainLiquidityPoolKeyPrefix))
+// 	b := k.cdc.MustMarshal(&interchainLiquidityPool)
+// 	store.Set(types.InterchainLiquidityPoolKey(
+// 		interchainLiquidityPool.Id,
+// 	), b)
+// }
 
 // SetInterchainLiquidityPool set a specific interchainLiquidityPool in the store from its index
 func (k Keeper) SetInitialPoolAssets(ctx sdk.Context, poolId string, tokens sdk.Coins) {
@@ -100,18 +102,81 @@ func (k Keeper) RemoveInterchainLiquidityPool(
 	))
 }
 
+// // GetAllInterchainLiquidityPool returns all interchainLiquidityPool
+// func (k Keeper) GetAllInterchainLiquidityPool(ctx sdk.Context) (list []types.InterchainLiquidityPool) {
+// 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InterchainLiquidityPoolKeyPrefix))
+// 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+// 	defer iterator.Close()
+
+// 	for ; iterator.Valid(); iterator.Next() {
+// 		var val types.InterchainLiquidityPool
+// 		k.cdc.MustUnmarshal(iterator.Value(), &val)
+// 		list = append(list, val)
+// 	}
+// 	return
+// }
+
+// CurrentPoolCountKey stores the current number of pools.
+var CurrentPoolCountKey = []byte("CurrentPoolCount")
+
+func (k Keeper) SetInterchainLiquidityPool(ctx sdk.Context, interchainLiquidityPool types.InterchainLiquidityPool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InterchainLiquidityPoolKeyPrefix))
+
+	// Get current pool count
+	poolCount := k.GetPoolCount(ctx)
+
+	// Increment the count
+	poolCount++
+
+	// Set the new count
+	k.SetPoolCount(ctx, poolCount)
+
+	// Marshal the pool and set in store
+	b := k.cdc.MustMarshal(&interchainLiquidityPool)
+	store.Set(GetInterchainLiquidityPoolKey(poolCount), b)
+
+	// Check if we exceed max pools
+	if poolCount > types.MaxPoolCount {
+		// Remove the oldest pool
+		store.Delete(GetInterchainLiquidityPoolKey(poolCount - types.MaxPoolCount))
+	}
+}
+
+func (k Keeper) GetPoolCount(ctx sdk.Context) uint64 {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InterchainLiquidityPoolKeyPrefix))
+	b := store.Get(CurrentPoolCountKey)
+	if b == nil {
+		return 0
+	}
+	return binary.BigEndian.Uint64(b)
+}
+
+func (k Keeper) SetPoolCount(ctx sdk.Context, count uint64) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InterchainLiquidityPoolKeyPrefix))
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, count)
+	store.Set(CurrentPoolCountKey, b)
+}
+
+func GetInterchainLiquidityPoolKey(count uint64) []byte {
+	return []byte(fmt.Sprintf("%020d", count))
+}
+
 // GetAllInterchainLiquidityPool returns all interchainLiquidityPool
 func (k Keeper) GetAllInterchainLiquidityPool(ctx sdk.Context) (list []types.InterchainLiquidityPool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InterchainLiquidityPoolKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
+	// Start from the latest pool and move to the oldest
+	poolCount := k.GetPoolCount(ctx)
+	for i := poolCount; i >= 1 && (poolCount-i) < types.MaxPoolCount; i-- {
+		b := store.Get(GetInterchainLiquidityPoolKey(i))
+		if b == nil {
+			continue
+		}
 		var val types.InterchainLiquidityPool
-		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		k.cdc.MustUnmarshal(b, &val)
 		list = append(list, val)
 	}
-
 	return
 }
