@@ -14,20 +14,23 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-func (q Keeper) GetAllOrders(ctx context.Context, request *types.QueryOrdersRequest) (*types.QueryOrdersResponse, error) {
-	clientCtx := sdk.UnwrapSDKContext(ctx)
-	store := clientCtx.KVStore(q.storeKey)
-	orderStore := prefix.NewStore(store, types.OTCOrderBookKey)
+func (q Keeper) GetAllOrders(goCtx context.Context, request *types.QueryOrdersRequest) (*types.QueryOrdersResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	orderStore := prefix.NewStore(ctx.KVStore(q.storeKey), types.OTCOrderBookKey)
 	var orders []*types.Order
-	pageRes, err := query.Paginate(orderStore, request.Pagination, func(key, value []byte) error {
-		order := q.MustUnmarshalOrder(value)
+	pageRes, err := query.Paginate(orderStore, request.Pagination, func(key []byte, value []byte) error {
+		var order types.Order
+		if err := q.cdc.Unmarshal(value, &order); err != nil {
+			return err
+		}
 		orders = append(orders, &order)
 		return nil
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "paginate: %v", err)
 	}
-	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, err
+
+	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, nil
 }
 
 func (q Keeper) GetAllOrdersByType(ctx context.Context, request *types.QueryOrdersByRequest) (*types.QueryOrdersResponse, error) {
@@ -37,7 +40,10 @@ func (q Keeper) GetAllOrdersByType(ctx context.Context, request *types.QueryOrde
 	var orders []*types.Order
 
 	pageRes, err := query.Paginate(orderStore, request.Pagination, func(key, value []byte) error {
-		order := q.MustUnmarshalOrder(value)
+		var order types.Order
+		if err := q.cdc.Unmarshal(value, &order); err != nil {
+			return err
+		}
 		acc := q.authKeeper.GetAccount(clientCtx, sdk.MustAccAddressFromBech32(order.Maker.MakerAddress))
 		if (acc != nil && request.OrderType == types.OrderType_SellToBuy) ||
 			(acc == nil && request.OrderType == types.OrderType_BuyToSell) {
@@ -48,18 +54,21 @@ func (q Keeper) GetAllOrdersByType(ctx context.Context, request *types.QueryOrde
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "paginate: %v", err)
 	}
-	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, err
+	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, nil
 }
 
 func (q Keeper) GetSubmittedOrders(ctx context.Context, request *types.QuerySubmittedOrdersRequest) (*types.QueryOrdersResponse, error) {
-
 	clientCtx := sdk.UnwrapSDKContext(ctx)
 	store := clientCtx.KVStore(q.storeKey)
 	orderStore := prefix.NewStore(store, types.OTCOrderBookKey)
 	var orders []*types.Order
 
 	pageRes, err := query.Paginate(orderStore, request.Pagination, func(key, value []byte) error {
-		order := q.MustUnmarshalOrder(value)
+
+		var order types.Order
+		if err := q.cdc.Unmarshal(value, &order); err != nil {
+			return err
+		}
 		if order.Maker != nil && order.Maker.MakerAddress == request.MakerAddress {
 			orders = append(orders, &order)
 		}
@@ -68,17 +77,21 @@ func (q Keeper) GetSubmittedOrders(ctx context.Context, request *types.QuerySubm
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "paginate: %v", err)
 	}
-	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, err
+	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, nil
 }
 
 func (q Keeper) GetTookOrders(ctx context.Context, request *types.QueryTookOrdersRequest) (*types.QueryOrdersResponse, error) {
 	clientCtx := sdk.UnwrapSDKContext(ctx)
 	store := clientCtx.KVStore(q.storeKey)
 	orderStore := prefix.NewStore(store, types.OTCOrderBookKey)
+
 	var orders []*types.Order
+
 	pageRes, err := query.Paginate(orderStore, request.Pagination, func(key, value []byte) error {
-		order := q.MustUnmarshalOrder(value)
-		// Check if order.Takers is not nil before accessing TakerAddress
+		var order types.Order
+		if err := q.cdc.Unmarshal(value, &order); err != nil {
+			return err
+		}
 		if order.Takers != nil && order.Takers.TakerAddress == request.TakerAddress {
 			orders = append(orders, &order)
 		}
@@ -87,17 +100,20 @@ func (q Keeper) GetTookOrders(ctx context.Context, request *types.QueryTookOrder
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "paginate: %v", err)
 	}
-	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, err
+	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, nil
 }
 
 func (q Keeper) GetPrivateOrders(ctx context.Context, request *types.QueryPrivateOrdersRequest) (*types.QueryOrdersResponse, error) {
-
 	clientCtx := sdk.UnwrapSDKContext(ctx)
 	store := clientCtx.KVStore(q.storeKey)
 	orderStore := prefix.NewStore(store, types.OTCOrderBookKey)
 	var orders []*types.Order
+
 	pageRes, err := query.Paginate(orderStore, request.Pagination, func(key, value []byte) error {
-		order := q.MustUnmarshalOrder(value)
+		var order types.Order
+		if err := q.cdc.Unmarshal(value, &order); err != nil {
+			return err
+		}
 		if order.Maker.DesiredTaker == request.DesireAddress {
 			orders = append(orders, &order)
 		}
@@ -106,7 +122,7 @@ func (q Keeper) GetPrivateOrders(ctx context.Context, request *types.QueryPrivat
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "paginate: %v", err)
 	}
-	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, err
+	return &types.QueryOrdersResponse{Orders: orders, Pagination: pageRes}, nil
 }
 
 // Params implements the Query/Params gRPC method

@@ -252,7 +252,7 @@ func createOrder(ctx sdk.Context, msg *types.MakeSwapMsg, channelKeeper types.Ch
 }
 
 func orderPath(sourcePort, sourceChannel, destPort, destChannel, pathID string) string {
-	return fmt.Sprintf("channel/%s/port/%s/channel/%s/port/%s/%d", sourceChannel, sourcePort, destChannel, destPort, pathID)
+	return fmt.Sprintf("channel/%s/port/%s/channel/%s/port/%s/%s", sourceChannel, sourcePort, destChannel, destPort, pathID)
 }
 
 func generateOrderId(orderPath string, msg *types.MakeSwapMsg) string {

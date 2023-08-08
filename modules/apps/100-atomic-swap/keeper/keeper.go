@@ -1,12 +1,9 @@
 package keeper
 
 import (
-	"encoding/hex"
-
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
@@ -100,35 +97,3 @@ func (k Keeper) AuthenticateCapability(ctx sdk.Context, cap *capabilitytypes.Cap
 func (k Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error {
 	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
 }
-
-/// Atomic orders
-
-// GetAtomicOrder returns the OTCOrder for the swap module.
-func (k Keeper) GetAtomicOrder(ctx sdk.Context, orderId string) (types.Order, bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKey)
-	bz := store.Get([]byte(orderId))
-	if bz == nil {
-		return types.Order{}, false
-	}
-
-	order := k.MustUnmarshalOrder(bz)
-	return order, true
-}
-
-// HasAtomicOrder checks if a the key with the given id exists on the store.
-func (k Keeper) HasAtomicOrder(ctx sdk.Context, orderId string) bool {
-	key, err := hex.DecodeString(orderId)
-	if err != nil {
-		return false
-	}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKey)
-	return store.Has(key)
-}
-
-// SetAtomicOrder sets a new OTCOrder to the store.
-func (k Keeper) SetAtomicOrder(ctx sdk.Context, order types.Order) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKey)
-	bz := k.MustMarshalOrder(order)
-	store.Set([]byte(order.Id), bz)
-}
-

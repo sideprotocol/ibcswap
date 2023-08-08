@@ -11,7 +11,6 @@ import (
 func (k Keeper) CancelMultiAssetDeposit(ctx context.Context, msg *types.MsgCancelMultiAssetDepositRequest) (*types.MsgCancelMultiAssetDepositResponse, error) {
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	_ = sdkCtx
 	// // Validate message
 	err := msg.ValidateBasic()
 	if err != nil {

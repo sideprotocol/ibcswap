@@ -55,6 +55,9 @@ e2e-test-atomic-swap-base: cleanup-ibc-test-containers
 e2e-test-atomic-swap: cleanup-ibc-test-containers
 	./scripts/run-e2e-atomic-swap.sh
 
+e2e-test-atomic-swap-fifo: cleanup-ibc-test-containers
+	./scripts/run-e2e.sh TestAtomicSwapTestSuite TestAtomicSwapFiFoPath
+
 compatibility-tests:
 	./scripts/run-compatibility-tests.sh $(release_branch)
 

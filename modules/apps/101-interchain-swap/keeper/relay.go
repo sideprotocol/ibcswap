@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -268,7 +267,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			},
 				sdk.Attribute{
 					Key:   "OrderId",
-					Value: fmt.Sprintf("%d", data.StateChange.MultiDepositOrderId),
+					Value: data.StateChange.MultiDepositOrderId,
 				}))
 			return nil
 

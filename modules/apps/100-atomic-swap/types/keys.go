@@ -32,12 +32,12 @@ var (
 	// PortKey defines the key to store the port ID in store
 	PortKey = []byte{0x01}
 	// LimitOrderBookKey defines the key to store the denomination trace info in store
-	LimitOrderBookKey = []byte{0x02}
+	//LimitOrderBookKey         = []byte{0x02}
+	//LimitOrderBookKeyIndexKey = []byte{0x03}
 	// OTCOrderBookKey defines the key to store the denomination trace info in store
-	OTCOrderBookKey = []byte{0x03}
-
-	// OrderBookKey defines the key to store the denomination trace info in store
-	OrderBookKey = []byte{0x04}
+	OTCOrderBookKey         = []byte{0x04}
+	OTCOrderBookKeyCountKey = []byte{0x05}
+	OTCOrderBookKeyIndexKey = []byte{0x06}
 )
 
 // GetEscrowAddress returns the escrow address for the specified channel.
@@ -54,4 +54,8 @@ func GetEscrowAddress(portID, channelID string) sdk.AccAddress {
 	preImage = append(preImage, contents...)
 	hash := sha256.Sum256(preImage)
 	return hash[:20]
+}
+
+func KeyPrefix(key string) []byte {
+	return []byte(key)
 }

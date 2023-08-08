@@ -59,7 +59,7 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.
 		return nil, err
 	}
 
-	k.SetAtomicOrder(ctx, *order)
+	k.AppendAtomicOrder(ctx, *order)
 	//ctx.EventManager().EmitTypedEvents(msg)
 
 	sdk.NewEvent(
