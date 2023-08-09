@@ -10,15 +10,38 @@ func (suite *KeeperTestSuite) TestSetAndGetInterchainLiquidityPool() {
 	ctx := suite.chainA.GetContext()
 	k := suite.chainA.GetSimApp().InterchainSwapKeeper
 
-	pool := types.InterchainLiquidityPool{
-		Id: "pool1",
+	// Set a few pools
+	poolCount := 5 // Let's say you want to set 5 pools for this test. Adjust as needed.
+	createdPools := make([]types.InterchainLiquidityPool, poolCount)
+
+	for i := 1; i <= poolCount; i++ {
+		pool := types.InterchainLiquidityPool{
+			Id: fmt.Sprintf("pool%d", i),
+		}
+		createdPools[i-1] = pool
+		k.SetInterchainLiquidityPool(ctx, pool)
 	}
 
-	k.SetInterchainLiquidityPool(ctx, pool)
+	// Get and verify each set pool
+	for _, createdPool := range createdPools {
+		retrievedPool, found := k.GetInterchainLiquidityPool(ctx, createdPool.Id)
+		suite.Require().True(found, "Expected to find the set pool.")
+		suite.Require().Equal(createdPool, retrievedPool, "The set pool did not match the retrieved pool.")
+	}
 
-	retrievedPool, found := k.GetInterchainLiquidityPool(ctx, pool.Id)
-	suite.Require().True(found, "Expected to find the set pool.")
-	suite.Require().Equal(pool, retrievedPool, "The set pool did not match the retrieved pool.")
+	// Now, let's test exceeding the max pool count (if applicable)
+	// You'd need to set pools greater than the `types.MaxPoolCount`, and then ensure that the oldest pools are no longer retrievable.
+	if poolCount < types.MaxPoolCount {
+		for i := poolCount + 1; i <= types.MaxPoolCount+1; i++ { // +1 to exceed max count by one
+			pool := types.InterchainLiquidityPool{
+				Id: fmt.Sprintf("pool%d", i),
+			}
+			k.SetInterchainLiquidityPool(ctx, pool)
+		}
+		// Now, the oldest pool (pool1) should not be found
+		_, found := k.GetInterchainLiquidityPool(ctx, "pool1")
+		suite.Require().False(found, "Expected not to find the oldest pool.")
+	}
 }
 
 func (suite *KeeperTestSuite) TestGetAllInterchainLiquidityPools() {

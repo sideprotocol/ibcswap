@@ -30,7 +30,9 @@ const (
 
 var (
 	// PortKey defines the key to store the port ID in store
-	PortKey = []byte{0x01}
+	PortKey                = []byte{0x01}
+	PoolIdToCountKeyPrefix = []byte{0x02}
+	CurrentPoolCountKey    = []byte{0x03}
 )
 
 func KeyPrefix(p string) []byte {

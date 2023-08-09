@@ -154,8 +154,7 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, orde
 		Maker:  msg,
 	}
 
-	k.SetAtomicOrder(ctx, order)
-
+	k.AppendAtomicOrder(ctx, order)
 	ctx.EventManager().EmitTypedEvents(msg)
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

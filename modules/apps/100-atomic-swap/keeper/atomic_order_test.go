@@ -59,7 +59,6 @@ func (suite *KeeperTestSuite) TestMoveOrderToBottom() {
 			CancelTimestamp: int64(i),
 		})
 	}
-
 	// Move the third order to the bottom
 	err := k.MoveOrderToBottom(ctx, orderIDs[2])
 	suite.Require().NoError(err)
@@ -73,6 +72,15 @@ func (suite *KeeperTestSuite) TestMoveOrderToBottom() {
 	movedOrderCount := k.GetAtomicOrderCountByOrderId(ctx, orderIDs[2])
 	lastOrderCount := k.GetAtomicOrderCount(ctx) - 1
 	suite.Require().Equal(movedOrderCount, lastOrderCount)
+
+	// Verify that all other orders have maintained their original sequence
+	for i := 0; i < len(orderIDs)-1; i++ { // Exclude the last order (since it was moved)
+		if i < 2 { // For orders before the moved order
+			suite.Require().Equal(ordersAfterMove[i].Id, orderIDs[i])
+		} else { // For orders after the moved order
+			suite.Require().Equal(ordersAfterMove[i].Id, orderIDs[i+1])
+		}
+	}
 }
 
 func (suite *KeeperTestSuite) TestTrimExcessOrders() {

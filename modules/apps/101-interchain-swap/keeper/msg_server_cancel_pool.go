@@ -72,7 +72,7 @@ func (k msgServer) CancelPool(ctx context.Context, msg *types.MsgCancelPoolReque
 
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeMakePool,
+			types.EventTypeCancelPool,
 			sdk.Attribute{
 				Key:   types.AttributeKeyPoolId,
 				Value: msg.PoolId,
