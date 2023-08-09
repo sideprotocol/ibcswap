@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/binary"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,12 +20,28 @@ func (k Keeper) InterchainLiquidityPoolAll(goCtx context.Context, req *types.Que
 	var interchainLiquidityPools []types.InterchainLiquidityPool
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	// Use the store with the mapping of poolId to its count
 	store := ctx.KVStore(k.storeKey)
-	interchainLiquidityPoolStore := prefix.NewStore(store, types.KeyPrefix(types.InterchainLiquidityPoolKeyPrefix))
+	poolIdToCountStore := prefix.NewStore(store, types.PoolIdToCountKeyPrefix)
 
-	pageRes, err := query.Paginate(interchainLiquidityPoolStore, req.Pagination, func(key []byte, value []byte) error {
+	// A counter for pagination
+	var counter int
+
+	pageRes, err := query.Paginate(poolIdToCountStore, req.Pagination, func(key []byte, value []byte) error {
+		counter++
+
+		// Decode the count for the given poolId
+		count := binary.BigEndian.Uint64(value)
+
+		// Get the actual pool using the count
+		poolStore := prefix.NewStore(store, types.KeyPrefix(types.InterchainLiquidityPoolKeyPrefix))
+		poolBytes := poolStore.Get(GetInterchainLiquidityPoolKey(count))
+		if poolBytes == nil {
+			return nil
+		}
+
 		var interchainLiquidityPool types.InterchainLiquidityPool
-		if err := k.cdc.Unmarshal(value, &interchainLiquidityPool); err != nil {
+		if err := k.cdc.Unmarshal(poolBytes, &interchainLiquidityPool); err != nil {
 			return err
 		}
 
@@ -47,14 +64,27 @@ func (k Keeper) InterchainLiquidityMyPoolAll(goCtx context.Context, req *types.Q
 	var interchainLiquidityPools []types.InterchainLiquidityPool
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	// Use the store with the mapping of poolId to its count
 	store := ctx.KVStore(k.storeKey)
-	interchainLiquidityPoolStore := prefix.NewStore(store, types.KeyPrefix(types.InterchainLiquidityPoolKeyPrefix))
+	poolIdToCountStore := prefix.NewStore(store, types.PoolIdToCountKeyPrefix)
 
-	pageRes, err := query.Paginate(interchainLiquidityPoolStore, req.Pagination, func(key []byte, value []byte) error {
-		var interchainLiquidityPool types.InterchainLiquidityPool
-		if err := k.cdc.Unmarshal(value, &interchainLiquidityPool); err != nil {
+	pageRes, err := query.Paginate(poolIdToCountStore, req.Pagination, func(key []byte, value []byte) error {
+		// Decode the count for the given poolId
+		count := binary.BigEndian.Uint64(value)
+
+		// Get the actual pool using the count
+		poolStore := prefix.NewStore(store, types.KeyPrefix(types.InterchainLiquidityPoolKeyPrefix))
+		poolBytes := poolStore.Get(GetInterchainLiquidityPoolKey(count))
+		if poolBytes == nil {
 			return nil
 		}
+
+		var interchainLiquidityPool types.InterchainLiquidityPool
+		if err := k.cdc.Unmarshal(poolBytes, &interchainLiquidityPool); err != nil {
+			return err
+		}
+
+		// Check if the creator is either SourceCreator or DestinationCreator
 		if interchainLiquidityPool.SourceCreator == req.Creator || interchainLiquidityPool.DestinationCreator == req.Creator {
 			interchainLiquidityPools = append(interchainLiquidityPools, interchainLiquidityPool)
 		}
