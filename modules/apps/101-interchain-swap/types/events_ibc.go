@@ -13,6 +13,7 @@ const (
 	EventTypeSingleDepositOrder      = "single_deposit"
 	EventTypeLiquidityWithdraw       = "liquidity_withdraw"
 	EventTypeSwap                    = "swap_assets"
+	EventTypeIBCStep                 = ""
 
 	// this line is used by starport scaffolding # ibc/packet/event
 
@@ -20,10 +21,16 @@ const (
 	AttributeKeyAck        = "acknowledgement"
 	AttributeKeyAckError   = "error"
 
-	AttributeKeyPoolId              = "poolId"
-	AttributeKeyMultiDepositOrderId = "orderId"
-	AttributeKeyTokenIn             = "tokenIn"
-	AttributeKeyTokenOut            = "tokenOut"
+	AttributeKeyPoolId              = "pool_id"
+	AttributeKeyMultiDepositOrderId = "order_id"
+	AttributeKeyTokenIn             = "token_in"
+	AttributeKeyTokenOut            = "token_out"
 	AttributeKeyLpToken             = "liquidity_pool_token"
 	AttributeKeyLpSupply            = "Liquidity_pool_token_supply"
+	AttributeIBCStep                = "ibc_step"
+)
+
+const (
+	ON_RECEIVE  = "on_receive"
+	ACKNOWLEDGE = "acknowledge"
 )

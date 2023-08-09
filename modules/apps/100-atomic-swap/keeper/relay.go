@@ -148,6 +148,19 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			}
 			order.Status = types.Status_SYNC
 			k.SetAtomicOrder(ctx, order)
+			ctx.EventManager().EmitEvent(
+				sdk.NewEvent(
+					types.EventTypeMakeSwap,
+					sdk.Attribute{
+						Key:   types.AttributeIBCStep,
+						Value: types.ACKNOWLEDGE,
+					},
+					sdk.Attribute{
+						Key:   types.AttributeOrderId,
+						Value: order.Id,
+					},
+				),
+			)
 			return nil
 
 		case types.TAKE_SWAP:
@@ -176,6 +189,20 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			k.SetAtomicOrder(ctx, order)
 			// Move Completed assets to bottom
 			k.MoveOrderToBottom(ctx, order.Id)
+
+			ctx.EventManager().EmitEvent(
+				sdk.NewEvent(
+					types.EventTypeTakeSwap,
+					sdk.Attribute{
+						Key:   types.AttributeIBCStep,
+						Value: types.ACKNOWLEDGE,
+					},
+					sdk.Attribute{
+						Key:   types.AttributeOrderId,
+						Value: order.Id,
+					},
+				),
+			)
 			return nil
 		case types.CANCEL_SWAP:
 			// This is the step 14 (Cancel & refund) of the atomic swap: https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap
@@ -199,6 +226,19 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			order.Status = types.Status_CANCEL
 			order.CancelTimestamp = msg.CreateTimestamp
 			k.SetAtomicOrder(ctx, order)
+			ctx.EventManager().EmitEvent(
+				sdk.NewEvent(
+					types.EventTypeCancelSwap,
+					sdk.Attribute{
+						Key:   types.AttributeIBCStep,
+						Value: types.ACKNOWLEDGE,
+					},
+					sdk.Attribute{
+						Key:   types.AttributeOrderId,
+						Value: order.Id,
+					},
+				),
+			)
 			return nil
 		default:
 			return errors.New("unknown data packet")

@@ -17,14 +17,11 @@ const (
 	AttributeKeyAckSuccess = "success"
 	AttributeKeyAck        = "acknowledgement"
 	AttributeKeyAckError   = "error"
-	AttributeOrderId       = "orderId"
-	//AttributeKeyTraceHash       = "trace_hash"
-	//AttributeKeySendingDenom    = "sending_token_denom"
-	//AttributeKeySendingAmount   = "sending_token_amount"
-	//AttributeKeyReceivingDenom  = "receiving_token_denom"
-	//AttributeKeyReceivingAmount = "receiving_token_amount"
-	//AttributeKeyCounterParty    = "expected_counterparty_address"
-	//AttributeKeyRefundReceiver  = "refund_receiver"
-	//	//AttributeKeyRefundDenom     = "refund_denom"
-	//	//AttributeKeyRefundAmount    = "refund_amount"
+	AttributeOrderId       = "order_id"
+	AttributeIBCStep       = "ibc_step"
+)
+
+const (
+	ON_RECEIVE  = "on_receive"
+	ACKNOWLEDGE = "acknowledge"
 )

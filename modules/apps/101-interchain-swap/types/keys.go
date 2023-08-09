@@ -50,12 +50,12 @@ func InitialPoolTokenKey(
 	return key
 }
 
-const (
-	EventTypeInterChainMakePoolSuccess              = "inter-chain-make-pool-success"
-	EventTypeInterChainTakePoolSuccess              = "inter-chain-take-pool-success"
-	EventTypeInterChainSingleDepositSuccess         = "inter-chain-single-deposit-success"
-	EventTypeInterChainMakeMultiDepositOrderSuccess = "inter-chain-make-multi-deposit-order-success"
-	EventTypeInterChainTakeMultiDepositOrderSuccess = "inter-chain-take-multi-deposit-order-success"
-	EventTypeInterChainTakeMultiWithdrawSuccess     = "inter-chain-take-multi-withdraw-order-success"
-	EventTypeInterChainSwapSuccess                  = "inter-chain-take-swap-success"
-)
+// const (
+// 	EventTypeInterChainMakePoolSuccess              = "inter-chain-make-pool-success"
+// 	EventTypeInterChainTakePoolSuccess              = "inter-chain-take-pool-success"
+// 	EventTypeInterChainSingleDepositSuccess         = "inter-chain-single-deposit-success"
+// 	EventTypeInterChainMakeMultiDepositOrderSuccess = "inter-chain-make-multi-deposit-order-success"
+// 	EventTypeInterChainTakeMultiDepositOrderSuccess = "inter-chain-take-multi-deposit-order-success"
+// 	EventTypeInterChainTakeMultiWithdrawSuccess     = "inter-chain-take-multi-withdraw-order-success"
+// 	EventTypeInterChainSwapSuccess                  = "inter-chain-take-swap-success"
+// )

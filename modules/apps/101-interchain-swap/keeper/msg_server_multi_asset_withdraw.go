@@ -83,20 +83,22 @@ func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMulti
 		rawOuts = append(rawOuts, out.String())
 	}
 
-	sdk.NewEvent(
-		types.EventTypeLiquidityWithdraw,
-		sdk.Attribute{
-			Key:   types.AttributeKeyPoolId,
-			Value: msg.PoolId,
-		},
-		sdk.Attribute{
-			Key:   types.AttributeKeyLpToken,
-			Value: msg.PoolToken.String(),
-		},
-		sdk.Attribute{
-			Key:   types.AttributeKeyTokenOut,
-			Value: strings.Join(rawOuts, ":"),
-		},
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeLiquidityWithdraw,
+			sdk.Attribute{
+				Key:   types.AttributeKeyPoolId,
+				Value: msg.PoolId,
+			},
+			sdk.Attribute{
+				Key:   types.AttributeKeyLpToken,
+				Value: msg.PoolToken.String(),
+			},
+			sdk.Attribute{
+				Key:   types.AttributeKeyTokenOut,
+				Value: strings.Join(rawOuts, ":"),
+			},
+		),
 	)
 
 	return &types.MsgMultiAssetWithdrawResponse{}, nil

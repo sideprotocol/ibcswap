@@ -157,6 +157,19 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, orde
 	k.SetAtomicOrder(ctx, order)
 
 	ctx.EventManager().EmitTypedEvents(msg)
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeMakeSwap,
+			sdk.Attribute{
+				Key:   types.AttributeIBCStep,
+				Value: types.ON_RECEIVE,
+			},
+			sdk.Attribute{
+				Key:   types.AttributeOrderId,
+				Value: order.Id,
+			},
+		),
+	)
 	return order.Id, nil
 }
 
@@ -204,6 +217,19 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 	// Move Completed assets to bottom
 	k.MoveOrderToBottom(ctx, order.Id)
 	ctx.EventManager().EmitTypedEvents(msg)
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeTakeSwap,
+			sdk.Attribute{
+				Key:   types.AttributeIBCStep,
+				Value: types.ON_RECEIVE,
+			},
+			sdk.Attribute{
+				Key:   types.AttributeOrderId,
+				Value: order.Id,
+			},
+		),
+	)
 	return order.Id, nil
 }
 
@@ -234,6 +260,19 @@ func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, ms
 	k.SetAtomicOrder(ctx, order)
 
 	ctx.EventManager().EmitTypedEvents(msg)
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeCancelSwap,
+			sdk.Attribute{
+				Key:   types.AttributeIBCStep,
+				Value: types.ON_RECEIVE,
+			},
+			sdk.Attribute{
+				Key:   types.AttributeOrderId,
+				Value: order.Id,
+			},
+		),
+	)
 	return order.Id, nil
 }
 

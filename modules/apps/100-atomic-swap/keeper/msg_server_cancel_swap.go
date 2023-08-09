@@ -48,12 +48,14 @@ func (k Keeper) CancelSwap(goCtx context.Context, msg *types.CancelSwapMsg) (*ty
 
 	ctx.EventManager().EmitTypedEvents(msg)
 
-	sdk.NewEvent(
-		types.EventTypeCancelSwap,
-		sdk.Attribute{
-			Key:   types.AttributeOrderId,
-			Value: order.Id,
-		},
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeCancelSwap,
+			sdk.Attribute{
+				Key:   types.AttributeOrderId,
+				Value: order.Id,
+			},
+		),
 	)
 	return &types.MsgCancelSwapResponse{}, nil
 }
