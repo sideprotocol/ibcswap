@@ -122,7 +122,6 @@ func GetBidIDFromBytes(bz []byte) uint64 {
 	return binary.BigEndian.Uint64(bz)
 }
 
-// MoveOrderToBottom moves the atomic order with the given ID to the bottom of the list.
 func (k Keeper) MoveOrderToBottom(ctx sdk.Context, orderId string) error {
 	// Step 1: Retrieve the item based on the given ID.
 	order, found := k.GetAtomicOrder(ctx, orderId)
@@ -131,12 +130,21 @@ func (k Keeper) MoveOrderToBottom(ctx sdk.Context, orderId string) error {
 	}
 	// Step 2: Remove the item from its current position.
 	k.RemoveOrder(ctx, orderId)
-	// Step 3: Append the item to the end.
-	count := k.GetAtomicOrderCount(ctx)
+
+	// Step 3: Get the current count (which will be the new position for the order).
+	newCount := k.GetAtomicOrderCount(ctx)
+
+	// Step 4: Set the order at its new position.
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.OTCOrderBookKey)
 	bz := k.cdc.MustMarshal(&order)
-	store.Set(GetOrderIDBytes(count), bz)
-	k.SetAtomicOrderCount(ctx, count+1)
+	store.Set(GetOrderIDBytes(newCount), bz)
+
+	// Step 5: Update the orderId -> count relationship.
+	k.SetAtomicOrderCountToOrderID(ctx, orderId, newCount)
+
+	// Step 6: Increment the total order count.
+	k.SetAtomicOrderCount(ctx, newCount+1)
+
 	return nil
 }
 

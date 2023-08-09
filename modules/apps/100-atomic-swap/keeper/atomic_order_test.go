@@ -68,6 +68,11 @@ func (suite *KeeperTestSuite) TestMoveOrderToBottom() {
 	ordersAfterMove := k.GetAllOrder(ctx)
 	lastOrder := ordersAfterMove[len(ordersAfterMove)-1]
 	suite.Require().Equal(lastOrder.Id, orderIDs[2])
+
+	// Additional check for the updated `orderId -> count` relationship
+	movedOrderCount := k.GetAtomicOrderCountByOrderId(ctx, orderIDs[2])
+	lastOrderCount := k.GetAtomicOrderCount(ctx) - 1
+	suite.Require().Equal(movedOrderCount, lastOrderCount)
 }
 
 func (suite *KeeperTestSuite) TestTrimExcessOrders() {
