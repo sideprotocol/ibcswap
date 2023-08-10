@@ -18,10 +18,18 @@ const (
 	AttributeKeyAck        = "acknowledgement"
 	AttributeKeyAckError   = "error"
 	AttributeOrderId       = "order_id"
-	AttributeIBCStep       = "ibc_step"
+	AttributeAction        = "action"
+	AttributeName          = "name"
 )
 
 const (
-	ON_RECEIVE  = "on_receive"
-	ACKNOWLEDGE = "acknowledge"
+	EventValueActionMakeOrder   = "make_order"
+	EventValueActionTakeOrder   = "take_order"
+	EventValueActionCancelOrder = "cancel_order"
+	EventOwner                  = "atomic_swap"
+)
+
+const (
+	EventValueSuffixReceived     = "received"
+	EventValueSuffixAcknowledged = "acknowledged"
 )

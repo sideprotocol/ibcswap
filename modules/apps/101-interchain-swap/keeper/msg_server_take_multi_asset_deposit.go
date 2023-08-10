@@ -96,22 +96,23 @@ func (k Keeper) TakeMultiAssetDeposit(ctx context.Context, msg *types.MsgTakeMul
 		poolTokenEventValues = append(poolTokenEventValues, poolToken.String())
 	}
 	mintedPoolTokens := strings.Join(poolTokenEventValues, ":")
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeTakeMultiDepositOrder,
-			sdk.Attribute{
-				Key:   types.AttributeKeyPoolId,
-				Value: msg.PoolId,
-			},
-			sdk.Attribute{
-				Key:   types.AttributeKeyMultiDepositOrderId,
-				Value: order.Id,
-			},
-			sdk.Attribute{
-				Key:   types.AttributeKeyLpToken,
-				Value: mintedPoolTokens,
-			},
-		))
+
+	// emit events
+	k.EmitEvent(
+		sdkCtx, types.EventValueActionTakeMultiDeposit, msg.PoolId,
+		sdk.Attribute{
+			Key:   types.AttributeKeyPoolCreator,
+			Value: msg.Sender,
+		},
+		sdk.Attribute{
+			Key:   types.AttributeKeyMultiDepositOrderId,
+			Value: msg.OrderId,
+		},
+		sdk.Attribute{
+			Key:   types.AttributeKeyLpToken,
+			Value: mintedPoolTokens,
+		},
+	)
 
 	return &types.MsgMultiAssetDepositResponse{}, nil
 }

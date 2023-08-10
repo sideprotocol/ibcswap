@@ -70,14 +70,14 @@ func (k msgServer) CancelPool(ctx context.Context, msg *types.MsgCancelPoolReque
 		return nil, err
 	}
 
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeCancelPool,
-			sdk.Attribute{
-				Key:   types.AttributeKeyPoolId,
-				Value: msg.PoolId,
-			},
-		))
+	// emit events
+	k.EmitEvent(
+		sdkCtx, types.EventValueActionCancelPool, msg.PoolId,
+		sdk.Attribute{
+			Key:   types.AttributeKeyPoolCreator,
+			Value: msg.Creator,
+		},
+	)
 	return &types.MsgCancelPoolResponse{
 		PoolId: msg.PoolId,
 	}, nil

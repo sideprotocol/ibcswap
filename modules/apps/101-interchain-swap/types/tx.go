@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -35,4 +37,15 @@ func GetCoinsFromDepositAssets(assets []*DepositAsset) []*sdk.Coin {
 		coins = append(coins, asset.Balance)
 	}
 	return coins
+}
+
+func GetEventAttrOfAsset(assets []*DepositAsset) []sdk.Attribute {
+	var attr []sdk.Attribute
+	for index, asset := range assets {
+		attr = append(attr, sdk.NewAttribute(
+			fmt.Sprintf("%d", index),
+			asset.String(),
+		))
+	}
+	return attr
 }

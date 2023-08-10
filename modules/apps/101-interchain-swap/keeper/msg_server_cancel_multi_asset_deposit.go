@@ -34,7 +34,6 @@ func (k Keeper) CancelMultiAssetDeposit(ctx context.Context, msg *types.MsgCance
 		return nil, errorsmod.Wrapf(types.ErrNotEnoughPermission, ":%s", types.ErrCancelOrder)
 	}
 
-	
 	cancelOrderData, err := types.ModuleCdc.Marshal(msg)
 	if err != nil {
 		return nil, err
@@ -62,18 +61,18 @@ func (k Keeper) CancelMultiAssetDeposit(ctx context.Context, msg *types.MsgCance
 		return nil, err
 	}
 
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeCancelPool,
-			sdk.Attribute{
-				Key:   types.AttributeKeyPoolId,
-				Value: msg.PoolId,
-			},
-			sdk.Attribute{
-				Key:   types.AttributeKeyMultiDepositOrderId,
-				Value: msg.OrderId,
-			},
-		))
+	// emit events
+	k.EmitEvent(
+		sdkCtx, types.EventValueActionCancelOrder, msg.PoolId,
+		sdk.Attribute{
+			Key:   types.AttributeKeyPoolCreator,
+			Value: msg.Creator,
+		},
+		sdk.Attribute{
+			Key:   types.AttributeKeyMultiDepositOrderId,
+			Value: msg.OrderId,
+		},
+	)
 
 	return &types.MsgCancelMultiAssetDepositResponse{
 		PoolId:  msg.PoolId,

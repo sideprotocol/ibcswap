@@ -155,17 +155,23 @@ func (k Keeper) OnReceivedMake(ctx sdk.Context, packet channeltypes.Packet, orde
 	}
 
 	k.AppendAtomicOrder(ctx, order)
-	ctx.EventManager().EmitTypedEvents(msg)
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeMakeSwap,
+			types.ModuleName,
 			sdk.Attribute{
-				Key:   types.AttributeIBCStep,
-				Value: types.ON_RECEIVE,
+				Key: types.AttributeAction,
+				Value: types.GetEventValueWithSuffix(
+					types.EventValueActionMakeOrder, types.EventValueSuffixReceived,
+				),
 			},
 			sdk.Attribute{
 				Key:   types.AttributeOrderId,
 				Value: order.Id,
+			},
+			sdk.Attribute{
+				Key:   types.AttributeName,
+				Value: types.EventOwner,
 			},
 		),
 	)
@@ -215,17 +221,23 @@ func (k Keeper) OnReceivedTake(ctx sdk.Context, packet channeltypes.Packet, msg 
 
 	// Move Completed assets to bottom
 	k.MoveOrderToBottom(ctx, order.Id)
-	ctx.EventManager().EmitTypedEvents(msg)
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeTakeSwap,
+			types.ModuleName,
 			sdk.Attribute{
-				Key:   types.AttributeIBCStep,
-				Value: types.ON_RECEIVE,
+				Key: types.AttributeAction,
+				Value: types.GetEventValueWithSuffix(
+					types.EventValueActionTakeOrder, types.EventValueSuffixReceived,
+				),
 			},
 			sdk.Attribute{
 				Key:   types.AttributeOrderId,
 				Value: order.Id,
+			},
+			sdk.Attribute{
+				Key:   types.AttributeName,
+				Value: types.EventOwner,
 			},
 		),
 	)
@@ -258,17 +270,22 @@ func (k Keeper) OnReceivedCancel(ctx sdk.Context, packet channeltypes.Packet, ms
 	order.CancelTimestamp = msg.CreateTimestamp
 	k.SetAtomicOrder(ctx, order)
 
-	ctx.EventManager().EmitTypedEvents(msg)
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeCancelSwap,
+			types.ModuleName,
 			sdk.Attribute{
-				Key:   types.AttributeIBCStep,
-				Value: types.ON_RECEIVE,
+				Key: types.AttributeAction,
+				Value: types.GetEventValueWithSuffix(
+					types.EventValueActionCancelOrder, types.EventValueSuffixReceived,
+				),
 			},
 			sdk.Attribute{
 				Key:   types.AttributeOrderId,
 				Value: order.Id,
+			},
+			sdk.Attribute{
+				Key:   types.AttributeName,
+				Value: types.EventOwner,
 			},
 		),
 	)

@@ -85,16 +85,22 @@ func (k Keeper) TakeSwap(goCtx context.Context, msg *types.TakeSwapMsg) (*types.
 	// Mark that the order has been occupied
 	order.Takers = msg
 	k.SetAtomicOrder(ctx, order)
-	ctx.EventManager().EmitTypedEvents(msg)
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeTakeSwap,
+			types.ModuleName,
+			sdk.Attribute{
+				Key:   types.AttributeAction,
+				Value: types.EventValueActionTakeOrder,
+			},
 			sdk.Attribute{
 				Key:   types.AttributeOrderId,
 				Value: order.Id,
 			},
+			sdk.Attribute{
+				Key:   types.AttributeName,
+				Value: types.EventOwner,
+			},
 		),
 	)
-
 	return &types.MsgTakeSwapResponse{}, nil
 }

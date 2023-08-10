@@ -71,15 +71,14 @@ func (k msgServer) TakePool(ctx context.Context, msg *types.MsgTakePoolRequest) 
 		return nil, err
 	}
 
-	sdkCtx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeTakePool,
-			sdk.Attribute{
-				Key:   types.AttributeKeyPoolId,
-				Value: msg.PoolId,
-			},
-		))
-
+	// emit events
+	k.EmitEvent(
+		sdkCtx, types.EventValueActionTakePool, msg.PoolId,
+		sdk.Attribute{
+			Key:   types.AttributeKeyPoolCreator,
+			Value: msg.Creator,
+		},
+	)
 	return &types.MsgTakePoolResponse{
 		PoolId: msg.PoolId,
 	}, nil

@@ -60,12 +60,26 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.
 	}
 
 	k.AppendAtomicOrder(ctx, *order)
+
+	// Event have to follow
+	/*
+		name,action,order_id
+	*/
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeMakeSwap,
+			types.ModuleName,
+			sdk.Attribute{
+				Key:   types.AttributeAction,
+				Value: types.EventValueActionMakeOrder,
+			},
 			sdk.Attribute{
 				Key:   types.AttributeOrderId,
 				Value: order.Id,
+			},
+			sdk.Attribute{
+				Key:   types.AttributeName,
+				Value: types.EventOwner,
 			},
 		),
 	)

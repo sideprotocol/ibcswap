@@ -137,3 +137,7 @@ func CheckSlippage(expect, result sdk.Dec, desireSlippage int64) error {
 	}
 	return nil
 }
+
+func GetEventValueWithSuffix(value, suffix string) string {
+	return value + "_" + suffix
+}

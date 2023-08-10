@@ -14,3 +14,7 @@ func GenerateRandomString(chainID string, n int) string {
 	}
 	return chainID + base64.URLEncoding.EncodeToString(b)
 }
+
+func GetEventValueWithSuffix(value, suffix string) string {
+	return value + "_" + suffix
+}

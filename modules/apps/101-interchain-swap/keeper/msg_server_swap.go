@@ -102,24 +102,26 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeSwap,
-			sdk.Attribute{
-				Key:   types.AttributeKeyPoolId,
-				Value: msg.PoolId,
-			},
-			sdk.Attribute{
-				Key:   types.AttributeKeyTokenIn,
-				Value: msg.TokenIn.String(),
-			},
-			sdk.Attribute{
-				Key:   types.AttributeKeyTokenOut,
-				Value: tokenOut.String(),
-			},
-		),
-	)
+	// Emit events
+	eventAttr := []sdk.Attribute{
+		{
+			Key:   types.AttributeKeyPoolId,
+			Value: msg.PoolId,
+		},
+		{
+			Key:   types.AttributeKeyTokenIn,
+			Value: msg.TokenIn.String(),
+		},
+		{
+			Key:   types.AttributeKeyTokenOut,
+			Value: tokenOut.String(),
+		},
+	}
 
+	k.EmitEvent(
+		ctx, types.EventValueActionSwap, msg.PoolId,
+		eventAttr...,
+	)
 	return &types.MsgSwapResponse{
 		SwapType: msg.SwapType,
 		Tokens:   []*sdk.Coin{msg.TokenIn, tokenOut},

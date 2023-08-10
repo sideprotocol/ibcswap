@@ -29,6 +29,11 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgTakePoolRequest{},
 	)
+
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgCancelPoolRequest{},
+	)
+
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSingleAssetDepositRequest{},
 	)
@@ -41,9 +46,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgMultiAssetWithdrawRequest{},
 	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgCancelPoolRequest{},
-	)
+
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgCancelMultiAssetDepositRequest{},
 	)
