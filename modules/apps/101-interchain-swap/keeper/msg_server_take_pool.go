@@ -45,15 +45,13 @@ func (k msgServer) TakePool(ctx context.Context, msg *types.MsgTakePoolRequest) 
 		return nil, errorsmod.Wrapf(types.ErrInEnoughAmount, "due to %s", types.ErrFailedOnDepositReceived)
 	}
 
-	rawMsg, err := types.ModuleCdc.Marshal(msg)
-	if err != nil {
-		return nil, err
-	}
-
+	rawMsg := types.ModuleCdc.MustMarshalJSON(msg)
+	rawStateChange := types.ModuleCdc.MustMarshalJSON(&types.StateChange{})
 	// Construct IBC data packet
 	packet := types.IBCSwapPacketData{
-		Type: types.TAKE_POOL,
-		Data: rawMsg,
+		Type:        types.TAKE_POOL,
+		Data:        rawMsg,
+		StateChange: rawStateChange,
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)
@@ -73,12 +71,14 @@ func (k msgServer) TakePool(ctx context.Context, msg *types.MsgTakePoolRequest) 
 
 	// emit events
 	k.EmitEvent(
-		sdkCtx, types.EventValueActionTakePool, msg.PoolId,
+		sdkCtx, types.EventValueActionTakePool, msg.PoolId, msg.Creator,
 		sdk.Attribute{
 			Key:   types.AttributeKeyPoolCreator,
 			Value: msg.Creator,
 		},
 	)
+
+	k.SetInterchainLiquidityPool(sdkCtx, pool)
 	return &types.MsgTakePoolResponse{
 		PoolId: msg.PoolId,
 	}, nil

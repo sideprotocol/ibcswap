@@ -64,19 +64,17 @@ func (k msgServer) MakePool(ctx context.Context, msg *types.MsgMakePoolRequest) 
 		return nil, err
 	}
 
-	poolData, err := types.ModuleCdc.Marshal(msg)
-	if err != nil {
-		return nil, err
-	}
+	poolData := types.ModuleCdc.MustMarshalJSON(msg)
+	rawStateChange := types.ModuleCdc.MustMarshalJSON(&types.StateChange{
+		PoolId:        poolId,
+		SourceChainId: sdkCtx.ChainID(),
+	})
 
 	// Construct IBC data packet
 	packet := types.IBCSwapPacketData{
-		Type: types.MAKE_POOL,
-		Data: poolData,
-		StateChange: &types.StateChange{
-			PoolId:        poolId,
-			SourceChainId: sdkCtx.ChainID(),
-		},
+		Type:        types.MAKE_POOL,
+		Data:        poolData,
+		StateChange: rawStateChange,
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)
@@ -97,6 +95,7 @@ func (k msgServer) MakePool(ctx context.Context, msg *types.MsgMakePoolRequest) 
 	// emit events
 	k.EmitEvent(
 		sdkCtx, types.EventValueActionMakeOrder, poolId,
+		msg.Creator,
 		sdk.Attribute{
 			Key:   types.AttributeKeyPoolCreator,
 			Value: msg.Creator,

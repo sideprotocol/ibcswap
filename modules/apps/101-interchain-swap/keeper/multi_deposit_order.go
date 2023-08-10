@@ -79,9 +79,7 @@ func (k Keeper) RemoveMultiDepositOrder(
 func (k Keeper) GetAllMultiDepositOrder(ctx sdk.Context, poolId string) (list []types.MultiAssetDepositOrder) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(poolId+types.MultiDepositOrderKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
-
 	defer iterator.Close()
-
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.MultiAssetDepositOrder
 		k.cdc.MustUnmarshal(iterator.Value(), &val)

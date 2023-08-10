@@ -36,6 +36,12 @@ func (suite *KeeperTestSuite) TestSetMultiDepositOrder() {
 	)
 	suite.Require().Equal(found, true)
 	suite.Require().Equal(storedOrder, order)
+
+	storedOrders := k.GetAllMultiDepositOrder(
+		ctx,
+		order.PoolId,
+	)
+	suite.Require().Equal(1, len(storedOrders))
 }
 
 func (suite *KeeperTestSuite) TestGetLatestMultiDepositOrder() {

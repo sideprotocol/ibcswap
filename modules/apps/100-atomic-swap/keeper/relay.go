@@ -90,7 +90,7 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	case types.MAKE_SWAP:
 		var msg types.MakeSwapMsg
 
-		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+		if err := types.ModuleCdc.UnmarshalJSON(data.Data, &msg); err != nil {
 			return nil, err
 		}
 
@@ -98,10 +98,10 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err != nil {
 			return nil, err
 		}
-		resp, errResp = types.ModuleCdc.Marshal(&types.MsgMakeSwapResponse{OrderId: orderId})
+		resp, errResp = types.ModuleCdc.MarshalJSON(&types.MsgMakeSwapResponse{OrderId: orderId})
 	case types.TAKE_SWAP:
 		var msg types.TakeSwapMsg
-		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+		if err := types.ModuleCdc.UnmarshalJSON(data.Data, &msg); err != nil {
 			return nil, err
 		}
 
@@ -109,17 +109,17 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		if err2 != nil {
 			return nil, err2
 		}
-		resp, errResp = types.ModuleCdc.Marshal(&types.MsgTakeSwapResponse{OrderId: orderId})
+		resp, errResp = types.ModuleCdc.MarshalJSON(&types.MsgTakeSwapResponse{OrderId: orderId})
 	case types.CANCEL_SWAP:
 		var msg types.CancelSwapMsg
-		if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+		if err := types.ModuleCdc.UnmarshalJSON(data.Data, &msg); err != nil {
 			return nil, err
 		}
 		orderId, err2 := k.OnReceivedCancel(ctx, packet, &msg)
 		if err2 != nil {
 			return nil, err2
 		}
-		resp, errResp = types.ModuleCdc.Marshal(&types.MsgCancelSwapResponse{OrderId: orderId})
+		resp, errResp = types.ModuleCdc.MarshalJSON(&types.MsgCancelSwapResponse{OrderId: orderId})
 	default:
 		return nil, types.ErrUnknownDataPacket
 	}
@@ -138,7 +138,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			// This is the step 4 (Acknowledge Make Packet) of the atomic swap: https://github.com/liangping/ibc/blob/atomic-swap/spec/app/ics-100-atomic-swap/ibcswap.png
 			// This logic is executed when Taker chain acknowledge the make swap packet.
 			var msg types.MakeSwapMsg
-			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+			if err := types.ModuleCdc.UnmarshalJSON(data.Data, &msg); err != nil {
 				return err
 			}
 			order, ok := k.GetAtomicOrder(ctx, data.OrderId)
@@ -173,7 +173,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			// This is the step 9 (Transfer Take Token & Close order): https://github.com/cosmos/ibc/tree/main/spec/app/ics-100-atomic-swap
 			// The step is executed on the Taker chain.
 			takeMsg := &types.TakeSwapMsg{}
-			if err := types.ModuleCdc.Unmarshal(data.Data, takeMsg); err != nil {
+			if err := types.ModuleCdc.UnmarshalJSON(data.Data, takeMsg); err != nil {
 				return err
 			}
 
@@ -221,7 +221,7 @@ func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Pac
 			// It is executed on the Maker chain.
 
 			var msg types.CancelSwapMsg
-			if err := types.ModuleCdc.Unmarshal(data.Data, &msg); err != nil {
+			if err := types.ModuleCdc.UnmarshalJSON(data.Data, &msg); err != nil {
 				return err
 			}
 

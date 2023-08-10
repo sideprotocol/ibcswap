@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/sideprotocol/ibcswap/v6/modules/apps/101-interchain-swap/types"
@@ -49,11 +51,11 @@ func (k Keeper) OnMakePoolAcknowledged(ctx sdk.Context, msg *types.MsgMakePoolRe
 		return err
 	}
 
-	k.SetInterchainLiquidityPool(ctx, *pool)
-
+	// add new pool
+	k.AppendInterchainLiquidityPool(ctx, *pool)
 	// emit events
 	k.EmitEvent(
-		ctx, types.EventValueActionMakeOrder+"_"+types.EventValueSuffixAcknowledged, poolId,
+		ctx, types.EventValueActionMakeOrder+"_"+types.EventValueSuffixAcknowledged, poolId, msg.Creator,
 		sdk.Attribute{
 			Key:   types.AttributeKeyPoolCreator,
 			Value: msg.Creator,
@@ -78,7 +80,7 @@ func (k Keeper) OnTakePoolAcknowledged(ctx sdk.Context, msg *types.MsgTakePoolRe
 
 	// emit events
 	k.EmitEvent(
-		ctx, types.EventValueActionTakeOrder+"_"+types.EventValueSuffixAcknowledged, msg.PoolId,
+		ctx, types.EventValueActionTakeOrder+"_"+types.EventValueSuffixAcknowledged, msg.PoolId, msg.Creator,
 		sdk.Attribute{
 			Key:   types.AttributeKeyPoolCreator,
 			Value: msg.Creator,
@@ -108,7 +110,7 @@ func (k Keeper) OnCancelPoolAcknowledged(ctx sdk.Context, msg *types.MsgCancelPo
 
 	// emit events
 	k.EmitEvent(
-		ctx, types.EventValueActionCancelOrder+"_"+types.EventValueSuffixAcknowledged, msg.PoolId,
+		ctx, types.EventValueActionCancelOrder+"_"+types.EventValueSuffixAcknowledged, msg.PoolId, msg.Creator,
 		sdk.Attribute{
 			Key:   types.AttributeKeyPoolCreator,
 			Value: msg.Creator,
@@ -142,7 +144,7 @@ func (k Keeper) OnSingleAssetDepositAcknowledged(ctx sdk.Context, req *types.Msg
 
 	// emit events
 	k.EmitEvent(
-		ctx, types.EventValueActionSingleDeposit+"_"+types.EventValueSuffixAcknowledged, req.PoolId,
+		ctx, types.EventValueActionSingleDeposit+"_"+types.EventValueSuffixAcknowledged, req.PoolId, req.Sender,
 		sdk.Attribute{
 			Key:   types.AttributeKeyPoolCreator,
 			Value: req.Sender,
@@ -182,7 +184,7 @@ func (k Keeper) OnCancelMultiAssetDepositAcknowledged(ctx sdk.Context, req *type
 
 	// emit events
 	k.EmitEvent(
-		ctx, types.EventValueActionCancelOrder+"_"+types.EventValueSuffixAcknowledged, req.PoolId,
+		ctx, types.EventValueActionCancelOrder+"_"+types.EventValueSuffixAcknowledged, req.PoolId, req.Creator,
 		sdk.Attribute{
 			Key:   types.AttributeKeyPoolCreator,
 			Value: req.Creator,
@@ -244,7 +246,7 @@ func (k Keeper) OnTakeMultiAssetDepositAcknowledged(ctx sdk.Context, req *types.
 	eventAttr = append(eventAttr, lpTokenAttr...)
 	// emit events
 	k.EmitEvent(
-		ctx, types.EventValueActionTakeMultiDeposit+"_"+types.EventValueSuffixReceived, req.PoolId,
+		ctx, types.EventValueActionTakeMultiDeposit+"_"+types.EventValueSuffixReceived, req.PoolId, req.Sender,
 		eventAttr...,
 	)
 	return nil
@@ -305,7 +307,7 @@ func (k Keeper) OnMultiAssetWithdrawAcknowledged(ctx sdk.Context, req *types.Msg
 	}
 
 	k.EmitEvent(
-		ctx, types.EventValueActionWithdrawMultiDeposit+"_"+types.EventValueSuffixAcknowledged, req.PoolId,
+		ctx, types.EventValueActionWithdrawMultiDeposit+"_"+types.EventValueSuffixAcknowledged, req.PoolId, req.Receiver,
 		eventAttr...,
 	)
 
@@ -341,7 +343,7 @@ func (k Keeper) OnSwapAcknowledged(ctx sdk.Context, req *types.MsgSwapRequest, r
 	}
 
 	k.EmitEvent(
-		ctx, types.EventValueActionSwap+"_"+types.EventValueSuffixAcknowledged, req.PoolId,
+		ctx, types.EventValueActionSwap+"_"+types.EventValueSuffixAcknowledged, req.PoolId, req.Sender,
 		eventAttr...,
 	)
 	return nil
@@ -375,11 +377,10 @@ func (k Keeper) OnMakePoolReceived(ctx sdk.Context, msg *types.MsgMakePoolReques
 		return nil, errorsmod.Wrapf(types.ErrFailedOnDepositReceived, "due to %s", types.ErrInvalidDecimalPair)
 	}
 
-	k.SetInterchainLiquidityPool(ctx, pool)
-
+	k.AppendInterchainLiquidityPool(ctx, pool)
 	// emit events
 	k.EmitEvent(
-		ctx, types.EventValueActionMakeOrder+"_"+types.EventValueSuffixReceived, poolID,
+		ctx, types.EventValueActionMakeOrder+"_"+types.EventValueSuffixReceived, poolID, msg.Creator,
 		sdk.Attribute{
 			Key:   types.AttributeKeyPoolCreator,
 			Value: msg.Creator,
@@ -395,27 +396,24 @@ func (k Keeper) OnTakePoolReceived(ctx sdk.Context, msg *types.MsgTakePoolReques
 	if !found {
 		return nil, types.ErrNotFoundPool
 	}
-	pool.Status = types.PoolStatus_ACTIVE
 
 	// mint voucher token
 	asset, err := pool.FindPoolAssetBySide(types.PoolAssetSide_DESTINATION)
 	if err != nil {
 		return nil, err
 	}
-
 	totalAmount := pool.SumOfPoolAssets()
 	if err = k.MintTokens(ctx, sdk.MustAccAddressFromBech32(pool.SourceCreator), sdk.Coin{
 		Denom: pool.Supply.Denom, Amount: totalAmount.Mul(sdk.NewInt(int64(asset.Weight))).Quo(sdk.NewInt((100))),
 	}); err != nil {
 		return nil, err
 	}
-
+	pool.Status = types.PoolStatus_ACTIVE
 	// save pool status
 	k.SetInterchainLiquidityPool(ctx, pool)
-
 	// emit events
 	k.EmitEvent(
-		ctx, types.EventValueActionTakeOrder+"_"+types.EventValueSuffixReceived, msg.PoolId,
+		ctx, types.EventValueActionTakeOrder+"_"+types.EventValueSuffixReceived, msg.PoolId, msg.Creator,
 		sdk.Attribute{
 			Key:   types.AttributeKeyPoolCreator,
 			Value: msg.Creator,
@@ -437,7 +435,7 @@ func (k Keeper) OnCancelPoolReceived(ctx sdk.Context, msg *types.MsgCancelPoolRe
 
 	// emit events
 	k.EmitEvent(
-		ctx, types.EventValueActionCancelOrder+"_"+types.EventValueSuffixReceived, msg.PoolId,
+		ctx, types.EventValueActionCancelOrder+"_"+types.EventValueSuffixReceived, msg.PoolId, msg.Creator,
 		sdk.Attribute{
 			Key:   types.AttributeKeyPoolCreator,
 			Value: msg.Creator,
@@ -463,7 +461,7 @@ func (k Keeper) OnSingleAssetDepositReceived(ctx sdk.Context, msg *types.MsgSing
 
 	// emit events
 	k.EmitEvent(
-		ctx, types.EventValueActionSingleDeposit+"_"+types.EventValueSuffixReceived, msg.PoolId,
+		ctx, types.EventValueActionSingleDeposit+"_"+types.EventValueSuffixReceived, msg.PoolId, msg.Sender,
 		sdk.Attribute{
 			Key:   types.AttributeKeyPoolCreator,
 			Value: msg.Sender,
@@ -511,7 +509,6 @@ func (k Keeper) OnMakeMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgM
 	}
 
 	k.SetMultiDepositOrder(ctx, order)
-
 	eventAttr := []sdk.Attribute{
 		{
 			Key:   types.AttributeKeyPoolCreator,
@@ -527,7 +524,7 @@ func (k Keeper) OnMakeMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgM
 
 	// emit events
 	k.EmitEvent(
-		ctx, types.EventValueActionMakeMultiDeposit+"_"+types.EventValueSuffixReceived, msg.PoolId,
+		ctx, types.EventValueActionMakeMultiDeposit+"_"+types.EventValueSuffixReceived, msg.PoolId, msg.Deposits[0].Sender,
 		eventAttr...,
 	)
 	return &types.MsgMultiAssetDepositResponse{
@@ -551,7 +548,7 @@ func (k Keeper) OnCancelMultiAssetDepositReceived(ctx sdk.Context, msg *types.Ms
 
 	// emit events
 	k.EmitEvent(
-		ctx, types.EventValueActionCancelMultiDeposit+"_"+types.EventValueSuffixReceived, msg.PoolId,
+		ctx, types.EventValueActionCancelMultiDeposit+"_"+types.EventValueSuffixReceived, msg.PoolId, msg.Creator,
 		sdk.Attribute{
 			Key:   types.AttributeKeyPoolCreator,
 			Value: msg.Creator,
@@ -639,15 +636,17 @@ func (k Keeper) OnTakeMultiAssetDepositReceived(ctx sdk.Context, msg *types.MsgT
 	eventAttr = append(eventAttr, lpTokenAttr...)
 	// emit events
 	k.EmitEvent(
-		ctx, types.EventValueActionTakeMultiDeposit+"_"+types.EventValueSuffixAcknowledged, msg.PoolId,
+		ctx, types.EventValueActionTakeMultiDeposit+"_"+types.EventValueSuffixAcknowledged, msg.PoolId, msg.Sender,
 		eventAttr...,
 	)
 
-	return &types.MsgMultiAssetDepositResponse{}, nil
+	return &types.MsgMultiAssetDepositResponse{
+		PoolTokens: stateChange.PoolTokens,
+	}, nil
 }
 
 // OnMultiAssetWithdrawReceived processes a withdrawal request and returns a response or an error.
-func (k Keeper) OnMultiAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgMultiAssetWithdrawRequest, stateChange types.StateChange) (*types.MsgMultiAssetWithdrawResponse, error) {
+func (k Keeper) OnMultiAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgMultiAssetWithdrawRequest, stateChange *types.StateChange) (*types.MsgMultiAssetWithdrawResponse, error) {
 
 	// Retrieve the liquidity pool
 	pool, found := k.GetInterchainLiquidityPool(ctx, msg.PoolId)
@@ -699,12 +698,12 @@ func (k Keeper) OnMultiAssetWithdrawReceived(ctx sdk.Context, msg *types.MsgMult
 		},
 		{
 			Key:   types.TypeMsgWithdraw,
-			Value: msg.PoolToken.String(),
+			Value: strings.Join(rawOuts, ":"),
 		},
 	}
 
 	k.EmitEvent(
-		ctx, types.EventValueActionWithdrawMultiDeposit+"_"+types.EventValueSuffixReceived, msg.PoolId,
+		ctx, types.EventValueActionWithdrawMultiDeposit+"_"+types.EventValueSuffixReceived, msg.PoolId, msg.Receiver,
 		eventAttr...,
 	)
 
@@ -756,7 +755,7 @@ func (k Keeper) OnSwapReceived(ctx sdk.Context, msg *types.MsgSwapRequest, state
 	}
 
 	k.EmitEvent(
-		ctx, types.EventValueActionSwap+"_"+types.EventValueSuffixReceived, msg.PoolId,
+		ctx, types.EventValueActionSwap+"_"+types.EventValueSuffixReceived, msg.PoolId, msg.Sender,
 		eventAttr...,
 	)
 	return &types.MsgSwapResponse{

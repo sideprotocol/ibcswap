@@ -40,19 +40,17 @@ func (k msgServer) CancelPool(ctx context.Context, msg *types.MsgCancelPoolReque
 
 	// Move initial funds to liquidity pool
 
-	cancelPoolData, err := types.ModuleCdc.Marshal(msg)
-	if err != nil {
-		return nil, err
-	}
+	cancelPoolData := types.ModuleCdc.MustMarshalJSON(msg)
+	rawStateChange := types.ModuleCdc.MustMarshalJSON(&types.StateChange{
+		PoolId:        msg.PoolId,
+		SourceChainId: sdkCtx.ChainID(),
+	})
 
 	// Construct IBC data packet
 	packet := types.IBCSwapPacketData{
-		Type: types.CANCEL_POOL,
-		Data: cancelPoolData,
-		StateChange: &types.StateChange{
-			PoolId:        msg.PoolId,
-			SourceChainId: sdkCtx.ChainID(),
-		},
+		Type:        types.CANCEL_POOL,
+		Data:        cancelPoolData,
+		StateChange: rawStateChange,
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)
@@ -72,11 +70,7 @@ func (k msgServer) CancelPool(ctx context.Context, msg *types.MsgCancelPoolReque
 
 	// emit events
 	k.EmitEvent(
-		sdkCtx, types.EventValueActionCancelPool, msg.PoolId,
-		sdk.Attribute{
-			Key:   types.AttributeKeyPoolCreator,
-			Value: msg.Creator,
-		},
+		sdkCtx, types.EventValueActionCancelPool, msg.PoolId, msg.Creator,
 	)
 	return &types.MsgCancelPoolResponse{
 		PoolId: msg.PoolId,

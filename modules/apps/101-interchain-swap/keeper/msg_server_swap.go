@@ -69,15 +69,13 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 
 	msg.TokenOut = tokenOut
 	// Construct the IBC data packet
-	swapData, err := types.ModuleCdc.Marshal(msg)
-	if err != nil {
-		return nil, err
-	}
+	swapData := types.ModuleCdc.MustMarshalJSON(msg)
+	rawStateChange := types.ModuleCdc.MustMarshalJSON(&types.StateChange{Out: []*sdk.Coin{tokenOut}})
 
 	packet := types.IBCSwapPacketData{
 		Type:        msgType,
 		Data:        swapData,
-		StateChange: &types.StateChange{Out: []*sdk.Coin{tokenOut}},
+		StateChange: rawStateChange,
 	}
 
 	timeoutHeight, timeoutTimestamp := types.GetDefaultTimeOut(&ctx)
@@ -119,7 +117,7 @@ func (k msgServer) Swap(goCtx context.Context, msg *types.MsgSwapRequest) (*type
 	}
 
 	k.EmitEvent(
-		ctx, types.EventValueActionSwap, msg.PoolId,
+		ctx, types.EventValueActionSwap, msg.PoolId, msg.Sender,
 		eventAttr...,
 	)
 	return &types.MsgSwapResponse{

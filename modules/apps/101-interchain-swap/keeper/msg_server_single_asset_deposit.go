@@ -50,15 +50,13 @@ func (k Keeper) SingleAssetDeposit(ctx context.Context, msg *types.MsgSingleAsse
 	}
 
 	// Construct IBC packet
-	rawMsgData, err := types.ModuleCdc.Marshal(msg)
-	if err != nil {
-		return nil, err
-	}
+	rawMsgData := types.ModuleCdc.MustMarshalJSON(msg)
+	rawStateChange := types.ModuleCdc.MustMarshalJSON(&types.StateChange{PoolTokens: []*sdk.Coin{poolToken}})
 
 	packet := types.IBCSwapPacketData{
 		Type:        types.SINGLE_DEPOSIT,
 		Data:        rawMsgData,
-		StateChange: &types.StateChange{PoolTokens: []*sdk.Coin{poolToken}},
+		StateChange: rawStateChange,
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)

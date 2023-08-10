@@ -18,7 +18,7 @@ func (k Keeper) MakeSwap(goCtx context.Context, msg *types.MakeSwapMsg) (*types.
 		return nil, err
 	}
 
-	msgByte, err0 := types.ModuleCdc.Marshal(msg)
+	msgByte, err0 := types.ModuleCdc.MarshalJSON(msg)
 	if err0 != nil {
 		return nil, err0
 	}

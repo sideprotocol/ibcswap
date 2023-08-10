@@ -16,7 +16,7 @@ func (k Keeper) CancelSwap(goCtx context.Context, msg *types.CancelSwapMsg) (*ty
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
 	}
-	msgbyte, err := types.ModuleCdc.Marshal(msg)
+	msgbyte, err := types.ModuleCdc.MarshalJSON(msg)
 	if err != nil {
 		return nil, err
 	}

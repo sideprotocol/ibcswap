@@ -43,25 +43,23 @@ func (k msgServer) MultiAssetWithdraw(goCtx context.Context, msg *types.MsgMulti
 		return nil, err
 	}
 
-	// construct the IBC data packet
-	rawMsgData, err := types.ModuleCdc.Marshal(msg)
-	if err != nil {
-		return nil, err
-	}
-
 	//burn voucher token.
 	err = k.BurnTokens(ctx, sdk.MustAccAddressFromBech32(msg.Receiver), *msg.PoolToken)
 	if err != nil {
 		return nil, err
 	}
 
+	// construct the IBC data packet
+	rawMsgData := types.ModuleCdc.MustMarshalJSON(msg)
+	rawStateChange := types.ModuleCdc.MustMarshalJSON(&types.StateChange{
+		Out:        outs,
+		PoolTokens: []*sdk.Coin{msg.PoolToken},
+	})
+
 	packet := types.IBCSwapPacketData{
-		Type: types.MULTI_WITHDRAW,
-		Data: rawMsgData,
-		StateChange: &types.StateChange{
-			Out:        outs,
-			PoolTokens: []*sdk.Coin{msg.PoolToken},
-		},
+		Type:        types.MULTI_WITHDRAW,
+		Data:        rawMsgData,
+		StateChange: rawStateChange,
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&ctx)

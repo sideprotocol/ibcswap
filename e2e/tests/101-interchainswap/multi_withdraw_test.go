@@ -152,7 +152,7 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 		s.Require().NoError(err)
 
 		// wait block when packet relay.
-		test.WaitForBlocks(ctx, 10, chainA, chainB)
+		test.WaitForBlocks(ctx, 15, chainA, chainB)
 		s.AssertPacketRelayed(ctx, chainB, channelB.PortID, channelB.ChannelID, 2)
 
 		// check pool info in chainA and chainB
@@ -168,7 +168,7 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 		s.Require().EqualValues(poolA.Supply, poolB.Supply)
 		s.Require().EqualValues(poolA.Assets[0].Balance.Amount, poolB.Assets[0].Balance.Amount)
 		s.Require().EqualValues(poolA.Assets[1].Balance.Amount, poolB.Assets[1].Balance.Amount)
-		s.Require().Equal(poolA.Status, types.PoolStatus_ACTIVE)
+		s.Require().Equal(types.PoolStatus_ACTIVE, poolA.Status)
 
 		// check liquidity status in escrow account and my wallet.
 		escrowAccount := types.GetEscrowAddress(poolA.CounterPartyPort, poolA.CounterPartyChannel)
@@ -273,7 +273,8 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 				s.AssertValidTxResponse(txRes)
 
 			case "take multi-deposit":
-				order := GetFirstOrderId(s,ctx, chainA, poolId)
+				order := GetLastOrderId(s, ctx, chainA, poolId)
+				logger.CleanLog("take order status", order)
 				msg := types.NewMsgTakeMultiAssetDeposit(
 					chainBAddress,
 					poolId,
@@ -293,7 +294,7 @@ func (s *InterchainswapTestSuite) TestMultiWithdrawStatus() {
 			if tc.msgType == "make multi-deposit" {
 				res, err := s.QueryInterchainMultiDepositOrders(ctx, chainA, poolId)
 				s.Require().NoError(err)
-				s.Require().Equal(len(res.Orders), 1)
+				s.Require().Equal(1, len(res.Orders))
 				orders := res.Orders
 				s.Require().Equal(orders[0].ChainId, chainA.Config().ChainID)
 			}

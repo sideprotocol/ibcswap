@@ -34,17 +34,15 @@ func (k Keeper) CancelMultiAssetDeposit(ctx context.Context, msg *types.MsgCance
 		return nil, errorsmod.Wrapf(types.ErrNotEnoughPermission, ":%s", types.ErrCancelOrder)
 	}
 
-	cancelOrderData, err := types.ModuleCdc.Marshal(msg)
-	if err != nil {
-		return nil, err
-	}
+	cancelOrderData := types.ModuleCdc.MustMarshalJSON(msg)
+	rawStateChange := types.ModuleCdc.MustMarshalJSON(&types.StateChange{
+		MultiDepositOrderId: order.Id,
+	})
 	// save order in source chain
 	packet := types.IBCSwapPacketData{
-		Type: types.CANCEL_MULTI_DEPOSIT,
-		Data: cancelOrderData,
-		StateChange: &types.StateChange{
-			MultiDepositOrderId: order.Id,
-		},
+		Type:        types.CANCEL_MULTI_DEPOSIT,
+		Data:        cancelOrderData,
+		StateChange: rawStateChange,
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)
@@ -63,7 +61,7 @@ func (k Keeper) CancelMultiAssetDeposit(ctx context.Context, msg *types.MsgCance
 
 	// emit events
 	k.EmitEvent(
-		sdkCtx, types.EventValueActionCancelOrder, msg.PoolId,
+		sdkCtx, types.EventValueActionCancelOrder, msg.PoolId, msg.Creator,
 		sdk.Attribute{
 			Key:   types.AttributeKeyPoolCreator,
 			Value: msg.Creator,

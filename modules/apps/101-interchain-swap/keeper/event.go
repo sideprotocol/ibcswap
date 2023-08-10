@@ -6,7 +6,7 @@ import (
 )
 
 func (k Keeper) EmitEvent(ctx sdk.Context,
-	action, poolID string, attr ...sdk.Attribute,
+	action, poolID, sender string, attr ...sdk.Attribute,
 ) {
 	headerAttr := []sdk.Attribute{
 		{
@@ -23,7 +23,7 @@ func (k Keeper) EmitEvent(ctx sdk.Context,
 		},
 		{
 			Key:   types.AttributeKeyMsgSender,
-			Value: types.EventOwner,
+			Value: sender,
 		},
 	}
 

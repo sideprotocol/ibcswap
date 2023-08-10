@@ -64,15 +64,13 @@ func (k Keeper) TakeMultiAssetDeposit(ctx context.Context, msg *types.MsgTakeMul
 	}
 
 	// Construct IBC packet
-	rawMsgData, err := types.ModuleCdc.Marshal(msg)
-	if err != nil {
-		return nil, err
-	}
+	rawMsgData := types.ModuleCdc.MustMarshalJSON(msg)
+	rawStateChange := types.ModuleCdc.MustMarshalJSON(&types.StateChange{PoolTokens: poolTokens})
 
 	packet := types.IBCSwapPacketData{
 		Type:        types.TAKE_MULTI_DEPOSIT,
 		Data:        rawMsgData,
-		StateChange: &types.StateChange{PoolTokens: poolTokens},
+		StateChange: rawStateChange,
 	}
 
 	timeoutHeight, timeoutStamp := types.GetDefaultTimeOut(&sdkCtx)
@@ -99,7 +97,7 @@ func (k Keeper) TakeMultiAssetDeposit(ctx context.Context, msg *types.MsgTakeMul
 
 	// emit events
 	k.EmitEvent(
-		sdkCtx, types.EventValueActionTakeMultiDeposit, msg.PoolId,
+		sdkCtx, types.EventValueActionTakeMultiDeposit, msg.PoolId, msg.Sender,
 		sdk.Attribute{
 			Key:   types.AttributeKeyPoolCreator,
 			Value: msg.Sender,
